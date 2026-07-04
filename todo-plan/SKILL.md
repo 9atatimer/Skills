@@ -148,4 +148,4 @@ A good lesson learned saves someone 30+ minutes in a future conversation.
   Remove stale items, update anything that has drifted.
 
 - Do not drop `PLAN.md` files -- the project uses `TODO_PLAN.md` exclusively.
-  `PLAN.md` is in `.gitignore`.
+  Ensure `PLAN.md` is listed in the repo's `.gitignore`.

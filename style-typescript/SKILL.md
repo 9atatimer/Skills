@@ -29,7 +29,9 @@ description: "Writing or modifying TypeScript/Vue/Nuxt: toolchain and style conv
 
 - Group: external libraries first, then local components/utils
 - Nuxt auto-imports: `ref`, `computed`, `useRoute`, etc.
-- Don't add explicit imports for auto-imported composables
+- Don't add explicit imports for auto-imported composables in app code.
+  Tests are the exception: they cannot rely on Nuxt auto-imports and must
+  import explicitly (see the testing-nuxt skill)
 
 ## Error Handling
 

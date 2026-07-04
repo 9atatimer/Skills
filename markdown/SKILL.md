@@ -1,6 +1,6 @@
 ---
 name: markdown
-description: "Writing or surgically editing Markdown files, especially design docs: ASCII-only rules (straight quotes, -- not em dash, -> not arrows), stable AST structure, markdown-editor MCP workflow. ASCII output rules apply everywhere, even outside Markdown edits."
+description: "Writing or surgically editing Markdown files, especially design docs: ASCII-only rules (straight quotes, -- not em dash, -> not arrows), stable AST structure, markdown-editor MCP workflow. ASCII output rules apply to all newly written or edited prose, in any file type; they do not mandate churn in untouched existing content."
 ---
 
 # Markdown Editing Skills

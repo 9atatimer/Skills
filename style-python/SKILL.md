@@ -124,7 +124,9 @@ def test_<action>_<scenario>_<expected>() -> None:
 
 ### Coverage
 
-90% minimum. Config in `pyproject.toml`.
+Thresholds are owned by the testing-python skill (repo-wide smoke
+threshold plus mutation targets); each repo enforces its numbers in its
+own `pyproject.toml`. Do not hardcode a percentage here.
 
 ## Project Structure
 
@@ -182,4 +184,4 @@ def process(order: Order, *, notify: bool = True) -> Result:
 - [ ] All functions typed
 - [ ] No `# type: ignore` without explanation
 - [ ] Ruff + mypy pass
-- [ ] Coverage >= 90%
+- [ ] Coverage meets the testing-python skill's thresholds
