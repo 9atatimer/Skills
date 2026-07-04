@@ -1,0 +1,60 @@
+# LOCAL.md -- repo facts for the github-workflow skill
+
+<!--
+  HOW TO USE THIS FILE
+
+  Copy it to LOCAL.md in this same directory, fill in every <placeholder>,
+  and commit LOCAL.md to your repo.
+
+  Ownership contract:
+
+  - LOCAL.md is REPO-OWNED. Provisioning NEVER writes or overwrites
+    LOCAL.md -- it only ships and refreshes this LOCAL.md.example.
+  - The github-workflow SKILL.md (a sibling file) is MANAGED: provisioning
+    overwrites it freely. Never put repo facts there; they belong here.
+  - Agents treat LOCAL.md as authoritative for everything listed below.
+-->
+
+## Repository Details
+
+- Owner: <owner>
+- Repository: <repo>
+- Default Branch: <default-branch>
+
+## Remote Topology
+
+<!-- Pick exactly one: direct-origin (origin is the canonical repo; PRs
+     open and merge on origin) or fork-upstream (origin is your personal
+     fork; the canonical repo is the upstream remote; two-stage PR flow). -->
+
+- Topology: <direct-origin | fork-upstream>
+- Notes: <e.g. "origin is canonical; no upstream remote" or "origin is the
+  personal fork of <org>/<repo>; PRs live on the upstream slug">
+
+## Branch Prefixes
+
+- Human: <user>/feat/..., <user>/fix/..., <user>/refactor/..., <user>/docs/...
+- Agent: <agent-prefix>/feat/..., <agent-prefix>/fix/... <!-- often set by
+  the harness; humans should not push to agent-prefixed branches -->
+
+## Review Cadence Overrides
+
+<!-- Optional. Overrides the review-watch loop's default wake timings,
+     e.g. a machine-global maximum wake interval. Leave blank to use the
+     skill defaults. -->
+
+- Max wake interval: <e.g. 240s>
+
+## Workflow Notes
+
+<!-- Optional repo-specific facts the skill should honor. Examples:
+     - Remotes that are NOT code upstreams (e.g. a template remote kept
+       only for diffing -- never branch from or PR to it).
+     - Required CI status check names for the Branch Protection section.
+     - Optional practices in effect: ai-session-tracking,
+       commit-sanitization (pre-push squash hook installed),
+       branch-protection, stage-only-mode.
+     - Private tooling coordinates, e.g. the npm package name and registry
+       that provide the gadmin CLI. -->
+
+- <note>
