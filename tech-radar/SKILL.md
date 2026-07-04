@@ -61,7 +61,7 @@ the radar and keeping it out of the core are the same discipline.
 | TS/JS: format | **Prettier** | printWidth 140, singleQuote, semi. |
 | TS/JS: lint | **ESLint** | Vue.js Style Guide (Priority A/B/C). |
 | Web framework | **Vue 3 + Nuxt** | Composition API, `<script setup>`. |
-| TS/JS: tests | **Vitest** or **Jest** | Unit (happy-dom) vs integration (node). |
+| TS/JS: tests | **Vitest** | Unit (happy-dom) vs integration (node). Jest is Hold -- the testing-node skill standardizes on Vitest. |
 | Shell | **Bash 5.2+** | `set -euo pipefail`; see the style-bash skill. |
 | Browser automation | **Chrome for Testing + chrome-devtools-mcp** | See the chrome-mcp skill. |
 | Secrets | **1Password** (service-account / `load-secrets-action`) | Inject at runtime; do not paste secrets into GitHub. |

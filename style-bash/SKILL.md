@@ -10,6 +10,12 @@ Follow these instructions whenever you create or edit Bash scripts in this repos
 ## General Expectations
 - Assume Bash 5.2+ (Homebrew build) and use the shebang `#!/usr/bin/env bash`
 - Enable strict mode at the top of each script: `set -euo pipefail`
+- **Exception -- fail-open session hooks:** agent session-start/maintenance
+  hooks (template-tools `hooks/`, repo `.claude/hooks/`, tds-utils
+  `sandbox/`) deliberately use `set -uo pipefail` WITHOUT `-e`: a broken
+  provisioning step must never abort the hook and block a session from
+  starting. Those scripts guard failures step-by-step and always exit 0.
+  Do not "fix" them by adding `-e`; their headers say so explicitly.
 
 ## Required Script Layout
 Structure every script in five clear sections:

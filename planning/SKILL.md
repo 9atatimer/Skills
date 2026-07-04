@@ -482,7 +482,7 @@ Always include:
 
 **Instead:**
 
-- Mock timers: `vi.useFakeTimers()` (JS) or `freezegun` (Python)
+- Mock timers: `vi.useFakeTimers()` (JS); in Python prefer DI of a Clock, or `time-machine` in integration tests (never `freezegun` -- see the testing-python skill)
 - Mock async operations: Return resolved promises immediately
 - Use `await` on real async operations (integration tests only)
 ```
@@ -520,8 +520,8 @@ Always include:
 5. Run: `npm run test:unit -- [feature]` (GREEN)
 6. Commit: `feat([module]): implement [feature] (GREEN)`
 
-**Testing Framework:** Vitest or Jest
-**Mocking:** vi.mock() or jest.mock()
+**Testing Framework:** Vitest (Jest is Hold -- see the tech-radar and testing-node skills)
+**Mocking:** vi.mock()
 **Environment:** happy-dom (unit) or node (integration)
 ```
 
