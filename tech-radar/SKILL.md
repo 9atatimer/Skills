@@ -51,7 +51,7 @@ the radar and keeping it out of the core are the same discipline.
 | Python: lint/format | **Ruff** | Linting and formatting. Config in `pyproject.toml`. |
 | Python: types | **mypy (strict)** | Static type checking. Annotate everything; no `Any`. |
 | Python: tests | **pytest** | Test runner. Given-When-Then naming. |
-| Python: test data | **factory_boy** | Test data factories. |
+| Python: test data | **factory_boy** | Test data factories for ORM models only; plain dataclasses use builder functions (see the testing-python skill). |
 | Python: property tests | **hypothesis** | Property-based testing. |
 | Python: validation | **Pydantic** | Validation at external/input boundaries. |
 | Python: data classes | **dataclasses** | `@dataclass(frozen=True, slots=True)` for internal data. |

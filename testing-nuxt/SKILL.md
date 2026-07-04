@@ -252,7 +252,7 @@ Without caching, each `useState('key')` call creates a new ref, breaking state s
 
 ## 6.4 Centralized Mock Directory
 
-All reusable mocks live in `test/mocks/`: `supabase.ts`, `usePosthog.ts`, `nuxt-app.ts`, `nuxt-imports.ts`.
+All reusable mocks live in `tests/mocks/`: `supabase.ts`, `usePosthog.ts`, `nuxt-app.ts`, `nuxt-imports.ts`.
 
 Components using auto-imports can add explicit imports for test compatibility:
 `import { usePosthog } from "#imports"` -- works in production (Nuxt ignores duplicates) and tests (resolves via vitest aliases).
