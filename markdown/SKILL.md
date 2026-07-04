@@ -93,8 +93,8 @@ Section IDs regenerate after each edit, so re-run `list_sections` if you need to
 
 Before editing a Markdown file:
 
-1. Check for smart quotes: `grep -P '[\x{2018}\x{2019}\x{201C}\x{201D}]' file.md`
-2. If found, convert them first: `sed -i 's/[""]/"/g; s/['\'']/'\''/g' file.md`
+1. Check for smart quotes: `perl -CSD -ne 'print "$.: $_" if /[\x{2018}\x{2019}\x{201C}\x{201D}]/' file.md`
+2. If found, convert them first: `perl -CSD -i -pe 's/[\x{201C}\x{201D}]/"/g; s/[\x{2018}\x{2019}]/\x27/g' file.md`
 3. Decide: surgical edit or full rewrite?
 4. If surgical: use markdown-editor workflow above
 5. If rewrite: read file, modify in response, write_file

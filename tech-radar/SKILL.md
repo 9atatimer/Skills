@@ -26,7 +26,7 @@ concrete radar (closest-wins); the tds-utils LMDE radar is the worked example.
 
 **A radar entry is a mechanism, so it belongs at an edge.** Everything on this
 radar (an SDK, a vendor, an endpoint, a model) is a *volatile mechanism* in the
-sense of `SKILL.CODING.md` Section 1. Depend on it from an adapter behind a seam,
+sense of the coding skill, Section 1. Depend on it from an adapter behind a seam,
 never from the core; keep its volatile specifics (model ids, base URLs, keys) as
 parameters supplied at the edge, not constants in the domain. Choosing tech from
 the radar and keeping it out of the core are the same discipline.
@@ -62,8 +62,8 @@ the radar and keeping it out of the core are the same discipline.
 | TS/JS: lint | **ESLint** | Vue.js Style Guide (Priority A/B/C). |
 | Web framework | **Vue 3 + Nuxt** | Composition API, `<script setup>`. |
 | TS/JS: tests | **Vitest** or **Jest** | Unit (happy-dom) vs integration (node). |
-| Shell | **Bash 5.2+** | `set -euo pipefail`; see `STYLE.BASH.md`. |
-| Browser automation | **Chrome for Testing + chrome-devtools-mcp** | See `SKILL.CHROME_MCP.md`. |
+| Shell | **Bash 5.2+** | `set -euo pipefail`; see the style-bash skill. |
+| Browser automation | **Chrome for Testing + chrome-devtools-mcp** | See the chrome-mcp skill. |
 | Secrets | **1Password** (service-account / `load-secrets-action`) | Inject at runtime; do not paste secrets into GitHub. |
 | CI / review | **GitHub Actions + ci.magic** | See `packages/naatm-ci-magic`. |
 
@@ -91,7 +91,7 @@ the radar and keeping it out of the core are the same discipline.
 | **Hand-rolled logging frameworks** | Use structlog. |
 | **`sleep()` / wall-clock waits in tests** | Use fake clocks/timers and event coordination. |
 | **Star/wildcard imports** | Obscure provenance; break static analysis. |
-| **Reassigning global `IFS` in Bash** | Fragile, surprising; see `STYLE.BASH.md`. |
+| **Reassigning global `IFS` in Bash** | Fragile, surprising; see the style-bash skill. |
 | **Secrets committed to the repo or pasted into GitHub UI** | Manage in 1Password, inject at runtime. |
 | **Speculative abstractions / frameworks beyond the design** | Build only what the design specifies. |
 

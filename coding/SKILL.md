@@ -21,10 +21,10 @@ These gates are non-negotiable. Do not skip them because the change "looks small
 
 1. **Design gate.** There must be an approved design doc for the tool you are touching.
    - Every tool/package has a `DESIGN.<name>.md`. A system spanning multiple tools has an `ARCHITECTURE.md`.
-   - If it does not exist or is ambiguous, stop and use `SKILL.DESIGN.md` to write/fix it first.
-2. **Plan gate.** For any multi-step feature, build the phased, test-first plan with `SKILL.PLANNING.md` and record it per `SKILL.TODO_PLAN.md`.
+   - If it does not exist or is ambiguous, stop and use the design skill to write/fix it first.
+2. **Plan gate.** For any multi-step feature, build the phased, test-first plan with the planning skill and record it per the todo-plan skill.
 3. **Test gate.** Write the failing test first (see Section 3). No production code without a failing test demanding it.
-4. **Tech gate.** Any off-the-shelf dependency must be on the **Adopt** or **Trial** ring of `TECH_RADAR.md`. Never introduce a `Hold`/`Verboten` technology, and never silently add a dependency that is not on the radar -- propose adding it first.
+4. **Tech gate.** Any off-the-shelf dependency must be on the **Adopt** or **Trial** ring of the tech-radar skill. Never introduce a `Hold`/`Verboten` technology, and never silently add a dependency that is not on the radar -- propose adding it first.
 
 ---
 
@@ -113,7 +113,7 @@ Avoid nested/inner functions due to their inherent testing difficulty.
 
 ### 1.8 Dependencies
 
-* Consult `TECH_RADAR.md` before reaching for anything off-the-shelf.
+* Consult the tech-radar skill before reaching for anything off-the-shelf.
 * Prefer well-maintained, battle-tested OSS libraries when they reduce risk or complexity.
 * Do not reinvent common primitives.
 * Reject libraries that obscure logic or introduce unnecessary abstraction.
@@ -122,7 +122,7 @@ Avoid nested/inner functions due to their inherent testing difficulty.
 
 ## 2. Anatomy of a Code File
 
-Every source file is laid out top-to-bottom in this fixed order. A reader should be able to scroll once and understand the file. (The language `STYLE.*` guide refines the syntax; this is the universal skeleton -- e.g. `STYLE.BASH.md`'s five-section layout is this same shape for shell.)
+Every source file is laid out top-to-bottom in this fixed order. A reader should be able to scroll once and understand the file. (The language `STYLE.*` guide refines the syntax; this is the universal skeleton -- e.g. the style-bash skill's five-section layout is this same shape for shell.)
 
 ```
 1. Module header        Docstring/comment: what this file is, which ports/deps it owns
@@ -184,7 +184,7 @@ def price_order(order: Order, *, tax: TaxPort) -> PricedOrder: ...
 
 ## 3. Testing Philosophy (TDD/BDD Required)
 
-**All work is test-driven and behavior-driven.** See `SKILL.PLANNING.md` for the RED -> GREEN -> COMMIT loop and the language `STYLE.*` guides for framework specifics.
+**All work is test-driven and behavior-driven.** See the planning skill for the RED -> GREEN -> COMMIT loop and the language `STYLE.*` guides for framework specifics.
 
 * Write tests **before** implementation (RED first, always).
 * Tests define **observable behavior** (the contract), not internal structure (the implementation).
@@ -215,7 +215,7 @@ Tests exist to document and protect *what the system does*, not *how it does it*
 
 **Logging:**
 
-* Structured and intentional (structlog -- see `TECH_RADAR.md`)
+* Structured and intentional (structlog -- see the tech-radar skill)
 * Use log levels; ensure debug logs are beneficial, not noisy
 * Log for diagnostics, tracing, and observability
 * Avoid noisy or redundant logs
@@ -251,7 +251,7 @@ Work is complete only when:
 
 * The change traces back to an approved design doc (`DESIGN.<name>.md` / `ARCHITECTURE.md`)
 * All behavioral tests pass (written test-first)
-* Every dependency used is on the Adopt/Trial ring of `TECH_RADAR.md`
+* Every dependency used is on the Adopt/Trial ring of the tech-radar skill
 * The change passes the Section 1.2 tests (Grep, Swap, Decision, Arrow, Change)
 * Code follows the file anatomy (Section 2)
 * Errors are handled consistently and observably

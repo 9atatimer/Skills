@@ -19,8 +19,9 @@ never writes or overwrites it -- provisioning ships only `LOCAL.md.example`,
 which the repo copies to `LOCAL.md` and fills in. Treat LOCAL.md as
 **authoritative** for:
 
-- **Owner/repo slug** -- the `<OWNER/REPO>` value every `--repo` flag and
-  API call below needs.
+- **Owner/repo slug** -- the `<OWNER/REPO>` value `--repo` flags and API
+  calls below need; in fork-upstream mode the Remote Topology table selects
+  between this slug and the Upstream field.
 - **Default branch** -- wherever this skill says "the default branch,"
   LOCAL.md names it.
 - **Remote topology** -- `direct-origin` or `fork-upstream`; selects which
@@ -56,6 +57,8 @@ Repo-owned. Provisioning never touches this file.
 ## Remote Topology
 
 - Topology: direct-origin | fork-upstream
+- Upstream: <org>/<repo> (fork-upstream only; the canonical repo where
+  Stage-2 PRs live)
 - Notes: <e.g. "origin is canonical; no upstream remote", or
   "origin is the personal fork; upstream is <org>/<repo>">
 
@@ -104,7 +107,7 @@ keys off that declaration:
 | Branch base | the default branch on `origin` | `upstream/<default>` (sync first: `git fetch upstream`) |
 | Push target | `origin` (the canonical repo) | `origin` (your fork) -- you cannot push to `upstream` |
 | PR head / base | `<branch>` -> `<default>`, same repo | `<fork>:<branch>` -> `upstream:<default>` |
-| `--repo` for `gadmin` / `gh` / review-watch | the LOCAL.md slug | the **upstream** slug (that is where the PR lives) |
+| `--repo` for `gadmin` / `gh` / review-watch | the LOCAL.md Owner/Repository slug | Stage-1 (fork PR, Copilot review, review-watch): the LOCAL.md Owner/Repository slug (the fork); Stage-2 (upstream PR): the LOCAL.md **Upstream** slug |
 
 **Why the fork split exists:** Copilot Pro+ review charges are billed to the
 repository owner. Reviewing on a personal fork first keeps AI-review costs on

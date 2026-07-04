@@ -6,8 +6,8 @@ description: "Writing or reviewing tests for Python code: pytest/pytest-asyncio 
 # Python Testing Standards
 
 > Framework-specific testing standards for Python code in this repo.
-> Read alongside `TESTING.md` (universal principles) and
-> `prompts/STYLE.PYTHON.md` (style and toolchain).
+> Read alongside the universal testing skill (universal principles) and
+> the `style-python` skill (style and toolchain).
 >
 > **These rules are non-negotiable.** Deviations require an explicit
 > comment with rationale.
@@ -277,7 +277,7 @@ assert any(
 assert "User 42 was created" in caplog.text  # typo waiting to happen
 ```
 
-Pairs with `structlog` (mandated by `prompts/STYLE.PYTHON.md`).
+Pairs with `structlog` (mandated by the `style-python` skill).
 
 **Prerequisite:** the `structlog` configuration must include a
 processor that attaches the event dict to the stdlib `LogRecord` (e.g.

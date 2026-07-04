@@ -129,7 +129,7 @@ def test_<action>_<scenario>_<expected>() -> None:
 ## Project Structure
 
 Hexagonal architecture (Ports & Adapters) -- the Python realization of the one
-idea in `SKILL.CODING.md` Section 1 (stable core, volatile edges, deps inward):
+idea in the coding skill, Section 1 (stable core, volatile edges, deps inward):
 
 ```
 src/cr_magic/

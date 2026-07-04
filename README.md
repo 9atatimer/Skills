@@ -10,7 +10,7 @@ each agent's lazy skill discovery replaces the old hand-rolled
 ## How it is consumed
 
 `clai provision` (see
-[PROVISION.DESIGN.md](https://github.com/9atatimer/tds-utils/blob/main/docs/design/PROVISION.DESIGN.md))
+[PROVISION.DESIGN.md](https://github.com/9atatimer/tds-utils/blob/master/docs/design/PROVISION.DESIGN.md))
 syncs this tree into every agent's skill directory at each new session:
 
 - Laptop: symlinks into one clone under `~/.cache/clai/template-tools/`, so

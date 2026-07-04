@@ -5,7 +5,7 @@ description: "Writing or reviewing tests for Nuxt 4 / Vue 3 code: Vitest + @vue/
 
 # Testing Standards -- Nuxt 4 / Vue 3
 
-> Companion to [TESTING.md](TESTING.md) (generic principles).
+> Companion to the universal [testing skill](../testing/SKILL.md) (generic principles).
 > This document covers **Nuxt 4-specific** testing practices.
 
 ---
@@ -578,8 +578,8 @@ await page.getByTestId('...').click()
 Line coverage is a smoke threshold; mutation score is the real quality
 bar. For Nuxt/Vue code, use **Stryker Mutator** -- the JS/TS equivalent
 of Python's `mutmut`. Every language in this repo uses a
-mutation-testing tool of the same class (see `TESTING.PYTHON.md` for
-Python, `TESTING.NODE.md` for non-Nuxt Node/TS).
+mutation-testing tool of the same class (see the testing-python skill for
+Python, the testing-node skill for non-Nuxt Node/TS).
 
 ### Packages
 

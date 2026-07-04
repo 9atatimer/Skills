@@ -28,8 +28,10 @@
      fork; the canonical repo is the upstream remote; two-stage PR flow). -->
 
 - Topology: <direct-origin | fork-upstream>
+- Upstream: <org>/<repo> <!-- fork-upstream only; the canonical repo where
+  Stage-2 PRs live. Leave blank for direct-origin. -->
 - Notes: <e.g. "origin is canonical; no upstream remote" or "origin is the
-  personal fork of <org>/<repo>; PRs live on the upstream slug">
+  personal fork of <org>/<repo>; Stage-2 PRs live on the Upstream slug">
 
 ## Branch Prefixes
 

@@ -21,7 +21,7 @@ Structure every script in five clear sections:
 
 > **Where Bash sits in the architecture.** A shell script is usually an *edge*
 > (a mechanism: it shells out to git, curl, the filesystem). That is fine -- but
-> the one idea in `SKILL.CODING.md` Section 1 still buys you the Decision test:
+> the one idea in the coding skill, Section 1 still buys you the Decision test:
 > keep each real decision in one named helper function (a policy), not smeared
 > across inline `if`/`||` chains, and isolate each external-command call in its
 > own helper so the script reads as intent, not plumbing.

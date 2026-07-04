@@ -8,11 +8,11 @@ description: "Writing or reviewing tests for non-Nuxt Node.js/TypeScript code (b
 > Framework-specific testing standards for Node.js and TypeScript code in this repo
 > (backend services, Cloudflare Workers, CLIs, libraries, shared packages).
 >
-> Read alongside `TESTING.md` (universal principles) and
-> `prompts/STYLE.TYPESCRIPT.md` (style and toolchain).
+> Read alongside the universal testing skill (universal principles) and
+> the style-typescript skill (style and toolchain).
 >
 > For Nuxt 4 / Vue 3 / Cypress component and SSR testing, see
-> `TESTING.NUXT.md` instead. This document is for **non-Nuxt** TS/JS code.
+> the testing-nuxt skill instead. This document is for **non-Nuxt** TS/JS code.
 >
 > **These rules are non-negotiable.** Deviations require an explicit
 > comment with rationale.
@@ -269,9 +269,9 @@ language in this repo uses a mutation-testing tool of the same class:
 
 | Language | Tool |
 |----------|------|
-| Python   | `mutmut` (primary), `cosmic-ray` (alt) -- see `TESTING.PYTHON.md` |
+| Python   | `mutmut` (primary), `cosmic-ray` (alt) -- see the testing-python skill |
 | Node / TS / JS | `@stryker-mutator/core` + `@stryker-mutator/vitest-runner` |
-| Nuxt / Vue | Stryker (same as above) -- see `TESTING.NUXT.md` Section 13 |
+| Nuxt / Vue | Stryker (same as above) -- see the testing-nuxt skill, Section 13 |
 
 ---
 

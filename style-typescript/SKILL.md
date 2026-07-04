@@ -39,7 +39,7 @@ description: "Writing or modifying TypeScript/Vue/Nuxt: toolchain and style conv
 
 ## Architecture
 
-The architecture rules are universal -- see `SKILL.CODING.md` Section 1. The only
+The architecture rules are universal -- see the coding skill, Section 1. The only
 TypeScript/Vue-specific points:
 
 - **The edge is `fetch` / `process.env` / SDK clients / model strings.** Keep
