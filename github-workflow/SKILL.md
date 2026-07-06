@@ -304,7 +304,8 @@ applies:
    - **Small and unambiguous** change -- make it, push, reply with the SHA.
      No need to ask first.
    - **Ambiguous or architecturally significant** -- ask the human before
-     acting, via `AskUserQuestion` so the question is in-band.
+     acting, inline in the session as plain text (never a question-picker
+     widget -- they break on mobile) so the question is in-band.
    - **Disagree** -- reject with a one-line concrete reason. Never just
      "disagree." Do not be a yes-man to Copilot -- reviewer pushback is the
      point of the loop.
@@ -356,8 +357,9 @@ Stop when any of these fires:
   fast -- Copilot rarely returns late once the response window has passed.
 - **5 iterations on any single PR** (safety cap) -- report state and
   surface to user.
-- A comment is architecturally ambiguous -- use `AskUserQuestion` and
-  stop. Do not guess at design calls.
+- A comment is architecturally ambiguous -- ask the human inline in the
+  session as plain text (never a question-picker widget -- they break on
+  mobile) and stop. Do not guess at design calls.
 - **All-rejected pass = stop.** If an iteration's actions for a PR are
   100% rejections (zero `accept`, zero pushes, zero re-requests), mark
   that PR settled and stop polling it immediately -- do not enter the
@@ -440,8 +442,9 @@ classify each as one of:
 
 - **Agree** -- will fix.
 - **Disagree** -- will reject with a reason.
-- **Ambiguous / architecturally significant** -- ask the human first via
-  `AskUserQuestion`. Do not guess.
+- **Ambiguous / architecturally significant** -- ask the human first,
+  inline in the session as plain text (never a question-picker widget --
+  they break on mobile). Do not guess.
 
 **Step 3: Reject the ones you disagree with** immediately, with reason:
 `gadmin github reply --repo <OWNER/REPO> --id <ID> --type reject --msg "Reason for disagreement"`
