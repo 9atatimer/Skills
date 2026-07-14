@@ -57,17 +57,17 @@ automation" build and looks/feels like Chrome.
 
 ```
 ~/.cache/<project>-cft/
-├── browser/                       # CfT binary (~250MB, installed by script)
-│   └── chrome/mac_arm-<version>/...
-└── userdata/                      # CfT profile (logins persist here)
++-- browser/                       # CfT binary (~250MB, installed by script)
+|   +-- chrome/mac_arm-<version>/...
++-- userdata/                      # CfT profile (logins persist here)
 
 <project-repo>/
-├── scripts/cft/
-│   ├── install.sh                 # idempotent CfT install via @puppeteer/browsers
-│   ├── path.sh                    # print latest CfT binary path
-│   └── mcp-launch.sh              # exec chrome-devtools-mcp w/ CfT + extension preloaded
-├── .mcp.json                      # project-scoped MCP entry -> mcp-launch.sh
-└── apps/<your-extension>/         # (optional) extension to preload
++-- scripts/cft/
+|   +-- install.sh                 # idempotent CfT install via @puppeteer/browsers
+|   +-- path.sh                    # print latest CfT binary path
+|   +-- mcp-launch.sh              # exec chrome-devtools-mcp w/ CfT + extension preloaded
++-- .mcp.json                      # project-scoped MCP entry -> mcp-launch.sh
++-- apps/<your-extension>/         # (optional) extension to preload
 ```
 
 ## Setup recipe

@@ -135,11 +135,11 @@ idea in the coding skill, Section 1 (stable core, volatile edges, deps inward):
 
 ```
 src/cr_magic/
-├── domain/      # Core logic, no deps. No vendor SDK, no os.environ, no model id here.
-├── ports/       # Interfaces (Protocol) -- one per named axis of change
-├── adapters/    # Implementations (the mechanisms / edges)
-├── cli/         # Entry points (Click)
-└── orchestration.py  # FSM + port wiring (composition root)
++-- domain/      # Core logic, no deps. No vendor SDK, no os.environ, no model id here.
++-- ports/       # Interfaces (Protocol) -- one per named axis of change
++-- adapters/    # Implementations (the mechanisms / edges)
++-- cli/         # Entry points (Click)
++-- orchestration.py  # FSM + port wiring (composition root)
 ```
 
 **Dependency rule**: `adapters` -> `ports` -> `domain` (inward only). Quick
