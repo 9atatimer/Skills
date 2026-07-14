@@ -11,7 +11,7 @@ description: "Writing or surgically editing Markdown files, especially design do
 
 ### Characters
 
-- **No smart quotes**: Use straight quotes (`"` and `'`), never curly (`"` `"` `'` `'`)
+- **No smart quotes**: Use straight quotes (`"` and `'`), never curly quotes (left/right double U+201C/U+201D, left/right single U+2018/U+2019)
 - **No smart arrows**: Use `->` instead of right arrow (U+2192), use `<-` instead of left arrow (U+2190)
 - **No em-dashes**: Use double hyphen (`--`) instead of em dash (U+2014)
 - **ASCII only in prose**: Avoid Unicode symbols that might render inconsistently
