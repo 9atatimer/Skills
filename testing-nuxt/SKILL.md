@@ -557,7 +557,9 @@ export { expect }
 
 #### 2. Login via UI
 ```typescript
-async function loginViaUI(page, email: string, password: string) {
+import type { Page } from '@playwright/test'
+
+async function loginViaUI(page: Page, email: string, password: string) {
   await page.goto('/test/fixture-login')
   await page.getByTestId('test-login-email').fill(email)     // -> data-pw
   await page.getByTestId('test-login-password').fill(password)

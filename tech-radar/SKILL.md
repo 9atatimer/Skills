@@ -62,7 +62,7 @@ the radar and keeping it out of the core are the same discipline.
 | TS/JS: lint | **ESLint** | Vue.js Style Guide (Priority A/B/C). |
 | Web framework | **Vue 3 + Nuxt** | Composition API, `<script setup>`. |
 | TS/JS: tests | **Vitest** | Unit (happy-dom) vs integration (node). Jest is Hold -- the testing-node skill standardizes on Vitest. |
-| TS/JS: E2E tests | **Playwright** | Browser E2E for Nuxt/Vue apps. Replaces Cypress. `getByTestId` (`data-testid`) fallback; prefer role/label locators. |
+| TS/JS: E2E tests | **Playwright** | Browser E2E for Nuxt/Vue apps. Replaces Cypress. Prefer role/label locators; `getByTestId` fallback (E2E attribute `data-pw`; see the testing-nuxt skill). |
 | Shell | **Bash 5.2+** | `set -euo pipefail`; see the style-bash skill. |
 | Browser automation | **Chrome for Testing + chrome-devtools-mcp** | See the chrome-mcp skill. |
 | Secrets | **1Password** (service-account / `load-secrets-action`) | Inject at runtime; do not paste secrets into GitHub. |
