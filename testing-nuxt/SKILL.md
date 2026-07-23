@@ -538,7 +538,8 @@ type Fixtures = { testUser: { id: string; email: string } }
 
 export const test = base.extend<Fixtures>({
   testUser: async ({}, use) => {
-    const email = `test-${Date.now()}@example.com`
+    // randomUUID() is unique across parallel workers; Date.now() alone can collide.
+    const email = `test-${crypto.randomUUID()}@example.com`
     const { data, error } = await adminSupabase.auth.admin.createUser({
       email,
       password: 'password',
@@ -557,7 +558,7 @@ export { expect }
 
 #### 2. Login via UI
 ```typescript
-import type { Page } from '@playwright/test'
+import { expect, type Page } from '@playwright/test'
 
 async function loginViaUI(page: Page, email: string, password: string) {
   await page.goto('/test/fixture-login')
