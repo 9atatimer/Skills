@@ -1,6 +1,6 @@
 ---
 name: testing-nuxt
-description: "Writing or reviewing tests for Nuxt 4 / Vue 3 code: Vitest + @vue/test-utils + Cypress standards, plus Stryker mutation testing scope and thresholds for composables/stores/utils/server. Read alongside the universal testing skill."
+description: "Writing or reviewing tests for Nuxt 4 / Vue 3 code: Vitest + @vue/test-utils + Playwright standards, plus Stryker mutation testing scope and thresholds for composables/stores/utils/server. Read alongside the universal testing skill."
 ---
 
 # Testing Standards -- Nuxt 4 / Vue 3
@@ -57,7 +57,7 @@ Failures indicate: browser-only API use, missing `process.client` guards, missin
 | **Unit Tests** | Logic, composables, stores, event emission | Vitest + happy-dom |
 | **Component Tests** | Component behavior, SSR compatibility | Vitest + @vue/test-utils + @nuxt/test-utils |
 | **Integration Tests** | Page-level behavior without network | @nuxt/test-utils/browser |
-| **E2E Tests** | Full app behavior incl. login | Cypress 14 |
+| **E2E Tests** | Full app behavior incl. login | Playwright |
 
 Nuxt 4 requires **happy-dom** for component tests unless jsdom is explicitly needed.
 
@@ -106,7 +106,7 @@ tests/
   components/       # component behavior tests
   ssr/              # SSR compatibility tests
   integration/      # multi-component routing/page tests
-  e2e/              # Cypress tests (cypress/e2e)
+  e2e/              # Playwright specs (playwright.config.ts testDir)
 ```
 
 | Test Type | Filename Suffix |
@@ -115,7 +115,7 @@ tests/
 | Component | `*.component.test.ts` |
 | SSR compatibility | `*.nuxt.test.ts` |
 | Integration (browser) | `*.integration.test.ts` |
-| Cypress | `*.cy.ts` |
+| Playwright E2E | `*.spec.ts` |
 
 ---
 
@@ -407,11 +407,17 @@ const handleMenuClick = () => emit('menu-click')
 
 # 9. Selector Requirements
 
-### Unit/Component Tests use: `data-testid=""`
-### Cypress E2E Tests use: `data-cy=""`
+### One test attribute everywhere: `data-testid=""`
 
-### Strict Separation Rule
-A test must **never** cross-use the other selector type. Violations must be corrected immediately.
+Playwright and `@vue/test-utils` share a single selector attribute. There is
+**no** `data-cy` -- unit/component tests and E2E specs both key off
+`data-testid`, so a component carries exactly one test attribute.
+
+### Prefer user-facing locators in E2E
+In Playwright, reach for role/label/text locators first (`getByRole`,
+`getByLabel`, `getByText`); they assert accessibility as a side effect. Fall
+back to `getByTestId()` (which resolves `data-testid`) only when no stable
+user-facing handle exists.
 
 ### Naming Convention
 ```
@@ -420,24 +426,24 @@ component-name-element-role
 Examples:
 ```
 data-testid="hamburger-menu-button-toggle"
-data-cy="login-form-submit"
+data-testid="login-form-submit"
 ```
 
-### Components Carry Both
+### Components Carry One Attribute
 ```vue
 <button
   data-testid="submit-button"
-  data-cy="submit-button"
   @click="handleClick"
 >Submit</button>
 ```
 
 ```typescript
-// Unit test: data-testid ONLY
+// Unit/component test (@vue/test-utils)
 wrapper.find('[data-testid="submit-button"]').trigger('click')
 
-// E2E test: data-cy ONLY
-cy.get('[data-cy="submit-button"]').click()
+// E2E spec (Playwright) -- prefer getByRole; getByTestId is the fallback
+await page.getByRole('button', { name: 'Submit' }).click()
+await page.getByTestId('submit-button').click()
 ```
 
 ---
@@ -485,71 +491,89 @@ export default defineNuxtRouteMiddleware((to) => {
 
 ---
 
-# 11. Cypress E2E Testing
+# 11. Playwright E2E Testing
 
 ### Selector Usage
-- **ONLY** use `data-cy` attributes
-- **NEVER** use `data-testid` in Cypress tests
+- Prefer `getByRole` / `getByLabel` / `getByText`; use `getByTestId`
+  (`data-testid`) as the fallback.
+- There is no `data-cy` -- E2E and unit tests share `data-testid`.
+
+### Config sketch (`playwright.config.ts`)
+```typescript
+import { defineConfig } from '@playwright/test'
+
+export default defineConfig({
+  testDir: './e2e',
+  testMatch: '**/*.spec.ts',
+  use: { baseURL: process.env.BASE_URL ?? 'http://localhost:3000' },
+  // Boot the app for the suite; reuse a running dev server locally.
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
+  },
+})
+```
 
 ### E2E Authentication Pattern
 
-#### 1. Dynamic Test User
-```javascript
-beforeEach(() => {
-  const testEmail = `test-${Date.now()}@example.com`;
-  cy.wrap(
-    adminSupabase.auth.admin.createUser({
-      email: testEmail,
+Playwright has no `Cypress.Commands`/`cy.session`. Model the same three
+concerns -- per-test user, cached login, cleanup -- with **fixtures** and a
+saved `storageState`.
+
+#### 1. Per-test user + cached login (fixture)
+```typescript
+import { test as base, expect } from '@playwright/test'
+
+type Fixtures = { testUser: { id: string; email: string } }
+
+export const test = base.extend<Fixtures>({
+  testUser: async ({}, use) => {
+    const email = `test-${Date.now()}@example.com`
+    const { data } = await adminSupabase.auth.admin.createUser({
+      email,
       password: 'password',
       email_confirm: true,
       user_metadata: { is_test_user: true },
     })
-  ).then((response) => {
-    Cypress.env('CURRENT_TEST_USER', response.data.user);
-  });
-});
+    await use({ id: data.user.id, email })
+    // Cleanup runs after the test, whatever the outcome.
+    await adminSupabase.auth.admin.deleteUser(data.user.id)
+  },
+})
+export { expect }
 ```
 
-#### 2. Login Command with Session Caching
-```javascript
-Cypress.Commands.add('loginViaUI', (email, password) => {
-  cy.session([email, password], () => {
-    cy.visit('/test/fixture-login');
-    cy.get('[data-cy="test-login-email"]').type(email);
-    cy.get('[data-cy="test-login-password"]').type(password, { log: false });
-    cy.get('[data-cy="test-login-submit"]').click();
-    cy.get('[data-cy="test-login-success"]', { timeout: 10000 }).should('be.visible');
-  }, { cacheAcrossSpecs: true });
-});
-```
-
-#### 3. Cleanup
-```javascript
-afterEach(() => {
-  const testUser = Cypress.env('CURRENT_TEST_USER');
-  if (testUser) {
-    cy.wrap(adminSupabase.auth.admin.deleteUser(testUser.id));
-  }
-});
-```
-
-#### 4. Auth State Verification
+#### 2. Login via UI, persist session with `storageState`
 ```typescript
-beforeEach(() => {
-  const testUserEmail = Cypress.env('CURRENT_TEST_USER')?.email;
-  cy.loginViaUI(testUserEmail, 'password');
-  cy.visit('/');
+async function loginViaUI(page, email: string, password: string) {
+  await page.goto('/test/fixture-login')
+  await page.getByTestId('test-login-email').fill(email)
+  await page.getByTestId('test-login-password').fill(password)
+  await page.getByTestId('test-login-submit').click()
+  await expect(page.getByTestId('test-login-success')).toBeVisible({ timeout: 10_000 })
+  // Reuse across specs by saving storage state (cookies + localStorage).
+  await page.context().storageState({ path: '.auth/user.json' })
+}
+```
 
-  // IMPORTANT: Verify auth state is recognized by Nuxt
-  cy.window().its('__NUXT__').should('exist');  // Wait for hydration
-  cy.url().should('not.include', '/login');      // No redirect
-});
+#### 3. Auth state verification
+```typescript
+test('authenticated home renders', async ({ page, testUser }) => {
+  await loginViaUI(page, testUser.email, 'password')
+  await page.goto('/')
+
+  // Verify Nuxt hydrated and recognized auth -- token set =/= auth recognized.
+  await expect(page.locator('#__nuxt')).toBeVisible()  // hydration marker
+  await expect(page).not.toHaveURL(/\/login/)           // no redirect
+})
 ```
 
 ### Auth Testing Notes
 - Setting auth token =/= auth state recognized by Nuxt
 - Must verify Nuxt has hydrated and recognized auth
-- Watch for race conditions between auth and page load
+- Watch for race conditions between auth and page load; prefer Playwright's
+  web-first `expect` auto-waiting over fixed timeouts
 - Configure `supabase.redirectOptions` in `nuxt.config.ts` if needed
 
 ---
@@ -622,7 +646,7 @@ Mutate composables, stores, pure utilities, and domain logic.
 
 - **Composables, stores, utils, `server/`**: mutation score >= 80%
 - **UI-only components**: not mutation-tested (cover with component
-  behavior tests + Cypress E2E)
+  behavior tests + Playwright E2E)
 
 ### When to run
 

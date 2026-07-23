@@ -62,6 +62,7 @@ the radar and keeping it out of the core are the same discipline.
 | TS/JS: lint | **ESLint** | Vue.js Style Guide (Priority A/B/C). |
 | Web framework | **Vue 3 + Nuxt** | Composition API, `<script setup>`. |
 | TS/JS: tests | **Vitest** | Unit (happy-dom) vs integration (node). Jest is Hold -- the testing-node skill standardizes on Vitest. |
+| TS/JS: E2E tests | **Playwright** | Browser E2E for Nuxt/Vue apps. Replaces Cypress. `getByTestId` (`data-testid`) fallback; prefer role/label locators. |
 | Shell | **Bash 5.2+** | `set -euo pipefail`; see the style-bash skill. |
 | Browser automation | **Chrome for Testing + chrome-devtools-mcp** | See the chrome-mcp skill. |
 | Secrets | **1Password** (service-account / `load-secrets-action`) | Inject at runtime; do not paste secrets into GitHub. |
@@ -79,6 +80,7 @@ the radar and keeping it out of the core are the same discipline.
 | Category | Technology | Notes |
 |---|---|---|
 | Python typing | **`typing.Optional` / `typing.List` (legacy)** | Use PEP 585/604 (`X | None`, `list[X]`). |
+| TS/JS: E2E tests | **Cypress** | Superseded by Playwright. Migrate existing suites; no new `*.cy.ts`. |
 | Python deps | **Pinned `==` or fully unpinned deps** | Use `>=` with a minimum version. |
 | Inheritance for reuse | **Deep class inheritance** | Prefer composition + dependency injection. |
 

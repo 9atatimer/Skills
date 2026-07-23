@@ -10,7 +10,7 @@ frameworks, and projects. It is written for coding agents and must be followed e
 
 For framework-specific standards, see:
 
-- the testing-nuxt skill -- Nuxt 4 / Vue 3 / Cypress
+- the testing-nuxt skill -- Nuxt 4 / Vue 3 / Playwright
 
 ---
 

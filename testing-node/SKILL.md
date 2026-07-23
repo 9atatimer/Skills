@@ -11,7 +11,7 @@ description: "Writing or reviewing tests for non-Nuxt Node.js/TypeScript code (b
 > Read alongside the universal testing skill (universal principles) and
 > the style-typescript skill (style and toolchain).
 >
-> For Nuxt 4 / Vue 3 / Cypress component and SSR testing, see
+> For Nuxt 4 / Vue 3 / Playwright component and SSR testing, see
 > the testing-nuxt skill instead. This document is for **non-Nuxt** TS/JS code.
 >
 > **These rules are non-negotiable.** Deviations require an explicit
