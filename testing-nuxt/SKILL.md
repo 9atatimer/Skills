@@ -407,17 +407,21 @@ const handleMenuClick = () => emit('menu-click')
 
 # 9. Selector Requirements
 
-### One test attribute everywhere: `data-testid=""`
+### Unit/Component Tests use: `data-testid=""`
+### Playwright E2E Tests use: `data-pw=""`
 
-Playwright and `@vue/test-utils` share a single selector attribute. There is
-**no** `data-cy` -- unit/component tests and E2E specs both key off
-`data-testid`, so a component carries exactly one test attribute.
+Two separate selector namespaces. Playwright resolves `data-pw` through
+`getByTestId()` because `playwright.config.ts` sets `testIdAttribute: 'data-pw'`
+(see Section 11). Unit/component assertions key off `data-testid`; E2E specs
+key off `data-pw`.
+
+### Strict Separation Rule
+A test must **never** cross-use the other selector type. Violations must be corrected immediately.
 
 ### Prefer user-facing locators in E2E
-In Playwright, reach for role/label/text locators first (`getByRole`,
-`getByLabel`, `getByText`); they assert accessibility as a side effect. Fall
-back to `getByTestId()` (which resolves `data-testid`) only when no stable
-user-facing handle exists.
+Within E2E, reach for role/label/text locators first (`getByRole`,
+`getByLabel`, `getByText`); fall back to `getByTestId()` (-> `data-pw`) only
+when no stable user-facing handle exists.
 
 ### Naming Convention
 ```
@@ -426,23 +430,23 @@ component-name-element-role
 Examples:
 ```
 data-testid="hamburger-menu-button-toggle"
-data-testid="login-form-submit"
+data-pw="login-form-submit"
 ```
 
-### Components Carry One Attribute
+### Components Carry Both
 ```vue
 <button
   data-testid="submit-button"
+  data-pw="submit-button"
   @click="handleClick"
 >Submit</button>
 ```
 
 ```typescript
-// Unit/component test (@vue/test-utils)
+// Unit test: data-testid ONLY
 wrapper.find('[data-testid="submit-button"]').trigger('click')
 
-// E2E spec (Playwright) -- prefer getByRole; getByTestId is the fallback
-await page.getByRole('button', { name: 'Submit' }).click()
+// E2E spec (Playwright): data-pw ONLY, via getByTestId (testIdAttribute: 'data-pw')
 await page.getByTestId('submit-button').click()
 ```
 
@@ -494,18 +498,22 @@ export default defineNuxtRouteMiddleware((to) => {
 # 11. Playwright E2E Testing
 
 ### Selector Usage
-- Prefer `getByRole` / `getByLabel` / `getByText`; use `getByTestId`
-  (`data-testid`) as the fallback.
-- There is no `data-cy` -- E2E and unit tests share `data-testid`.
+- Prefer `getByRole` / `getByLabel` / `getByText`; use `getByTestId` as the
+  fallback -- it resolves `data-pw` (see config below).
+- E2E specs use `data-pw`; unit/component tests use `data-testid`. Never
+  cross-use the two.
 
 ### Config sketch (`playwright.config.ts`)
 ```typescript
 import { defineConfig } from '@playwright/test'
 
 export default defineConfig({
-  testDir: './e2e',
+  testDir: './tests/e2e',            // matches the tests/ layout in Section 4
   testMatch: '**/*.spec.ts',
-  use: { baseURL: process.env.BASE_URL ?? 'http://localhost:3000' },
+  use: {
+    baseURL: process.env.BASE_URL ?? 'http://localhost:3000',
+    testIdAttribute: 'data-pw',      // getByTestId() targets data-pw, not data-testid
+  },
   // Boot the app for the suite; reuse a running dev server locally.
   webServer: {
     command: 'npm run dev',
@@ -517,11 +525,12 @@ export default defineConfig({
 
 ### E2E Authentication Pattern
 
-Playwright has no `Cypress.Commands`/`cy.session`. Model the same three
-concerns -- per-test user, cached login, cleanup -- with **fixtures** and a
-saved `storageState`.
+Playwright has no `Cypress.Commands`/`cy.session`. Model the same concerns --
+per-test user, login, cleanup -- with **fixtures**. (For cross-spec session
+reuse, save `storageState` from a project-level global setup instead; the
+per-test user below is ephemeral and must not be shared across specs.)
 
-#### 1. Per-test user + cached login (fixture)
+#### 1. Per-test user + cleanup (fixture)
 ```typescript
 import { test as base, expect } from '@playwright/test'
 
@@ -530,12 +539,14 @@ type Fixtures = { testUser: { id: string; email: string } }
 export const test = base.extend<Fixtures>({
   testUser: async ({}, use) => {
     const email = `test-${Date.now()}@example.com`
-    const { data } = await adminSupabase.auth.admin.createUser({
+    const { data, error } = await adminSupabase.auth.admin.createUser({
       email,
       password: 'password',
       email_confirm: true,
       user_metadata: { is_test_user: true },
     })
+    // Supabase admin calls return { data, error } -- they do not throw.
+    if (error || !data.user) throw error ?? new Error('createUser returned no user')
     await use({ id: data.user.id, email })
     // Cleanup runs after the test, whatever the outcome.
     await adminSupabase.auth.admin.deleteUser(data.user.id)
@@ -544,16 +555,14 @@ export const test = base.extend<Fixtures>({
 export { expect }
 ```
 
-#### 2. Login via UI, persist session with `storageState`
+#### 2. Login via UI
 ```typescript
 async function loginViaUI(page, email: string, password: string) {
   await page.goto('/test/fixture-login')
-  await page.getByTestId('test-login-email').fill(email)
+  await page.getByTestId('test-login-email').fill(email)     // -> data-pw
   await page.getByTestId('test-login-password').fill(password)
   await page.getByTestId('test-login-submit').click()
   await expect(page.getByTestId('test-login-success')).toBeVisible({ timeout: 10_000 })
-  // Reuse across specs by saving storage state (cookies + localStorage).
-  await page.context().storageState({ path: '.auth/user.json' })
 }
 ```
 
@@ -563,15 +572,17 @@ test('authenticated home renders', async ({ page, testUser }) => {
   await loginViaUI(page, testUser.email, 'password')
   await page.goto('/')
 
-  // Verify Nuxt hydrated and recognized auth -- token set =/= auth recognized.
-  await expect(page.locator('#__nuxt')).toBeVisible()  // hydration marker
-  await expect(page).not.toHaveURL(/\/login/)           // no redirect
+  // Assert on an authenticated-only element -- token set =/= auth recognized.
+  // Waiting on a post-auth control is a real client signal; #__nuxt is present
+  // in SSR HTML and does NOT prove hydration.
+  await expect(page.getByTestId('user-menu')).toBeVisible()
+  await expect(page).not.toHaveURL(/\/login/)  // no redirect to login
 })
 ```
 
 ### Auth Testing Notes
 - Setting auth token =/= auth state recognized by Nuxt
-- Must verify Nuxt has hydrated and recognized auth
+- Verify via an authenticated-only element, not `#__nuxt` (present during SSR)
 - Watch for race conditions between auth and page load; prefer Playwright's
   web-first `expect` auto-waiting over fixed timeouts
 - Configure `supabase.redirectOptions` in `nuxt.config.ts` if needed
