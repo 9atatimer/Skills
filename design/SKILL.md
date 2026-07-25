@@ -213,8 +213,8 @@ A design doc's value is realized when it drives implementation:
 
 1. **Before coding:** Read the design doc. If anything is unclear, improve the doc first
 2. **During planning:** Use the planning skill to break the design into phases, recorded in the repo's single root `TODO_PLAN.md` (per the todo-plan skill)
-3. **During coding:** Use the coding skill to implement against the design doc
-4. **After implementation:** Update the design doc status to IMPLEMENTED; note any deviations
+3. **During coding:** Use the coding skill to implement against the design doc. **The doc is frozen while you code** -- see Drift below
+4. **After implementation:** Run the aftermath checklist below. Do **not** silently "update the doc to match"
 
 ### Design Doc -> TODO_PLAN Flow
 
@@ -232,6 +232,94 @@ The design doc answers **what** and **why**. The TODO_PLAN answers **how** and *
 
 ---
 
+## Drift: the doc does not get warped
+
+**An approved design doc is frozen for the implementer.** It is the contract the
+implementation is checked against. The moment you edit it to describe what you
+actually built, you destroy the only artifact that can show you drifted -- and
+you launder an unreviewed decision into apparent spec.
+
+This is a real failure mode, not a hypothetical. It happened here: an
+implementation swarm rewrote the flag tables, deleted the data-model fields it
+had chosen not to build, and converted the Open Questions into RESOLVED
+entries -- inside a `+4574` feature PR where 87 lines of doc churn were
+invisible. The rewritten doc no longer stated the security rule the code was
+violating. It shipped.
+
+### The rule
+
+> **During POC / MVP / any implementation: drift gets cut as issues. The design
+> doc does not get edited by the implementer.**
+
+When the code and the doc disagree, that disagreement **is the deliverable of
+the aftermath**. File it. A human decides whether to amend the design or change
+the code, through the design process.
+
+### What counts as drift
+
+Anything the doc specifies that the code does not do, and anything the code does
+that the doc does not specify. All of it:
+
+| Kind | Example | Action |
+|---|---|---|
+| Spec'd but not built | A registry entry, a field, an enum variant you dropped | Issue |
+| Built but not spec'd | Security flags, a new error type, a timeout policy | Issue |
+| Rule violated | Doc says "fail closed, exclude X"; you shipped X anyway | Issue, flagged as a **decision needed** -- this is the dangerous kind |
+| Shape changed | Fields merged, split, or moved from data to behavior | Issue |
+| Provisional resolved | Doc marks flags "provisional, verify at implementation time" | **Not drift** -- the doc told you to. Record the verified values in the aftermath |
+
+The "rule violated" row is the one that matters most. If your implementation
+breaks a stated constraint -- especially a security constraint -- say so out
+loud in its own issue, framed as a decision for a human. Do not soften the rule
+in the doc so the code conforms.
+
+### One legitimate exception
+
+The doc's **Key Decisions** table is an append-only decision log, not spec. New
+decisions made during implementation belong there -- but:
+
+- **Append only.** Never rewrite or delete an existing row. A decision that was
+  reversed gets a new row saying so, with the reason.
+- **Each row cites its authorizing issue.** If nothing authorized it, it is
+  drift, not a decision -- file it first.
+- **In a docs-only PR, never bundled into the feature PR.** Doc changes buried
+  in a large code diff do not get read. That is exactly how the failure above
+  shipped.
+
+Every other section -- Overview, Goals, Non-Goals, Design/Subsystems, Data
+Model, State Machine, Security, Open Questions -- is frozen until a human
+amends it.
+
+---
+
+## Aftermath (run this when implementation lands)
+
+Implementation is not done when the tests pass. Work through this checklist,
+in a **docs-only PR separate from the feature PR**:
+
+1. **Cut drift issues.** Walk the doc section by section against the code. Every
+   divergence gets an issue per the table above, with file:line and a concrete
+   consequence. Cross-link them so the set is reviewable together.
+2. **Record Key Decisions.** Append the decisions made during implementation to
+   the doc's Key Decisions table, each citing its authorizing issue.
+3. **Record lessons learned.** Add to `TODO_PLAN.md`'s Lessons Learned section:
+   what surprised you, what bit you, what the next agent must not repeat. A
+   lesson needs the *mechanism*, not just the symptom -- "X inherits the global
+   config and starts OAuth flows" beats "X was noisy."
+4. **Record discovered issues.** Anything you found that is *not* drift --
+   pre-existing bugs, deferred work the doc names as future, follow-ups you
+   chose not to do. File them; do not leave them in a PR description.
+5. **Update TODO_PLAN.** Mark the phase shipped, and list the outstanding drift
+   issues under it so the work is visibly incomplete until they are settled.
+6. **Status transition.** Only a human moves the doc to IMPLEMENTED, and only
+   once the drift issues are closed -- because IMPLEMENTED means "code matches
+   the design," which is false while drift is open.
+
+> A green test suite and a clean review say nothing about whether you built what
+> was designed. Only the aftermath does.
+
+---
+
 ## Status Transitions
 
 ```
@@ -243,6 +331,12 @@ DRAFT  -->  REVIEW  -->  APPROVED  -->  IMPLEMENTED
 
 - **DRAFT -> REVIEW:** Author believes doc is complete enough for feedback
 - **REVIEW -> APPROVED:** Reviewers agree on the approach
-- **APPROVED -> IMPLEMENTED:** Code matches the design
+- **APPROVED -> IMPLEMENTED:** Code matches the design -- **human-only, and only
+  once every drift issue is closed.** An implementer never marks its own work
+  IMPLEMENTED, and the status is a lie while drift is open
 - **IMPLEMENTED -> SUPERSEDED:** A newer design replaces this one (link to it)
 - **REVIEW -> DRAFT:** Significant revisions needed (back to drafting)
+
+**APPROVED is a freeze.** From APPROVED onward the doc changes only by human
+amendment through the design process -- never as a side effect of someone
+implementing it. See Drift above.
