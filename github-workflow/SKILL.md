@@ -1,6 +1,6 @@
 ---
 name: github-workflow
-description: "Pushing code, opening PRs, responding to review comments or CI results, requesting or re-requesting reviews, subscribing to PR activity, or running the review-watch loop. The trigger is the push/review boundary, not just PR creation -- every interaction with a GitHub remote counts. Derive repo identity from git/gh at runtime; read repo conventions from the repo's own AGENT.md/CLAUDE.md. Skip for local-only work with no push/PR/review step yet."
+description: "Pushing code, opening PRs, responding to review comments or CI results, requesting or re-requesting reviews, subscribing to PR activity, or running the review-watch loop. The trigger is the push/review boundary, not just PR creation -- every interaction with a GitHub remote counts. Derive repo identity from git/gh at runtime; read repo conventions from the repo's own agent instruction file (AGENT.md / AGENTS.md / CLAUDE.md). Skip for local-only work with no push/PR/review step yet."
 ---
 
 # SKILL: GitHub Workflow
@@ -13,26 +13,59 @@ logic -- it contains no repo-specific facts.
 ## Where repo facts come from
 
 **Identity is derived, never declared.** Ask the repo; do not read a
-hand-maintained file that can silently go stale:
+hand-maintained file that can silently go stale.
+
+**Always pin `gh` to a remote URL.** A bare `gh repo view` resolves the
+remote named `upstream` ahead of `origin`, so in a fork checkout it reports
+the *canonical* repo -- which makes a fork look like a direct origin and
+sends Stage-1 commands at upstream. Verified:
 
 ```zsh
-gh repo view --json nameWithOwner --jq .nameWithOwner       # owner/repo slug
-gh repo view --json defaultBranchRef --jq .defaultBranchRef.name
-gh repo view --json isFork,parent \
-  --jq 'if .isFork then "fork of \(.parent.nameWithOwner)" else "direct origin" end'
-git remote -v                                               # remote topology
+# origin=9atatimer/tds-utils, upstream=Nine-At-A-Time-Media/template-tools
+$ gh repo view --json nameWithOwner --jq .nameWithOwner
+Nine-At-A-Time-Media/template-tools     # <- upstream, NOT origin
 ```
 
-Those four cover the slug, the default branch, and whether the repo is a
-direct origin or a fork with an upstream -- which is what selects the PR
-flow in Remote Topology below. Prefer `gh`; fall back to `git remote -v`
-and `git symbolic-ref refs/remotes/origin/HEAD` when `gh` is unavailable.
+So derive against an explicit URL (a bare remote *name* is not accepted):
 
-**Conventions live in the consuming repo's `AGENT.md`/`CLAUDE.md`.** Branch
-prefixes, review-cadence limits, required CI check names, extra remotes that
-are not code upstreams, and any other local policy are repo policy, and that
-file is already the canonical, version-controlled, always-loaded home for
-repo policy. Read it; do not expect a data file inside this skill directory.
+```zsh
+origin_url=$(git remote get-url origin)
+
+gh repo view "$origin_url" --json nameWithOwner --jq .nameWithOwner
+gh repo view "$origin_url" --json defaultBranchRef --jq .defaultBranchRef.name
+gh repo view "$origin_url" --json isFork,parent \
+  --jq 'if .isFork then "fork of \(.parent.nameWithOwner)" else "direct origin" end'
+```
+
+`isFork` is the **only** source of truth for topology -- never infer it from
+remote names. When `isFork` is true, the two-stage flow additionally needs the
+parent slug and the parent's default branch:
+
+```zsh
+parent=$(gh repo view "$origin_url" --json parent --jq .parent.nameWithOwner)
+gh repo view "$parent" --json defaultBranchRef --jq .defaultBranchRef.name
+```
+
+**Fallback when `gh` is unavailable.** git alone cannot answer `isFork`, so
+topology degrades to a convention: an `upstream` remote is *assumed* to mean
+fork mode. Say so rather than asserting it, and get both sides' defaults:
+
+```zsh
+git remote get-url origin                      # this repo's slug
+git remote get-url upstream 2>/dev/null        # canonical slug; absent => assume direct
+git symbolic-ref refs/remotes/origin/HEAD
+git symbolic-ref refs/remotes/upstream/HEAD 2>/dev/null
+```
+
+`git remote -v` only lists configured remotes; it inspects, it does not
+classify.
+
+**Conventions live in the consuming repo's agent instruction file**
+(`AGENT.md` / `AGENTS.md` / `CLAUDE.md`). Branch prefixes, review-cadence
+limits, required CI check names, extra remotes that are not code upstreams,
+and any other local policy are repo policy, and that file is already the
+canonical, version-controlled, always-loaded home for it. Read it; do not
+expect a data file inside this skill directory.
 
 > Skills are units of distribution: provisioning refreshes and overwrites
 > this directory. Nothing repo-owned may live inside it. See "The LOCAL.md
@@ -50,8 +83,8 @@ repo policy. Read it; do not expect a data file inside this skill directory.
 
 ## Branch Naming Convention
 
-All branches MUST use the owner prefixes the repo's `AGENT.md`/`CLAUDE.md`
-declares:
+All branches MUST use the owner prefixes the repo's agent instruction file
+(`AGENT.md` / `AGENTS.md` / `CLAUDE.md`) declares:
 
 - Human-driven branches use the human prefix (e.g. `<user>/feat/description`,
   `<user>/fix/description`).
@@ -68,7 +101,7 @@ from" above). Every step below keys off it:
 | Branch base | the default branch on `origin` | `upstream/<default>` (sync first: `git fetch upstream`) |
 | Push target | `origin` (the canonical repo) | `origin` (your fork) -- you cannot push to `upstream` |
 | PR head / base | `<branch>` -> `<default>`, same repo | `<fork>:<branch>` -> `upstream:<default>` |
-| `--repo` for `gadmin` / `gh` / review-watch | the derived owner/repo slug | Stage-1 (fork PR, Copilot review, review-watch): the derived slug (the fork); Stage-2 (upstream PR): the **parent** slug from `gh repo view --json parent` |
+| `--repo` for `gadmin` / `gh` / review-watch | the derived owner/repo slug | Stage-1 (fork PR, Copilot review, review-watch): the derived slug (the fork); Stage-2 (upstream PR): the **parent** slug from `gh repo view "$origin_url" --json parent` |
 
 **Why the fork split exists:** Copilot Pro+ review charges are billed to the
 repository owner. Reviewing on a personal fork first keeps AI-review costs on
@@ -144,7 +177,7 @@ To avoid charging Copilot review cycles to the organization:
 Three families of verbs, in **token-frugal preference order**:
 
 1. **`gadmin`** -- ships as an npm package from the fleet's tooling repo
-   (the repo's `AGENT.md`/`CLAUDE.md` names the exact package and registry
+   (the repo's agent instruction file names the exact package and registry
    when it is a private one). Reachable on `$PATH` via a global install or
    per-project via `node_modules/.bin/gadmin` / `npx gadmin`. Preferred for
    reads (comments, CI logs) and writes (replies); output is filtered to
@@ -200,7 +233,7 @@ applies:
 
 3. **Claude Code CLI -- polling (`ScheduleWakeup`)** -- when MCP is not
    available. Default timing (a cadence limit in the repo's
-   `AGENT.md`/`CLAUDE.md`, or the user's global instructions, wins over
+   agent instruction file, or the user's global instructions, wins over
    these -- e.g. a global maximum wake interval):
 
    - First wake after opening the PR: ~3 min (Copilot needs a beat to
@@ -457,7 +490,7 @@ docs: update architecture doc
 
 ## Optional Practices
 
-These sections apply **only when the repo's `AGENT.md`/`CLAUDE.md` enables
+These sections apply **only when the repo's agent instruction file enables
 them**. Each is self-contained; if the repo does not mention it, skip it.
 
 ### AI Session Tracking via Issues

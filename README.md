@@ -31,8 +31,9 @@ PROVISION.DESIGN.md:
 
 - Parametric (repo owner, default branch, merge style, ...): the shared skill
   stays pure logic and either **derives** the fact at runtime (`gh repo view`,
-  `git remote -v`) or reads it from the consuming repo's `AGENT.md`/`CLAUDE.md`,
-  which is the canonical home for repo policy. **Nothing repo-owned goes inside
+  pinned to the origin URL) or reads it from the consuming repo's agent
+  instruction file (`AGENT.md` / `AGENTS.md` / `CLAUDE.md`), which is the
+  canonical home for repo policy. **Nothing repo-owned goes inside
   a skill directory** -- provision owns that tree and overwrites it.
 - Behavioral (a repo whose flow genuinely diverges): the repo commits its own
   skill of the same name at project scope; native skill precedence (project
