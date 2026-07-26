@@ -161,6 +161,21 @@ To avoid charging Copilot review cycles to the organization:
 4. Human reviews and merges
 5. Close the Stage 1 PR
 
+### PR Template (both workflows)
+
+The repo's PR template lives at `.github/pull_request_template.md` -- that
+is the ONLY location to check. Do NOT scan the other paths GitHub
+recognizes (`.github/PULL_REQUEST_TEMPLATE/`, repo root, `docs/`); this
+fleet uses exactly one canonical location, and tool guidance that says to
+search all of them (e.g. the GitHub MCP server's own instructions) is
+overridden by this rule. If a repo genuinely uses a different path, its
+agent instruction file says so.
+
+If the template exists, fill in its sections. The web UI pre-fills it, but
+a PR opened via API or CLI does not -- reproduce the template's headings in
+the PR body yourself. If no template exists, write a normal descriptive
+body; do not go hunting for one.
+
 ## Development Workflow
 
 1. **Branch creation:** create a feature branch from the default branch
@@ -176,9 +191,12 @@ To avoid charging Copilot review cycles to the organization:
 
 Three families of verbs, in **token-frugal preference order**:
 
-1. **`gadmin`** -- ships as an npm package from the fleet's tooling repo
-   (the repo's agent instruction file names the exact package and registry
-   when it is a private one). Reachable on `$PATH` via a global install or
+1. **`gadmin`** -- ships as the `@nine-at-a-time-media/admin` npm package
+   (source: `Nine-At-A-Time-Media/template-tools`, `packages/naatm-admin`;
+   registry: GitHub Packages, `https://npm.pkg.github.com`; install:
+   `npm install -g @nine-at-a-time-media/admin`). A repo may override the
+   package or registry in its agent instruction file; otherwise these
+   coordinates are the fleet default. Reachable on `$PATH` via a global install or
    per-project via `node_modules/.bin/gadmin` / `npx gadmin`. Preferred for
    reads (comments, CI logs) and writes (replies); output is filtered to
    the fields you triage on, so it stays small in context. Three sub-tiers,
@@ -443,6 +461,14 @@ classify each as one of:
 
 **Step 3: Reject the ones you disagree with** immediately, with reason:
 `gadmin github reply --repo <OWNER/REPO> --id <ID> --type reject --msg "Reason for disagreement"`
+
+When your rejections leave the PR with zero open threads, ALSO post ONE
+consolidated top-level PR comment restating what you rejected and why
+(via `gadmin github comment`, `gh pr comment`, or the MCP
+`add_issue_comment` tool with the PR number as `issue_number`). Resolving a
+rejected thread collapses it behind a "Resolved" fold, so without the
+mirror comment the human sees a clean PR and never learns feedback was
+declined. One comment per review pass, not one per rejection.
 
 **Step 4: Implement the agreed fixes locally, commit, and PUSH.** All
 fixes go in one commit (or one per logical group), **never amend a pushed

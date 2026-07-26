@@ -8,9 +8,16 @@ description: "Writing or reviewing tests in any language: universal principles -
 This document defines **universal testing principles** applicable across all languages,
 frameworks, and projects. It is written for coding agents and must be followed exactly.
 
-For framework-specific standards, see:
+For framework-specific standards, load the companion skill matching the code
+under test -- and only that one:
 
-- the testing-nuxt skill -- Nuxt 4 / Vue 3 / Playwright
+- the testing-node skill -- Node.js / TypeScript outside Nuxt
+- the testing-nuxt skill -- Nuxt 4 / Vue 3
+- the testing-python skill -- Python / pytest
+
+Skip companions whose stack the repo does not use; never cite or follow a
+pointer to a standard the repo has no code for (a bash-only repo needs none
+of the three).
 
 ---
 
