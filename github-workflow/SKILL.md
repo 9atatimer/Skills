@@ -464,8 +464,10 @@ classify each as one of:
 
 When your rejections leave the PR with zero open threads, ALSO post ONE
 consolidated top-level PR comment restating what you rejected and why
-(via `gadmin github comment`, `gh pr comment`, or the MCP
-`add_issue_comment` tool with the PR number as `issue_number`). Resolving a
+(via `gadmin github issue comment --repo <OWNER/REPO> --number <PR_NUMBER>
+--body <TEXT>` -- a PR number is valid because PRs are issues -- or
+`gh pr comment`, or the MCP `add_issue_comment` tool with the PR number as
+`issue_number`). Resolving a
 rejected thread collapses it behind a "Resolved" fold, so without the
 mirror comment the human sees a clean PR and never learns feedback was
 declined. One comment per review pass, not one per rejection.
