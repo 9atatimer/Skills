@@ -29,12 +29,19 @@ warns loudly on unexpected local edits (straggler detector) and the next run
 replaces them. Repo-specific customization goes through two mechanisms, per
 PROVISION.DESIGN.md:
 
-- Parametric (repo owner, default branch, merge style, ...): the shared
-  skill stays pure logic and reads a small repo-owned data file (e.g.
-  `skills/github-workflow/LOCAL.md`) that provision never touches.
+- Parametric (repo owner, default branch, merge style, ...): the shared skill
+  stays pure logic and either **derives** the fact at runtime (`gh repo view`,
+  `git remote -v`) or reads it from the consuming repo's `AGENT.md`/`CLAUDE.md`,
+  which is the canonical home for repo policy. **Nothing repo-owned goes inside
+  a skill directory** -- provision owns that tree and overwrites it.
 - Behavioral (a repo whose flow genuinely diverges): the repo commits its own
   skill of the same name at project scope; native skill precedence (project
   shadows managed) makes closest-win.
+
+An earlier design had the shared skill read a repo-owned `LOCAL.md` sibling
+file inside the skill directory. That is retired -- it cannot work when skills
+are provisioned as symlinks to one shared tree. See "The LOCAL.md misstep" in
+`TODO_PLAN.md`.
 
 ## Legacy channel
 

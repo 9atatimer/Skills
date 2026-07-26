@@ -1,6 +1,6 @@
 ---
 name: github-workflow
-description: "Pushing code, opening PRs, responding to review comments or CI results, requesting or re-requesting reviews, subscribing to PR activity, or running the review-watch loop. The trigger is the push/review boundary, not just PR creation -- every interaction with a GitHub remote counts. Read repo specifics (owner/repo slug, default branch, remote topology, branch prefixes) from this skill's sibling LOCAL.md before acting. Skip for local-only work with no push/PR/review step yet."
+description: "Pushing code, opening PRs, responding to review comments or CI results, requesting or re-requesting reviews, subscribing to PR activity, or running the review-watch loop. The trigger is the push/review boundary, not just PR creation -- every interaction with a GitHub remote counts. Derive repo identity from git/gh at runtime; read repo conventions from the repo's own AGENT.md/CLAUDE.md. Skip for local-only work with no push/PR/review step yet."
 ---
 
 # SKILL: GitHub Workflow
@@ -8,79 +8,39 @@ description: "Pushing code, opening PRs, responding to review comments or CI res
 This skill contains the procedures for interacting with a GitHub remote:
 branch discipline, the PR flow, tool selection, the review-watch loop, and
 the automated review-response procedure. The skill body is pure shared
-logic -- it contains no repo-specific facts. All repo identity lives in a
-repo-owned data file described next.
+logic -- it contains no repo-specific facts.
 
-## Repository Localization (LOCAL.md)
+## Where repo facts come from
 
-Before acting on anything below, read `LOCAL.md` in this skill's directory
-(a sibling file next to this SKILL.md). It is **repo-owned**: provisioning
-never writes or overwrites it -- provisioning ships only `LOCAL.md.example`,
-which the repo copies to `LOCAL.md` and fills in. Treat LOCAL.md as
-**authoritative** for:
+**Identity is derived, never declared.** Ask the repo; do not read a
+hand-maintained file that can silently go stale:
 
-- **Owner/repo slug** -- the `<OWNER/REPO>` value `--repo` flags and API
-  calls below need; in fork-upstream mode the Remote Topology table selects
-  between this slug and the Upstream field.
-- **Default branch** -- wherever this skill says "the default branch,"
-  LOCAL.md names it.
-- **Remote topology** -- `direct-origin` or `fork-upstream`; selects which
-  PR flow applies (see Remote Topology below).
-- **Branch-naming prefixes** -- the human and agent branch prefixes this
-  repo requires.
-- **Review cadence overrides** -- e.g. a machine- or repo-mandated maximum
-  wake interval for the review-watch loop; overrides win over the default
-  timings below.
-- **Repo-specific workflow notes** -- extra remotes that are not code
-  upstreams, required CI check names, optional practices in effect, and
-  any other local quirks.
-
-If LOCAL.md is missing, do not guess silently: derive the slug and default
-branch from `git remote -v` and `git symbolic-ref refs/remotes/origin/HEAD`,
-tell the user LOCAL.md is absent, and offer to create it from
-`LOCAL.md.example`.
-
-LOCAL.md format (this is the contract; `LOCAL.md.example` ships a copyable
-version):
-
-```markdown
-# LOCAL.md -- repo facts for the github-workflow skill
-
-Repo-owned. Provisioning never touches this file.
-
-## Repository Details
-
-- Owner: <owner>
-- Repository: <repo>
-- Default Branch: <default-branch>
-
-## Remote Topology
-
-- Topology: direct-origin | fork-upstream
-- Upstream: <org>/<repo> (fork-upstream only; the canonical repo where
-  Stage-2 PRs live)
-- Notes: <e.g. "origin is canonical; no upstream remote", or
-  "origin is the personal fork; upstream is <org>/<repo>">
-
-## Branch Prefixes
-
-- Human: <user>/feat/..., <user>/fix/..., <user>/refactor/..., <user>/docs/...
-- Agent: <agent-prefix>/feat/..., <agent-prefix>/fix/... (often set by the
-  harness; humans should not push to agent-prefixed branches)
-
-## Review Cadence Overrides
-
-- Max wake interval: <e.g. 240s; leave blank to use skill defaults>
-
-## Workflow Notes
-
-- <repo-specific facts: remotes that are not upstreams, required CI check
-  names, optional practices enabled, tooling package names/registries>
+```zsh
+gh repo view --json nameWithOwner --jq .nameWithOwner       # owner/repo slug
+gh repo view --json defaultBranchRef --jq .defaultBranchRef.name
+gh repo view --json isFork,parent \
+  --jq 'if .isFork then "fork of \(.parent.nameWithOwner)" else "direct origin" end'
+git remote -v                                               # remote topology
 ```
+
+Those four cover the slug, the default branch, and whether the repo is a
+direct origin or a fork with an upstream -- which is what selects the PR
+flow in Remote Topology below. Prefer `gh`; fall back to `git remote -v`
+and `git symbolic-ref refs/remotes/origin/HEAD` when `gh` is unavailable.
+
+**Conventions live in the consuming repo's `AGENT.md`/`CLAUDE.md`.** Branch
+prefixes, review-cadence limits, required CI check names, extra remotes that
+are not code upstreams, and any other local policy are repo policy, and that
+file is already the canonical, version-controlled, always-loaded home for
+repo policy. Read it; do not expect a data file inside this skill directory.
+
+> Skills are units of distribution: provisioning refreshes and overwrites
+> this directory. Nothing repo-owned may live inside it. See "The LOCAL.md
+> misstep" in `TODO_PLAN.md`.
 
 ## Branch Safety (CRITICAL)
 
-- **NEVER WORK ON THE DEFAULT BRANCH** (as named by LOCAL.md)
+- **NEVER WORK ON THE DEFAULT BRANCH**
 - **ALWAYS CHECK CURRENT BRANCH FIRST**: before any git operation, run
   `git branch --show-current`
 - **IF YOU ARE ON THE DEFAULT BRANCH**: STOP IMMEDIATELY. Warn the human.
@@ -90,7 +50,8 @@ Repo-owned. Provisioning never touches this file.
 
 ## Branch Naming Convention
 
-All branches MUST use the owner prefixes LOCAL.md declares:
+All branches MUST use the owner prefixes the repo's `AGENT.md`/`CLAUDE.md`
+declares:
 
 - Human-driven branches use the human prefix (e.g. `<user>/feat/description`,
   `<user>/fix/description`).
@@ -99,15 +60,15 @@ All branches MUST use the owner prefixes LOCAL.md declares:
 
 ## Remote Topology
 
-LOCAL.md declares which of two topologies this repo uses. Every step below
-keys off that declaration:
+Derive which of two topologies this repo uses (see "Where repo facts come
+from" above). Every step below keys off it:
 
 | Step | Direct origin | Fork + upstream |
 |------|---------------|-----------------|
 | Branch base | the default branch on `origin` | `upstream/<default>` (sync first: `git fetch upstream`) |
 | Push target | `origin` (the canonical repo) | `origin` (your fork) -- you cannot push to `upstream` |
 | PR head / base | `<branch>` -> `<default>`, same repo | `<fork>:<branch>` -> `upstream:<default>` |
-| `--repo` for `gadmin` / `gh` / review-watch | the LOCAL.md Owner/Repository slug | Stage-1 (fork PR, Copilot review, review-watch): the LOCAL.md Owner/Repository slug (the fork); Stage-2 (upstream PR): the LOCAL.md **Upstream** slug |
+| `--repo` for `gadmin` / `gh` / review-watch | the derived owner/repo slug | Stage-1 (fork PR, Copilot review, review-watch): the derived slug (the fork); Stage-2 (upstream PR): the **parent** slug from `gh repo view --json parent` |
 
 **Why the fork split exists:** Copilot Pro+ review charges are billed to the
 repository owner. Reviewing on a personal fork first keeps AI-review costs on
@@ -116,7 +77,7 @@ the *fork* -- not any PR state -- that controls billing.
 
 ## Push & PR Flow
 
-Pick the flow matching LOCAL.md's topology.
+Pick the flow matching the derived topology.
 
 ### Single PR Workflow (direct-origin)
 
@@ -183,8 +144,8 @@ To avoid charging Copilot review cycles to the organization:
 Three families of verbs, in **token-frugal preference order**:
 
 1. **`gadmin`** -- ships as an npm package from the fleet's tooling repo
-   (LOCAL.md's Workflow Notes name the exact package and registry when it
-   is a private one). Reachable on `$PATH` via a global install or
+   (the repo's `AGENT.md`/`CLAUDE.md` names the exact package and registry
+   when it is a private one). Reachable on `$PATH` via a global install or
    per-project via `node_modules/.bin/gadmin` / `npx gadmin`. Preferred for
    reads (comments, CI logs) and writes (replies); output is filtered to
    the fields you triage on, so it stays small in context. Three sub-tiers,
@@ -238,7 +199,8 @@ applies:
    Idempotent; auto-removed on merge/close.
 
 3. **Claude Code CLI -- polling (`ScheduleWakeup`)** -- when MCP is not
-   available. Default timing (LOCAL.md's Review Cadence Overrides win over
+   available. Default timing (a cadence limit in the repo's
+   `AGENT.md`/`CLAUDE.md`, or the user's global instructions, wins over
    these -- e.g. a global maximum wake interval):
 
    - First wake after opening the PR: ~3 min (Copilot needs a beat to
@@ -495,8 +457,8 @@ docs: update architecture doc
 
 ## Optional Practices
 
-These sections apply **only when LOCAL.md's Workflow Notes enable them**.
-Each is self-contained; if LOCAL.md does not mention it, skip it.
+These sections apply **only when the repo's `AGENT.md`/`CLAUDE.md` enables
+them**. Each is self-contained; if the repo does not mention it, skip it.
 
 ### AI Session Tracking via Issues
 
@@ -529,14 +491,14 @@ For repos with external visibility where public history must stay clean: a
 pre-push git hook automatically squashes local commits before pushing,
 opening an editor with previous commit messages as comments for reference
 so a clean message can be written for the remote. Local development stays
-unfiltered; the public history stays clean and linear. When LOCAL.md notes
+unfiltered; the public history stays clean and linear. When the repo notes
 this hook is installed, expect the squash prompt on push and write the
 consolidated message accordingly.
 
 ### Branch Protection and Required Checks
 
 For repos whose default branch is protected by required status checks
-(LOCAL.md's Workflow Notes list the check names): PRs cannot merge until
+(the repo lists the check names): PRs cannot merge until
 all checks pass. If a check fails:
 
 1. Read the job output:
@@ -547,7 +509,7 @@ all checks pass. If a check fails:
 ### Restricted Agent Permissions (Stage-Only Mode)
 
 For high-trust codebases or regulated environments where the human curates
-every commit. When LOCAL.md declares stage-only mode:
+every commit. When the repo declares stage-only mode:
 
 - The AI agent **MUST NOT** use `git commit` or `git push`
 - After implementing and validating changes, the agent stages them with
