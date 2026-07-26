@@ -16,10 +16,13 @@ Load the detailed skill the moment a task reaches its territory.
 These hold for every task, whether or not you have loaded the detailed
 skill.
 
-1. **Design first.** Every tool/package has a `DESIGN.<name>.md`; a system
-   spanning multiple tools has an `ARCHITECTURE.md`. No implementation
-   without an approved design doc. If it is missing or ambiguous,
-   write/fix it first. -> the design skill
+1. **Design first.** Every tool/package requires a `DESIGN.<name>.md`
+   (conventionally under `docs/design/`); a system spanning multiple
+   tools requires an `ARCHITECTURE.md`. This is a requirement, not a
+   statement that the doc already exists -- check the convention path
+   once, and if it is missing or ambiguous, write/fix it first rather
+   than hunting further. No implementation without an approved design
+   doc. -> the design skill
 2. **The design doc is frozen while you implement.** An approved doc is
    the contract your code is checked against -- never notes to reconcile.
    When the code and the doc disagree, **cut an issue; do not edit the
