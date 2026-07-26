@@ -12,7 +12,7 @@ For framework-specific standards, load the companion skill matching the code
 under test -- and only that one:
 
 - the testing-node skill -- Node.js / TypeScript outside Nuxt
-- the testing-nuxt skill -- Nuxt 4 / Vue 3
+- the testing-nuxt skill -- Nuxt 4 / Vue 3 (incl. Playwright E2E)
 - the testing-python skill -- Python / pytest
 
 Skip companions whose stack the repo does not use; never cite or follow a
