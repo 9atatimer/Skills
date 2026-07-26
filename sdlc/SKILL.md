@@ -33,8 +33,8 @@ skill.
    authorizing issue, in a docs-only PR. Only a human marks a doc
    IMPLEMENTED. -> the design skill
 3. **Implementation ends with the aftermath, not with green tests.** Cut
-   drift issues, append Key Decisions, record lessons learned in the
-   TODO_PLAN, file what you discovered, and hand off the status
+   drift issues, append Key Decisions, record lessons learned in
+   `TODO_PLAN.md`, file what you discovered, and hand off the status
    transition. A passing suite and a clean bot review say nothing about
    whether you built what was designed. -> the design skill
 4. **Test first (TDD/BDD).** Write the failing test before the code.
