@@ -194,7 +194,11 @@ Three families of verbs, in **token-frugal preference order**:
 1. **`gadmin`** -- ships as the `@nine-at-a-time-media/admin` npm package
    (source: `Nine-At-A-Time-Media/template-tools`, `packages/naatm-admin`;
    registry: GitHub Packages, `https://npm.pkg.github.com`; install:
-   `npm install -g @nine-at-a-time-media/admin`). A repo may override the
+   `npm install -g @nine-at-a-time-media/admin`). A bare global install
+   fails with a confusing 404 until `~/.npmrc` maps the scope
+   (`@nine-at-a-time-media:registry=https://npm.pkg.github.com`) and
+   carries a `read:packages` token -- see the package README for the
+   one-time setup. A repo may override the
    package or registry in its agent instruction file; otherwise these
    coordinates are the fleet default. Reachable on `$PATH` via a global install or
    per-project via `node_modules/.bin/gadmin` / `npx gadmin`. Preferred for
