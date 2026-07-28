@@ -48,5 +48,8 @@ are provisioned as symlinks to one shared tree. See "The LOCAL.md misstep" in
 
 `packages/naatm-prompts` (the flat `prompts/*.md` files plus
 `naatm-prompts sync`) remains available as a legacy channel for existing
-template-base consumers during the migration. New content lands here; the
-retirement decision for naatm-prompts is design Open Question 4.
+template-base consumers during the migration. As of tds-utils#179 the flat
+payload is a strict content-subset of this `skills/` tree: every unique
+rule was ported up here, new content lands ONLY here, and the flat files
+must not be edited independently. The retirement decision for
+naatm-prompts is design Open Question 4.
