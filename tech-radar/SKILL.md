@@ -94,6 +94,7 @@ the radar and keeping it out of the core are the same discipline.
 | **`sleep()` / wall-clock waits in tests** | Use fake clocks/timers and event coordination. |
 | **Star/wildcard imports** | Obscure provenance; break static analysis. |
 | **Reassigning global `IFS` in Bash** | Fragile, surprising; see the style-bash skill. |
+| **Make / Makefiles** | Obsolete build tooling with no place in a modern Node/Python stack. Use npm scripts, `scripts/*.sh`, or the project task runner (`localdev`, `gadmin`). Delete any Makefile on sight, and replace `make` invocations in docs with the equivalent command. |
 | **Secrets committed to the repo or pasted into GitHub UI** | Manage in 1Password, inject at runtime. |
 | **Speculative abstractions / frameworks beyond the design** | Build only what the design specifies. |
 
