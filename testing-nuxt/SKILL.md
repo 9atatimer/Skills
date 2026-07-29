@@ -407,13 +407,15 @@ const handleMenuClick = () => emit('menu-click')
 
 # 9. Selector Requirements
 
-### Unit/Component Tests use: `data-testid=""`
-### Playwright E2E Tests use: `data-pw=""`
+### Non-E2E tests (unit / component / integration / SSR) use: `data-testid=""`
+### Playwright E2E tests use: `data-pw=""`
 
-Two separate selector namespaces. Playwright resolves `data-pw` through
-`getByTestId()` because `playwright.config.ts` sets `testIdAttribute: 'data-pw'`
-(see Section 11). Unit/component assertions key off `data-testid`; E2E specs
-key off `data-pw`.
+Two separate selector namespaces. Everything under `tests/` except `tests/e2e`
+-- unit, component, integration, and SSR tests, plus any shared helpers --
+keys off `data-testid`. All Playwright E2E code (specs and their
+fixtures/page-objects) keys off `data-pw`, which `getByTestId()` resolves
+because `playwright.config.ts` sets `testIdAttribute: 'data-pw'` (see Section
+11). The rule applies to the whole tree, not just spec files.
 
 ### Strict Separation Rule
 A test must **never** cross-use the other selector type. Violations must be corrected immediately.
@@ -507,17 +509,22 @@ export default defineNuxtRouteMiddleware((to) => {
 ```typescript
 import { defineConfig } from '@playwright/test'
 
+const baseURL = process.env.BASE_URL ?? 'http://localhost:3000'
+
 export default defineConfig({
   testDir: './tests/e2e',            // matches the tests/ layout in Section 4
   testMatch: '**/*.spec.ts',
   use: {
-    baseURL: process.env.BASE_URL ?? 'http://localhost:3000',
+    baseURL,
     testIdAttribute: 'data-pw',      // getByTestId() targets data-pw, not data-testid
   },
-  // Boot the app for the suite; reuse a running dev server locally.
+  // This config lives at the app root (apps/<name>/playwright.config.ts), so
+  // `npm run dev` runs the app's own dev script -- from the repo root it would
+  // be `npm -C apps/<name> run dev`. webServer.url shares baseURL so Playwright
+  // waits on the same origin the tests target; reuse a running dev server locally.
   webServer: {
     command: 'npm run dev',
-    url: 'http://localhost:3000',
+    url: baseURL,
     reuseExistingServer: !process.env.CI,
   },
 })
@@ -533,13 +540,14 @@ per-test user below is ephemeral and must not be shared across specs.)
 #### 1. Per-test user + cleanup (fixture)
 ```typescript
 import { test as base, expect } from '@playwright/test'
+import { randomUUID } from 'node:crypto'
 
 type Fixtures = { testUser: { id: string; email: string } }
 
 export const test = base.extend<Fixtures>({
   testUser: async ({}, use) => {
     // randomUUID() is unique across parallel workers; Date.now() alone can collide.
-    const email = `test-${crypto.randomUUID()}@example.com`
+    const email = `test-${randomUUID()}@example.com`
     const { data, error } = await adminSupabase.auth.admin.createUser({
       email,
       password: 'password',
@@ -549,8 +557,11 @@ export const test = base.extend<Fixtures>({
     // Supabase admin calls return { data, error } -- they do not throw.
     if (error || !data.user) throw error ?? new Error('createUser returned no user')
     await use({ id: data.user.id, email })
-    // Cleanup runs after the test, whatever the outcome.
-    await adminSupabase.auth.admin.deleteUser(data.user.id)
+    // Cleanup runs after the test, whatever the outcome. deleteUser also returns
+    // { error } rather than throwing, so check it -- an ignored failure silently
+    // leaks the test user.
+    const { error: cleanupError } = await adminSupabase.auth.admin.deleteUser(data.user.id)
+    if (cleanupError) console.warn(`Failed to delete test user ${data.user.id}:`, cleanupError)
   },
 })
 export { expect }
