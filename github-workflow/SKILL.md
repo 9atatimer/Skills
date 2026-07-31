@@ -362,7 +362,8 @@ applies:
    - **No action needed** -- echoes of your own posts get nothing;
      genuine informational or duplicate comments get a brief
      acknowledged reply on the thread naming why (the fourth recorded
-     state under Zero Unreviewed Code).
+     state under Zero Unreviewed Code), posted per the acknowledged
+     reply convention below so the thread is marked addressed.
 
 5. **After a productive push**, nudge Copilot to re-review (Copilot does
    not auto-re-review on `synchronize`). There is no `gadmin` wrapper for
@@ -643,6 +644,11 @@ include it in the next commit; if not, skip.
 - Defer replies (5-turn cap fired) say: `Deferred to <issue-url> (pr-todo)`
   -- posted via `--type reject` so the thread carries the addressed
   annotation (see "Feedback becomes pr-todo issues").
+- Acknowledged replies (no action) say: `No action: <reason>` -- also
+  posted via `--type reject`, for the same reason: `gadmin reply` only
+  supports `accept`/`reject`, and only annotated replies count as
+  addressed for `pending-comments`. Native `defer` and `ack` types are
+  tracked gadmin enhancements.
 - Replies are posted **sequentially**, one tool call per reply. Do not
   batch.
 
