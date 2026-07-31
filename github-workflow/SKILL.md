@@ -88,7 +88,7 @@ expect a data file inside this skill directory.
   agentic (Copilot, codex) or human -- before the PR merges.
 - A push after the latest review reopens the question: those tail
   commits are unreviewed until an agentic re-review runs (within the
-  5-turn cap) or a human explicitly looks at them. Never merge a PR
+  per-reviewer turn cap) or a human explicitly looks at them. Never merge a PR
   whose tail commits nobody has seen; when the cap has fired, say so
   in the handoff so the human knows the tail is theirs to review.
 - **Feedback is never dropped. Acting on it is optional; recording it
@@ -149,7 +149,7 @@ or close/re-open PRs.
    productive push, re-request with
    `gh pr edit <NUMBER> --add-reviewer @copilot` (Copilot does not
    auto-re-review on `synchronize`). Repeat: address feedback, push,
-   re-request, wait -- subject to the 5-turn-per-reviewer cap in
+   re-request, wait -- subject to the per-reviewer turn cap in
    Termination below.
 5. **Human review:** once AI review cycles settle, the human takes over for
    final review and merge. Do NOT create a second "final" PR.
@@ -268,13 +268,13 @@ Which bot reviews a PR is policy, not agent judgment:
 - **Greptile is by-human-invite only.** Never request, trigger, or
   re-request a greptile review under any circumstances; if the human
   invites it onto a PR, triage its feedback like any other reviewer's.
-- **Turn budgets.** The 5-turn cap applies per reviewer. When the
-  human declares Copilot quota low, Copilot's cap drops to 3 for the
-  rest of the session -- the declaration is the trigger; do not probe
-  quota yourself. (Automated low-water detection via the billing usage
-  API's premium-request SKU needs a `Plan: read` token and lags real
-  usage; treat it as a future enhancement, and the human's word as
-  authoritative either way.)
+- **Turn budgets: be thrifty.** The cap is **3 turns per reviewer by
+  default**. It rises to **5 only when the human makes an audible call
+  for a "turbo PR"** on that PR -- an explicit ask, never inferred.
+  Do not probe quota yourself; the human's declarations are the only
+  input. (Automated quota awareness is tracked as an enhancement --
+  the billing usage API's premium-request SKU needs a `Plan: read`
+  token and lags real usage.)
 
 Whoever reviews, the same machinery applies unchanged: the
 review-watch loop, the per-reviewer turn cap, pr-todo deferral, and
@@ -417,7 +417,7 @@ applies:
 
    Skip this step entirely if nothing was pushed this cycle -- the next
    review would just repeat the prior one. Also skip it permanently once
-   the 5-turn cap for that reviewer has fired (see Termination) --
+   the turn cap for that reviewer has fired (see Termination) --
    remaining feedback becomes `pr-todo` issues, not another cycle.
 
 6. **In polling mode**, also sweep every other open PR you authored before
@@ -438,20 +438,22 @@ Stop when any of these fires:
   not an empty-list check) and no new Copilot review has appeared across
   **3 consecutive wakes** (~6 min quiescent) -- Copilot is done. Stop
   fast -- Copilot rarely returns late once the response window has passed.
-- **5 review turns with a given agentic reviewer (hard cap).** After 5
-  turns (review received -> response pushed) with the same agentic
-  reviewer on one PR, do not trigger further reviews from it. Convert
+- **Per-reviewer turn cap (hard).** After the capped number of turns
+  (review received -> response pushed) with the same agentic reviewer
+  on one PR -- **3 by default, 5 when the human has called for a
+  "turbo PR"** (see Reviewer Selection) -- do not trigger further
+  reviews from it. Convert
   each remaining piece of its feedback into a ToDo Issue labeled
   `pr-todo` (see "Feedback becomes pr-todo issues" below) and hand the
   PR to human review/merge. Two exceptions, both the author's call:
     - **Scope intentionally expanded** -- the PR deliberately grew
       additional features mid-review; the new scope earns a fresh
-      5-turn count for that reviewer.
+      turn count for that reviewer.
     - **Dangerous fault unearthed** -- the author judges the reviewer's
       feedback to have exposed a dangerous fault (data loss, security
       hole, corruption); keep the review cycle going until the fault is
       resolved, cap notwithstanding.
-- **Stalled reviewer backstop.** The 5-turn cap counts *completed*
+- **Stalled reviewer backstop.** The turn cap counts *completed*
   turns (review received -> response pushed), so a reviewer that stays
   in the requested list but never delivers would otherwise keep the
   loop alive indefinitely. If a requested agentic reviewer produces no
@@ -482,9 +484,9 @@ Stop when any of these fires:
   and surface to user.
 - Human says to stop. Do not argue.
 
-### Feedback becomes pr-todo issues (5-turn cap)
+### Feedback becomes pr-todo issues (turn cap)
 
-When the 5-turn cap fires for a reviewer:
+When the turn cap fires for a reviewer:
 
 1. **Ensure the `pr-todo` label exists first** -- `gh issue create
    --label` rejects a label the repo does not have, so this must
@@ -669,7 +671,7 @@ include it in the next commit; if not, skip.
 
 - Accept replies say: `Agreed, fixed in <sha> -- <one-line summary of fix>`.
 - Reject replies say: `<concrete reason>` -- never just "disagree."
-- Defer replies (5-turn cap fired) say: `Deferred to <issue-url> (pr-todo)`
+- Defer replies (turn cap fired) say: `Deferred to <issue-url> (pr-todo)`
   -- posted via `--type reject` so the thread carries the addressed
   annotation (see "Feedback becomes pr-todo issues").
 - Acknowledged replies (no action) say: `No action: <reason>` -- also
