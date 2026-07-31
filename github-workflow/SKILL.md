@@ -374,7 +374,19 @@ applies:
    the active reviewer there is no requested-reviewers entry to check:
    in-flight is the eyes reaction codex leaves on the triggering
    `@codex review` comment, and completion is its posted review (or a
-   thumbs-up reaction on that comment, meaning no suggestions).
+   thumbs-up reaction on that comment, meaning no suggestions). The
+   PR-state commands above do not return those reactions -- fetch them
+   explicitly:
+
+   ```bash
+   gh api /repos/<OWNER>/<REPO>/issues/comments/<TRIGGER_COMMENT_ID>/reactions
+   ```
+
+   (or the MCP `pull_request_read` `get_comments` method, whose
+   entries include per-comment reaction counts). `eyes` -> in flight;
+   `+1` with no review -> done, no suggestions; neither -> not yet
+   picked up, or stalled.
+
    **Greptile** is never awaited -- it reviews only when the human
    invites it, so treat its reviews as events to triage, not a queue
    to poll.
@@ -460,7 +472,11 @@ Stop when any of these fires:
   review or thumbs-up on the trigger comment with no eyes reaction
   outstanding. Plus no new review from it across **3 consecutive
   wakes** (~6 min quiescent). Stop fast -- reviewers rarely return
-  late once the response window has passed.
+  late once the response window has passed. For greptile there is no
+  done-and-quiet wait at all: it cannot be re-requested, so the loop
+  terminates as soon as its review is fully triaged (every comment
+  fixed, rebutted, deferred, or acknowledged, fixes pushed) -- hand
+  off to the human; schedule no further wakes for it.
 - **Per-reviewer turn cap (hard).** After the capped number of turns
   (review received -> response pushed) with the same agentic reviewer
   on one PR -- **3 by default, 5 when the human has called for a
