@@ -93,10 +93,13 @@ expect a data file inside this skill directory.
   in the handoff so the human knows the tail is theirs to review.
 - **Feedback is never dropped. Acting on it is optional; recording it
   is not.** Every piece of reviewer feedback ends in exactly one of
-  three states: fixed (accept reply + SHA), rebutted (reject reply
-  with a concrete reason), or deferred (a `pr-todo` issue, per
-  "Feedback becomes pr-todo issues"). Silently ignoring feedback is
-  the one forbidden outcome.
+  four recorded states: fixed (accept reply + SHA), rebutted (reject
+  reply with a concrete reason), deferred (a `pr-todo` issue, per
+  "Feedback becomes pr-todo issues"), or acknowledged (a brief
+  no-action reply naming why: informational only, already handled, or
+  duplicate of a linked thread). Echoes of your own posts arriving
+  back through the event stream are not feedback and need no state.
+  Silently ignoring feedback is the one forbidden outcome.
 
 ## Branch Naming Convention
 
@@ -356,8 +359,10 @@ applies:
    - **Disagree** -- reject with a one-line concrete reason. Never just
      "disagree." Do not be a yes-man to Copilot -- reviewer pushback is the
      point of the loop.
-   - **No action needed** (echo, informational, noise) -- skip and say so
-     briefly.
+   - **No action needed** -- echoes of your own posts get nothing;
+     genuine informational or duplicate comments get a brief
+     acknowledged reply on the thread naming why (the fourth recorded
+     state under Zero Unreviewed Code).
 
 5. **After a productive push**, nudge Copilot to re-review (Copilot does
    not auto-re-review on `synchronize`). There is no `gadmin` wrapper for
