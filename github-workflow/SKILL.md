@@ -400,6 +400,13 @@ Stop when any of these fires:
       feedback to have exposed a dangerous fault (data loss, security
       hole, corruption); keep the review cycle going until the fault is
       resolved, cap notwithstanding.
+- **Stalled reviewer backstop.** The 5-turn cap counts *completed*
+  turns (review received -> response pushed), so a reviewer that stays
+  in the requested list but never delivers would otherwise keep the
+  loop alive indefinitely. If a requested agentic reviewer produces no
+  review across ~30 minutes of waiting (in polling mode, ~10
+  consecutive quiet wakes), treat it as stalled: report state, surface
+  to the user, and stop.
 - A comment is architecturally ambiguous -- ask the human inline in the
   session as plain text (never a question-picker widget -- they break on
   mobile) and stop. Do not guess at design calls.
@@ -428,26 +435,41 @@ Stop when any of these fires:
 
 When the 5-turn cap fires for a reviewer:
 
-1. **One issue per coherent piece of remaining feedback** (batch
-   trivially related nits into a single issue):
+1. **Ensure the `pr-todo` label exists first** -- `gh issue create
+   --label` rejects a label the repo does not have, so this must
+   precede any issue creation ("already exists" errors are fine to
+   ignore):
 
    ```bash
-   gh issue create --repo <OWNER/REPO> --label pr-todo \
-     --title "<short imperative summary>" \
-     --body "<what the reviewer flagged, why it is deferred, links to the PR and the originating comment thread>"
-   ```
-
-2. **The `pr-todo` label** marks deferred agentic-review feedback. If
-   the repo does not have it yet, create it once:
-
-   ```bash
-   gh label create pr-todo --repo <OWNER/REPO> \
+   gh label create pr-todo --repo <TARGET/REPO> \
      --description "Deferred agentic-review feedback from a capped PR" \
      --color BFD4F2
    ```
 
-3. **Reply on each deferred thread** with the issue reference
-   (`Deferred to <issue-url> (pr-todo)`) and resolve the thread.
+2. **One issue per coherent piece of remaining feedback** (batch
+   trivially related nits into a single issue):
+
+   ```bash
+   gh issue create --repo <TARGET/REPO> --label pr-todo \
+     --title "<short imperative summary>" \
+     --body "<what the reviewer flagged, why it is deferred, links to the PR and the originating comment thread>"
+   ```
+
+   **`<TARGET/REPO>` is the canonical repo, per topology.**
+   Direct-origin: the derived origin slug. Fork mode: the **parent**
+   slug (`gh repo view "$origin_url" --json parent`) -- the deferred
+   backlog belongs where human review and merge happen, not in the
+   personal fork, even though Stage-1 review threads live on the fork.
+
+3. **Reply on each deferred thread and resolve it**, via
+   `gadmin github reply --repo <OWNER/REPO> --id <ID> --type reject
+   --msg "Deferred to <issue-url> (pr-todo)"`. The annotated reject
+   type is what marks the thread addressed for the `pending-comments`
+   predicate -- a plain un-annotated reply leaves the thread reported
+   as pending forever, and later cold or cross-PR sweeps would
+   re-create issues for feedback already deferred. Thread replies go
+   to the repo hosting the review threads (fork mode: the fork). A
+   native `defer` reply type is a tracked gadmin enhancement.
 
 4. **Do not re-request review** from that reviewer on this PR again --
    no `--add-reviewer @copilot`, no `request_copilot_review`. The cap
@@ -557,7 +579,9 @@ include it in the next commit; if not, skip.
 
 - Accept replies say: `Agreed, fixed in <sha> -- <one-line summary of fix>`.
 - Reject replies say: `<concrete reason>` -- never just "disagree."
-- Defer replies (5-turn cap fired) say: `Deferred to <issue-url> (pr-todo)`.
+- Defer replies (5-turn cap fired) say: `Deferred to <issue-url> (pr-todo)`
+  -- posted via `--type reject` so the thread carries the addressed
+  annotation (see "Feedback becomes pr-todo issues").
 - Replies are posted **sequentially**, one tool call per reply. Do not
   batch.
 
