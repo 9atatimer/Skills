@@ -129,7 +129,8 @@ or close/re-open PRs.
    productive push, re-request with
    `gh pr edit <NUMBER> --add-reviewer @copilot` (Copilot does not
    auto-re-review on `synchronize`). Repeat: address feedback, push,
-   re-request, wait.
+   re-request, wait -- subject to the 5-turn-per-reviewer cap in
+   Termination below.
 5. **Human review:** once AI review cycles settle, the human takes over for
    final review and merge. Do NOT create a second "final" PR.
 
@@ -352,7 +353,9 @@ applies:
    ```
 
    Skip this step entirely if nothing was pushed this cycle -- the next
-   review would just repeat the prior one.
+   review would just repeat the prior one. Also skip it permanently once
+   the 5-turn cap for that reviewer has fired (see Termination) --
+   remaining feedback becomes `pr-todo` issues, not another cycle.
 
 6. **In polling mode**, also sweep every other open PR you authored before
    scheduling the next wake -- Copilot can leave delayed comments on PRs
@@ -372,8 +375,19 @@ Stop when any of these fires:
   not an empty-list check) and no new Copilot review has appeared across
   **3 consecutive wakes** (~6 min quiescent) -- Copilot is done. Stop
   fast -- Copilot rarely returns late once the response window has passed.
-- **5 iterations on any single PR** (safety cap) -- report state and
-  surface to user.
+- **5 review turns with a given agentic reviewer (hard cap).** After 5
+  turns (review received -> response pushed) with the same agentic
+  reviewer on one PR, do not trigger further reviews from it. Convert
+  each remaining piece of its feedback into a ToDo Issue labeled
+  `pr-todo` (see "Feedback becomes pr-todo issues" below) and hand the
+  PR to human review/merge. Two exceptions, both the author's call:
+    - **Scope intentionally expanded** -- the PR deliberately grew
+      additional features mid-review; the new scope earns a fresh
+      5-turn count for that reviewer.
+    - **Dangerous fault unearthed** -- the author judges the reviewer's
+      feedback to have exposed a dangerous fault (data loss, security
+      hole, corruption); keep the review cycle going until the fault is
+      resolved, cap notwithstanding.
 - A comment is architecturally ambiguous -- ask the human inline in the
   session as plain text (never a question-picker widget -- they break on
   mobile) and stop. Do not guess at design calls.
@@ -397,6 +411,35 @@ Stop when any of these fires:
 - Push fails / network failure / Copilot service unavailable -- report
   and surface to user.
 - Human says to stop. Do not argue.
+
+### Feedback becomes pr-todo issues (5-turn cap)
+
+When the 5-turn cap fires for a reviewer:
+
+1. **One issue per coherent piece of remaining feedback** (batch
+   trivially related nits into a single issue):
+
+   ```bash
+   gh issue create --repo <OWNER/REPO> --label pr-todo \
+     --title "<short imperative summary>" \
+     --body "<what the reviewer flagged, why it is deferred, links to the PR and the originating comment thread>"
+   ```
+
+2. **The `pr-todo` label** marks deferred agentic-review feedback. If
+   the repo does not have it yet, create it once:
+
+   ```bash
+   gh label create pr-todo --repo <OWNER/REPO> \
+     --description "Deferred agentic-review feedback from a capped PR" \
+     --color BFD4F2
+   ```
+
+3. **Reply on each deferred thread** with the issue reference
+   (`Deferred to <issue-url> (pr-todo)`) and resolve the thread.
+
+4. **Do not re-request review** from that reviewer on this PR again --
+   no `--add-reviewer @copilot`, no `request_copilot_review`. The cap
+   is a stop on the trigger, not just on your responses.
 
 In subscription mode, ignore any subsequent `<github-webhook-activity>`
 events after a terminal condition fires (the MCP server auto-removes the
@@ -498,6 +541,7 @@ include it in the next commit; if not, skip.
 
 - Accept replies say: `Agreed, fixed in <sha> -- <one-line summary of fix>`.
 - Reject replies say: `<concrete reason>` -- never just "disagree."
+- Defer replies (5-turn cap fired) say: `Deferred to <issue-url> (pr-todo)`.
 - Replies are posted **sequentially**, one tool call per reply. Do not
   batch.
 
