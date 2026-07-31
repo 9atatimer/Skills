@@ -287,6 +287,13 @@ after opening any PR -- do not wait for the human to ask. Push fixes,
 nudge re-review, repeat until quiescent. Applies to human-prefixed and
 agent-prefixed PRs alike.
 
+The loop runs against the **active reviewer**: Copilot by default, or
+whichever reviewer the human selected (see Reviewer Selection). Queue
+detection (step 2), re-requests (step 5), and the termination
+conditions all key off the active reviewer -- never fire a Copilot
+request while codex is the active reviewer, and never re-request
+greptile at all.
+
 ### Transport
 
 Three tiers in preference order -- your environment determines which
@@ -363,6 +370,15 @@ applies:
      `copilot-pull-request-reviewer[bot]` (other reviewers may remain) --
      Copilot has finished or is not queued; proceed to step 3.
 
+   The commands above detect **Copilot's** queue. When **codex** is
+   the active reviewer there is no requested-reviewers entry to check:
+   in-flight is the eyes reaction codex leaves on the triggering
+   `@codex review` comment, and completion is its posted review (or a
+   thumbs-up reaction on that comment, meaning no suggestions).
+   **Greptile** is never awaited -- it reviews only when the human
+   invites it, so treat its reviews as events to triage, not a queue
+   to poll.
+
    Also note any new **overview-only** reviews (`state=COMMENTED` body
    with no inline comments): `gadmin github pending-comments` only
    surfaces inline comments, so overview-only reviews are invisible to it
@@ -393,10 +409,14 @@ applies:
      state under Zero Unreviewed Code), posted per the acknowledged
      reply convention below so the thread is marked addressed.
 
-5. **After a productive push**, nudge Copilot to re-review (Copilot does
-   not auto-re-review on `synchronize`). There is no `gadmin` wrapper for
-   this yet (tracked in the backlog), so the order is `gh` (if available)
-   -> MCP:
+5. **After a productive push**, nudge the **active reviewer** to
+   re-review. When codex is active, the trigger is a PR comment
+   containing `@codex review` -- do not touch the Copilot request.
+   Greptile is never re-requested (by-human-invite only); further
+   rounds ride on the active reviewer. For Copilot (the default; it
+   does not auto-re-review on `synchronize`) there is no `gadmin`
+   wrapper yet (tracked in the backlog), so the order is `gh` (if
+   available) -> MCP:
 
    ```bash
    gh pr edit <NUMBER> --add-reviewer @copilot
@@ -433,11 +453,14 @@ should reflect the settled state, not mid-cycle churn.
 Stop when any of these fires:
 
 - PR merged or closed.
-- `copilot-pull-request-reviewer[bot]` absent from the requested reviewers
-  (other reviewers may remain -- use the same Copilot-bot check as step 2,
-  not an empty-list check) and no new Copilot review has appeared across
-  **3 consecutive wakes** (~6 min quiescent) -- Copilot is done. Stop
-  fast -- Copilot rarely returns late once the response window has passed.
+- The active reviewer is done and quiet: for Copilot,
+  `copilot-pull-request-reviewer[bot]` absent from the requested
+  reviewers (other reviewers may remain -- use the same Copilot-bot
+  check as step 2, not an empty-list check); for codex, a posted
+  review or thumbs-up on the trigger comment with no eyes reaction
+  outstanding. Plus no new review from it across **3 consecutive
+  wakes** (~6 min quiescent). Stop fast -- reviewers rarely return
+  late once the response window has passed.
 - **Per-reviewer turn cap (hard).** After the capped number of turns
   (review received -> response pushed) with the same agentic reviewer
   on one PR -- **3 by default, 5 when the human has called for a
