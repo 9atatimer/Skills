@@ -493,6 +493,7 @@ When the 5-turn cap fires for a reviewer:
        repository(owner:$owner,name:$repo) {
          pullRequest(number:$pr) {
            reviewThreads(first:100) {
+             pageInfo { hasNextPage endCursor }
              nodes { id isResolved comments(first:1) { nodes { databaseId } } }
            } } } }'
 
@@ -500,6 +501,10 @@ When the 5-turn cap fires for a reviewer:
      mutation($t:ID!) {
        resolveReviewThread(input:{threadId:$t}) { thread { isResolved } } }'
    ```
+
+   A PR can carry more than 100 threads (resolved historical ones
+   included): while `hasNextPage` is true and ids are still unmatched,
+   re-run the query with `after: <endCursor>` on `reviewThreads`.
 
    Thread replies go to the repo hosting the review threads (fork
    mode: the fork). A native `defer` reply type and a thread-resolve
