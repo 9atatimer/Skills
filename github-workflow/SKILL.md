@@ -481,10 +481,29 @@ When the 5-turn cap fires for a reviewer:
    state, which merge-blocking "require conversation resolution"
    settings read. Resolve explicitly afterwards: the GitHub MCP
    `resolve_review_thread` tool, or `gh api graphql` with the
-   `resolveReviewThread` mutation and the thread's node id. Thread
-   replies go to the repo hosting the review threads (fork mode: the
-   fork). A native `defer` reply type and a thread-resolve verb are
-   tracked gadmin enhancements.
+   `resolveReviewThread` mutation. The mutation takes a
+   `PullRequestReviewThread` node id, which `gadmin pending-comments`
+   does not expose (it reports REST comment ids) -- look the node ids
+   up once per PR and match each thread by its first comment's
+   `databaseId` against the REST id you replied to:
+
+   ```bash
+   gh api graphql -f owner=<OWNER> -f repo=<REPO> -F pr=<NUMBER> -f query='
+     query($owner:String!,$repo:String!,$pr:Int!) {
+       repository(owner:$owner,name:$repo) {
+         pullRequest(number:$pr) {
+           reviewThreads(first:100) {
+             nodes { id isResolved comments(first:1) { nodes { databaseId } } }
+           } } } }'
+
+   gh api graphql -f t=<THREAD_NODE_ID> -f query='
+     mutation($t:ID!) {
+       resolveReviewThread(input:{threadId:$t}) { thread { isResolved } } }'
+   ```
+
+   Thread replies go to the repo hosting the review threads (fork
+   mode: the fork). A native `defer` reply type and a thread-resolve
+   verb (exposing thread node ids) are tracked gadmin enhancements.
 
 4. **Do not re-request review** from that reviewer on this PR again --
    no `--add-reviewer @copilot`, no `request_copilot_review`. The cap
