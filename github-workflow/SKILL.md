@@ -81,6 +81,23 @@ expect a data file inside this skill directory.
 - **REQUIRED WORKFLOW**: all changes go on a feature branch, then merge via
   Pull Request
 
+## Zero Unreviewed Code (CRITICAL)
+
+- **NEVER land code no one has reviewed. The target is 0% unreviewed
+  code.** Every pushed commit must be looked at by a reviewer --
+  agentic (Copilot, codex) or human -- before the PR merges.
+- A push after the latest review reopens the question: those tail
+  commits are unreviewed until an agentic re-review runs (within the
+  5-turn cap) or a human explicitly looks at them. Never merge a PR
+  whose tail commits nobody has seen; when the cap has fired, say so
+  in the handoff so the human knows the tail is theirs to review.
+- **Feedback is never dropped. Acting on it is optional; recording it
+  is not.** Every piece of reviewer feedback ends in exactly one of
+  three states: fixed (accept reply + SHA), rebutted (reject reply
+  with a concrete reason), or deferred (a `pr-todo` issue, per
+  "Feedback becomes pr-todo issues"). Silently ignoring feedback is
+  the one forbidden outcome.
+
 ## Branch Naming Convention
 
 All branches MUST use the owner prefixes the repo's agent instruction file
