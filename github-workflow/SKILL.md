@@ -446,6 +446,14 @@ When the 5-turn cap fires for a reviewer:
      --color BFD4F2
    ```
 
+   Label creation needs push access to `<TARGET/REPO>`, which a fork
+   contributor typically lacks. If it fails on permissions, do not
+   stop: file the issues **without** `--label`, put `label: pr-todo`
+   as the first line of each issue body, and note in the PR handoff
+   that a maintainer should create the label and apply it to the
+   listed issues. Opening plain issues only requires the repo to be
+   visible to you, so the deferral itself still lands upstream.
+
 2. **One issue per coherent piece of remaining feedback** (batch
    trivially related nits into a single issue):
 
@@ -461,15 +469,22 @@ When the 5-turn cap fires for a reviewer:
    backlog belongs where human review and merge happen, not in the
    personal fork, even though Stage-1 review threads live on the fork.
 
-3. **Reply on each deferred thread and resolve it**, via
+3. **Reply on each deferred thread, then resolve the thread -- two
+   separate calls.** The reply goes via
    `gadmin github reply --repo <OWNER/REPO> --id <ID> --type reject
    --msg "Deferred to <issue-url> (pr-todo)"`. The annotated reject
    type is what marks the thread addressed for the `pending-comments`
    predicate -- a plain un-annotated reply leaves the thread reported
    as pending forever, and later cold or cross-PR sweeps would
-   re-create issues for feedback already deferred. Thread replies go
-   to the repo hosting the review threads (fork mode: the fork). A
-   native `defer` reply type is a tracked gadmin enhancement.
+   re-create issues for feedback already deferred. `gadmin reply`
+   only posts the reply; it does not touch GitHub's thread-resolved
+   state, which merge-blocking "require conversation resolution"
+   settings read. Resolve explicitly afterwards: the GitHub MCP
+   `resolve_review_thread` tool, or `gh api graphql` with the
+   `resolveReviewThread` mutation and the thread's node id. Thread
+   replies go to the repo hosting the review threads (fork mode: the
+   fork). A native `defer` reply type and a thread-resolve verb are
+   tracked gadmin enhancements.
 
 4. **Do not re-request review** from that reviewer on this PR again --
    no `--add-reviewer @copilot`, no `request_copilot_review`. The cap
