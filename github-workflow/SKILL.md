@@ -252,6 +252,34 @@ output. ANSI codes are stripped automatically.
 the subscription stream, **do not re-fetch it.** The webhook payload is the
 source of truth for that thread -- reply directly from the comment ID.
 
+## Reviewer Selection (agentic reviewers)
+
+Which bot reviews a PR is policy, not agent judgment:
+
+- **Copilot is the default agentic reviewer.** Every PR's AI review
+  cycles run on Copilot unless the human directs otherwise.
+  Re-request trigger: `gh pr edit <NUMBER> --add-reviewer @copilot`
+  (or the MCP `request_copilot_review`).
+- **Codex is a quota-relief fallback, human-invoked ONLY.** Never
+  select codex yourself -- not when Copilot stalls, errors, or appears
+  out of quota. The human decides ("Copilot is exhausted -- use
+  codex"), per PR or per session; absent that instruction, surface the
+  stall and stop. Trigger: a PR comment containing `@codex review`.
+- **Greptile is by-human-invite only.** Never request, trigger, or
+  re-request a greptile review under any circumstances; if the human
+  invites it onto a PR, triage its feedback like any other reviewer's.
+- **Turn budgets.** The 5-turn cap applies per reviewer. When the
+  human declares Copilot quota low, Copilot's cap drops to 3 for the
+  rest of the session -- the declaration is the trigger; do not probe
+  quota yourself. (Automated low-water detection via the billing usage
+  API's premium-request SKU needs a `Plan: read` token and lags real
+  usage; treat it as a future enhancement, and the human's word as
+  authoritative either way.)
+
+Whoever reviews, the same machinery applies unchanged: the
+review-watch loop, the per-reviewer turn cap, pr-todo deferral, and
+Zero Unreviewed Code.
+
 ## Review-watch loop
 
 A PR review is **iterative, not one-shot**. Start this loop by default
