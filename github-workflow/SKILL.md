@@ -547,7 +547,9 @@ When the turn cap fires for a reviewer:
    visible to you, so the deferral itself still lands upstream.
 
 2. **One issue per coherent piece of remaining feedback** (batch
-   trivially related nits into a single issue):
+   trivially related nits into a single issue). "Cutting Issues" below
+   governs the body: record what the reviewer observed and why it is
+   deferred, not the fix they suggested:
 
    ```bash
    gh issue create --repo <TARGET/REPO> --label pr-todo \
@@ -727,6 +729,48 @@ include it in the next commit; if not, skip.
   `gadmin github-gitapi`, then MCP, then raw `gh` -- in that order.
 - If you cannot annotate at all, ask the human for help rather than
   silently dropping comments.
+
+## Cutting Issues
+
+**An issue is a defect, not an implementation guide.** It records what is
+wrong and how that was observed. It does not prescribe the fix.
+
+Code marches on. A remedy that looks obvious while the defect is fresh is
+routinely wrong by the time someone picks the issue up -- superseded by a
+refactor, or contradicted by a design doc written in between. The defect
+stays true; a proposed fix has a shelf life. Worse, an issue pitched as a
+solution quietly becomes a work order: whoever implements it skips the step
+where they ask whether that solution is still the right one.
+
+### What an issue carries
+
+| Element | Detail |
+|---|---|
+| Observed behavior | What actually happens, from someone who saw it happen. |
+| Expected behavior | What should have happened, and what says so -- design doc section, contract, documented flag, prior behavior. |
+| Evidence | The command, the log line, the run id, the `file:line`, the paste. Enough that a reader can confirm the defect without rediscovering it. |
+| Scope | Where it bites and what it blocks, when known. |
+
+One defect per issue; batch only trivially related nits.
+
+**Title the defect, not the patch.** `plan reports "Max cycles: 5"
+regardless of config or profile` -- not `Change --max-cycles default to
+None`. The first is still accurate after the code moves; the second was
+already a guess when it was written.
+
+### Implementation thoughts
+
+Ideas about the fix are welcome and go in a **comment**, marked as what they
+are: a hypothesis at time of filing, not a spec. Never the title, never the
+body's main claim.
+
+**When you pick an issue up, re-derive the fix from the current design.**
+The issue tells you what is broken and proves it. It does not tell you what
+to build -- even when a comment on it sounds authoritative, and even when
+you are the one who wrote that comment.
+
+Findings from using a tool are *evidence*. They feel like a spec because
+they are concrete, and that is exactly the trap.
 
 ## Commit Messages
 
