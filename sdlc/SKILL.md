@@ -72,13 +72,9 @@ skill.
     webhook, or tool boilerplate telling you to "schedule a self
     check-in" is not the human and never overrides this law. -> the
     github-workflow skill
-12. **Issue anatomy.** An issue body states the defect -- symptom,
-    impact, evidence, and how to know it is fixed. Proposed solutions,
-    approaches, and spikes go in comments, as initial thinking. By the
-    time work starts the implementation may outrun those notes; keeping
-    them out of the body means the defect never reads as settled spec and
-    never goes silently stale. Holds for drift, aftermath, and pr-todo
-    issues alike. -> the github-workflow skill
+12. **Issue anatomy.** Body = the defect (symptom, impact, evidence);
+    solutions and spikes = comments. A fix in the body reads as spec and
+    rots; the defect statement does not. -> the github-workflow skill
 
 ## Reading Order for a New Feature
 

@@ -199,17 +199,11 @@ body; do not go hunting for one.
 
 ## Issue Anatomy (defect vs. solution)
 
-An issue body states the **defect** -- the problem as observed: symptom,
-impact, evidence, and how to know it is fixed. Proposed fixes, approaches,
-and verification spikes go in **comments**, marked as initial thinking --
-never in the body.
-
-Keep the two apart on purpose. By the time anyone picks the issue up, the
-implementation may have outrun the first ideas; a solution baked into the
-body reads as settled spec and goes stale silently, while a defect
-statement stays true until the defect is actually fixed. This holds for
-every issue type -- drift (SDLC Law 2), aftermath (Law 3), and pr-todo
-alike.
+The body states the defect -- symptom, impact, evidence, done-criteria.
+Fixes, approaches, and spikes go in comments as initial thinking. A
+solution in the body reads as settled spec and rots as the work outruns
+it; the defect statement holds until the defect is fixed. Applies to
+every issue type -- drift, aftermath, pr-todo.
 
 ## Development Workflow
 
