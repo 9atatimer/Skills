@@ -652,33 +652,6 @@ whatever delayed-prompt or sleep mechanism that environment offers.
   (documentation follow-ups from the settled state of all PRs in the
   cycle), and whether the PRs are mergeable from your perspective.
 
-## Context Goes Where the Work Will Read It
-
-Sessions are archived and never re-read. A closing "one thing worth
-knowing" paragraph is therefore the one place context is guaranteed to be
-lost -- it reads as diligence while being the opposite.
-
-Route it by audience instead:
-
-| Who needs it | Where it goes |
-|---|---|
-| Whoever picks up issue #N | A comment on #N |
-| Whoever touches this repo next | The repo's `CLAUDE.md` / `AGENT.md` |
-| Whoever revisits the decision | The design doc's Key Decisions |
-| Me, next session | The global agent instruction file |
-
-Then say in one line that you recorded it, and where. That line is the
-handoff; the content lives at the destination.
-
-This is the same instinct as "an issue is a defect, not an implementation
-guide": a finding that feels urgent while it is fresh needs a durable home,
-not a louder paragraph in a transcript nobody opens again.
-
-**Applies to closing summaries specifically.** If a turn's answer is
-complete, end it. Do not append an observation because it seems a shame to
-drop it -- either it mattered enough to be in the body, or it belongs at
-one of the destinations above.
-
 ## Automated Review Response
 
 This is the procedure for handling a batch of review feedback -- whether it
