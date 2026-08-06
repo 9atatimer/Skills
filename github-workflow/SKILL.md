@@ -229,33 +229,6 @@ exactly the trap.
 5. **Push:** push to `origin`
 6. **PR:** create a PR with a clear description
 
-### Git Hook Discipline (scalpel, not axe)
-
-The pre-commit/pre-push hooks (`@nine-at-a-time-media/hooks`) are the
-contract; a failing hook is a diagnosis prompt, not an obstacle. In order:
-
-1. **Diagnose and fix the real issue.** A lint error, failing test, or
-   leaked secret the hook catches is the hook doing its job.
-2. **If one specific check cannot run in the current environment** --
-   scanner binary absent with only a docker fallback and no docker daemon,
-   E2E needing a live backend the sandbox lacks -- skip that check alone
-   with its sentry file: `NO.LINT`, `NO.TEST`, `NO.E2E`, `NO.BUILD`,
-   `NO.GITLEAKS`, `NO.TRIVY`, `NO.SEMGREP`. Sentries are gitignored and
-   machine-local; touch them in the repo root, never commit them. Create
-   one per genuinely-impossible check, each for a concrete infrastructure
-   reason you can state, and run the checks the hook *can* still perform.
-3. **Never blanket-skip the suite.** `HUSKY=0`, `HUSKY_SKIP`, and
-   `git commit --no-verify` silence every check at once, including the
-   ones that would have run fine. Do not reach for them because one check
-   is broken -- that is the axe where the sentry is the scalpel. (CI
-   setting `HUSKY=0` on `npm ci` is different: that disables hook
-   *installation* in a pipeline that runs the same checks as explicit
-   steps.)
-
-When a sentry was needed, say so in the session (which checks, why, and
-what you ran manually to compensate) so the human knows what the commit
-was and was not verified against.
-
 ## GitHub Tool Usage
 
 Three families of verbs, in **token-frugal preference order**:
