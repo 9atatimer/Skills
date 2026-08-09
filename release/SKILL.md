@@ -144,9 +144,12 @@ gh run watch <run-id> --repo <owner/repo> --exit-status --interval 15
   file re-runs).
 - Cite the green run URL in the PR body as verification evidence.
 
-`gh run watch` blocks until completion and then exits -- it is a real
-event wait, not polling on a self-set timer, so it does not violate the
-no-self-scheduled-timers law.
+`gh run watch` is a synchronous blocking wait: it polls GitHub
+internally at `--interval` and exits when the run completes. That does
+not violate the no-self-scheduled-timers law, whose target is deferring
+agent work to a future turn on a self-set clock -- a foreground command
+that blocks the current turn until a real outcome is not that, whatever
+it does internally.
 
 ## Deploy hygiene
 
