@@ -1,6 +1,6 @@
 ---
 name: sdlc
-description: "The always-in-effect laws and the station-to-station flow (DESIGN -> PLANNING -> CODING -> GITHUB -> AFTERMATH) that the other skills detail. Load at the start of any feature or multi-step task, or whenever unsure which skill applies next; the compressed laws here hold for every task even before a detailed skill is loaded."
+description: "The always-in-effect laws and the station-to-station flow (DESIGN -> PLANNING -> CODING -> GITHUB -> RELEASE -> AFTERMATH) that the other skills detail. Load at the start of any feature or multi-step task, or whenever unsure which skill applies next; the compressed laws here hold for every task even before a detailed skill is loaded."
 ---
 
 # SDLC -- Laws and Flow Between the Stations
@@ -84,11 +84,11 @@ The skills compose in this sequence -- load each as you reach its step,
 not all at once:
 
 ```
-DESIGN  ->  PLANNING  ->  CODING (+ style-<lang>)  ->  GITHUB  ->  AFTERMATH
-  |            |               |  \                       |            |
-  v            v               v   \-- tech-radar         v            v
-DESIGN.<name>.md  TODO_PLAN.md   (consult when choosing   PR +       drift issues,
-or ARCHITECTURE.md (the plan)     a dependency)          review      lessons, decisions
+DESIGN  ->  PLANNING  ->  CODING (+ style-<lang>)  ->  GITHUB  ->  (RELEASE)  ->  AFTERMATH
+  |            |               |  \                       |            |              |
+  v            v               v   \-- tech-radar         v            v              v
+DESIGN.<name>.md  TODO_PLAN.md   (consult when choosing   PR +      deploy via      drift issues,
+or ARCHITECTURE.md (the plan)     a dependency)          review     CD, proven      lessons, decisions
 ```
 
 1. **DESIGN** -- write/confirm `DESIGN.<name>.md` (or `ARCHITECTURE.md`).
@@ -100,10 +100,14 @@ or ARCHITECTURE.md (the plan)     a dependency)          review      lessons, de
    frozen from here on.** -> the coding skill
 4. **GITHUB** -- branch, PR, drive the review loop to merge. -> the
    github-workflow skill
-5. **AFTERMATH** -- cut drift issues, append Key Decisions, record
+5. **RELEASE** (only when the work crosses a deploy boundary: CD
+   workflows, publish targets, deploy credentials) -- prove the deploy
+   pre-merge via `workflow_dispatch` where possible, know what the merge
+   triggers, and diagnose red runs behavior-first. -> the release skill
+6. **AFTERMATH** -- cut drift issues, append Key Decisions, record
    lessons in `TODO_PLAN.md`, file what you discovered, hand the status
    transition to a human. Docs-only PR, separate from the feature PR.
    -> the design skill
 
-The loop is not closed until step 5. Shipping code is not the same as
-shipping what was designed.
+The loop is not closed until the aftermath. Shipping code is not the
+same as shipping what was designed.
