@@ -193,7 +193,8 @@ or close/re-open PRs.
    re-request, wait -- subject to the per-reviewer turn cap in
    Termination below.
 5. **Human review:** once AI review cycles settle, the human takes over for
-   final review and merge. Do NOT create a second "final" PR.
+   final review and merge (directly, or by commanding tedium -- see Landing
+   via tedium below). Do NOT create a second "final" PR.
 
 ### Two-Stage PR Workflow (fork + upstream)
 
@@ -222,6 +223,19 @@ To avoid charging Copilot review cycles to the organization:
 3. This is the production PR
 4. Human reviews and merges
 5. Close the Stage 1 PR
+
+### Landing via tedium (merge bot)
+
+Repos with the tedium App installed may land PRs through the merge bot
+(see `docs/design/DESIGN.TEDIUM.md`). The rule "humans merge, agents do
+not" refines to: **humans authorize merges; tedium executes them.** An
+explicit `@tedium land` comment from a human with write access IS the
+human merge decision. Zero-unreviewed-code is unchanged -- `land` may only
+be issued when every pushed commit has been reviewed. Agents never comment
+`@tedium land` on their own initiative; `@tedium dryrun` is fine for
+agents wanting a green-proof without landing. Never add `tedium/*` to
+protected-branch patterns; the bot's staging branches must remain
+force-pushable and deletable by the App.
 
 ### PR Template (both workflows)
 

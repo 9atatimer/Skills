@@ -74,6 +74,10 @@ the radar and keeping it out of the core are the same discipline.
 |---|---|---|
 | LLM access | **OpenAI-compatible endpoints** (Cloudflare Workers AI / AI Gateway, Groq, Z.ai/GLM, Ollama) | Via the `openai-compat` adapter; one adapter covers the family by config. |
 | LLM access | **claude-cli provider** | Drives Claude Code on a Pro/Max plan instead of a metered key. |
+| Serverless runtime | **Cloudflare Workers** | First consumer: tedium (merge bot). Fetch-based, WebCrypto, no node:crypto. |
+| Serverless deploy | **wrangler** | Worker deploys via `cfwdeploy` (naatm-deploy); owns worker secrets + DO migrations. |
+| Serverless state | **Durable Objects** | Serialized per-entity state + alarms. One DO per repo in tedium. |
+| TS/JS: worker tests | **@cloudflare/vitest-pool-workers** | Workers-runtime vitest pool; never hand-roll miniflare (testing-node skill). |
 
 ## Hold
 
