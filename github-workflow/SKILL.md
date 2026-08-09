@@ -101,6 +101,40 @@ expect a data file inside this skill directory.
   back through the event stream are not feedback and need no state.
   Silently ignoring feedback is the one forbidden outcome.
 
+## Clear the Gate Before You Move It (CRITICAL)
+
+**You must meet or exceed the existing quality gate before you can change
+the gate. Always.**
+
+The bar a change is judged against is the bar as it stands *before* that
+change -- the last state that passed review. A commit does not get to
+supply the standard it is measured by. This covers every gate a repo has:
+lint rules, coverage floors, required status checks, severity thresholds,
+timeouts, turn caps, review policy, and the configuration files that set
+any of them.
+
+Direction decides when a change takes effect:
+
+- **Raising a bar may take effect immediately.** A stricter rule needs no
+  protection from itself, and delaying it only lets weaker changes through
+  in the meantime.
+- **Lowering a bar takes effect only after it has cleared the old bar and
+  merged.** Where a gate reads its own configuration, that means reading
+  policy at the merge base, not the working tree -- and the general form is
+  that the effective policy is the *stricter* of the two, which gets both
+  directions right in one rule.
+
+No one proposes a lower gate and then clears the lower gate they just
+proposed. In practice that forbids, in the same change that is failing:
+editing the threshold that is failing you, disabling the check that is
+failing you, and `--no-verify` (see Git Hook Discipline -- a per-check
+sentry for a genuinely impossible check is not lowering a bar; skipping the
+suite is).
+
+**A repo owner may force past this. Nobody else may, and an agent never
+may.** If you believe a gate is wrong, say so and let the owner rule. Being
+blocked by a gate is not authorization to move it.
+
 ## Branch Naming Convention
 
 All branches MUST use the owner prefixes the repo's agent instruction file
