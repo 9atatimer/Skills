@@ -119,10 +119,17 @@ Direction decides when a change takes effect:
   protection from itself, and delaying it only lets weaker changes through
   in the meantime.
 - **Lowering a bar takes effect only after it has cleared the old bar and
-  merged.** Where a gate reads its own configuration, that means reading
-  policy at the merge base, not the working tree -- and the general form is
-  that the effective policy is the *stricter* of the two, which gets both
-  directions right in one rule.
+  merged.**
+
+**The environment enforces this, not the tool.** A gate reads its config
+from the checkout it runs in and should not try to work out whether that
+checkout is a proposal or canon. Which checkout it gets is the enforcement:
+the *review* gate runs on the proposal, under the proposal's rules -- the
+honest answer to "does this hold up under the rules it proposes" needs the
+new rules -- while the *integration* gate runs hermetically on the merged
+state, under canon, where no proposal's config can reach it. Same gate, two
+states, two answers. Do not build proposal-versus-canon reconciliation into
+a tool; every gate in the fleet would need its own copy.
 
 No one proposes a lower gate and then clears the lower gate they just
 proposed. In practice that forbids, in the same change that is failing:
