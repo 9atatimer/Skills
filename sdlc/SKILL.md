@@ -9,7 +9,9 @@ description: "The always-in-effect laws and the station-to-station flow (DESIGN 
 > know which skill to load as work moves from station to station.
 
 Each law below is the compressed form; the named skill is the authority.
-Load the detailed skill the moment a task reaches its territory.
+Load the detailed skill the moment a task reaches its territory. When two
+stations plausibly apply at once, load the one whose gate you must clear
+first (design before planning, planning before coding).
 
 ## Always-In-Effect Laws
 
