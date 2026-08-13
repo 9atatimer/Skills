@@ -295,7 +295,8 @@ contract; a failing hook is a diagnosis prompt, not an obstacle. In order:
    scanner binary absent with only a docker fallback and no docker daemon,
    E2E needing a live backend the sandbox lacks -- skip that check alone
    with its sentry file: `NO.LINT`, `NO.TEST`, `NO.E2E`, `NO.BUILD`,
-   `NO.GITLEAKS`, `NO.TRIVY`, `NO.SEMGREP`. Sentries are gitignored and
+   `NO.GITLEAKS`, `NO.TRIVY`, `NO.SEMGREP`, `NO.TFCHECK`. Sentries are
+   gitignored and
    machine-local; touch them in the repo root, never commit them. Create
    one per genuinely-impossible check, each for a concrete infrastructure
    reason you can state, and run the checks the hook *can* still perform.
