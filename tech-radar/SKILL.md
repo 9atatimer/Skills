@@ -63,6 +63,7 @@ the radar and keeping it out of the core are the same discipline.
 | Web framework | **Vue 3 + Nuxt** | Composition API, `<script setup>`. |
 | TS/JS: tests | **Vitest** | Unit (happy-dom) vs integration (node). Jest is Hold -- the testing-node skill standardizes on Vitest. |
 | TS/JS: E2E tests | **Playwright** | Browser E2E for Nuxt/Vue apps. Replaces Cypress. Prefer role/label locators; `getByTestId` fallback (E2E attribute `data-pw`; see the testing-nuxt skill). |
+| TS/JS: validation | **zod** (v4) | Schema validation at external/input boundaries -- the TS counterpart to Pydantic. Also the tool-argument schema language for the AI SDK. |
 | Shell | **Bash 5.2+** | `set -euo pipefail`; see the style-bash skill. |
 | Browser automation | **Chrome for Testing + chrome-devtools-mcp** | See the chrome-mcp skill. |
 | Secrets | **1Password** (service-account / `load-secrets-action`) | Inject at runtime; do not paste secrets into GitHub. |
@@ -78,6 +79,11 @@ the radar and keeping it out of the core are the same discipline.
 | Serverless deploy | **wrangler** | Worker deploys via `cfwdeploy` (naatm-deploy); owns worker secrets + DO migrations. |
 | Serverless state | **Durable Objects** | Serialized per-entity state + alarms. One DO per repo in tedium. |
 | TS/JS: worker tests | **@cloudflare/vitest-pool-workers** | Workers-runtime vitest pool; never hand-roll miniflare (testing-node skill). |
+| Agent runtime | **agents** (Cloudflare Agents SDK) | Stateful agents on Durable Objects: transcript persistence, state sync, WebSocket transport. First consumer: quillmap `cloudflare/wiki-agent`. |
+| Agent loop | **@cloudflare/think** | Pre-1.0 experimental preview -- API may break on any minor. Subclass it behind a port; never import it from domain code. First consumer: quillmap `cloudflare/wiki-agent`. |
+| Agent chat UI | **@cloudflare/ai-chat** | Pre-1.0 preview chat client for the Think protocol. Same containment rule as `@cloudflare/think`. |
+| LLM tool-calling | **ai** (Vercel AI SDK v7) | Provider-agnostic tool/stream vocabulary; what `agents` composes against. |
+| LLM provider adapter | **@ai-sdk/openai** (v4) | OpenAI provider for the AI SDK. Model id stays an edge parameter, never a domain constant. |
 
 ## Hold
 
