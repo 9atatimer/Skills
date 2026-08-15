@@ -7,7 +7,7 @@ description: "Phase 2 of the SDLC: writing, reviewing, or improving a design doc
 
 > **Purpose:** Author, review, and improve design documents that are useful to both AI agents and human engineers.
 > **When to use:** Before implementing a new system, major feature, or architectural change.
-> **Exit gate:** a human marks the doc APPROVED. From then on it is frozen.
+> **Exit gate:** a human marks the doc APPROVED. From then on its body is frozen; only the status and the append-only Key Decisions log move.
 > **References:** `docs/design/TEMPLATE.md`, `docs/design/STYLE-GUIDE.md`
 
 ---
@@ -37,11 +37,18 @@ trees fail in opposite directions, which is why they are separate:
 | | `docs/design/` | `docs/arch/` |
 |---|---|---|
 | Describes | what we intend to build | what is deployed right now |
-| Lifecycle | **frozen at APPROVED** | **living, never frozen** |
+| Lifecycle | **body frozen at APPROVED** | **living, never frozen** |
 | Wrong when | rewritten to match the code | contains anything not yet shipped |
 
 Never place an as-built document in `docs/design/`, and never describe
 unshipped intentions in `docs/arch/`. -> the architecture skill
+
+**The freeze covers a design record's body, and only design records.** The
+status still advances (APPROVED -> IMPLEMENTED -> SUPERSEDED) and Key
+Decisions is still append-only -- see Status Transitions. And
+`STYLE-GUIDE.md` / `TEMPLATE.md`, which live in `docs/design/` as reusable
+process guidance rather than descriptions of an intended system, have no
+approval lifecycle and evolve freely.
 
 ---
 

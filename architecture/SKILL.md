@@ -18,7 +18,7 @@ description: "Phase 3 and 7a of the SDLC: naming the seams a change will add (be
 |---|---|---|
 | Describes | what we intend to build | what is deployed right now |
 | Truth kind | aspirational | factual |
-| Lifecycle | **frozen at APPROVED** | **living, never frozen** |
+| Lifecycle | **body frozen at APPROVED** | **living, never frozen** |
 | Written by | the designer, before code | the releaser, after shipping |
 | Wrong when | rewritten to match the code | contains anything not yet shipped |
 
@@ -27,6 +27,18 @@ directions, so one document cannot be both. A design doc edited to match
 the code destroys the only artifact that could show drift. An as-built
 containing intentions is worse than no as-built, because a reader cannot
 tell which parts are real.
+
+**The law governs design records, not the process artifacts beside them.**
+`DESIGN.<name>.md` and `INTEGRATION.md` are design records: they describe a
+specific intended system, they carry a status, and they freeze.
+`STYLE-GUIDE.md`, `TEMPLATE.md`, and any other reusable process guidance in
+`docs/design/` are not -- they have no approval lifecycle and evolve freely.
+Improving them is continuous improvement, not drift.
+
+**What freezes is the design record's body.** Its lifecycle metadata still
+moves: the status advances APPROVED -> IMPLEMENTED -> SUPERSEDED, and the
+Key Decisions log is append-only. Freezing the body is what makes drift
+visible; freezing the status would make the ladder unusable.
 
 Two rules follow, and they are absolute:
 

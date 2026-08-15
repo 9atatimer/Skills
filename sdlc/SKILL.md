@@ -33,12 +33,15 @@ skill.
    is *appending* to the Key Decisions log, each row citing its
    authorizing issue, in a docs-only PR. Only a human marks a doc
    IMPLEMENTED. -> the design skill
-3. **The folder law: design is frozen, architecture is living.**
-   `docs/design/` is aspirational and freezes at APPROVED. `docs/arch/` is
-   factual, never frozen, and describes **only what is deployed**. That
-   opposition is why they are separate trees. An as-built containing
-   intentions is worthless; a design doc rewritten to match the code is a
-   lie. -> the architecture skill
+3. **The folder law: design is frozen, architecture is living.** A design
+   record in `docs/design/` is aspirational and its body freezes at
+   APPROVED -- only its status and its append-only Key Decisions log move
+   after that. `docs/arch/` is factual, never frozen, and describes **only
+   what is deployed**. That opposition is why they are separate trees. An
+   as-built containing intentions is worthless; a design doc rewritten to
+   match the code is a lie. The law governs design *records*, not the
+   process artifacts beside them (`STYLE-GUIDE.md`, `TEMPLATE.md`), which
+   have no approval lifecycle and evolve freely. -> the architecture skill
 4. **Implementation ends with the retrospective, not with green tests.**
    Cut drift issues, append Key Decisions, reconcile the as-built, record
    lessons learned in `TODO_PLAN.md`, file what you discovered, and hand
