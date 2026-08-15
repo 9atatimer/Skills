@@ -1,6 +1,6 @@
 ---
 name: tech-radar
-description: "Choosing a library, framework, runtime, or any off-the-shelf tool; consult before adding any dependency. Adopt/Trial may be used; Hold/Verboten may not; un-radared tech must be proposed, never silently added. Skip when the task reuses only existing dependencies."
+description: "Choosing a library, framework, runtime, or any off-the-shelf tool; consult before adding any dependency. Adopt/Trial may be used; Hold/Verboten may not; un-radared tech must be proposed, never silently added. Owned by the architecture phase (rows are proposed there), consulted in the coding phase, audited at release. Skip when the task reuses only existing dependencies."
 ---
 
 ## Localization
@@ -40,6 +40,23 @@ the radar and keeping it out of the core are the same discipline.
    rationale) as part of the same change.
 4. This file is project-owned. Derivatives of the template edit it to reflect
    their stack; `naatm-prompts sync` will not clobber local edits.
+
+## Who owns the radar, and when
+
+The radar is **owned by the architecture phase and consulted in the coding
+phase.** A row is a small architectural decision, so it is made where
+architectural decisions are reviewable -- not mid-implementation, where a
+dependency arrives already load-bearing.
+
+| Phase | What happens |
+|---|---|
+| 3 Architecture | **Propose** the row in the design doc: the candidate, the ring, one line of rationale. Reviewable before it is load-bearing |
+| 5 Code | **Consult** the radar before reaching for anything off-the-shelf. The row **lands with the code that uses it**, so the radar never drifts ahead of or behind reality |
+| 7a Architecture | **Audit.** Everything the release actually uses is on the radar, on the ring it was proposed at |
+| 8 Retrospective | A dependency that reached production with no row is a **filed finding**, not something to backfill quietly |
+
+Proposing at phase 3 and landing at phase 5 are not in tension: the
+proposal makes the choice reviewable, the landing keeps the file honest.
 
 ---
 
