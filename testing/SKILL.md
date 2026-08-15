@@ -39,8 +39,16 @@ These are cheap, durable, and catch the failure that unit tests never
 will -- a leak into the core reads as a passing test suite right up until
 the day you need the seam. Write them in phase 4 like any other RED test.
 
-**Both kinds are RED before any code.** A RED test fails because the
-behavior does not exist yet -- never because of a placeholder assertion.
+**A RED test fails because the behavior does not exist yet** -- never
+because of a placeholder assertion.
+
+**Derive the whole list here; go RED one behavior at a time.** Enumerating
+every design and architect behavior is phase 4's thinking, and doing it up
+front is what stops you discovering scope in phase 5. Writing all of those
+tests before any of them goes GREEN is a different thing, and it is a
+test-first waterfall: the earlier behaviors sit implemented while the later
+ones sit failing, and no commit is ever one behavior wide. Enumerate the
+list, then loop phases 4-6 per behavior -- RED, GREEN, COMMIT.
 
 For framework-specific standards, load the companion skill matching the code
 under test -- and only that one:

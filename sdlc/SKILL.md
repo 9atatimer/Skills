@@ -112,7 +112,12 @@ skill.
 8 RETROSPECTIVE              drift issues, lessons, next plan
 ```
 
-**Everything through 3b is one-pass. Phases 4-6 are where work iterates.**
+**Everything through 3b is one-pass. Phases 4-6 are where work iterates --
+once per behavior, not once per feature.** Phase 4's exit gate is the *next*
+behavior failing, not the whole suite written up front: batching every RED
+test before any GREEN is a test-first waterfall, and it cannot produce the
+one-behavior-per-commit slices law 5 requires. Derive the full behavior list
+in phase 4 (see the testing skill), then walk it one at a time.
 Agents habitually get this backwards -- they iterate on the design and
 one-pass the tests. Do not.
 
@@ -122,7 +127,7 @@ one-pass the tests. Do not.
 | 2 Design | `docs/design/DESIGN.<name>.md` | a human marks it APPROVED | the design skill |
 | 3 Architecture | the seam list, inside the design doc | seams named, radar rows proposed | the architecture skill |
 | 3b Planning | `TODO_PLAN.md` | a phased, test-first route | the planning skill |
-| 4 Behaviors | the test tree, all RED | fails because the code does not exist | the testing skill + the stack-specific one |
+| 4 Behaviors | the next behavior, RED | it fails because the code does not exist | the testing skill + the stack-specific one |
 | 5 Code | source | GREEN | the coding skill + the language style skill |
 | 6 Gates | scanners, CI, review | green and approved | the gates skill |
 | 7 Release | deploy / publish / tag | shipped and proven | the release skill |

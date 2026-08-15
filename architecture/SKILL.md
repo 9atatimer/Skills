@@ -51,8 +51,16 @@ Two rules follow, and they are absolute:
 
 ## Phase 3: Architecture (intended)
 
-Runs after the design is approved, before planning. Answers: *given what we
+Runs **before the approval gate**, not after it. Answers: *given what we
 actually have, what does this change add to it?*
+
+This ordering is forced by the freeze. Everything this phase produces lands
+inside the design record (see Output below), and an APPROVED record is
+frozen -- so seam-naming has to finish while the doc can still be edited. A
+design record with no named seams is not finished and must not be approved;
+approval covers the design *and* its seams as one reviewed artifact. If you
+find a missing seam after approval, that is drift: cut an issue, do not
+quietly edit the record. -> the retrospective skill
 
 ### 1. Read the as-built first
 
@@ -111,8 +119,9 @@ Everything from this phase lands **inside the design doc**, not in
 ### Exit gate
 
 Every volatile axis this change introduces is named and mapped to exactly
-one seam; every new dependency has a proposed ring. Then phase 3b
-(planning) can compute the route.
+one seam; every new dependency has a proposed ring. The design record is now
+complete and approvable -- **a human approves, and the record freezes.**
+Then phase 3b (planning) can compute the route.
 
 ---
 

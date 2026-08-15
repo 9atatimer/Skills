@@ -7,7 +7,9 @@ description: "Phase 2 of the SDLC: writing, reviewing, or improving a design doc
 
 > **Purpose:** Author, review, and improve design documents that are useful to both AI agents and human engineers.
 > **When to use:** Before implementing a new system, major feature, or architectural change.
-> **Exit gate:** a human marks the doc APPROVED. From then on its body is frozen; only the status and the append-only Key Decisions log move.
+> **Exit gate:** the record is complete -- *including its seams, which are
+> phase 3* -- and a human marks it APPROVED. From then on its body is frozen;
+> only the status and the append-only Key Decisions log move.
 > **References:** `docs/design/TEMPLATE.md`, `docs/design/STYLE-GUIDE.md`
 
 ---
@@ -61,8 +63,10 @@ to name each volatile axis as one explicit seam.
 
 **That work is phase 3 and its authority is the architecture skill** -- but
 its output lands *here*, in this doc's Architecture Overview, Design, Key
-Decisions, and Rejections sections. A design doc with no named seams is not
-finished; a seam first discovered while coding was never reviewed.
+Decisions, and Rejections sections, and it lands **before approval.** A
+design doc with no named seams is not finished and must not be approved; the
+freeze would make the seams unwritable. A seam first discovered while coding
+was never reviewed, and is drift.
 
 The short form, so a doc can be judged without loading phase 3:
 
