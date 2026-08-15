@@ -1,12 +1,46 @@
 ---
 name: testing
-description: "Writing or reviewing tests in any language: universal principles -- no hanging tests, no real I/O or sleeps in unit tests, skip (never xfail) anything that might hang, fakes over mocks, RED tests fail because code doesn't exist (never placeholder assertions). Pair with the language-specific testing skill."
+description: "Phase 4 of the SDLC: writing or reviewing tests in any language -- universal principles -- no hanging tests, no real I/O or sleeps in unit tests, skip (never xfail) anything that might hang, fakes over mocks, RED tests fail because code doesn't exist (never placeholder assertions). Pair with the language-specific testing skill."
 ---
 
-# Testing Standards
+# Testing Standards (Phase 4: Behaviors)
 
 This document defines **universal testing principles** applicable across all languages,
 frameworks, and projects. It is written for coding agents and must be followed exactly.
+
+## Where behaviors come from
+
+Phase 4 is not "write some tests." It is the phase that turns the two
+approved artifacts into executable claims, and there are **two distinct
+sources**. A suite drawn from only one of them has a predictable blind
+spot.
+
+**Design behaviors** come from the design doc. Each Goal is a testable
+success criterion by construction -- that is why the design skill demands
+Goals be verifiable. Each Non-Goal is worth a test only where its
+violation would be silent. Each state machine transition, each data-model
+constraint, and each rule in the Security section is a behavior.
+
+> Goal: "an unreadable verdict never fails a clean PR" -> a test that feeds
+> the judge an unparseable response and asserts the PR is not blocked.
+
+**Architect behaviors** come from the seams named in phase 3. These are
+the mechanical tests of the coding skill, Section 1.2, written as real
+test cases rather than left as review-time opinions:
+
+| Architect behavior | The test |
+|---|---|
+| Grep | the core names no vendor, SDK, `fetch`, `process.env`, `fs`, or model string |
+| Swap | a second implementation registers behind the seam with zero core edits |
+| Decision | each named decision resolves in one place, in the problem's language |
+| Arrow | every import crosses inward |
+
+These are cheap, durable, and catch the failure that unit tests never
+will -- a leak into the core reads as a passing test suite right up until
+the day you need the seam. Write them in phase 4 like any other RED test.
+
+**Both kinds are RED before any code.** A RED test fails because the
+behavior does not exist yet -- never because of a placeholder assertion.
 
 For framework-specific standards, load the companion skill matching the code
 under test -- and only that one:

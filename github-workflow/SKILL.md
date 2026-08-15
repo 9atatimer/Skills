@@ -220,7 +220,7 @@ The body states the defect -- symptom, impact, evidence, done-criteria.
 Fixes, approaches, and spikes go in comments as initial thinking. A
 solution in the body reads as settled spec and rots as the work outruns
 it; the defect statement holds until the defect is fixed. Applies to
-every issue type -- drift, aftermath, pr-todo.
+every issue type -- drift, retrospective, pr-todo.
 
 **Title the defect, not the patch.** `plan reports "Max cycles: 5"
 regardless of config or profile` -- not `Change --max-cycles default to

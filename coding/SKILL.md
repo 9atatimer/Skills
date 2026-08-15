@@ -1,9 +1,9 @@
 ---
 name: coding
-description: "Writing, implementing, or modifying source code in any language: pre-code gates (design, plan, failing test, tech radar), stable-core/volatile-edges architecture with mechanical tests, function taxonomy, file anatomy. Skip when authoring a design doc (design), building a phased plan (planning), or editing prose only (markdown)."
+description: "Phase 5 of the SDLC: writing, implementing, or modifying source code in any language -- pre-code gates (design, architecture, plan, failing test, tech radar), stable-core/volatile-edges architecture with mechanical tests, function taxonomy, file anatomy. Skip when authoring a design doc (design), naming seams (architecture), building a phased plan (planning), or editing prose only (markdown)."
 ---
 
-# SKILL: Implementation
+# SKILL: Implementation (Phase 5)
 
 **Role & Mandate**
 
@@ -20,11 +20,12 @@ Deliver maintainable, testable, low-risk code for a fast-moving startup -- ship 
 These gates are non-negotiable. Do not skip them because the change "looks small."
 
 1. **Design gate.** There must be an approved design doc for the tool you are touching.
-   - Every tool/package has a `DESIGN.<name>.md`. A system spanning multiple tools has an `ARCHITECTURE.md`.
+   - Every tool/package has a `DESIGN.<name>.md` under `docs/design/`.
    - If it does not exist or is ambiguous, stop and use the design skill to write/fix it first.
-2. **Plan gate.** For any multi-step feature, build the phased, test-first plan with the planning skill and record it per the todo-plan skill.
-3. **Test gate.** Write the failing test first (see Section 3). No production code without a failing test demanding it.
-4. **Tech gate.** Any off-the-shelf dependency must be on the **Adopt** or **Trial** ring of the tech-radar skill. Never introduce a `Hold`/`Verboten` technology, and never silently add a dependency that is not on the radar -- propose adding it first.
+2. **Architecture gate.** Every volatile axis this change introduces is named and mapped to one seam, against the as-built in `docs/arch/`. A seam first discovered while coding was never reviewed. -> the architecture skill
+3. **Plan gate.** For any multi-step feature, build the phased, test-first plan with the planning skill and record it per the todo-plan skill.
+4. **Test gate.** Write the failing test first (see Section 3). No production code without a failing test demanding it.
+5. **Tech gate.** Any off-the-shelf dependency must be on the **Adopt** or **Trial** ring of the tech-radar skill. Never introduce a `Hold`/`Verboten` technology, and never silently add a dependency that is not on the radar -- propose adding it first.
 
 ---
 
@@ -249,7 +250,7 @@ Tests exist to document and protect *what the system does*, not *how it does it*
 
 Work is complete only when:
 
-* The change traces back to an approved design doc (`DESIGN.<name>.md` / `ARCHITECTURE.md`)
+* The change traces back to an approved design doc (`docs/design/DESIGN.<name>.md`)
 * All behavioral tests pass (written test-first)
 * Every dependency used is on the Adopt/Trial ring of the tech-radar skill
 * The change passes the Section 1.2 tests (Grep, Swap, Decision, Arrow, Change)

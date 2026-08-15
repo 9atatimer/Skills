@@ -1,6 +1,6 @@
 ---
 name: todo-plan
-description: "Reading, updating, or pruning the project's root TODO_PLAN.md -- the repo's one and only plan file (singleton, repo root): status, progress marks, lessons learned. Skip for first-time authoring of a phased plan from a design doc (planning)."
+description: "Maintaining the project's root TODO_PLAN.md across every phase -- reading, updating, or pruning it -- the repo's one and only plan file (singleton, repo root): status, progress marks, lessons learned. Skip for first-time authoring of a phased plan from a design doc (planning)."
 ---
 
 # Skill: TODO_PLAN.md Maintenance

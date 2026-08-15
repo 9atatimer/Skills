@@ -7,6 +7,29 @@ Claude Code, Codex CLI, Gemini CLI, Copilot, OpenCode, Cursor, and others;
 each agent's lazy skill discovery replaces the old hand-rolled
 `SKILL.INDEX.md` dispatch.
 
+## The phase spine
+
+The skills are organized around the eight-phase SDLC. The `sdlc` skill is
+the spine -- the always-in-effect laws and which skill owns which phase --
+and is the one to load first when unsure:
+
+| Phase | Skill |
+|---|---|
+| 1 Concept | `concept` |
+| 2 Design | `design` |
+| 3 Architecture (intended) | `architecture` |
+| 3b Planning | `planning` (+ `todo-plan`) |
+| 4 Behaviors | `testing` + `testing-{node,nuxt,python}` |
+| 5 Code | `coding` + `style-{bash,python,typescript}` |
+| 6 Gates | `gates` |
+| 7 Release | `release` |
+| 7a Architecture (as-built) | `architecture` |
+| 8 Retrospective | `retrospective` |
+
+`github-workflow`, `markdown`, `tech-radar`, and the tool skills
+(`chrome-mcp`, `lmde-dashboards`) are not phases -- they are loaded
+whenever their subject comes up.
+
 ## How it is consumed
 
 `clai provision` (see

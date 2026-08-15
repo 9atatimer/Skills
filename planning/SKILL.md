@@ -1,9 +1,9 @@
 ---
 name: planning
-description: "Turning a design doc into a phased, test-first (RED->GREEN->COMMIT) implementation plan before multi-step work; produces plan content recorded inside the repo's single root TODO_PLAN.md, never a separate file. Skip when just maintaining an existing TODO_PLAN.md (todo-plan) or making a single small change (coding)."
+description: "Phase 3b of the SDLC, the epilogue to architecture: turning an approved design plus the as-built into a phased, test-first (RED->GREEN->COMMIT) route; produces plan content recorded inside the repo's single root TODO_PLAN.md, never a separate file. Skip when just maintaining an existing TODO_PLAN.md (todo-plan) or making a single small change (coding)."
 ---
 
-# SKILL: Implementation Planning
+# SKILL: Implementation Planning (Phase 3b)
 
 > **THIS SKILL PRODUCES PLAN *CONTENT*, NOT A FILE.** The phased plan you
 > build here is recorded as a section inside the repository's single,
@@ -15,8 +15,29 @@ description: "Turning a design doc into a phased, test-first (RED->GREEN->COMMIT
 > it as the shape of your *thinking*, not a file to create.
 
 > **Purpose:** Create resilient, BDD-driven implementation plans that fight compact amnesia
-> **When to use:** Before starting any multi-phase feature implementation
+> **When to use:** After the architecture phase has named the seams, before any behavior is written
 > **Learned from:** Pantry TODO_PLAN (excellent) vs CR-MAGIC TODO_PLAN (poor)
+
+## Planning needs two endpoints
+
+A plan is the **route from where you actually stand to where the design
+says you are going.** It needs both:
+
+- **The target** -- the approved design doc (`docs/design/`). What and why.
+- **The start** -- the as-built (`docs/arch/`). What is really there now.
+
+That is why this phase is an epilogue to architecture rather than a
+prologue to the tests: **a route computed without the as-built is
+fiction**, because it plans against an imagined codebase. Read both before
+writing a single phase.
+
+It is also why this is where scope gets cut. Planning is the first phase
+that meets real code, so it is the first phase where cost is real. A phase
+count that grew when you looked at the actual tree is the process working,
+not a failure -- say so out loud rather than quietly padding the estimate.
+
+Architecture and planning elide **together** or not at all. -> the
+architecture skill
 
 ---
 
