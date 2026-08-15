@@ -1,6 +1,6 @@
 ---
 name: retrospective
-description: "Phase 8 of the SDLC, and the only thing that closes the loop: walking the frozen design against the shipped code, cutting drift issues, appending Key Decisions, recording lessons in TODO_PLAN.md, and handing the status transition to a human. Load whenever an implementation lands -- green tests and a clean review are not the end of the work. Skip only when nothing shipped."
+description: "Phase 8 of the SDLC, and the only thing that closes the loop: walking the frozen design against the shipped code, cutting drift issues, appending Key Decisions, recording lessons in TODO_PLAN.md, and handing the status transition to a human. Load whenever an implementation lands -- green tests and a clean review are not the end of the work. This phase never elides, including when the change shipped nowhere."
 ---
 
 # SKILL: Retrospective (Phase 8)
