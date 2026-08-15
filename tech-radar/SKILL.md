@@ -84,7 +84,7 @@ proposal makes the choice reviewable, the landing keeps the file honest.
 | Shell | **Bash 5.2+** | `set -euo pipefail`; see the style-bash skill. |
 | Browser automation | **Chrome for Testing + chrome-devtools-mcp** | See the chrome-mcp skill. |
 | Secrets | **1Password** (service-account / `load-secrets-action`) | Inject at runtime; do not paste secrets into GitHub. |
-| CI / review | **GitHub Actions + ci.magic** | See `packages/naatm-ci-magic`. |
+| CI / review | **GitHub Actions + ci.magic** | See template-tools' `packages/naatm-ci-magic`. |
 
 ## Trial
 

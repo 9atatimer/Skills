@@ -118,7 +118,7 @@ LATEST=$(ls -dt "$CFT_HOME"/browser/chrome/mac_arm-* 2>/dev/null | head -1 || tr
 echo "$LATEST/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing"
 ```
 
-**`scripts/cft/mcp-launch.sh`** -- wrapper that Claude Code invokes:
+**`scripts/cft/mcp-launch.sh`** -- wrapper the agent's MCP client invokes:
 
 ```bash
 #!/usr/bin/env bash
@@ -142,10 +142,18 @@ exec npx -y "chrome-devtools-mcp@${CDM_VERSION}" \
 
 `chmod +x scripts/cft/*.sh`.
 
-### 2. Register an MCP server in the project's `.mcp.json`
+### 2. Register the MCP server, project-scoped
 
-Project-scoped -- **never put this in `~/.claude.json`** (see
-[Etiquette](#etiquette)).
+The agent-neutral requirements: register the server at **project scope**
+(so the entry lives in the repo and other agents/collaborators see it),
+**never** in the agent's user/global MCP config (see
+[Etiquette](#etiquette)). Longer term, the canonical home for this wiring
+is template-tools' MCP manifest (`mcp/manifest.json` + `clai provision`),
+which exists precisely to abstract per-agent MCP registration.
+
+In Claude Code, project scope means the project's `.mcp.json` (the
+user/global config to avoid is `~/.claude.json`); other agents: their
+project-scoped equivalent.
 
 ```json
 {
@@ -166,9 +174,10 @@ Project-scoped -- **never put this in `~/.claude.json`** (see
 scripts/cft/install.sh
 ```
 
-### 4. Restart Claude Code in the project
+### 4. Restart the agent in the project
 
-The new MCP entry registers; on first MCP tool call, the wrapper launches
+Restart your coding agent (e.g. Claude Code) so it picks up the new MCP
+entry; on first MCP tool call, the wrapper launches
 CfT with your extension preloaded. First time, you'll need to log into
 whatever site you care about in CfT -- that login persists across sessions
 in `$CFT_HOME/userdata`.
@@ -184,9 +193,10 @@ in `$CFT_HOME/userdata`.
 
 - **Don't load development extensions into your main Chrome** for an
   agent-driven project. CfT is the development browser.
-- **Don't pollute `~/.claude.json`** with project-specific MCP entries.
-  Use the project-scoped `.mcp.json` so it lives in the repo and other
-  agents/collaborators see it.
+- **Don't pollute the agent's user/global MCP config** (in Claude Code,
+  `~/.claude.json`) with project-specific MCP entries. Use the
+  project-scoped config (in Claude Code, `.mcp.json`) so it lives in the
+  repo and other agents/collaborators see it.
 - **Don't expect the user to manage the CfT window** in normal operation.
   It opens on demand; they only need to log into the target site once.
 - **Don't enable `chrome://inspect/#remote-debugging`** on the user's

@@ -5,7 +5,7 @@ description: "Writing or reviewing tests for Nuxt 4 / Vue 3 code: Vitest + @vue/
 
 # Testing Standards -- Nuxt 4 / Vue 3
 
-> Companion to the universal [testing skill](../testing/SKILL.md) (generic principles).
+> Companion to the universal testing skill (generic principles).
 > This document covers **Nuxt 4-specific** testing practices.
 
 ---

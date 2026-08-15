@@ -87,7 +87,7 @@ Section IDs regenerate after each edit, so re-run `list_sections` if you need to
 - **Quote escaping**: If your content has quotes, the JSON escaping can cause match failures
 - **Position confusion**: `insert_section` position is section index, not line number
 - **Empty sections**: Tool sometimes creates empty duplicate headings; clean up with `delete_section`
-- **No frontmatter access**: markdown-editor cannot edit YAML frontmatter; use Filesystem:edit_file for that
+- **No frontmatter access**: markdown-editor cannot edit YAML frontmatter; use your file-editing tool (e.g. the Filesystem MCP server's `edit_file`) for that
 
 ## Pre-edit checklist
 

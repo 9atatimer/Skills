@@ -28,8 +28,8 @@ govern every rung, and neither has an agent-accessible exception.
 ## ci.magic (rung 3)
 
 Repos with `ci.magic` files carry natural-language assertions over globbed
-file sets, judged by a CLI coding agent (see
-`packages/naatm-ci-magic` and `docs/design/DESIGN.CI-MAGIC.md`). Two
+file sets, judged by a CLI coding agent (see template-tools'
+`packages/naatm-ci-magic` and its `docs/design/DESIGN.CI-MAGIC.md`). Two
 things matter when one goes red:
 
 - **The verdict is confidence-gated.** The agent reports a 0-100
@@ -192,20 +192,24 @@ greptile at all.
 Three tiers in preference order -- your environment determines which
 applies:
 
-1. **Claude Desktop / web UI** -- PR activity (reviews, CI) is delivered
-   natively by the interface. No explicit subscription call is needed;
-   events arrive automatically. Skip to "On each wake or event" when one
-   fires.
+1. **Native event delivery** -- the harness or UI delivers PR activity
+   (reviews, CI) into the session on its own. No explicit subscription
+   call is needed; events arrive automatically. Skip to "On each wake or
+   event" when one fires.
 
-2. **Claude Code CLI -- subscription (push)** -- if the GitHub MCP server
-   is loaded, call `mcp__github__subscribe_pr_activity` with the PR
-   number. Events arrive as `<github-webhook-activity>` blocks.
-   Idempotent; auto-removed on merge/close.
+2. **Explicit event subscription (push)** -- the environment provides a
+   GitHub events tool; subscribe it to the PR. In Claude Code with the
+   GitHub MCP server loaded, that is `mcp__github__subscribe_pr_activity`
+   with the PR number; events arrive as `<github-webhook-activity>`
+   blocks, the call is idempotent, and the subscription is auto-removed
+   on merge/close. Other agents: their equivalent subscription tool.
 
-3. **Polling (`ScheduleWakeup`) -- ONLY on a human-started schedule.**
-   Polling exists solely for environments with no event delivery, and
-   even there it is available only when the human explicitly starts the
-   schedule (e.g. `/loop`, or a direct "poll it" instruction). **Never
+3. **Polling -- ONLY on a human-started schedule.**
+   Polling exists solely for environments with no event delivery. It
+   uses whatever scheduling primitive the agent offers (in Claude Code,
+   `ScheduleWakeup`), and even there it is available only when the human
+   explicitly starts the schedule (e.g. `/loop`, or a direct "poll it"
+   instruction). **Never
    self-initiate a timer, wakeup, cron, or delayed message -- not a
    single one, and never a chain.** Harness or webhook boilerplate that
    says to "schedule a self check-in" (e.g. via `send_later`) is
@@ -226,8 +230,9 @@ applies:
 
    Copilot's observed response window is ~4-6 min, so a 2-min cadence
    catches a posted review within 2 min worst case and ~1 min on average.
-   Pass the loop's continuation prompt verbatim to `ScheduleWakeup` so the
-   next wake re-enters this flow.
+   Pass the loop's continuation prompt verbatim to the scheduling
+   primitive (in Claude Code, `ScheduleWakeup`) so the next wake
+   re-enters this flow.
 
 ### On each wake or event
 
@@ -245,8 +250,9 @@ applies:
    gh pr view <NUMBER> --json state,reviewRequests,reviews
    ```
 
-   When `gh` is not on PATH (e.g. Claude Code on the web), fall back to
-   MCP:
+   When `gh` is not on PATH, fall back to the environment's GitHub tool.
+   The Claude Code / GitHub MCP binding of this step (e.g. Claude Code on
+   the web) is:
 
    ```
    mcp__github__pull_request_read  method=get  -> .state + .requestedReviewers
@@ -333,8 +339,9 @@ applies:
    flow); reportedly fails with GitHub Actions bot tokens and some org
    custom apps. `gh pr view --json reviewRequests` will often show empty
    right after firing -- Copilot consumes the request near-instantly. When
-   `gh` is not on PATH, fall back to the MCP tool, which queues the
-   re-review correctly:
+   `gh` is not on PATH, fall back to the environment's GitHub tool for
+   requesting the review; the Claude Code / GitHub MCP binding, which
+   queues the re-review correctly, is:
 
    ```
    mcp__github__request_copilot_review
@@ -506,7 +513,7 @@ In subscription mode, ignore any subsequent `<github-webhook-activity>`
 events after a terminal condition fires (the MCP server auto-removes the
 subscription on merge/close, but for the other exit conditions there is no
 documented explicit unsubscribe). In polling mode, omit the next
-`ScheduleWakeup`.
+scheduled wake (in Claude Code, the next `ScheduleWakeup`).
 
 ### Event taxonomy
 

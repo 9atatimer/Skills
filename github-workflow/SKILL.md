@@ -189,7 +189,7 @@ To avoid charging Copilot review cycles to the organization:
 ### Landing via tedium (merge bot)
 
 Repos with the tedium App installed may land PRs through the merge bot
-(see `docs/design/DESIGN.TEDIUM.md`). The rule "humans merge, agents do
+(see template-tools' `docs/design/DESIGN.TEDIUM.md`). The rule "humans merge, agents do
 not" refines to: **humans authorize merges; tedium executes them.** An
 explicit `@tedium land` comment from a human with write access IS the
 human merge decision. Zero-unreviewed-code is unchanged -- `land` may only

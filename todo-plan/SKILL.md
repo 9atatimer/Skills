@@ -136,7 +136,8 @@ A good lesson learned saves someone 30+ minutes in a future conversation.
 **Do not record:**
 
 - Obvious things ("tests should pass before merging")
-- Things already documented in style guides or CLAUDE.md
+- Things already documented in style guides or the repo's agent
+  instruction file (`AGENT.md` / `AGENTS.md` / `CLAUDE.md`)
 - Implementation details that belong in code comments
 
 ### General
