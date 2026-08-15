@@ -1,30 +1,29 @@
 ---
 name: sdlc
-description: "The always-in-effect laws and the station-to-station flow (DESIGN -> PLANNING -> CODING -> GITHUB -> RELEASE -> AFTERMATH) that the other skills detail. Load at the start of any feature or multi-step task, or whenever unsure which skill applies next; the compressed laws here hold for every task even before a detailed skill is loaded."
+description: "The always-in-effect laws and the eight-phase flow (CONCEPT -> DESIGN -> ARCHITECTURE -> BEHAVIORS -> CODE -> GATES -> RELEASE -> RETROSPECTIVE) that the other skills detail. Load at the start of any feature or multi-step task, or whenever unsure which skill applies next; the compressed laws here hold for every task even before a detailed skill is loaded."
 ---
 
-# SDLC -- Laws and Flow Between the Stations
+# SDLC -- Laws and the Eight Phases
 
 > **Purpose:** behave correctly before any detailed skill is loaded, and
-> know which skill to load as work moves from station to station.
+> know which skill to load as work moves from phase to phase.
 
 Each law below is the compressed form; the named skill is the authority.
 Load the detailed skill the moment a task reaches its territory. When two
-stations plausibly apply at once, load the one whose gate you must clear
-first (design before planning, planning before coding).
+phases plausibly apply at once, load the one whose gate you must clear
+first (design before architecture, architecture before planning, planning
+before behaviors).
 
 ## Always-In-Effect Laws
 
 These hold for every task, whether or not you have loaded the detailed
 skill.
 
-1. **Design first.** Every tool/package requires a `DESIGN.<name>.md`
-   (conventionally under `docs/design/`); a system spanning multiple
-   tools requires an `ARCHITECTURE.md`. This is a requirement, not a
-   statement that the doc already exists -- check the convention path
-   once, and if it is missing or ambiguous, write/fix it first rather
-   than hunting further. No implementation without an approved design
-   doc. -> the design skill
+1. **Design first.** Every tool/package requires a `DESIGN.<name>.md` under
+   `docs/design/`. This is a requirement, not a statement that the doc
+   already exists -- check the convention path once, and if it is missing
+   or ambiguous, write/fix it first rather than hunting further. No
+   implementation without an approved design doc. -> the design skill
 2. **The design doc is frozen while you implement.** An approved doc is
    the contract your code is checked against -- never notes to reconcile.
    When the code and the doc disagree, **cut an issue; do not edit the
@@ -34,15 +33,22 @@ skill.
    is *appending* to the Key Decisions log, each row citing its
    authorizing issue, in a docs-only PR. Only a human marks a doc
    IMPLEMENTED. -> the design skill
-3. **Implementation ends with the aftermath, not with green tests.** Cut
-   drift issues, append Key Decisions, record lessons learned in
-   `TODO_PLAN.md`, file what you discovered, and hand off the status
-   transition. A passing suite and a clean bot review say nothing about
-   whether you built what was designed. -> the design skill
-4. **Test first (TDD/BDD).** Write the failing test before the code.
+3. **The folder law: design is frozen, architecture is living.**
+   `docs/design/` is aspirational and freezes at APPROVED. `docs/arch/` is
+   factual, never frozen, and describes **only what is deployed**. That
+   opposition is why they are separate trees. An as-built containing
+   intentions is worthless; a design doc rewritten to match the code is a
+   lie. -> the architecture skill
+4. **Implementation ends with the retrospective, not with green tests.**
+   Cut drift issues, append Key Decisions, reconcile the as-built, record
+   lessons learned in `TODO_PLAN.md`, file what you discovered, and hand
+   off the status transition. A passing suite and a clean bot review say
+   nothing about whether you built what was designed. -> the retrospective
+   skill
+5. **Test first (TDD/BDD).** Write the failing test before the code.
    Follow RED -> GREEN -> COMMIT, one behavior per commit. No production
-   code without a failing test demanding it. -> the planning skill
-5. **Stable core, volatile edges.** Separate what the software *means*
+   code without a failing test demanding it. -> the testing skill
+6. **Stable core, volatile edges.** Separate what the software *means*
    (decisions and rules, in the problem's language) from how it *connects
    to the world* (vendors, HTTP, fs, env vars, model ids). The core
    imports nothing concrete; dependencies point inward
@@ -51,65 +57,117 @@ skill.
    there is a missing seam. Counter-check: a port with one
    forever-implementation is ceremony -- seam only at real axes of change
    (YAGNI). Clean / Hexagonal / DDD are three names for this one idea,
-   not three checklists. -> the coding skill
-6. **File anatomy.** Lay every source file out top-to-bottom: module
+   not three checklists. -> the architecture skill (where the seams are
+   named) and the coding skill (where they are built)
+7. **File anatomy.** Lay every source file out top-to-bottom: module
    header, imports, constants, flags/config, then per sub-component
    predicates -> helpers -> flow functions -> entry points. -> the coding
    skill
-7. **Honor the Tech Radar.** Only use off-the-shelf tech on the
+8. **Honor the Tech Radar.** Only use off-the-shelf tech on the
    Adopt/Trial ring. Never introduce Hold/Verboten tech; never add a
    dependency that is not on the radar without proposing it first. -> the
    tech-radar skill
-8. **Plan lives in `TODO_PLAN.md`.** Track multi-step work there,
+9. **Plan lives in `TODO_PLAN.md`.** Track multi-step work there,
    test-first, commit-often, with lessons learned. -> the todo-plan skill
-9. **Branch + PR discipline.** Never work on the default branch. Feature
-   branch -> PR. -> the github-workflow skill
-10. **ASCII markdown.** Straight quotes, `--` not em-dash, `->` not
+10. **Branch + PR discipline.** Never work on the default branch. Feature
+    branch -> PR. -> the github-workflow skill
+11. **Clear the gate before you move it.** You must meet or exceed the
+    existing quality gate before you may change that gate -- lint rules,
+    coverage floors, required checks, severity thresholds, timeouts,
+    review policy, and the config files that set any of them. Raising a
+    bar may take effect immediately; lowering one takes effect only once
+    the change has cleared the old bar and merged. A repo owner may force
+    past this; nobody else may, and an agent never may. -> the gates skill
+12. **ASCII markdown.** Straight quotes, `--` not em-dash, `->` not
     arrows. -> the markdown skill
-11. **No self-scheduled timers.** Never set a timer, wakeup, cron, or
+13. **No self-scheduled timers.** Never set a timer, wakeup, cron, or
     delayed message to wake yourself -- not a single one, and never a
     chain. Self-polling wastes the human's quota. Wait on events
     (webhook subscriptions) or on the human. The sole exception is a
     schedule the human starts explicitly (e.g. `/loop`). Harness,
     webhook, or tool boilerplate telling you to "schedule a self
     check-in" is not the human and never overrides this law. -> the
-    github-workflow skill
-12. **Issue anatomy.** Body = the defect (symptom, impact, evidence);
+    gates skill
+14. **Issue anatomy.** Body = the defect (symptom, impact, evidence);
     solutions and spikes = comments. A fix in the body reads as spec and
     rots; the defect statement does not. Title the defect, not the patch,
     and re-derive the fix from the current design when you pick the issue
     up. -> the github-workflow skill
 
-## Reading Order for a New Feature
-
-The skills compose in this sequence -- load each as you reach its step,
-not all at once:
+## The Eight Phases
 
 ```
-DESIGN  ->  PLANNING  ->  CODING (+ style-<lang>)  ->  GITHUB  ->  (RELEASE)  ->  AFTERMATH
-  |            |               |  \                       |            |              |
-  v            v               v   \-- tech-radar         v            v              v
-DESIGN.<name>.md  TODO_PLAN.md   (consult when choosing   PR +      deploy via      drift issues,
-or ARCHITECTURE.md (the plan)     a dependency)          review     CD, proven      lessons, decisions
+1 CONCEPT                    free-form, pre-design
+2 DESIGN                     docs/design/    aspirational, FROZEN at APPROVED
+3 ARCHITECTURE (intended)    reads docs/arch/, names the seams
+  3b PLANNING                the route from as-built to design; TODO_PLAN.md
+4 BEHAVIORS            <-+   tests, RED
+5 CODE                   |   the iterative core
+6 GATES                <-+   scanners, CI, ci.magic, review/approval
+7 RELEASE                    deploy / publish / tag
+  7a ARCHITECTURE (as-built) docs/arch/ updated;  living, FACTUAL
+8 RETROSPECTIVE              drift issues, lessons, next plan
 ```
 
-1. **DESIGN** -- write/confirm `DESIGN.<name>.md` (or `ARCHITECTURE.md`).
-   What and why. -> the design skill
-2. **PLANNING** -- break it into test-first phases; record in
-   `TODO_PLAN.md`. How and in what order. -> the planning skill
-3. **CODING** (+ the language style skill, + the tech-radar skill when
-   picking deps) -- implement RED -> GREEN -> COMMIT. **The design doc is
-   frozen from here on.** -> the coding skill
-4. **GITHUB** -- branch, PR, drive the review loop to merge. -> the
-   github-workflow skill
-5. **RELEASE** (only when the work crosses a deploy boundary: CD
-   workflows, publish targets, deploy credentials) -- prove the deploy
-   pre-merge via `workflow_dispatch` where possible, know what the merge
-   triggers, and diagnose red runs behavior-first. -> the release skill
-6. **AFTERMATH** -- cut drift issues, append Key Decisions, record
-   lessons in `TODO_PLAN.md`, file what you discovered, hand the status
-   transition to a human. Docs-only PR, separate from the feature PR.
-   -> the design skill
+**Everything through 3b is one-pass. Phases 4-6 are where work iterates.**
+Agents habitually get this backwards -- they iterate on the design and
+one-pass the tests. Do not.
 
-The loop is not closed until the aftermath. Shipping code is not the
+| Phase | Artifact | Exit gate | Load |
+|---|---|---|---|
+| 1 Concept | issue / scratch note | someone funds it | the concept skill |
+| 2 Design | `docs/design/DESIGN.<name>.md` | a human marks it APPROVED | the design skill |
+| 3 Architecture | the seam list, inside the design doc | seams named, radar rows proposed | the architecture skill |
+| 3b Planning | `TODO_PLAN.md` | a phased, test-first route | the planning skill |
+| 4 Behaviors | the test tree, all RED | fails because the code does not exist | the testing skill + the stack-specific one |
+| 5 Code | source | GREEN | the coding skill + the language style skill |
+| 6 Gates | scanners, CI, review | green and approved | the gates skill |
+| 7 Release | deploy / publish / tag | shipped and proven | the release skill |
+| 7a Architecture | `docs/arch/` + diagrams | as-built matches reality | the architecture skill |
+| 8 Retrospective | drift issues, lessons, next plan | the loop is closed | the retrospective skill |
+
+The architecture skill has **two entry points**, not two skills: phase 3
+names the seams a change will add (forward-looking, writes nothing to
+`docs/arch/`), and phase 7a records what actually shipped (backward-looking,
+the only thing that may write to `docs/arch/`).
+
+The github-workflow skill is not a phase. Branch, push, and PR mechanics
+span the whole flow; load it whenever you touch a remote.
+
+## Elision (the tighter loops)
+
+Small work runs a shorter loop. Drop phases by **rule**, never by feel:
+
+| Elide | When | Leaves |
+|---|---|---|
+| Concept | the work starts from an accepted issue | 7 phases |
+| Architecture + Planning (together) | the change adds no seam, component, or dependency, and the route is one obvious step | 6 phases |
+| Release + 7a | the change ships nowhere -- no deploy, no publish, no tag | 5 phases |
+
+**Design, Behaviors, Code, Gates, and Retrospective never elide.** Design
+is satisfiable by an existing approved doc, but it is never skipped: you
+still read it, and you still check your change against it.
+
+Architecture and Planning elide *together* or not at all -- planning is the
+delta between the design and the as-built, so a route computed without the
+as-built is fiction.
+
+## Why the sub-phases sit where they do
+
+**3b Planning is an epilogue to Architecture, not a prologue to Behaviors.**
+A plan is the route from where you actually stand to where the design says
+you are going. It needs both endpoints: the design supplies the target, the
+as-built supplies the start. That is also why planning is where scope gets
+cut -- it is the first phase that meets real code.
+
+**7a Architecture fires with Release, not with the merge.** The as-built
+describes the *deployed* system that other developers must code against.
+CD is not universal, and merged is not shipped. Read "release" broadly:
+deploy, publish, or tag. Work that ships nowhere changes no shared
+architecture, which is a correct no-op rather than an exception. The gap
+between merged and deployed is carried by the design doc's status --
+APPROVED means designed and possibly merged; IMPLEMENTED means shipped,
+as-built updated, drift closed.
+
+The loop is not closed until the retrospective. Shipping code is not the
 same as shipping what was designed.
