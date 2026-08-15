@@ -1,34 +1,47 @@
 ---
 name: design
-description: "Writing, reviewing, or improving a design doc; use before starting any feature that lacks one. Covers DESIGN.<name>.md vs ARCHITECTURE.md choice, required sections incl. Rejections, and naming axes of change. Skip when implementing against an approved design (coding) or building the phased plan (planning)."
+description: "Phase 2 of the SDLC: writing, reviewing, or improving a design doc; use before starting any feature that lacks one. Covers the required sections incl. Rejections, the freeze at APPROVED, and the status ladder. Skip when naming seams or updating the as-built (architecture), building the phased plan (planning), or implementing against an approved design (coding)."
 ---
 
-# SKILL: Design Document Authoring & Review
+# SKILL: Design Document Authoring & Review (Phase 2)
 
 > **Purpose:** Author, review, and improve design documents that are useful to both AI agents and human engineers.
 > **When to use:** Before implementing a new system, major feature, or architectural change.
+> **Exit gate:** a human marks the doc APPROVED. From then on it is frozen.
 > **References:** `docs/design/TEMPLATE.md`, `docs/design/STYLE-GUIDE.md`
 
 ---
 
 ## The Design-Doc Rule (read first)
 
-**No implementation without an approved design doc.** Two document kinds, and the
-choice between them is mechanical:
+**No implementation without an approved design doc.**
 
 | You are designing... | Write | Where |
 |---|---|---|
 | A single tool / package / component | `DESIGN.<name>.md` | `docs/design/` |
-| A system that spans **multiple tools** (how they fit together) | `ARCHITECTURE.md` | `docs/design/` |
 | How two specific components connect | `INTEGRATION.md` | `docs/design/` |
 
 * **Every tool gets its own `DESIGN.<name>.md`.** One tool, one design doc.
-* **A mix of tools gets an `ARCHITECTURE.md`** that describes the boundaries,
-  responsibilities, and contracts between the tools' design docs -- it links
-  out to each `DESIGN.<name>.md` rather than duplicating them.
+* A design doc that spans multiple tools describes the boundaries and
+  contracts between them, and links out to each `DESIGN.<name>.md` rather
+  than duplicating them.
 * The design doc answers **what** and **why**; the root `TODO_PLAN.md` (via
   the planning skill) answers **how** and **in what order**; the code
   (via the coding skill) is the result.
+
+### `docs/design/` is not `docs/arch/`
+
+**The as-built lives in `docs/arch/` and is not a design doc.** The two
+trees fail in opposite directions, which is why they are separate:
+
+| | `docs/design/` | `docs/arch/` |
+|---|---|---|
+| Describes | what we intend to build | what is deployed right now |
+| Lifecycle | **frozen at APPROVED** | **living, never frozen** |
+| Wrong when | rewritten to match the code | contains anything not yet shipped |
+
+Never place an as-built document in `docs/design/`, and never describe
+unshipped intentions in `docs/arch/`. -> the architecture skill
 
 ---
 
@@ -37,10 +50,14 @@ choice between them is mechanical:
 A design doc's most useful architectural work is to separate what is **stable**
 (the meaning -- decisions and rules in the problem's language) from what is
 **volatile** (the mechanisms -- vendors, wire formats, storage, model ids), and
-to name each volatile axis as one explicit seam. This is the single idea behind
-Clean / Hexagonal / DDD; see the coding skill, Section 1.
+to name each volatile axis as one explicit seam.
 
-In the **Architecture Overview** and **Design** sections, make this concrete:
+**That work is phase 3 and its authority is the architecture skill** -- but
+its output lands *here*, in this doc's Architecture Overview, Design, Key
+Decisions, and Rejections sections. A design doc with no named seams is not
+finished; a seam first discovered while coding was never reviewed.
+
+The short form, so a doc can be judged without loading phase 3:
 
 - **List what is likely to change** (the Change test). Each axis maps to exactly
   one seam -- a port, a policy, or a parameter -- not a hardcoded value.
@@ -85,8 +102,10 @@ Copy `docs/design/TEMPLATE.md` to a new file following naming conventions:
 | Pattern | Use For |
 |---------|---------|
 | `DESIGN.<name>.md` | Feature or component design |
-| `ARCHITECTURE.md` | System-level design |
 | `INTEGRATION.md` | How components connect |
+
+(As-built system documentation is not a design doc -- it belongs in
+`docs/arch/`. See the architecture skill.)
 
 ### 3. Fill Sections in Order
 
@@ -211,24 +230,38 @@ When asked to improve an existing doc:
 
 A design doc's value is realized when it drives implementation:
 
-1. **Before coding:** Read the design doc. If anything is unclear, improve the doc first
-2. **During planning:** Use the planning skill to break the design into phases, recorded in the repo's single root `TODO_PLAN.md` (per the todo-plan skill)
-3. **During coding:** Use the coding skill to implement against the design doc. **The doc is frozen while you code** -- see Drift below
-4. **After implementation:** Run the aftermath checklist below. Do **not** silently "update the doc to match"
+1. **Architecture (phase 3):** name the seams the change adds, against the
+   as-built in `docs/arch/`. The output lands in this doc. -> the
+   architecture skill
+2. **Planning (phase 3b):** break the design into test-first phases,
+   recorded in the repo's single root `TODO_PLAN.md`. -> the planning skill
+3. **Behaviors and Code (phases 4-5):** implement RED -> GREEN -> COMMIT
+   against the design doc. **The doc is frozen from APPROVED onward** --
+   see Drift below
+4. **Retrospective (phase 8):** walk the doc against the code and file
+   every divergence. Do **not** silently "update the doc to match". -> the
+   retrospective skill
 
-### Design Doc -> TODO_PLAN Flow
+### Where this doc sits
 
 ```
-docs/design/DESIGN.feature.md    (what to build and why)
+docs/design/DESIGN.feature.md    (what to build and why -- FROZEN at APPROVED)
+         |
+         v
+docs/arch/                       (what already exists -- read, not written, at phase 3)
          |
          v
 TODO_PLAN.md                     (how to build it -- the repo-root singleton)
          |
          v
 Implementation                    (the code)
+         |
+         v
+docs/arch/                       (updated at 7a with what actually shipped)
 ```
 
-The design doc answers **what** and **why**. The TODO_PLAN answers **how** and **in what order**.
+The design doc answers **what** and **why**. The as-built answers **what is
+actually there**. The TODO_PLAN answers **how** and **in what order**.
 
 ---
 
@@ -252,26 +285,25 @@ violating. It shipped.
 > doc does not get edited by the implementer.**
 
 When the code and the doc disagree, that disagreement **is the deliverable of
-the aftermath**. File it. A human decides whether to amend the design or change
-the code, through the design process.
+the retrospective**. File it. A human decides whether to amend the design or
+change the code, through the design process.
 
 ### What counts as drift
 
-Anything the doc specifies that the code does not do, and anything the code does
-that the doc does not specify. All of it:
+Anything the doc specifies that the code does not do, and anything the code
+does that the doc does not specify. **The drift walk itself -- the kinds,
+and what to file for each -- is the retrospective skill (phase 8).** Two
+things must be true here, at design time, for that walk to be possible
+later:
 
-| Kind | Example | Action |
-|---|---|---|
-| Spec'd but not built | A registry entry, a field, an enum variant you dropped | Issue |
-| Built but not spec'd | Security flags, a new error type, a timeout policy | Issue |
-| Rule violated | Doc says "fail closed, exclude X"; you shipped X anyway | Issue, flagged as a **decision needed** -- this is the dangerous kind |
-| Shape changed | Fields merged, split, or moved from data to behavior | Issue |
-| Provisional resolved | Doc marks flags "provisional, verify at implementation time" | **Not drift** -- the doc told you to. Record the verified values in the aftermath |
+- The doc says something specific enough to diverge *from*. "Handle errors
+  gracefully" cannot drift; "retry twice, then fail closed" can.
+- The doc stays frozen, so the divergence is visible at all.
 
-The "rule violated" row is the one that matters most. If your implementation
-breaks a stated constraint -- especially a security constraint -- say so out
-loud in its own issue, framed as a decision for a human. Do not soften the rule
-in the doc so the code conforms.
+One split is worth knowing before you get there: for anything the code does
+that the doc never specified, the as-built **records** it as fact (phase 7a)
+*and* an issue **accuses** -- asks whether it should have been designed.
+Recording is not approving, and this doc is not where either happens.
 
 ### One legitimate exception
 
@@ -292,31 +324,20 @@ amends it.
 
 ---
 
-## Aftermath (run this when implementation lands)
+## When implementation lands
 
-Implementation is not done when the tests pass. Work through this checklist,
-in a **docs-only PR separate from the feature PR**:
+Implementation is not done when the tests pass. The closing checklist --
+cut drift issues, append Key Decisions, record lessons, file what you
+discovered, update `TODO_PLAN.md`, hand off the status transition -- is
+**the retrospective skill (phase 8)**, run in a docs-only PR separate from
+the feature PR.
 
-1. **Cut drift issues.** Walk the doc section by section against the code. Every
-   divergence gets an issue per the table above, with file:line and a concrete
-   consequence. Cross-link them so the set is reviewable together.
-2. **Record Key Decisions.** Append the decisions made during implementation to
-   the doc's Key Decisions table, each citing its authorizing issue.
-3. **Record lessons learned.** Add to `TODO_PLAN.md`'s Lessons Learned section:
-   what surprised you, what bit you, what the next agent must not repeat. A
-   lesson needs the *mechanism*, not just the symptom -- "X inherits the global
-   config and starts OAuth flows" beats "X was noisy."
-4. **Record discovered issues.** Anything you found that is *not* drift --
-   pre-existing bugs, deferred work the doc names as future, follow-ups you
-   chose not to do. File them; do not leave them in a PR description.
-5. **Update TODO_PLAN.** Mark the phase shipped, and list the outstanding drift
-   issues under it so the work is visibly incomplete until they are settled.
-6. **Status transition.** Only a human moves the doc to IMPLEMENTED, and only
-   once the drift issues are closed -- because IMPLEMENTED means "code matches
-   the design," which is false while drift is open.
+It used to live here, which is why it got skipped: the freeze rule above
+tells implementers not to be in this skill, so the one checklist that
+closes the loop was hidden behind the rule that kept them out of it.
 
-> A green test suite and a clean review say nothing about whether you built what
-> was designed. Only the aftermath does.
+> A green test suite and a clean review say nothing about whether you built
+> what was designed. Only the retrospective does.
 
 ---
 
@@ -331,11 +352,18 @@ DRAFT  -->  REVIEW  -->  APPROVED  -->  IMPLEMENTED
 
 - **DRAFT -> REVIEW:** Author believes doc is complete enough for feedback
 - **REVIEW -> APPROVED:** Reviewers agree on the approach
-- **APPROVED -> IMPLEMENTED:** Code matches the design -- **human-only, and only
-  once every drift issue is closed.** An implementer never marks its own work
-  IMPLEMENTED, and the status is a lie while drift is open
+- **APPROVED -> IMPLEMENTED:** **shipped, as-built updated, drift closed.**
+  Human-only. All three conditions, not just the first: code that is merged
+  but not released is not in the shared architecture, and the status is a
+  lie while drift is open. An implementer never marks its own work
+  IMPLEMENTED
 - **IMPLEMENTED -> SUPERSEDED:** A newer design replaces this one (link to it)
 - **REVIEW -> DRAFT:** Significant revisions needed (back to drafting)
+
+**APPROVED and IMPLEMENTED carry the merged-but-unreleased gap.** APPROVED
+means designed, and possibly merged, but not yet in the shared architecture
+described by `docs/arch/`. That is what lets the as-built stay strictly
+factual instead of needing a "pending" marker.
 
 **APPROVED is a freeze.** From APPROVED onward the doc changes only by human
 amendment through the design process -- never as a side effect of someone
