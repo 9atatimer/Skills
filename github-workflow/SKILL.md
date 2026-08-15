@@ -214,6 +214,24 @@ a PR opened via API or CLI does not -- reproduce the template's headings in
 the PR body yourself. If no template exists, write a normal descriptive
 body; do not go hunting for one.
 
+## Naming issues and PRs
+
+**Always say which kind a number is: `issue #458`, `PR #459`.** Never a bare
+`#458`.
+
+GitHub renders both identically and numbers them from one shared sequence, so
+a bare `#N` tells the reader nothing about whether it points at a defect
+record or a diff -- and those want opposite reactions. "Blocked on #71" is
+unreadable; "blocked on PR #71" says wait for a merge, "blocked on issue #71"
+says someone has to decide something.
+
+This holds everywhere a number appears: commit messages, PR bodies, issue
+bodies, review replies, `TODO_PLAN.md`, and chat with the human.
+
+**Cross-repo references carry the repo:** `template-base#71`, or the full
+`owner/repo#71` when the org is not obvious from context. A bare number is
+always read as this repo.
+
 ## Issue Anatomy (defect vs. solution)
 
 The body states the defect -- symptom, impact, evidence, done-criteria.
