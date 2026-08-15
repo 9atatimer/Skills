@@ -26,7 +26,8 @@ and is the one to load first when unsure:
 | 7a Architecture (as-built) | `architecture` |
 | 8 Retrospective | `retrospective` |
 
-`github-workflow`, `markdown`, `tech-radar`, and the tool skills
+`github-workflow`, `markdown`, `tech-radar`, `wrapup` (the session
+epilogue, typically invoked as `/wrapup`), and the tool skills
 (`chrome-mcp`, `lmde-dashboards`) are not phases -- they are loaded
 whenever their subject comes up.
 
