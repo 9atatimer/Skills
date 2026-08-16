@@ -1,6 +1,6 @@
 ---
 name: wrapup
-description: "The session epilogue, typically human-invoked (/wrapup) before a session is archived: sweep what the session produced into durable homes -- comments on the issues it touched, new issues for what it discovered, TODO_PLAN lessons and status, as-built corrections -- batching all file edits into at most ONE docs-only PR. Records only what would be wasteful to forget; 'nothing worth recording' is a valid outcome. If an implementation landed this session and phase 8 has not run, run the retrospective skill first -- wrapup is not a substitute for it."
+description: "The session epilogue, typically human-invoked (/wrapup) before a session is archived: first preserve any uncommitted or unpushed work on the session's feature branch, then sweep what the session produced into durable homes -- comments on the issues it touched, new issues for what it discovered, TODO_PLAN lessons and status, as-built corrections -- batching all file edits into at most ONE docs-only PR. Records only what would be wasteful to forget; 'nothing worth recording' is a valid outcome. If an implementation landed this session and phase 8 has not run, run the retrospective skill first -- wrapup is not a substitute for it."
 ---
 
 # SKILL: Wrapup (session epilogue)
@@ -21,6 +21,20 @@ spikes. It is the session-scoped cousin of the retrospective:
 - If phase 8 already ran, wrapup does not re-run it or duplicate its
   outputs.
 
+## First: preserve the work itself
+
+Before any routing, inspect every repository the session touched:
+uncommitted changes (`git status`) and unpushed commits on the working
+branch. Unfinished code is not "context" -- it is the session's primary
+artifact, and in an ephemeral sandbox, archiving discards it
+permanently. Commit and push it on the session's feature branch per the
+github-workflow skill (never the default branch; work-in-progress state
+is fine to push on a feature branch -- a PR can wait). If pushing is
+impossible (no network, no credentials), do NOT proceed quietly: say so
+and end with a precise handoff -- repo, branch, diff stat, and what
+remains -- so the human can decide before the container is reclaimed.
+Only then run the sweep.
+
 ## The sweep
 
 Walk the session once and route each artifact to the one place the
@@ -37,7 +51,7 @@ archived and re-read by nobody.
 | A deployed-system fact that changed or was wrong | `docs/arch/` -- ONLY if the change actually shipped; the 7a rule is unchanged |
 | The same correction made for the second or third time | A proposed skill change (an issue on the skills repo), not another lesson nobody reads |
 | A repo convention that got clarified | The repo's agent instruction file (`AGENT.md` / `AGENTS.md` / `CLAUDE.md`) |
-| Everything else | Let it die with the session. That is what archiving is for |
+| Everything else session-local: reasoning, dead ends, scratch state | Let it die with the session. That is what archiving is for. (Code is never in this row -- see "First: preserve the work itself") |
 
 ## The two laws
 
