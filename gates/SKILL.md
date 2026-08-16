@@ -153,11 +153,15 @@ Which bot reviews a PR is policy, not agent judgment:
   cycles run on Copilot unless the human directs otherwise.
   Re-request trigger: `gh pr edit <NUMBER> --add-reviewer @copilot`
   (or the MCP `request_copilot_review`).
-- **Codex is a quota-relief fallback, human-invoked ONLY.** Never
-  select codex yourself -- not when Copilot stalls, errors, or appears
-  out of quota. The human decides ("Copilot is exhausted -- use
-  codex"), per PR or per session; absent that instruction, surface the
-  stall and stop. Trigger: a PR comment containing `@codex review`.
+- **Codex is a quota-relief fallback, human-invoked ONLY -- and
+  "human-invoked" means the human posts the trigger themselves.** The
+  trigger is a PR comment containing `@codex review`, and an agent
+  NEVER posts it: not to select codex, not to relay or fix a typo'd
+  human request, and not to nudge a re-review after pushing fixes. If
+  the human's trigger misfires (wrong handle, no bot reaction), say so
+  and let the human re-post. **Copilot is the only reviewer an agent
+  may summon or re-summon.** Absent a working human trigger, surface
+  the state and stop.
 - **Greptile is by-human-invite only.** Never request, trigger, or
   re-request a greptile review under any circumstances; if the human
   invites it onto a PR, triage its feedback like any other reviewer's.
@@ -320,11 +324,14 @@ applies:
      state under Zero Unreviewed Code), posted per the acknowledged
      reply convention below so the thread is marked addressed.
 
-5. **After a productive push**, nudge the **active reviewer** to
-   re-review. When codex is active, the trigger is a PR comment
-   containing `@codex review` -- do not touch the Copilot request.
-   Greptile is never re-requested (by-human-invite only); further
-   rounds ride on the active reviewer. For Copilot (the default; it
+5. **After a productive push**, nudge the re-review -- but only for
+   Copilot, the one reviewer an agent may summon. When codex is
+   active, do NOT post `@codex review` (human-only trigger, see
+   Reviewer Selection) and do not touch the Copilot request either:
+   reply on the threads with the fix SHAs, state that the branch is
+   ready for another codex pass, and let the human decide whether to
+   re-summon it. Greptile is never re-requested (by-human-invite
+   only). For Copilot (the default; it
    does not auto-re-review on `synchronize`) there is no `gadmin`
    wrapper yet (tracked in the backlog), so the order is `gh` (if
    available) -> MCP:
