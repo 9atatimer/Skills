@@ -168,13 +168,19 @@ intentions back into the as-built):
 
 ### What the as-built contains
 
-One document per system or bounded context, plus diagrams:
+One topic directory per system or bounded context, plus a root index:
 
 ```
 docs/arch/
-  ARCHITECTURE.md            the system as deployed: components, seams, flows
-  <system>.html              rendered architecture diagrams
+  ARCHITECTURE.md            the INDEX: inventory (rows link to topics),
+                             cross-cutting friction, radar reality
+  <whole-repo>.html          whole-repo topology diagrams
+  <topic>/ARCHITECTURE.md    the topic's as-built: components, seams, flows
+  <topic>/<topic>.html       the topic's at-a-glance page
 ```
+
+The markdown carries the parseable detail for agents; the html carries
+the at-a-glance view for humans; both must agree.
 
 Content, in the order a new reader needs it:
 
