@@ -232,17 +232,12 @@ bodies, review replies, `TODO_PLAN.md`, and chat with the human.
 `owner/repo#71` when the org is not obvious from context. A bare number is
 always read as this repo.
 
-**The one sanctioned bare number: closing keywords.** GitHub's
-auto-close linkage (`Closes`/`Fixes`/`Resolves`) recognizes ONLY the
-bare form -- `Closes #461` links and closes on merge, while
-`Closes issue #461` is inert prose, and the issue silently stays open
-after the merge (observed on PR #465). So in a PR body, write the
-closing reference as `Closes #N` exactly; it is unambiguous anyway,
-because a closing keyword can only ever target an issue. Everywhere
-else the `issue #N` / `PR #N` rule stands unchanged. If you follow the
-convention in the closing line by mistake, the fix is to close the
-issue manually after merge -- with a comment naming the PR -- not to
-leave it open.
+**Exception: closing keywords take the bare form.** GitHub's
+auto-close parser recognizes only `Closes #N`; `Closes issue #N` is
+inert prose and the issue silently stays open after merge. Write
+closing lines bare (a closing keyword can only target an issue, so no
+ambiguity); the rule holds everywhere else. Missed one? Close the
+issue manually, naming the PR.
 
 ## Issue Anatomy (defect vs. solution)
 
