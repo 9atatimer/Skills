@@ -161,7 +161,12 @@ Which bot reviews a PR is policy, not agent judgment:
   the human's trigger misfires (wrong handle, no bot reaction), say so
   and let the human re-post. **Copilot is the only reviewer an agent
   may summon or re-summon.** Absent a working human trigger, surface
-  the state and stop.
+  the state and stop. Why the asymmetry: codex reviews are expensive,
+  and its quota is shared with workloads outside the PR -- exhaustion
+  has a blast radius the agent cannot see from inside a session.
+  Copilot is cheap, and its turn cap bounds the spend. Every codex
+  invocation is therefore a human budget decision, never an agent
+  convenience.
 - **Greptile is by-human-invite only.** Never request, trigger, or
   re-request a greptile review under any circumstances; if the human
   invites it onto a PR, triage its feedback like any other reviewer's.
