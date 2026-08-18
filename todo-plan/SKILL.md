@@ -111,7 +111,16 @@ breakdown** belongs in `TODO_PLAN.md`.
 
 ### Recording Lessons Learned
 
-This is the most important section. Record lessons when:
+This section holds **unsettled lessons on the work in progress** -- and
+only those. It is an inbox, not an archive. A lesson that has settled
+graduates to the layer whose readers need it (the sdlc skill, law 15):
+a code comment (file-local implementation trap), `docs/arch/` (component
+constraint), the repo's `AGENT.md` (what every session must know before
+working safely), or a shared skill (fleet-universal). Every layer costs
+its readers a read; keeping a settled lesson here charges it to every
+future session on this plan.
+
+Record lessons when:
 
 - An assumption turned out to be wrong
 - A tool or API didn't behave as documented
@@ -139,6 +148,17 @@ A good lesson learned saves someone 30+ minutes in a future conversation.
 - Things already documented in style guides or the repo's agent
   instruction file (`AGENT.md` / `AGENTS.md` / `CLAUDE.md`)
 - Implementation details that belong in code comments
+- Settled lessons -- route them to their layer instead (see above)
+
+**Graduation (mandatory triage).** At every retrospective and every
+wrapup, walk the list; each entry gets exactly one of:
+
+- **Promote**: the lesson has settled -- move it to its layer and delete
+  it here.
+- **Keep**: still live, still tied to the work in progress.
+- **Delete**: superseded, or its root cause is fixed. Delete outright --
+  never annotate an entry as "Historical" or "superseded"; git history
+  holds the past.
 
 ### General
 

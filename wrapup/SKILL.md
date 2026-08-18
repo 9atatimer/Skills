@@ -47,7 +47,8 @@ archived and re-read by nobody.
 | Progress, evidence, or a decision on an existing issue #N | A comment on issue #N |
 | A defect or opportunity discovered | A new issue -- defect in the body, solution thinking in a comment (issue anatomy, the github-workflow skill) |
 | Task state changed: done, blocked, descoped, superseded | `TODO_PLAN.md` status marks / Blockers |
-| A lesson with a mechanism (what you expected, what happened, why) | `TODO_PLAN.md` Lessons Learned |
+| A lesson with a mechanism, still unsettled, tied to the work in progress | `TODO_PLAN.md` Lessons Learned |
+| A lesson with a mechanism, settled | Its layer per the sdlc skill, law 15: code comment (file-local), `docs/arch/` (component), `AGENT.md` (repo), or a proposed skill change (fleet-universal). Never an issue -- issues vanish when the root cause is fixed |
 | A deployed-system fact that changed or was wrong | `docs/arch/` -- ONLY if the change actually shipped; the 7a rule is unchanged |
 | The same correction made for the second or third time | A proposed skill change (an issue on the skills repo), not another lesson nobody reads |
 | A repo convention that got clarified | The repo's agent instruction file (`AGENT.md` / `AGENTS.md` / `CLAUDE.md`) |

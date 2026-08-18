@@ -44,8 +44,8 @@ skill.
    have no approval lifecycle and evolve freely. -> the architecture skill
 4. **Implementation ends with the retrospective, not with green tests.**
    Cut drift issues, append Key Decisions, reconcile the as-built, record
-   lessons learned in `TODO_PLAN.md`, file what you discovered, and hand
-   off the status transition. A passing suite and a clean bot review say
+   lessons learned at their layer (law 15), file what you discovered, and
+   hand off the status transition. A passing suite and a clean bot review say
    nothing about whether you built what was designed. -> the retrospective
    skill
 5. **Test first (TDD/BDD).** Write the failing test before the code.
@@ -96,6 +96,23 @@ skill.
     rots; the defect statement does not. Title the defect, not the patch,
     and re-derive the fix from the current design when you pick the issue
     up. -> the github-workflow skill
+15. **Lessons live at the narrowest layer whose readers need them.**
+    Every layer is read by someone at some time, and that read is the
+    cost of recording there -- a lesson placed one layer too high is
+    context rot by definition. Ask *who reads this, and when?* before
+    writing it down. Issues are NOT a lessons layer: they are transitory
+    and vanish the moment the root cause is addressed -- route pending
+    work there, never park a lesson. -> the retrospective skill
+    (routing) and the todo-plan skill (lifecycle)
+
+    | Layer | A lesson about... | Read by whom, when |
+    |---|---|---|
+    | `TODO_PLAN.md` Lessons Learned | the work in progress, still unsettled | agents continuing that work, every session until it settles |
+    | a code comment | that implementation in that file (not architectural) | whoever edits the file, when they edit it |
+    | `docs/arch/` | that component of the deployed system | whoever touches the component |
+    | the repo's `AGENT.md` | that repo -- what an agent must know before it can work safely | every session in the repo; the most expensive repo-local layer |
+    | a shared skill | the topic, universally, fleet-wide | any session whose task enters the topic |
+    | global agent instructions | how the human wants agents to behave | every session, everywhere -- the most expensive layer of all |
 
 ## The Eight Phases
 

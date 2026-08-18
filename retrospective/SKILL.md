@@ -65,8 +65,16 @@ Every other section is frozen until a human amends it. -> the design skill
 
 ### 3. Record lessons learned
 
-Add to `TODO_PLAN.md`'s Lessons Learned: what surprised you, what bit you,
-what the next agent must not repeat.
+Record what surprised you, what bit you, what the next agent must not
+repeat -- **at the narrowest layer whose readers need it** (the sdlc
+skill, law 15). A lesson that is already settled goes straight to its
+durable layer: a code comment for a file-local implementation trap,
+`docs/arch/` for a component constraint, the repo's `AGENT.md` for
+something every session in the repo must know first, a shared skill for
+a fleet-universal lesson. `TODO_PLAN.md`'s Lessons Learned takes only
+what is still *unsettled* about the work in progress. An issue is never
+a lesson's home: issues are transitory and vanish when the root cause is
+fixed.
 
 **A lesson needs the mechanism, not the symptom.** "X inherits the global
 config and starts OAuth flows" beats "X was noisy." The symptom tells the
@@ -121,6 +129,12 @@ A session gets archived and nobody re-reads it. Something the person
 picking up issue #N needs is a comment on #N; something about the repo's
 conventions goes in its agent instruction file; something about how agents
 should work goes in the relevant skill.
+
+**An issue routes work; it never holds a lesson.** Issues are transitory
+-- they vanish the moment the root cause is addressed, taking anything
+parked in them along. The rows above that point at an issue are routing
+*pending decisions and work*; the lesson itself, once settled, lives at
+its layer (the sdlc skill, law 15).
 
 **When the same lesson recurs, the lesson is not the deliverable -- the
 skill change is.** A third repetition means the doctrine is wrong or
