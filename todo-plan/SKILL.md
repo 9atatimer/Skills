@@ -14,7 +14,8 @@ description: "Maintaining the project's root TODO_PLAN.md across every phase -- 
 
 This skill defines how to maintain the project's `TODO_PLAN.md` file at the
 repository root. This is the single source of truth for what needs doing, what
-has been done, and what we learned along the way.
+has been done, and the unsettled lessons of the work in progress (settled
+lessons live at their layer -- the sdlc skill, law 15).
 
 ---
 
@@ -22,7 +23,8 @@ has been done, and what we learned along the way.
 
 `TODO_PLAN.md` is a **self-contained operational document**. A cold-start agent
 should be able to read this file and know: what the project has accomplished,
-what work is active, what the next steps are, and what pitfalls to avoid.
+what work is active, what the next steps are, and what pitfalls the work in
+progress carries.
 
 It is not a design doc (those live in `docs/design/`). It is not a changelog
 (that's git history). It is the **living task plan** for the project.
@@ -58,7 +60,8 @@ It is not a design doc (those live in `docs/design/`). It is not a changelog
 
 ## Lessons Learned
 
-- Numbered entries with enough context to be useful months later
+- Numbered entries: unsettled lessons on the work in progress
+  (settled lessons graduate to their layer -- the sdlc skill, law 15)
 
 ## Blockers
 
@@ -150,8 +153,9 @@ A good lesson learned saves someone 30+ minutes in a future conversation.
 - Implementation details that belong in code comments
 - Settled lessons -- route them to their layer instead (see above)
 
-**Graduation (mandatory triage).** At every retrospective and every
-wrapup, walk the list; each entry gets exactly one of:
+**Graduation (mandatory triage).** At every retrospective, and at any
+wrapup whose sweep touches this file, walk the whole list; each entry
+gets exactly one of:
 
 - **Promote**: the lesson has settled -- move it to its layer and delete
   it here.

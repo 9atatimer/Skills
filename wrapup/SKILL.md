@@ -48,11 +48,17 @@ archived and re-read by nobody.
 | A defect or opportunity discovered | A new issue -- defect in the body, solution thinking in a comment (issue anatomy, the github-workflow skill) |
 | Task state changed: done, blocked, descoped, superseded | `TODO_PLAN.md` status marks / Blockers |
 | A lesson with a mechanism, still unsettled, tied to the work in progress | `TODO_PLAN.md` Lessons Learned |
-| A lesson with a mechanism, settled | Its layer per the sdlc skill, law 15: code comment (file-local), `docs/arch/` (component), `AGENT.md` (repo), or a proposed skill change (fleet-universal). Never an issue -- issues vanish when the root cause is fixed |
+| A lesson with a mechanism, settled | Its layer per the sdlc skill, law 15: code comment (file-local), `docs/arch/` (component -- ONLY if the change shipped, the 7a rule; otherwise it waits in `TODO_PLAN.md`), `AGENT.md` (repo), or a proposed skill change (fleet-universal). Never an issue -- issues vanish when the root cause is fixed |
 | A deployed-system fact that changed or was wrong | `docs/arch/` -- ONLY if the change actually shipped; the 7a rule is unchanged |
 | The same correction made for the second or third time | A proposed skill change (an issue on the skills repo), not another lesson nobody reads |
 | A repo convention that got clarified | The repo's agent instruction file (`AGENT.md` / `AGENTS.md` / `CLAUDE.md`) |
 | Everything else session-local: reasoning, dead ends, scratch state | Let it die with the session. That is what archiving is for. (Code is never in this row -- see "First: preserve the work itself") |
+
+When the sweep touches `TODO_PLAN.md`, also run the todo-plan skill's
+graduation triage over the whole Lessons Learned list -- promote/keep/
+delete every entry, not only this session's additions. A sweep that
+never opens the file skips this; the retrospective's mandatory triage
+is the backstop that keeps the list from accumulating.
 
 ## The two laws
 

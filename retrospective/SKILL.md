@@ -69,12 +69,19 @@ Record what surprised you, what bit you, what the next agent must not
 repeat -- **at the narrowest layer whose readers need it** (the sdlc
 skill, law 15). A lesson that is already settled goes straight to its
 durable layer: a code comment for a file-local implementation trap,
-`docs/arch/` for a component constraint, the repo's `AGENT.md` for
-something every session in the repo must know first, a shared skill for
-a fleet-universal lesson. `TODO_PLAN.md`'s Lessons Learned takes only
-what is still *unsettled* about the work in progress. An issue is never
-a lesson's home: issues are transitory and vanish when the root cause is
-fixed.
+`docs/arch/` for a component constraint -- only if the component
+actually shipped (the folder law: the as-built holds deployed facts
+only; until it ships, the lesson waits in `TODO_PLAN.md`) -- the repo's
+`AGENT.md` for something every session in the repo must know first, a
+shared skill for a fleet-universal lesson. `TODO_PLAN.md`'s Lessons
+Learned takes only what is still *unsettled* about the work in progress.
+An issue is never a lesson's home: issues are transitory and vanish when
+the root cause is fixed.
+
+Then run the todo-plan skill's graduation triage over the **whole**
+existing Lessons Learned list -- promote/keep/delete every entry, not
+only what this work added -- so settled entries from earlier work do not
+accumulate.
 
 **A lesson needs the mechanism, not the symptom.** "X inherits the global
 config and starts OAuth flows" beats "X was noisy." The symptom tells the
@@ -120,7 +127,7 @@ ever reads it:
 | The design was wrong about the problem | An issue, or a new concept note | 1 Concept |
 | A decision needs revisiting | Design doc Key Decisions + an issue | 2 Design |
 | The shape of the code fights us | `docs/arch/` "lessons the shape taught us" | 3 Architecture |
-| An estimate was badly off | `TODO_PLAN.md` Lessons Learned | 3b Planning |
+| An estimate was badly off | `TODO_PLAN.md` Lessons Learned, while unsettled (law 15) | 3b Planning |
 | A test class was missing | The testing skill, or the repo's test conventions | 4 Behaviors |
 | A gate missed something it should have caught | The gates skill, or the repo's CI config | 6 Gates |
 
@@ -145,8 +152,9 @@ missing, not that agents keep being careless. Propose the change.
 ## Exit gate
 
 The loop is closed when: every divergence is filed, Key Decisions cites its
-authorizations, `TODO_PLAN.md` carries the lessons and the open drift, and
-a human has what they need to rule on the status transition.
+authorizations, every lesson sits at its layer (unsettled ones in
+`TODO_PLAN.md` alongside the open drift), and a human has what they need
+to rule on the status transition.
 
 Shipping code is not the same as shipping what was designed.
 
