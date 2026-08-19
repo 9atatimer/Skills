@@ -172,6 +172,23 @@ Which bot reviews a PR is policy, not agent judgment:
 - **Greptile is by-human-invite only.** Never request, trigger, or
   re-request a greptile review under any circumstances; if the human
   invites it onto a PR, triage its feedback like any other reviewer's.
+- **Read Copilot's suppressed comments.** A Copilot review body carries a
+  collapsed `Suppressed comments` block alongside the surfaced finding.
+  Observed repeatedly on template-tools PR #485: across three rounds, the
+  suppressed entries were the more serious findings every time -- a
+  silently ignored config field, a validation that ran mid-run instead of
+  at preflight -- while one surfaced finding was a misdiagnosis (an
+  indentation complaint claiming a `SyntaxError` in code that imported
+  fine and whose suite was green). Triage the whole review body, not the
+  inline thread, and weigh each finding on the code rather than on where
+  the bot filed it.
+
+**A bot finding is a bug report, not a verdict.** Verify it against the
+code before acting: confirm the failure it describes actually occurs.
+Where it is right, fix and say so; where its reasoning is wrong but it
+pointed at something real, fix the real thing and correct the diagnosis
+on the thread, so the wrong explanation does not outlive it. Where it is
+simply wrong, say why, on the thread, with the evidence.
 - **Turn budgets: be thrifty.** The cap is **3 turns per reviewer by
   default**. It rises to **5 only when the human makes an audible call
   for a "turbo PR"** on that PR -- an explicit ask, never inferred.
