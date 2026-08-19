@@ -112,6 +112,23 @@ Every function is exactly one of these:
 
 Avoid nested/inner functions due to their inherent testing difficulty.
 
+**Adjacent same-typed parameters get keyword arguments at every call site.**
+Two `str` parameters side by side make a swapped call look correct: the types
+check, the linter is silent, and a reader sees two strings in a plausible
+order. Only someone who remembers the signature can catch it.
+
+This is not hypothetical. designomatic's `evaluate_scope(vision, proposal, ...)`
+was called as `evaluate_scope(proposal, vision, ...)` in the proofread path for
+the entire life of that path, so the scope gate judged the editor's proposal as
+though it were the document's goals. Every human review and every bot review
+passed over it; a bot finally caught it on template-tools PR #485, long after
+it shipped.
+
+The cost of prevention is one keyword per argument. Apply it whenever two or
+more adjacent parameters share a type, and test the *roles* rather than the
+call shape -- an assertion that the right value reached the right slot fails on
+a re-swap, where an assertion that the call happened does not.
+
 ### 1.8 Dependencies
 
 * Consult the tech-radar skill before reaching for anything off-the-shelf.
