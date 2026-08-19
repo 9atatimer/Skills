@@ -151,6 +151,16 @@ Follow `docs/design/STYLE-GUIDE.md` rigorously:
 
 ## Reviewing an Existing Design Doc
 
+**Run the panel before you ask a human.** `designomatic run <draft> --panel
+design-review` puts several distinct lenses over the document against this
+repo's own `STYLE-GUIDE.md` -- the same standard the checklist below states.
+This matters most for a document *you* drafted: reviewing your own draft
+re-reads your intent rather than the text, and a panel is the cheapest
+correction for that. -> the designomatic skill
+
+The checklist stays yours to apply. The panel is a first pass, not an
+approval, and only a human marks a record APPROVED.
+
 ### Quality Checklist
 
 Run through these checks:
@@ -361,7 +371,9 @@ DRAFT  -->  REVIEW  -->  APPROVED  -->  IMPLEMENTED
             (revise)                    SUPERSEDED
 ```
 
-- **DRAFT -> REVIEW:** Author believes doc is complete enough for feedback
+- **DRAFT -> REVIEW:** Author believes doc is complete enough for feedback,
+  and the reviewer panel has run over it (-> the designomatic skill). A
+  human's first read should not be spent on what a panel would have caught
 - **REVIEW -> APPROVED:** Reviewers agree on the approach
 - **APPROVED -> IMPLEMENTED:** **shipped, as-built updated, drift closed.**
   Human-only. All three conditions, not just the first: code that is merged

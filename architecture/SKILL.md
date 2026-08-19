@@ -116,6 +116,17 @@ Everything from this phase lands **inside the design doc**, not in
 | Proposed radar rows | Key Decisions (and the radar, with the code) |
 | Components this change touches that the as-built already describes | Related Documents |
 
+### Check the seams before the human does
+
+Once the axes are named, run `designomatic run <draft> --panel seam-review`.
+It is a one-cycle panel asking exactly this phase's question: is each axis
+named, does each map to exactly one seam, and is anything seamed that has one
+implementation and always will. -> the designomatic skill
+
+This is the cheapest point to catch a missing seam. One discovered later,
+while coding, was never reviewed -- and the record's freeze at APPROVED makes
+it unwritable by then, so it becomes drift rather than design.
+
 ### Exit gate
 
 Every volatile axis this change introduces is named and mapped to exactly

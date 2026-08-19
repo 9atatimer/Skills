@@ -141,7 +141,7 @@ one-pass the tests. Do not.
 | Phase | Artifact | Exit gate | Load |
 |---|---|---|---|
 | 1 Concept | issue / scratch note | someone funds it | the concept skill |
-| 2 Design | `docs/design/DESIGN.<name>.md` | a human marks it APPROVED | the design skill |
+| 2 Design | `docs/design/DESIGN.<name>.md` | a human marks it APPROVED | the design skill; run the panel before the human -> the designomatic skill |
 | 3 Architecture | the seam list, inside the design doc | seams named, radar rows proposed | the architecture skill |
 | 3b Planning | `TODO_PLAN.md` | a phased, test-first route | the planning skill |
 | 4 Behaviors | the next behavior, RED | it fails because the code does not exist | the testing skill + the stack-specific one |
@@ -158,6 +158,11 @@ the only thing that may write to `docs/arch/`).
 
 The github-workflow skill is not a phase. Branch, push, and PR mechanics
 span the whole flow; load it whenever you touch a remote.
+
+Neither is the designomatic skill. It is the reviewer-panel pass over a
+design record, used inside phases 2 and 3 -- most valuable on a draft you
+wrote yourself, because you cannot review your own document. Load it when a
+record is drafted or amended and before a human is asked to read it.
 
 ## Elision (the tighter loops)
 
