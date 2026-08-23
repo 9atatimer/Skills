@@ -1,0 +1,5 @@
+# Provisioned mirrors -- `clai provision` regenerates these every session
+# from this repo's own skills/ tree. They are outputs, never sources.
+.claude/
+.codex/
+.agents/

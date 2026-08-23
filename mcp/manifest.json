@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "base": ["ast-mcp"]
+  },
+  "servers": {
+    "ast-mcp": {
+      "command": "${HOME}/.local/bin/ast-mcp",
+      "args": []
+    }
+  }
+}
