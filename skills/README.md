@@ -33,17 +33,25 @@ whenever their subject comes up.
 
 ## How it is consumed
 
-`clai provision` (see
-[PROVISION.DESIGN.md](https://github.com/9atatimer/tds-utils/blob/master/docs/design/PROVISION.DESIGN.md))
-syncs this tree into every agent's skill directory at each new session:
+Two components split the job, and the boundary between them matters:
 
-- Laptop: symlinks into one clone under `~/.cache/clai/template-tools/`, so
-  one pull refreshes every agent.
-- Ephemeral sandboxes: copies (the containers are discarded, so symlink
-  sources would not survive).
+- **lmde owns acquisition.** `lmde acquire` installs the published
+  `@nine-at-a-time-media/skills` package and leaves the payload at the
+  boundary path `~/.local/lib/node_modules/@nine-at-a-time-media/skills`.
+- **clai owns configuration.** `clai provision` reads that path and syncs
+  the tree into every agent's skill directory at each new session --
+  symlinks on a laptop, copies in ephemeral sandboxes (the containers are
+  discarded, so symlink sources would not survive).
 
-Skills are inert data and float to latest on the default branch -- no pin, no
-publish step.
+See
+[LMDE.DESIGN.md](https://github.com/9atatimer/tds-utils/blob/master/docs/design/LMDE.DESIGN.md)
+section 2 for that boundary and
+[PROVISION.DESIGN.md](https://github.com/9atatimer/tds-utils/blob/master/docs/design/PROVISION.DESIGN.md)
+for the sync itself.
+
+Skills float to registry latest -- there is no version to pin and no human
+rollout step -- but they are **not** unpublished. This repository publishes
+the payload on every merge to `main`, and that publish is the rollout.
 
 ## Pure-shared and machine-overwritten
 
