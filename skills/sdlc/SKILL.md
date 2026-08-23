@@ -117,7 +117,7 @@ skill.
 ## The Eight Phases
 
 ```
-1 CONCEPT                    free-form, pre-design
+1 CONCEPT                    docs/concepts/  intent, unfunded, disposable
 2 DESIGN                     docs/design/    aspirational, FROZEN at APPROVED
 3 ARCHITECTURE (intended)    reads docs/arch/, names the seams
   3b PLANNING                the route from as-built to design; TODO_PLAN.md
@@ -140,7 +140,7 @@ one-pass the tests. Do not.
 
 | Phase | Artifact | Exit gate | Load |
 |---|---|---|---|
-| 1 Concept | issue / scratch note | someone funds it | the concept skill |
+| 1 Concept | `docs/concepts/<idea>/` -- statement of work + user stories | a human funds it | the concept skill |
 | 2 Design | `docs/design/DESIGN.<name>.md` | a human marks it APPROVED | the design skill; run the panel before the human -> the designomatic skill |
 | 3 Architecture | the seam list, inside the design doc | seams named, radar rows proposed | the architecture skill |
 | 3b Planning | `TODO_PLAN.md` | a phased, test-first route | the planning skill |
@@ -170,7 +170,7 @@ Small work runs a shorter loop. Drop phases by **rule**, never by feel:
 
 | Elide | When | Leaves |
 |---|---|---|
-| Concept | the work starts from an accepted issue | 7 phases |
+| Concept | the work starts from an accepted issue -- one someone already agreed to *is* a funded intention | 7 phases |
 | Architecture + Planning (together) | the change adds no seam, component, or dependency, and the route is one obvious step | 6 phases |
 | Release + 7a | the change ships nowhere -- no deploy, no publish, no tag | 5 phases |
 
@@ -181,6 +181,31 @@ still read it, and you still check your change against it.
 Architecture and Planning elide *together* or not at all -- planning is the
 delta between the design and the as-built, so a route computed without the
 as-built is fiction.
+
+## Entering mid-flow
+
+**The phases flow in order; you will not always join at the start.** Work
+arrives mid-stream constantly -- a half-written design, an issue with no
+concept behind it, a branch already coding against a doc nobody approved.
+Each phase names the inputs it hopes for. **Hope is the correct strength:
+an input is never assured, and its absence is not by itself a defect.**
+
+Three rules for arriving in the middle:
+
+1. **Enter at the phase the work is actually in**, not at phase 1. Locate
+   it by what exists, then load that phase's skill.
+2. **Do not backfill an upstream artifact to fill a slot.** A concept
+   reconstructed after funding, or a design doc written to justify
+   finished code, documents nothing that happened. If an upstream artifact
+   is genuinely needed -- there is no approved design and you are about to
+   implement -- that is a real gate, and you stop and produce it properly.
+3. **Do not skip a gate because you came in late.** Elision is by rule
+   (above). "I joined at phase 5" is not one of the rules.
+
+Backing up a phase is allowed and cheap: an idea that turns out to be
+unframed goes back to concept, a design that will not survive its seams
+goes back to design. What is not allowed is backing up *silently* -- say
+which phase you moved to and why.
 
 ## Why the sub-phases sit where they do
 

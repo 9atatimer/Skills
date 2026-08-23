@@ -103,8 +103,44 @@ Before writing, understand:
 
 - **What problem are we solving?** (not what we're building)
 - **Who is the audience?** (AI agents implementing it + human reviewers)
-- **What already exists?** Check `docs/design/` for related docs
+- **What already exists?** Check `docs/design/` for related docs, and
+  `docs/concepts/<idea>/` for a phase 1 record of this idea
 - **What are the constraints?** (tech stack, timeline, dependencies)
+
+#### If a concept exists, phase 2 converts it
+
+A concept (-> the concept skill) holds a statement of work and user
+stories: intent at full width, deliberately unconverged, and possibly not
+all achievable. **Converting it is this phase's job, and much of it is a
+conversation with the human, not a transcription.**
+
+| The concept holds | Becomes | Who converts it |
+|---|---|---|
+| The idea | Overview | you, from the text |
+| Aspirations and user stories | Goals, and what is deferred | the human, in conversation |
+| What the human settled | Key Decisions rows, citing the concept | you |
+| What is still open | Open Questions | you |
+| What the idea leans on | dependencies and sequencing | you |
+| Anything the agent assumed | confirmed or dropped | the human, before anything else |
+| Alternatives dismissed aloud | Rejections | you, from the record |
+
+Three rules govern that conversion:
+
+- **A concept with no Goals, Non-Goals or Rejections is complete.** Those
+  are outputs of this phase. Do not treat their absence as a defect in the
+  concept, and never send work back to phase 1 to manufacture them.
+- **This is where feasibility enters.** Concept was forbidden to say "we
+  cannot do that." You may -- and an aspiration you cannot reach becomes a
+  Non-Goal or a Rejection with a reason, in front of the human, never
+  silently.
+- **The concept is not authority.** It is unfunded, non-binding, and never
+  frozen. Cite it as the origin of a decision; never as approval for one.
+  Do not edit it to match the design, and do not delete it.
+
+**A concept is hoped for, not assured.** Most work arrives here without one
+-- from an accepted issue, or straight from a human. That is elision
+working as intended, not a gap to backfill: gather the same context from
+the issue and the conversation and carry on.
 
 ### 2. Start from the Template
 
