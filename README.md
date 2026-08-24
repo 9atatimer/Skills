@@ -11,23 +11,24 @@ version bump -- a merge to `main` publishes, and that publish is the rollout.
 skills/<name>/SKILL.md    the skills themselves
 skills/<name>/...         a skill's supporting files, if it has any
 mcp/manifest.json         the MCP server catalog provisioned alongside them
-pins.env                  the fleet pins for the executable packages
 SOURCE_STAMP              content digest of the payload (generated at pack time)
 ```
 
-All four are payload members and they have two distinct readers, which is
-why a partial tree is worse than an absent one:
+All three are payload members, and clai reads all three:
 
-| member | read by | purpose |
-|--------|---------|---------|
-| `skills/` | clai | materialized into each agent's skills dir |
-| `mcp/manifest.json` | clai | the MCP server catalog |
-| `pins.env` | lmde | which version of clai / ast-mcp / gadmin to install |
-| `SOURCE_STAMP` | clai | currency check; regenerated, never committed |
+| member | purpose |
+|--------|---------|
+| `skills/` | materialized into each agent's skills dir |
+| `mcp/manifest.json` | the MCP server catalog |
+| `SOURCE_STAMP` | currency check; regenerated at pack time, never committed |
 
-A consumer that finds `skills/` and `mcp/manifest.json` but no `pins.env`
-does not degrade gracefully -- it floats every executable to registry
-latest, silently ungating the half of the fleet those pins exist to gate.
+**This repository carries skills and nothing else.** Version pins for the
+fleet executables (clai, ast-mcp, gadmin) are ENVIRONMENT, not skills; they
+live beside the acquire engine in the tooling repos -- tds-utils
+`lmde/lib/pins.env` and template-tools
+`packages/naatm-sandbox/lib/pins.env`. They briefly shipped in this payload,
+which meant moving skills here dragged clai's version policy along with
+them.
 
 ## Consuming it
 
@@ -50,9 +51,7 @@ CLAI_DATA_DIR=$(pwd) clai provision --report
 ```
 
 That override is a development and test affordance. It is not how any
-machine is provisioned, and it is not a substitute for acquire -- notably it
-carries no `pins.env` handling, because pins are lmde's concern and clai
-never reads them.
+machine is provisioned, and it is not a substitute for acquire.
 
 Skills are copied or symlinked into each agent's own directory
 (`.claude/skills/`, `.codex/skills/`, `.agents/skills/`). Those are
