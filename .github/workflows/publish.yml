@@ -33,29 +33,27 @@ jobs:
       - name: Test
         run: npm test
 
-      # The payload auto-versions so a skill merge IS the rollout -- no manual
-      # bump to forget.
-      #
-      # The 0.2.x SERIES IS DELIBERATE and must not be reverted to 0.1.x.
-      # template-tools published this same package name up to 0.1.85 using
-      # `0.1.<count>` over ITS history. This repo's count over the same paths
-      # is far lower (2 at the time of writing), so 0.1.<count> here would
-      # resolve to versions template-tools already published -- `publish_if_new`
-      # would report "already published", CI would go green, and NOTHING would
-      # ship. The fleet would keep receiving 0.1.85 forever with no failing
-      # signal anywhere. 0.2.x clears the whole prior series in one step and
-      # stays monotonic, because the count only ever grows.
+      # The payload auto-versions so a merge IS the rollout -- no manual bump
+      # to forget. The rule (which paths count, and why the series is 0.2)
+      # lives in scripts/version.mjs so it can be tested; `npm test` above
+      # guards it. It used to be inline here, where the path list could be
+      # narrowed by anyone editing YAML with nothing to notice.
       - name: Stamp version
         run: |
           set -euo pipefail
-          count=$(git rev-list --count HEAD -- skills mcp/manifest.json)
+          count=$(git rev-list --count HEAD -- \
+            $(node --input-type=module -e "
+              import { VERSION_PATHS } from './scripts/version.mjs';
+              process.stdout.write(VERSION_PATHS.join(' '));
+            "))
+          version=$(node scripts/version.mjs "${count}")
           node -e "
             const fs = require('fs');
             const p = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-            p.version = '0.2.' + process.argv[1];
+            p.version = process.argv[1];
             fs.writeFileSync('package.json', JSON.stringify(p, null, 2) + '\n');
             console.log('skills version: ' + p.version);
-          " "${count}"
+          " "${version}"
 
       # Cross-org publish: this repo lives in 9atatimer, the package scope is
       # @nine-at-a-time-media. The built-in GITHUB_TOKEN cannot write across
