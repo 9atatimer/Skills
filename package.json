@@ -13,7 +13,6 @@
   "files": [
     "skills/",
     "mcp/",
-    "pins.env",
     "SOURCE_STAMP"
   ],
   "scripts": {
