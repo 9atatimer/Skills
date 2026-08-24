@@ -33,15 +33,20 @@ skill.
    is *appending* to the Key Decisions log, each row citing its
    authorizing issue, in a docs-only PR. Only a human marks a doc
    IMPLEMENTED. -> the design skill
-3. **The folder law: design is frozen, architecture is living.** A design
-   record in `docs/design/` is aspirational and its body freezes at
-   APPROVED -- only its status and its append-only Key Decisions log move
-   after that. `docs/arch/` is factual, never frozen, and describes **only
-   what is deployed**. That opposition is why they are separate trees. An
-   as-built containing intentions is worthless; a design doc rewritten to
-   match the code is a lie. The law governs design *records*, not the
+3. **The folder law: concept disposable, design frozen, arch living.**
+   The concept tree -- `docs/concepts/`, or wherever the repo's `AGENT.md`
+   says -- is unfunded, non-binding, never frozen, and **nothing
+   downstream may cite it as authority**; an intention on disk is not a
+   decision. A design record in `docs/design/` is aspirational and its
+   body freezes at APPROVED -- only its status and its append-only Key
+   Decisions log move after that. `docs/arch/` is factual, never frozen,
+   and describes **only what is deployed**. Those three lifecycles are why
+   they are three trees. A want promoted to spec was never reviewed; a
+   design doc rewritten to match the code is a lie; an as-built containing
+   intentions is worthless. The law governs design *records*, not the
    process artifacts beside them (`STYLE-GUIDE.md`, `TEMPLATE.md`), which
-   have no approval lifecycle and evolve freely. -> the architecture skill
+   have no approval lifecycle and evolve freely. -> the concept skill (the
+   disposable end) and the architecture skill
 4. **Implementation ends with the retrospective, not with green tests.**
    Cut drift issues, append Key Decisions, reconcile the as-built, record
    lessons learned at their layer (law 15), file what you discovered, and
