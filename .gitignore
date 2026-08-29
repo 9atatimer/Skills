@@ -1,2 +1,6 @@
 node_modules/
 .husky/_/
+# session-local agent provisioning mirrors
+.agents/
+.claude/
+.codex/
