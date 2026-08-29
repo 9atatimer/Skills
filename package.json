@@ -18,6 +18,11 @@
   "scripts": {
     "build": "node scripts/stamp.mjs",
     "prepack": "node scripts/stamp.mjs",
-    "test": "node --test 'test/*.test.mjs'"
+    "prepare": "node .husky/install.mjs",
+    "test": "node --test 'test/*.test.mjs'",
+    "guard": "node scripts/publicity-guard.mjs --all"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
   }
 }
