@@ -95,9 +95,10 @@ proposal makes the choice reviewable, the landing keeps the file honest.
 | Serverless runtime | **Cloudflare Workers** | First consumer: tedium (merge bot). Fetch-based, WebCrypto, no node:crypto. |
 | Serverless deploy | **wrangler** | Worker deploys via `cfwdeploy` (naatm-deploy); owns worker secrets + DO migrations. |
 | Serverless state | **Durable Objects** | Serialized per-entity state + alarms. One DO per repo in tedium. |
+| Serverless object store | **Cloudflare R2** | Bytes too big for a DO SQLite row. A DO row cannot hold a multi-MB value, and `@cloudflare/shell`'s `Workspace` spills to R2 at or above `inlineThreshold` (default 1_500_000 bytes, decimal) -- without the binding it stores the row inline and warns its way into a SQLite row-limit failure. First consumer: quillmap session upload tray. Lifecycle rules do the expiring; do not hand-roll retention against it. |
 | TS/JS: worker tests | **@cloudflare/vitest-pool-workers** | Workers-runtime vitest pool; never hand-roll miniflare (testing-node skill). |
 | Agent runtime | **agents** (Cloudflare Agents SDK) | Stateful agents on Durable Objects: transcript persistence, state sync, WebSocket transport. First consumer: quillmap `cloudflare/wiki-agent`. |
-| Agent loop | **@cloudflare/think** | Pre-1.0 experimental preview -- API may break on any minor. Subclass it behind a port; never import it from domain code. First consumer: quillmap `cloudflare/wiki-agent`. |
+| Agent loop | **@cloudflare/think** | Pre-1.0 experimental preview -- API may break on any minor. Subclass it behind a port; never import it from domain code. First consumer: quillmap `cloudflare/wiki-agent`. Its `Workspace` (from `@cloudflare/shell`) is transitive but load-bearing wherever a session stores files: it is the R2 spill point above, and two Workspaces sharing storage and namespace must be constructed with identical `r2`/`r2Prefix`/`inlineThreshold` or the constructor throws. |
 | Agent chat UI | **@cloudflare/ai-chat** | Pre-1.0 preview chat client for the Think protocol. Same containment rule as `@cloudflare/think`. |
 | LLM tool-calling | **ai** (Vercel AI SDK v7) | Provider-agnostic tool/stream vocabulary; what `agents` composes against. |
 | LLM provider adapter | **@ai-sdk/openai** (v4) | OpenAI provider for the AI SDK. Model id stays an edge parameter, never a domain constant. |
