@@ -140,10 +140,40 @@ Record lessons when:
 ```markdown
 ### {N}. {Short title}
 
+about: {layer}
+
 {What happened and what to do differently. 2-4 sentences max.}
 ```
 
 A good lesson learned saves someone 30+ minutes in a future conversation.
+
+**`about:` names the layer the lesson is for.** It is law 15's routing
+decision, recorded at the moment you write the lesson instead of
+rediscovered at triage months later -- when whoever is triaging no longer
+has the context that made the routing obvious.
+
+| `about:` | The lesson's layer |
+|---|---|
+| `wip` | none yet -- unsettled, belongs in this file |
+| a repo path, e.g. `goldfish/shell.py` | a code comment in that file |
+| `component:<name>` | `docs/arch/<name>` -- only once it ships (the folder law) |
+| `repo` | the repo's `AGENT.md` |
+| `skill:<name>` | that shared skill |
+| `global` | the global agent instructions |
+
+**Only `wip` belongs in this file.** Everything else is a lesson that has
+already settled and is naming its own destination, so write it there
+directly and never record it here first.
+
+Two things the field is good for beyond routing:
+
+- **A lesson you cannot label is one you have not finished diagnosing.**
+  If you cannot say which layer's readers need this, you are still
+  describing a symptom. Say so plainly rather than filing `wip` as a
+  parking space.
+- **The same `about:` recurring across lessons is the signal to change
+  the layer itself.** Three lessons pointing at one skill means the
+  doctrine is wrong, not that agents keep being careless.
 
 **Do not record:**
 
@@ -157,8 +187,9 @@ A good lesson learned saves someone 30+ minutes in a future conversation.
 wrapup whose sweep touches this file, walk the whole list; each entry
 gets exactly one of:
 
-- **Promote**: the lesson has settled -- move it to its layer and delete
-  it here.
+- **Promote**: `about:` is anything other than `wip` -- move the lesson to
+  that layer and delete it here. The field already decided; triage only
+  executes it.
 - **Keep**: still live, still tied to the work in progress.
 - **Delete**: superseded, or its root cause is fixed. Delete outright --
   never annotate an entry as "Historical" or "superseded"; git history

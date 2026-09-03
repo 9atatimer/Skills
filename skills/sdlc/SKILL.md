@@ -107,17 +107,19 @@ skill.
     context rot by definition. Ask *who reads this, and when?* before
     writing it down. Issues are NOT a lessons layer: they are transitory
     and vanish the moment the root cause is addressed -- route pending
-    work there, never park a lesson. -> the retrospective skill
-    (routing) and the todo-plan skill (lifecycle)
+    work there, never park a lesson. **Record the layer in the lesson's
+    `about:` field as you write it** -- the routing is obvious now and
+    will not be at triage. -> the retrospective skill (routing) and the
+    todo-plan skill (the field and its lifecycle)
 
-    | Layer | A lesson about... | Read by whom, when |
-    |---|---|---|
-    | `TODO_PLAN.md` Lessons Learned | the work in progress, still unsettled | agents continuing that work, every session until it settles |
-    | a code comment | that implementation in that file (not architectural) | whoever edits the file, when they edit it |
-    | `docs/arch/` | that component of the deployed system | whoever touches the component |
-    | the repo's `AGENT.md` | that repo -- what an agent must know before it can work safely | every session in the repo; the most expensive repo-local layer |
-    | a shared skill | the topic, universally, fleet-wide | any session whose task enters the topic |
-    | global agent instructions | how the human wants agents to behave | every session, everywhere -- the most expensive layer of all |
+    | Layer | `about:` | A lesson about... | Read by whom, when |
+    |---|---|---|---|
+    | `TODO_PLAN.md` Lessons Learned | `wip` | the work in progress, still unsettled | agents continuing that work, every session until it settles |
+    | a code comment | the file's path | that implementation in that file (not architectural) | whoever edits the file, when they edit it |
+    | `docs/arch/` | `component:<name>` | that component of the deployed system | whoever touches the component |
+    | the repo's `AGENT.md` | `repo` | that repo -- what an agent must know before it can work safely | every session in the repo; the most expensive repo-local layer |
+    | a shared skill | `skill:<name>` | the topic, universally, fleet-wide | any session whose task enters the topic |
+    | global agent instructions | `global` | how the human wants agents to behave | every session, everywhere -- the most expensive layer of all |
 
 ## The Eight Phases
 
