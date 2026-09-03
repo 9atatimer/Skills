@@ -190,6 +190,49 @@ Opaque names are why two branches need no coordination to create tasks.
 There is no counter to keep in sync and nothing to renumber at merge time;
 the namespace is large enough that independent mints do not collide.
 
+### Two tiers, one contract
+
+The contract the whole layout rests on is one sentence:
+
+> Mint an ID that collides with nothing in `tasks/`, including
+> `tasks/done/`.
+
+Everything downstream consumes an opaque string and cares about nothing
+else, so there are two ways to satisfy that sentence and no difference
+beyond it.
+
+| | Tier 1 -- the repo has a task tool | Tier 0 -- fallback |
+|---|---|---|
+| Who mints | the tool | you, by hand |
+| Scheme | opaque, e.g. `red-cock-hills` | `task-NNN`, one past the highest |
+| Collision check | every ID under `tasks/`, retried | one `ls tasks/` |
+| Graph checking | its checker, in CI | none |
+
+**Never name the tool in a skill, and never assume one exists.** A skill
+that says "run `<tool> task new`" is broken in every repo that does not
+have it -- which is exactly the case tier 0 is for. Ask the repo: if it
+ships a task command, use it; otherwise mint `task-NNN` yourself. The
+repo's `AGENT.md` is where a specific tool gets named.
+
+**Tier 0 is this rule, not a program.** A fallback binary is something you
+must install in order to avoid needing an installed thing, and it rots --
+everyone with the tool runs tier 1, so nothing exercises the fallback. A
+rule cannot rot, and it works in a repo holding nothing but git and an
+editor.
+
+**What tier 0 costs**, so the degradation is chosen rather than
+discovered: no transitive queries, no duplicate detection when filing, no
+CI dangling-reference check, and monotonic brings back branch collisions
+-- two branches both mint `task-007`, and the merge resolves it by
+renumbering the later one and fixing its inbound references.
+
+**Mixing the two schemes in one repo is free.** A repo that starts on
+`task-001` and later gets a tool ends up with `task-001` beside
+`red-cock-hills`, permanently, and that is fine -- it is the direct payoff
+of never parsing an ID. Adopting a tool is a no-op migration: nothing is
+renamed, nothing is backfilled, no edge changes. **Never renumber to tidy
+up**; it breaks every inbound reference and buys nothing.
+
 ### Verify inbound references, always
 
 `T-003` mistyped will not resolve and is obviously wrong. `red-cock-hills`
