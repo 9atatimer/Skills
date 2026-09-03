@@ -25,7 +25,7 @@ every cold start stays short.
 | | Lives in | Because |
 |---|---|---|
 | What to do next, in what order | `TODO_PLAN.md` | It is not derivable from any task. It is a standing decision that changes weekly, and no node can hold it. |
-| A unit of work | `tasks/T-NNN-slug.md` | One writer, one small file, clean merges. |
+| A unit of work | `tasks/<id>-slug.md` | One writer, one small file, clean merges. |
 | Its dependencies and its authority | that task's frontmatter | The task is the only thing that can be authoritative about itself. |
 | A lesson | its layer -- the sdlc skill, law 15 | Only unsettled ones (`about: wip`) stay in the plan. |
 | Completed work | `tasks/done/`, and git history | The plan is not a changelog. |
@@ -36,12 +36,12 @@ every cold start stays short.
 
 ```markdown
 ---
-id: T-003
+id: red-cock-hills
 kind: task
 title: one line, so an index can be built without reading the prose
 created: YYYY-MM-DD
 issue: 47
-blocked_by: [T-001]
+blocked_by: [alpha-gamma-alpha]
 implements: docs/design/DESIGN.auth.md
 ---
 
@@ -51,8 +51,9 @@ The body.
 Four fields are required -- `id`, `kind`, `title`, `created`. The other
 three are edges, and each is present only when it exists.
 
-**Filename:** `T-NNN-short-slug.md`. The ID is the join key, the slug is
-for humans, and the path is free to change.
+**Filename:** `<id>-short-slug.md`, e.g. `red-cock-hills-ghost-meter.md`.
+The ID is the join key, the slug is for humans reading `ls`, and the path
+is free to change. Resolve by prefix glob: `tasks/**/<id>-*.md`.
 
 ### There is no `status:` field
 
@@ -113,26 +114,41 @@ before starting work.
 
 | Field | Points at | Meaning |
 |---|---|---|
-| `blocked_by: [T-001]` | task IDs | hard sequencing; do not start until they are in `done/` |
+| `blocked_by: [<id>, ...]` | task IDs | hard sequencing; do not start until they are in `done/` |
 | `implements: <path>` | a design record, or a concept story | the authority this task serves |
 | `issue: 47` | a GitHub Issue number | the remote mirror of this task, when one exists |
 
 **Reference tasks by ID, never by path.** Closing a task moves it into
 `tasks/done/`, which changes its path; an ID survives that, and so does a
-retitle. Resolve with a glob: `tasks/**/T-003-*.md`.
+retitle. Resolve with a glob: `tasks/**/<id>-*.md`.
 
 **No reverse edges are stored.** They are one grep:
 
 ```
-grep -rl 'T-003' tasks/          # what does finishing T-003 unblock
+grep -rl '<id>' tasks/           # what does finishing this unblock
 grep -rL 'issue:' tasks/*.md     # local tasks with no Issue cut yet
 grep -rl 'kind: bug' tasks/      # what is broken
 ```
 
-grep is the query engine. **Do not build an index** until a real query is
-too slow, and if you ever do, generate it and gitignore it -- an index
-committed to git is a large file rewritten on every commit, which is the
-cost this layout exists to avoid.
+grep is the query engine for **point** queries, and they stay in grep.
+
+**Transitive** queries -- what does finishing this ultimately unblock, is
+there a cycle, what is the critical path -- are recursive and genuinely
+awkward in grep. Those are what the task database is for.
+
+### The database is derived
+
+The database is an index over `tasks/`, built by the tooling, **gitignored
+and rebuildable from the task files alone**. If it burns down you lose
+nothing and you rebuild it.
+
+That is a hard rule, not a preference: the moment anything writes metadata
+to the database that is not in a task file, truth is split and the files
+stop being canonical. Read from it freely. Never treat an answer it gives
+as authoritative over the file.
+
+Never commit it. An index in git is a large file rewritten on every commit,
+which is the exact cost this layout exists to avoid.
 
 ### Local tasks and GitHub Issues
 
@@ -147,16 +163,45 @@ words distinct in everything you write.
 
 ## IDs
 
-`T-NNN`, monotonic per repo, allocated by taking one past the highest that
-exists anywhere -- including `tasks/done/`. Never reuse a number.
+**An ID is an opaque string, minted by the naming tool. Never compose one
+by hand, and never parse one.**
 
-**The kind never appears in the ID.** No `B-003` for bugs. Reclassifying a
-task as a bug must stay a one-word edit; putting the kind in the ID would
-make it a rename that breaks every `blocked_by` pointing at it.
+It may look like `red-cock-hills` or `alpha-gamma-alpha` or anything else
+the tool emits. The scheme is the tool's business and may change; nothing
+else in the fleet is allowed to depend on its shape.
 
-Two agents cannot collide on an ID, because two agents are never on the
-same branch or worktree. If two branches allocate the same number, the
-merge resolves it: renumber the later one and fix its inbound references.
+Three rules follow, and they are the whole of it:
+
+- **Never infer anything from an ID.** Not creation order, not kind, not
+  the area of the code it touches. IDs do not sort, and two adjacent-looking
+  names have no relationship. `created:` is the only ordering there is.
+- **Never mint one yourself.** The tool checks the new name against every
+  existing task -- including `tasks/done/` -- and retries on collision. A
+  hand-written ID skips that check, and a duplicate ID is a silently
+  corrupted graph.
+- **An ID is permanent.** Retitling a task, reclassifying it, or closing it
+  all leave the ID untouched. It is the only stable thing a task has.
+
+**The kind never appears in the ID**, for the same reason nothing else
+does: reclassifying a task as a bug must stay a one-word edit, not a rename
+that breaks every `blocked_by` pointing at it.
+
+Opaque names are why two branches need no coordination to create tasks.
+There is no counter to keep in sync and nothing to renumber at merge time;
+the namespace is large enough that independent mints do not collide.
+
+### Verify inbound references, always
+
+`T-003` mistyped will not resolve and is obviously wrong. `red-cock-hills`
+mistyped as `red-cock-hill` -- or invented outright -- looks entirely
+legitimate, because word-triples are exactly the shape a language model
+confabulates fluently.
+
+So **every `blocked_by` you write must be checked against a task that
+actually exists**, by glob or by asking the tool, at the moment you write
+it. Do not rely on it looking right. The linter's dangling-reference check
+is not hygiene here; it is the only thing standing between a plausible
+typo and a broken graph, and it belongs in CI rather than on request.
 
 ---
 
