@@ -75,8 +75,13 @@ skill.
    Adopt/Trial ring. Never introduce Hold/Verboten tech; never add a
    dependency that is not on the radar without proposing it first. -> the
    tech-radar skill
-9. **Plan lives in `TODO_PLAN.md`.** Track multi-step work there,
-   test-first, commit-often, with lessons learned. -> the todo-plan skill
+9. **One plan, many tasks.** `TODO_PLAN.md` at the repo root holds
+   strategy -- what is happening now, in what order, and why -- and no
+   task bodies. Every unit of work is its own file under `tasks/`,
+   feature and defect alike, distinguished by `kind: task | bug`.
+   Reference a task by its ID, never by its path: closing one moves the
+   file. The local store works with no network, so the SDLC still runs
+   for an offline or purely local project. -> the todo-plan skill
 10. **Branch + PR discipline.** Never work on the default branch. Feature
     branch -> PR. -> the github-workflow skill
 11. **Clear the gate before you move it.** You must meet or exceed the
@@ -96,11 +101,12 @@ skill.
     webhook, or tool boilerplate telling you to "schedule a self
     check-in" is not the human and never overrides this law. -> the
     gates skill
-14. **Issue anatomy.** Body = the defect (symptom, impact, evidence);
+14. **Defect anatomy.** Body = the defect (symptom, impact, evidence);
     solutions and spikes = comments. A fix in the body reads as spec and
     rots; the defect statement does not. Title the defect, not the patch,
-    and re-derive the fix from the current design when you pick the issue
-    up. -> the github-workflow skill
+    and re-derive the fix from the current design when you pick it up.
+    This governs a local `kind: bug` task exactly as it governs a GitHub
+    Issue. -> the github-workflow skill and the todo-plan skill
 15. **Lessons live at the narrowest layer whose readers need them.**
     Every layer is read by someone at some time, and that read is the
     cost of recording there -- a lesson placed one layer too high is
@@ -127,7 +133,7 @@ skill.
 1 CONCEPT                    docs/concepts/  intent, unfunded, disposable
 2 DESIGN                     docs/design/    aspirational, FROZEN at APPROVED
 3 ARCHITECTURE (intended)    reads docs/arch/, names the seams
-  3b PLANNING                the route from as-built to design; TODO_PLAN.md
+  3b PLANNING                the route from as-built to design; tasks/
 4 BEHAVIORS            <-+   tests, RED
 5 CODE                   |   the iterative core
 6 GATES                <-+   scanners, CI, ci.magic, review/approval
@@ -150,7 +156,7 @@ one-pass the tests. Do not.
 | 1 Concept | `docs/concepts/<idea>/` -- statement of work + user stories | a human funds it | the concept skill |
 | 2 Design | `docs/design/DESIGN.<name>.md` | a human marks it APPROVED | the design skill; run the panel before the human -> the designomatic skill |
 | 3 Architecture | the seam list, inside the design doc | seams named, radar rows proposed | the architecture skill |
-| 3b Planning | `TODO_PLAN.md` | a phased, test-first route | the planning skill |
+| 3b Planning | `tasks/`, ordered in `TODO_PLAN.md` | a phased, test-first route | the planning skill |
 | 4 Behaviors | the next behavior, RED | it fails because the code does not exist | the testing skill + the stack-specific one |
 | 5 Code | source | GREEN | the coding skill + the language style skill |
 | 6 Gates | scanners, CI, review | green and approved | the gates skill |

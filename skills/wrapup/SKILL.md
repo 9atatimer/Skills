@@ -46,7 +46,9 @@ archived and re-read by nobody.
 |---|---|
 | Progress, evidence, or a decision on an existing issue #N | A comment on issue #N |
 | A defect or opportunity discovered | A new issue -- defect in the body, solution thinking in a comment (issue anatomy, the github-workflow skill) |
-| Task state changed: done, blocked, descoped, superseded | `TODO_PLAN.md` status marks / Blockers |
+| Task state changed: done, blocked, descoped | the task file: move to `tasks/done/`, set `blocked_by`, or delete it. External blockers go in `TODO_PLAN.md` Blockers |
+| The order of what to do next changed | `TODO_PLAN.md` "Now" |
+| Work discovered that nobody is doing yet | a new file in `tasks/`, `kind: task` or `bug` |
 | A lesson with a mechanism, still unsettled, tied to the work in progress | `TODO_PLAN.md` Lessons Learned |
 | A lesson with a mechanism, settled | Its layer per the sdlc skill, law 15: code comment (file-local), `docs/arch/` (component -- ONLY if the change shipped, the 7a rule; otherwise it waits in `TODO_PLAN.md`), `AGENT.md` (repo), or a proposed skill change (fleet-universal). Never an issue -- issues vanish when the root cause is fixed |
 | A deployed-system fact that changed or was wrong | `docs/arch/` -- ONLY if the change actually shipped; the 7a rule is unchanged |
