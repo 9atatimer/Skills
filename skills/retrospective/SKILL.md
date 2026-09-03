@@ -105,11 +105,13 @@ Anything you found that is *not* drift: pre-existing bugs, deferred work
 the doc names as future, follow-ups you chose not to do. File them. Do not
 leave them in a PR description, where they die when the PR merges.
 
-### 5. Update TODO_PLAN
+### 5. Update the plan and the tasks
 
-Mark the phase shipped, and list the outstanding drift issues under it, so
-the work stays **visibly incomplete** until they are settled. -> the
-todo-plan skill
+Move shipped tasks into `tasks/done/`, and cut the outstanding drift as
+new task files (`kind: bug`) named in `TODO_PLAN.md`'s "Now", so the work
+stays **visibly incomplete** until they are settled. Then prune
+`tasks/done/`: delete every entry whose work has shipped and whose lessons
+have graduated. -> the todo-plan skill
 
 ### 6. Hand off the status transition
 
