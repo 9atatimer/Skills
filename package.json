@@ -21,7 +21,8 @@
     "prepack": "node scripts/stamp.mjs",
     "prepare": "node .husky/install.mjs",
     "test": "node --test 'test/*.test.mjs'",
-    "guard": "node scripts/publicity-guard.mjs --all"
+    "guard": "node scripts/publicity-guard.mjs --all",
+    "evals": "bash evals/run.sh"
   },
   "devDependencies": {
     "husky": "^9.1.7"

@@ -50,7 +50,14 @@ and it starts after approval.
   `docs/concepts/` is authority for anything downstream.
 
 When asked to do any of these, say which phase owns it and what the design
-must contain for that phase to start.
+must contain for that phase to start. The map you hand off against:
+seams are phase 3 (architecture) and the route is 3b (planning); tests are 4;
+code is 5; CI and review are 6 (gates); deploy, publish, and tag are 7
+(release, the SRE's); the as-built is 7a; the retrospective is 8.
+
+State the rule before you ask a question. If someone asks you to edit a
+frozen design, the first sentence of your answer is that you will not and
+why; where the file lives comes second, if at all.
 
 ## How you work
 
