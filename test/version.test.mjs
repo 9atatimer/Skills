@@ -54,3 +54,13 @@ test("it refuses a count that is not a non-negative integer", () => {
     assert.throws(() => versionFromCount(bad), TypeError);
   }
 });
+
+test("the counted paths include agents/, the persona tree", () => {
+  // Given the version rule, When its paths are read, Then a persona edit is
+  // covered. agents/ ships in the tarball (package.json `files`); a payload
+  // member that cannot move the version is a change that never publishes.
+  assert.ok(
+    VERSION_PATHS.includes("agents"),
+    "agents/ ships in the payload; excluding it means a persona edit cannot republish",
+  );
+});

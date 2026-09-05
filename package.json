@@ -1,7 +1,7 @@
 {
   "name": "@nine-at-a-time-media/skills",
   "version": "0.0.0",
-  "description": "Canonical agent skills tree + MCP catalog (inert data, no binary). The version is stamped by CI at publish time; 0.0.0 is never published.",
+  "description": "Canonical agent skills tree, agent personas, and MCP catalog (inert data, no binary). The version is stamped by CI at publish time; 0.0.0 is never published.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -12,6 +12,7 @@
   },
   "files": [
     "skills/",
+    "agents/",
     "mcp/",
     "SOURCE_STAMP"
   ],

@@ -13,8 +13,8 @@
  *
  * TWO groups, and the second is the one that bit:
  *
- *   * PAYLOAD content -- skills/ and mcp/manifest.json. Obvious: change a
- *     skill, ship a new version.
+ *   * PAYLOAD content -- skills/, agents/, and mcp/manifest.json. Obvious:
+ *     change a skill or a persona, ship a new version.
  *
  *   * PACKAGING -- package.json and scripts/. Less obvious and previously
  *     MISSING. package.json's `files` array decides WHAT SHIPS, so a change
@@ -30,6 +30,7 @@
  */
 export const VERSION_PATHS = Object.freeze([
   "skills",
+  "agents",
   "mcp/manifest.json",
   "package.json",
   "scripts",
