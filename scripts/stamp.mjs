@@ -1,31 +1,39 @@
 // stamp.mjs -- write SOURCE_STAMP, a content digest of this repo's payload
-// members (skills/** and mcp/manifest.json), which clai's currency machine
-// consumes to decide whether a session needs re-provisioning.
+// members (skills/**, agents/** and mcp/manifest.json), which clai's
+// currency machine consumes to decide whether a session needs
+// re-provisioning.
 //
 // Unlike the template-tools package this replaces, there is NO COPY STEP:
 // there, skills/ and mcp/ lived at the repo root and had to be assembled
 // into packages/skills/ before publish. Here the repo root IS the package,
 // so the payload is already in place and the build reduces to stamping it.
 //
-// The digest is a DELIBERATE DUPLICATE of clai's Python implementation
-// (packages/clai/hatch_build.py digest_data_dir and
+// The digest ALGORITHM is a deliberate duplicate of clai's Python
+// implementation (packages/clai/hatch_build.py digest_data_dir and
 // adapters/provisioning._digest_members): members sorted by POSIX relpath,
-// one sha256 folding "relpath\0 sha256hex(bytes)\0" per file. Keep them
-// identical -- test/stamp.test.mjs locks this one to a Python-computed
-// fixture digest, so drift breaks the build rather than silently shipping a
-// stamp clai will disagree with.
+// one sha256 folding "relpath\0 sha256hex(bytes)\0" per file.
+// test/stamp.test.mjs locks it to a Python-computed fixture digest.
+//
+// The MEMBER SET is a superset of clai's: clai digests skills/ and the
+// manifest; this also folds in agents/ (the persona tree). That is safe
+// because clai reads a shipped SOURCE_STAMP verbatim and never recomputes it
+// in production -- the stamp is a change signal, not a checksum clai
+// verifies. It only diverges under a CLAI_DATA_DIR dev override, where clai
+// digests live and would miss a persona-only edit. agents/ is optional in
+// the tree, so a payload without one still digests to clai's exact value.
 //
 // Runs standalone (node scripts/stamp.mjs) and via prepack, so `npm publish`
 // always ships a stamp over the current tree. Zero dependencies.
 
 import { createHash } from "node:crypto";
-import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, dirname, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 const SKILLS_DIRNAME = "skills";
+const AGENTS_DIRNAME = "agents";
 const MANIFEST_RELPATH = join("mcp", "manifest.json");
 const STAMP_NAME = "SOURCE_STAMP";
 
@@ -62,8 +70,10 @@ export function digestMembers(pairs) {
  */
 export function stamp({ root = REPO_ROOT } = {}) {
   const manifestRel = MANIFEST_RELPATH.split(sep).join("/");
+  const agentsDir = join(root, AGENTS_DIRNAME);
   const members = [
     ...walkFiles(root, join(root, SKILLS_DIRNAME)),
+    ...(existsSync(agentsDir) ? walkFiles(root, agentsDir) : []),
     [manifestRel, join(root, MANIFEST_RELPATH)],
   ];
   const digest = digestMembers(members);
