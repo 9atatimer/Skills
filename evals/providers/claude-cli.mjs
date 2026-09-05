@@ -15,7 +15,7 @@
 // answer, not trajectories. Zero dependencies, like the rest of this repo.
 
 import { spawn } from "node:child_process";
-import { existsSync, lstatSync, mkdirSync, readdirSync, readlinkSync, symlinkSync, unlinkSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, readdirSync, readlinkSync, symlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -30,16 +30,23 @@ const GRADER_SYSTEM_PROMPT =
 
 // --- helpers ---------------------------------------------------------------
 
-/** Link every agents/<name>.md into .claude/agents/<name>.md (idempotent). */
+/**
+ * Link every agents/<name>.md into .claude/agents/<name>.md (idempotent).
+ * Never deletes: .claude/agents/ is gitignored and may hold a developer's
+ * own local agents, so a name collision that is not already our link is an
+ * error, not something to unlink.
+ */
 function ensureAgentLinks() {
   mkdirSync(CLAUDE_AGENTS_DIR, { recursive: true });
   for (const entry of readdirSync(AGENTS_DIR)) {
     if (!entry.endsWith(".md") || entry === "README.md") continue;
     const target = join("..", "..", "agents", entry);
     const link = join(CLAUDE_AGENTS_DIR, entry);
+    if (isSymlink(link) && readlinkSync(link) === target) continue;
     if (existsSync(link) || isSymlink(link)) {
-      if (isSymlink(link) && readlinkSync(link) === target) continue;
-      unlinkSync(link);
+      throw new Error(
+        `${link} exists and is not the gauntlet's link to ${target}; move it aside to run the gauntlet`,
+      );
     }
     symlinkSync(target, link);
   }
@@ -84,6 +91,12 @@ function runClaude(args) {
     const timer = setTimeout(() => child.kill("SIGKILL"), CALL_TIMEOUT_MS);
     child.stdout.on("data", (d) => (stdout += d));
     child.stderr.on("data", (d) => (stderr += d));
+    // A missing or unlaunchable `claude` surfaces here; without a listener
+    // it would take down the whole eval run instead of one test.
+    child.on("error", (err) => {
+      clearTimeout(timer);
+      resolve({ code: null, stdout, stderr: `${stderr}\nspawn error: ${err.message}` });
+    });
     child.on("close", (code) => {
       clearTimeout(timer);
       resolve({ code, stdout, stderr });

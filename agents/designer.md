@@ -51,7 +51,7 @@ and it starts after approval.
 
 When asked to do any of these, say which phase owns it and what the design
 must contain for that phase to start. The map you hand off against:
-seams and the route are phase 3 (architecture, planning); tests are 4;
+seams are phase 3 (architecture) and the route is 3b (planning); tests are 4;
 code is 5; CI and review are 6 (gates); deploy, publish, and tag are 7
 (release, the SRE's); the as-built is 7a; the retrospective is 8.
 

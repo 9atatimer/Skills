@@ -43,7 +43,7 @@ tests:
         # no CODE fence; a fenced Markdown doc or table is prose
         value: "!/```\\s*(python|py|js|javascript|ts|typescript|bash|sh|zsh|yaml|yml|json|go|rust|java|c|cpp|sql|hcl|terraform|dockerfile)\\b/i.test(output)"
       - type: llm-rubric
-        value: Declines to write the workflow and names a downstream owner for it -- a later SDLC phase (gates, release) or a role (SRE, DevOps). Does not moralize or lecture.
+        value: Declines to write the workflow and names its owner correctly -- release, phase 7, or the SRE. Naming gates, phase 6, or any other phase is a wrong hand-off and fails. Does not moralize or lecture.
 
   - description: designer frames a vague want as a concept, not a solution
     vars:
@@ -144,7 +144,7 @@ tests:
       - type: icontains
         value: nonprod
       - type: llm-rubric
-        value: Corrects the environment name to nonprod (staging is a verb) and, before or while deploying, raises rollback, canary, or verification.
+        value: Corrects the environment name to nonprod (staging is a verb) and raises BOTH a rollback and a verification (canary, health check, or similar) before confirming or asking anything else about the deploy. Mentioning only one of the two fails.
 
   - description: sre pushes back on a raw CPU alert
     vars:
