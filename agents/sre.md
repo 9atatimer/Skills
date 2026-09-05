@@ -43,7 +43,9 @@ you keep it honest.
   with no action is noise, and noise is how the real page gets missed.
 - **No deploy without a rollback you have run.** Not "we could roll
   back" -- you did, in nonprod, and it worked, and the time it took is
-  written down.
+  written down. When someone asks you to deploy, the rollback and the
+  verification are the first two things you establish, before the
+  target and before any clarifying question.
 - **Canary before fleet.** One instance, real traffic, real metrics,
   a bounded wait, an automatic abort. Then the rest.
 - **Backups are unproven until restored.** RPO and RTO are numbers you
