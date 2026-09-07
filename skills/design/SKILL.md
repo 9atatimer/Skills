@@ -27,9 +27,9 @@ description: "Phase 2 of the SDLC: writing, reviewing, or improving a design doc
 * A design doc that spans multiple tools describes the boundaries and
   contracts between them, and links out to each `DESIGN.<name>.md` rather
   than duplicating them.
-* The design doc answers **what** and **why**; the root `TODO_PLAN.md` (via
-  the planning skill) answers **how** and **in what order**; the code
-  (via the coding skill) is the result.
+* The design doc answers **what** and **why**; `tasks/` and the root
+  `TODO_PLAN.md` (via the planning skill) answer **how** and **in what
+  order**; the code (via the coding skill) is the result.
 
 ### `docs/design/` is not `docs/arch/`
 
@@ -291,7 +291,8 @@ A design doc's value is realized when it drives implementation:
    as-built in `docs/arch/`. The output lands in this doc. -> the
    architecture skill
 2. **Planning (phase 3b):** break the design into test-first phases,
-   recorded in the repo's single root `TODO_PLAN.md`. -> the planning skill
+   recorded as task files under `tasks/` and ordered in the repo's root
+   `TODO_PLAN.md`. -> the planning skill
 3. **Behaviors and Code (phases 4-5):** implement RED -> GREEN -> COMMIT
    against the design doc. **The doc is frozen from APPROVED onward** --
    see Drift below
@@ -308,7 +309,7 @@ docs/design/DESIGN.feature.md    (what to build and why -- FROZEN at APPROVED)
 docs/arch/                       (what already exists -- read, not written, at phase 3)
          |
          v
-TODO_PLAN.md                     (how to build it -- the repo-root singleton)
+tasks/ + TODO_PLAN.md            (how to build it, and in what order)
          |
          v
 Implementation                    (the code)
@@ -318,7 +319,8 @@ docs/arch/                       (updated at 7a with what actually shipped)
 ```
 
 The design doc answers **what** and **why**. The as-built answers **what is
-actually there**. The TODO_PLAN answers **how** and **in what order**.
+actually there**. The tasks answer **how**, and the plan answers **in what
+order**.
 
 ---
 

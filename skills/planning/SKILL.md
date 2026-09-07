@@ -1,18 +1,21 @@
 ---
 name: planning
-description: "Phase 3b of the SDLC, the epilogue to architecture: turning an approved design plus the as-built into a phased, test-first (RED->GREEN->COMMIT) route; produces plan content recorded inside the repo's single root TODO_PLAN.md, never a separate file. Skip when just maintaining an existing TODO_PLAN.md (todo-plan) or making a single small change (coding)."
+description: "Phase 3b of the SDLC, the epilogue to architecture: turning an approved design plus the as-built into a phased, test-first (RED->GREEN->COMMIT) route; produces task files under tasks/ sequenced with blocked_by, plus the ordered Now list in the repo's root TODO_PLAN.md -- never a standalone plan document. Skip when just maintaining existing tasks or the plan (todo-plan) or making a single small change (coding)."
 ---
 
 # SKILL: Implementation Planning (Phase 3b)
 
-> **THIS SKILL PRODUCES PLAN *CONTENT*, NOT A FILE.** The phased plan you
-> build here is recorded as a section inside the repository's single,
-> root-level `TODO_PLAN.md` -- never a separate or per-feature file.
-> The todo-plan skill is authoritative on that file: its singleton rule,
-> location, structure, and lightweight one-line-task format. This skill
-> covers only the *methodology* of breaking work into testable, committable
-> phases. Where the template below reads like a standalone document, treat
-> it as the shape of your *thinking*, not a file to create.
+> **THIS SKILL PRODUCES TASKS, NOT A DOCUMENT.** The phased route you
+> build here is recorded as **task files under `tasks/`** -- one per unit
+> of work that ends in a commit, sequenced with `blocked_by`. The repo's
+> root `TODO_PLAN.md` gains only the ordered "Now" list naming the next
+> three to seven of them. Never a standalone or per-feature plan document.
+> The todo-plan skill is authoritative on the task schema, IDs, edges, and
+> the plan file's shape. This skill covers only the *methodology* of
+> breaking work into testable, committable phases. Where the template
+> below reads like a standalone document, treat it as the shape of your
+> *thinking*: its content is distributed across task files, not written
+> into one.
 
 > **Purpose:** Create resilient, BDD-driven implementation plans that fight compact amnesia
 > **When to use:** After the architecture phase has named the seams, before any behavior is written
@@ -129,12 +132,14 @@ architecture skill
 
 ## The BDD TODO_PLAN Template [OK]
 
-> **NOTE -- this is a *section* template, not a file template.** The
-> structure below describes the *content* of a plan as it lives inside the
-> repo's single root `TODO_PLAN.md`. The `# Title` / `> Status:` /
-> `> Branch:` front-matter shown is illustrative of what a plan should
-> capture -- it is **not** the header of a new standalone file. The plan is
-> a section within `TODO_PLAN.md`; see the todo-plan skill.
+> **NOTE -- this is the shape of your thinking, not a file template.**
+> The structure below describes the content a plan must cover. That
+> content is **distributed**: each phase's steps become task files under
+> `tasks/`, sequenced with `blocked_by`; the philosophy and recovery
+> sections belong in `TODO_PLAN.md`'s "How to Use This File"; the ordering
+> becomes its "Now" list. The `# Title` / `> Status:` / `> Branch:`
+> front-matter shown is illustrative of what a plan should capture -- it is
+> **not** the header of a new standalone file. See the todo-plan skill.
 
 ### Structure Overview
 
@@ -191,7 +196,8 @@ If you lose context mid-session:
 
 1. **Check last commit:** `git log -1 --oneline`
 2. **Read commit message:** Tells you what test passed
-3. **Check this TODO_PLAN:** Find that step, see what's next
+3. **Check `TODO_PLAN.md`'s Now list**, then open that task file: find
+   where you were, see what is next
 4. **Run tests:** `[test command]` -- what's still RED?
 5. **Read last learning checkpoint:** Context of decisions made
 6. **Continue from next RED test**
@@ -445,7 +451,8 @@ If you lose context mid-session:
 
 1. **Check last commit:** `git log -1 --oneline`
 2. **Read commit message:** Tells you what test passed
-3. **Check this TODO_PLAN:** Find that step, see what's next
+3. **Check `TODO_PLAN.md`'s Now list**, then open that task file: find
+   where you were, see what is next
 4. **Run tests:** `[test command]` -- what's still RED?
 5. **Read last learning checkpoint:** Context of decisions made
 6. **Continue from next RED test**

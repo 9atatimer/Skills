@@ -1,176 +1,410 @@
 ---
 name: todo-plan
-description: "Maintaining the project's root TODO_PLAN.md across every phase -- reading, updating, or pruning it -- the repo's one and only plan file (singleton, repo root): status, progress marks, lessons learned. Skip for first-time authoring of a phased plan from a design doc (planning)."
+description: "The repo's plan and its task files -- reading, updating, or pruning them. TODO_PLAN.md at the root holds strategy (what is happening now, in what order, and why); every unit of work is its own file under tasks/, defect or feature alike. Covers the task schema, IDs, edges, closing, and lessons lifecycle. Skip for first-time authoring of a phased plan from a design doc (planning)."
 ---
 
-# Skill: TODO_PLAN.md Maintenance
+# Skill: The Plan and Its Tasks
 
-> **SINGLETON -- READ THIS FIRST.** A repository has exactly **one**
-> `TODO_PLAN.md`, and it lives at the **repo root**. Never create
-> `TODO_PLAN.<feature>.md`, never place a plan file under `docs/`, never
-> split the plan across files. One repo, one plan. Completed work moves
-> into this file's "What We've Accomplished" section; superseded plans are
-> not kept as files -- git history holds the past.
+> **ONE PLAN, MANY TASKS -- READ THIS FIRST.** A repository has exactly
+> **one** plan file, `TODO_PLAN.md`, at the **repo root**. It holds
+> strategy: what is happening now, in what order, and why. It does **not**
+> hold task bodies. Every unit of work is its own file under `tasks/`.
+> Never create `TODO_PLAN.<feature>.md`, and never move a task body back
+> into the plan.
 
-This skill defines how to maintain the project's `TODO_PLAN.md` file at the
-repository root. This is the single source of truth for what needs doing, what
-has been done, and the unsettled lessons of the work in progress (settled
-lessons live at their layer -- the sdlc skill, law 15).
-
----
-
-## Purpose
-
-`TODO_PLAN.md` is a **self-contained operational document**. A cold-start agent
-should be able to read this file and know: what the project has accomplished,
-what work is active, what the next steps are, and what pitfalls the work in
-progress carries.
-
-It is not a design doc (those live in `docs/design/`). It is not a changelog
-(that's git history). It is the **living task plan** for the project.
+The split exists because the two halves have different costs. Editing one
+large file is expensive and error-prone -- retries, token burn, and silent
+no-op replacements. Reading one small file is cheap. So the things that
+change constantly are small files, and the one file that must be read on
+every cold start stays short.
 
 ---
 
-## File Structure
+## What goes where
+
+| | Lives in | Because |
+|---|---|---|
+| What to do next, in what order | `TODO_PLAN.md` | It is not derivable from any task. It is a standing decision that changes weekly, and no node can hold it. |
+| A unit of work | `tasks/<id>-slug.md` | One writer, one small file, clean merges. |
+| Its dependencies and its authority | that task's frontmatter | The task is the only thing that can be authoritative about itself. |
+| A lesson | its layer -- the sdlc skill, law 15 | Only unsettled ones (`about: wip`) stay in the plan. |
+| Completed work | `tasks/done/`, and git history | The plan is not a changelog. |
+
+---
+
+## The task file
+
+```markdown
+---
+id: red-fox-hills
+kind: task
+title: one line, so an index can be built without reading the prose
+created: YYYY-MM-DD
+issue: 47
+blocked_by: [alpha-gamma-alpha]
+implements: docs/design/DESIGN.auth.md
+---
+
+The body.
+```
+
+Four fields are required -- `id`, `kind`, `title`, `created`. The other
+three are edges, and each is present only when it exists.
+
+**Filename:** `<id>-short-slug.md`, e.g. `red-fox-hills-ghost-meter.md`.
+The ID is the join key, the slug is for humans reading `ls`, and the path
+is free to change. Resolve by prefix glob: `tasks/**/<id>-*.md`.
+
+### There is no `status:` field
+
+Every state you would put in one is already derivable, and a second copy
+would only disagree with the first:
+
+- **done** -- the file is in `tasks/done/`.
+- **blocked** -- `blocked_by` names a task that is not in `done/`.
+- **open** -- neither of the above.
+
+Do not add one back. A field that restates the filesystem is a field that
+goes stale.
+
+### `kind`
+
+```yaml
+kind: task | bug
+```
+
+**A kind earns a slot only if skill text that already exists branches on
+it.** Not "could branch" -- does, today. A kind nothing acts on is a label
+people argue about and no tool reads, which is worse than having none.
+
+- `task` -- the default.
+- `bug` -- law 14 governs its body, and law 5 demands a RED test before
+  the fix. Two rules, both already written, both keyed on this value.
+
+`spike` passes the test on the merits: its exit condition is genuinely
+different -- it closes by producing a finding, and its code is deleted
+rather than merged (the concept skill). Add it the first time you actually
+track one. `chore`, `docs`, `research`, and `epic` do not pass; nothing
+branches on them.
+
+`refactor` is the near-miss worth naming, because it has a plausible rule
+-- "no behavior change, so no new RED test." That is also the exact
+sentence used to skip tests, so encoding it as a kind hands out the
+exemption in writing. Leave it out.
+
+### A bug's body is evidence; a task's body is intent
+
+Law 14 applies to a local `kind: bug` exactly as it applies to a GitHub
+Issue: **body = the defect (symptom, impact, evidence); the fix goes in a
+comment or a later section, never the body.** A fix in the body reads as
+spec and rots; the defect statement stays true. Title the defect, not the
+patch, and re-derive the fix from the current design when you pick it up.
+
+A task's body is the opposite -- it is intent, and it goes stale the
+moment the design moves. Check it against `implements:` before you trust
+it.
+
+---
+
+## Edges
+
+Three, and each is declared on the **dependent** end -- the end that must
+survive its target being closed or deleted, and the end an agent reads
+before starting work.
+
+| Field | Points at | Meaning |
+|---|---|---|
+| `blocked_by: [<id>, ...]` | task IDs | hard sequencing; do not start until they are in `done/` |
+| `implements: <path>` | a design record, or a concept story | the authority this task serves |
+| `issue: 47` | a GitHub Issue number | the remote mirror of this task, when one exists |
+
+**Reference tasks by ID, never by path.** Closing a task moves it into
+`tasks/done/`, which changes its path; an ID survives that, and so does a
+retitle. Resolve with a glob: `tasks/**/<id>-*.md`.
+
+**No reverse edges are stored.** They are one grep:
+
+```
+grep -rl '<id>' tasks/           # what does finishing this unblock
+grep -rL 'issue:' tasks/*.md     # local tasks with no Issue cut yet
+grep -rl 'kind: bug' tasks/      # what is broken
+```
+
+grep is the query engine for **point** queries, and they stay in grep.
+
+**Transitive** queries -- what does finishing this ultimately unblock, is
+there a cycle, what is the critical path -- are recursive and genuinely
+awkward in grep. Those are what the task database is for.
+
+### The database is derived
+
+The database is an index over `tasks/`, built by the tooling, **gitignored
+and rebuildable from the task files alone**. If it burns down you lose
+nothing and you rebuild it.
+
+That is a hard rule, not a preference: the moment anything writes metadata
+to the database that is not in a task file, truth is split and the files
+stop being canonical. Read from it freely. Never treat an answer it gives
+as authoritative over the file.
+
+Never commit it. An index in git is a large file rewritten on every commit,
+which is the exact cost this layout exists to avoid.
+
+### Local tasks and GitHub Issues
+
+The local store works with no network and no GitHub, which is the point:
+the SDLC must still run for an offline or purely local project. When a
+repo does use Issues, `issue:` is the bridge, and the Issue is the outward
+projection -- cut it per the github-workflow skill and record the number.
+Local objects are **tasks**; remote ones are **Issues**. Keep the two
+words distinct in everything you write.
+
+---
+
+## IDs
+
+**An ID is an opaque string, minted by the naming tool. Never compose one
+by hand, and never parse one.**
+
+It may look like `red-fox-hills` or `alpha-gamma-alpha` or anything else
+the tool emits. The scheme is the tool's business and may change; nothing
+else in the fleet is allowed to depend on its shape.
+
+Three rules follow, and they are the whole of it:
+
+- **Never infer anything from an ID.** Not creation order, not kind, not
+  the area of the code it touches. IDs do not sort, and two adjacent-looking
+  names have no relationship. `created:` is the only ordering there is.
+- **Never mint one yourself.** The tool checks the new name against every
+  existing task -- including `tasks/done/` -- and retries on collision. A
+  hand-written ID skips that check, and a duplicate ID is a silently
+  corrupted graph.
+- **An ID is permanent.** Retitling a task, reclassifying it, or closing it
+  all leave the ID untouched. It is the only stable thing a task has.
+
+**The kind never appears in the ID**, for the same reason nothing else
+does: reclassifying a task as a bug must stay a one-word edit, not a rename
+that breaks every `blocked_by` pointing at it.
+
+Opaque names are why two branches need no coordination to create tasks.
+There is no counter to keep in sync and nothing to renumber at merge time;
+the namespace is large enough that independent mints do not collide.
+
+### Two tiers, one contract
+
+The contract the whole layout rests on is one sentence:
+
+> Mint an ID that collides with nothing in `tasks/`, including
+> `tasks/done/`.
+
+Everything downstream consumes an opaque string and cares about nothing
+else, so there are two ways to satisfy that sentence and no difference
+beyond it.
+
+| | Tier 1 -- the repo has a task tool | Tier 0 -- fallback |
+|---|---|---|
+| Who mints | the tool | you, by hand |
+| Scheme | opaque, e.g. `red-fox-hills` | `task-NNN`, one past the highest |
+| Collision check | every ID under `tasks/`, retried | one `ls tasks/` |
+| Graph checking | its checker, in CI | none |
+
+**Never name the tool in a skill, and never assume one exists.** A skill
+that says "run `<tool> task new`" is broken in every repo that does not
+have it -- which is exactly the case tier 0 is for. Ask the repo: if it
+ships a task command, use it; otherwise mint `task-NNN` yourself. The
+repo's `AGENT.md` is where a specific tool gets named.
+
+**Tier 0 is this rule, not a program.** A fallback binary is something you
+must install in order to avoid needing an installed thing, and it rots --
+everyone with the tool runs tier 1, so nothing exercises the fallback. A
+rule cannot rot, and it works in a repo holding nothing but git and an
+editor.
+
+**What tier 0 costs**, so the degradation is chosen rather than
+discovered: no transitive queries, no duplicate detection when filing, no
+CI dangling-reference check, and monotonic brings back branch collisions
+-- two branches both mint `task-007`, and the merge resolves it by
+renumbering the later one and fixing its inbound references.
+
+**Mixing the two schemes in one repo is free.** A repo that starts on
+`task-001` and later gets a tool ends up with `task-001` beside
+`red-fox-hills`, permanently, and that is fine -- it is the direct payoff
+of never parsing an ID. Adopting a tool is a no-op migration: nothing is
+renamed, nothing is backfilled, no edge changes. **Never renumber to tidy
+up**; it breaks every inbound reference and buys nothing.
+
+### Verify inbound references, always
+
+`T-003` mistyped will not resolve and is obviously wrong. `red-fox-hills`
+mistyped as `red-fox-hill` -- or invented outright -- looks entirely
+legitimate, because word-triples are exactly the shape a language model
+confabulates fluently.
+
+So **every `blocked_by` you write must be checked against a task that
+actually exists**, by glob or by asking the tool, at the moment you write
+it. Do not rely on it looking right. The linter's dangling-reference check
+is not hygiene here; it is the only thing standing between a plausible
+typo and a broken graph, and it belongs in CI rather than on request.
+
+---
+
+## `TODO_PLAN.md`
+
+Short. It is read on every cold start, so every line in it is charged to
+every future session.
 
 ```markdown
 # {Project Name} -- TODO Plan
 
 > **Status:** Active | Complete
-> **Created:** YYYY-MM-DD
 > **Updated:** YYYY-MM-DD
-> **Design:** link to design doc (if applicable)
+> **Design:** link to the design doc, if applicable
 
 ## How to Use This File
 
-- Rules for agents (branch workflow, commit conventions, blockers)
-- Mandatory standards (links to the coding, language style, and testing skills)
-- Key reference documents table
+Rules for agents in this repo: branch workflow, commit conventions, the
+test command. A short table of key reference documents.
 
-## What We've Accomplished
+## Where Things Stand
 
-- Detailed summary of completed work -- enough to orient a cold-start agent
-- Not just checkboxes -- describe what exists and how it works
+Orientation for a cold-start agent, in prose: what exists, what works,
+what the shape of the thing is. Narrative, not a log -- git history and
+`tasks/done/` hold the record of what happened.
 
-## Active Work: {Feature Name}
+## Now
 
-- Full phase breakdowns with task checklists inline
-- Acceptance criteria per phase
-- Commit points
-
-## Lessons Learned
-
-- Numbered entries: unsettled lessons on the work in progress
-  (settled lessons graduate to their layer -- the sdlc skill, law 15)
+Three to seven task IDs, ordered, with one line each on why this order.
+This is the only list in this file, and it is the only thing here that no
+task could hold.
 
 ## Blockers
 
-- Anything blocking progress, with date and unblock action
+What is blocking progress that is not itself a task -- an external
+dependency, a decision waiting on a human. With a date and the unblock
+action.
+
+## Lessons Learned
+
+Unsettled lessons only (`about: wip`). See below.
 ```
+
+**No task list, no checklists, no phase breakdowns.** Those are `tasks/`.
+An index of every task here is the thin-index anti-pattern with extra
+steps: it duplicates the filenames, it is hand-maintained, and it is
+wrong within a week. `ls tasks/` is free and always correct.
+
+**Keep "Now" honest.** If it has fifteen entries it is not a decision, it
+is the backlog again. Cut it back to what you would actually do next.
 
 ---
 
-## Rules for Agents
+## Working the tasks
 
-### The plan lives inline, not by reference
+### Adding
 
-Put the actual task details directly in `TODO_PLAN.md`. Do not create thin
-indexes that point to separate plan files. An agent should never have to chase
-links to find out what to do next.
+- One task per unit of work that ends in a commit. If it needs a phase
+  breakdown, it is several tasks with `blocked_by` between them.
+- Give it `implements:` if a design record or story authorizes it. A task
+  with no authority and no defect behind it is worth questioning.
+- Discovered work gets its own file immediately, not a note at the bottom
+  of the task you are on.
 
-Design docs stay in `docs/design/` -- link to them for context. But the **task
-breakdown** belongs in `TODO_PLAN.md`.
+### Closing
 
-### Adding Work
+Move the file into `tasks/done/`. Do not edit it to say "done" -- the
+directory is the state.
 
-- When a design doc produces a phased plan, transfer the tasks into the
-  **Active Work** section. Reference the design doc for context, don't
-  duplicate the design rationale.
+**`tasks/done/` holds the current cycle only.** At each retrospective,
+delete every entry whose work has shipped and whose lessons have
+graduated. It exists so an in-flight cycle can see what it already
+finished, not as an archive; git history is the archive. Left unpruned it
+becomes the landfill this layout was built to end.
 
-- Group tasks by phase with clear dependency ordering.
-- Include acceptance criteria and commit points per phase.
-- Keep task descriptions short -- one line. If it needs explanation, add a
-  brief note below the checkbox.
+### Deleting
 
-### Updating Progress
+A task that turns out to be unnecessary is **deleted**, not struck
+through and not annotated as superseded. There is no `supersedes:` field
+for the same reason: git history holds the past, and a tombstone is a file
+every future `ls` has to read past.
 
-- Mark tasks `[x]` as you complete them. Do not batch -- mark each task done as
-  soon as it is done.
+---
 
-- If a task turns out to be unnecessary, strike it with `~~` and add a brief
-  reason: `~~Task description~~ (superseded by X)`
+## Lessons Learned
 
-- If you discover new work mid-implementation, add it to the Active section
-  immediately. Do not wait until the end.
+`TODO_PLAN.md`'s Lessons Learned holds **unsettled lessons on the work in
+progress** -- and only those. It is an inbox, not an archive. Settled
+lessons graduate to the layer whose readers need them (the sdlc skill,
+law 15). Every layer costs its readers a read; keeping a settled lesson
+here charges it to every future session on this plan.
 
-### Moving to Completed
-
-- When all tasks in a feature/area are done, move the summary from Active Work
-  into **What We've Accomplished**.
-
-- Write enough detail that a cold-start agent can understand what exists --
-  not just "Phase 1 done" but what was actually built, what files were created,
-  what patterns were established.
-
-### Recording Lessons Learned
-
-This section holds **unsettled lessons on the work in progress** -- and
-only those. It is an inbox, not an archive. A lesson that has settled
-graduates to the layer whose readers need it (the sdlc skill, law 15):
-a code comment (file-local implementation trap), `docs/arch/` (component
-constraint), the repo's `AGENT.md` (what every session must know before
-working safely), or a shared skill (fleet-universal). Every layer costs
-its readers a read; keeping a settled lesson here charges it to every
-future session on this plan.
-
-Record lessons when:
-
-- An assumption turned out to be wrong
-- A tool or API didn't behave as documented
-- A debugging session took longer than expected and the root cause was
-  non-obvious
-
-- An approach was tried, rejected, and replaced -- capture *why* so the next
-  agent doesn't repeat the experiment
-
-- Something worked unexpectedly well and should be repeated
+Record a lesson when an assumption was wrong, a tool did not behave as
+documented, a non-obvious root cause cost real time, an approach was tried
+and rejected, or something worked unexpectedly well.
 
 **Format:**
 
 ```markdown
 ### {N}. {Short title}
 
+about: {layer}
+
 {What happened and what to do differently. 2-4 sentences max.}
 ```
 
-A good lesson learned saves someone 30+ minutes in a future conversation.
+A good lesson saves someone 30+ minutes in a future conversation.
 
-**Do not record:**
+**`about:` names the layer the lesson is for.** It is law 15's routing
+decision, recorded at the moment you write the lesson instead of
+rediscovered at triage months later -- when whoever is triaging no longer
+has the context that made the routing obvious.
 
-- Obvious things ("tests should pass before merging")
-- Things already documented in style guides or the repo's agent
-  instruction file (`AGENT.md` / `AGENTS.md` / `CLAUDE.md`)
-- Implementation details that belong in code comments
-- Settled lessons -- route them to their layer instead (see above)
+| `about:` | The lesson's layer |
+|---|---|
+| `wip` | none yet -- unsettled, belongs in this file |
+| a repo path, e.g. `goldfish/shell.py` | a code comment in that file |
+| `component:<name>` | `docs/arch/<name>` -- only once it ships (the folder law) |
+| `repo` | the repo's `AGENT.md` |
+| `skill:<name>` | that shared skill |
+| `global` | the global agent instructions |
+
+**Only `wip` belongs in this file.** Everything else is a lesson that has
+already settled and is naming its own destination, so write it there
+directly and never record it here first.
+
+Two things the field is good for beyond routing:
+
+- **A lesson you cannot label is one you have not finished diagnosing.**
+  If you cannot say which layer's readers need this, you are still
+  describing a symptom. Say so plainly rather than filing `wip` as a
+  parking space.
+- **The same `about:` recurring across lessons is the signal to change
+  the layer itself.** Three lessons pointing at one skill means the
+  doctrine is wrong, not that agents keep being careless.
+
+**A task is never a lesson's home**, and neither is an issue. Both are
+transitory -- they vanish when the work is done, taking anything parked in
+them along.
+
+**Do not record:** obvious things, anything already in a style guide or
+the repo's agent instruction file, implementation details that belong in
+code comments, or settled lessons.
 
 **Graduation (mandatory triage).** At every retrospective, and at any
-wrapup whose sweep touches this file, walk the whole list; each entry
-gets exactly one of:
+wrapup whose sweep touches this file, walk the whole list; each entry gets
+exactly one of:
 
-- **Promote**: the lesson has settled -- move it to its layer and delete
-  it here.
-- **Keep**: still live, still tied to the work in progress.
+- **Promote**: `about:` is anything other than `wip` -- move the lesson to
+  that layer and delete it here. The field already decided; triage only
+  executes it.
+- **Keep**: still `wip`, still tied to the work in progress.
 - **Delete**: superseded, or its root cause is fixed. Delete outright --
-  never annotate an entry as "Historical" or "superseded"; git history
-  holds the past.
+  never annotate an entry as "Historical"; git history holds the past.
 
-### General
+---
 
-- Keep the file focused. One active feature at a time is ideal. If multiple
-  features are active, give each its own `## Active Work` section.
+## Hygiene
 
-- Review and prune `TODO_PLAN.md` at the start of any major new work session.
-  Remove stale items, update anything that has drifted.
-
-- Do not drop `PLAN.md` files -- the project uses `TODO_PLAN.md` exclusively.
-  Ensure `PLAN.md` is listed in the repo's `.gitignore`.
+- Prune at the start of any major work session: stale entries in `Now`,
+  tasks whose authority has moved, `done/` from a shipped cycle.
+- `PLAN.md` is not this file. Several repos gitignore it to catch
+  agent-dropped plan files; leave that ignore in place.

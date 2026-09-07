@@ -78,10 +78,17 @@ Learned takes only what is still *unsettled* about the work in progress.
 An issue is never a lesson's home: issues are transitory and vanish when
 the root cause is fixed.
 
+**Label every lesson with `about:` as you write it** -- the layer it is
+for, decided now rather than at some later triage that will not have your
+context. `wip` is the only value that means "stays in `TODO_PLAN.md`";
+every other value names where the lesson goes, so route it there in this
+same pass. -> the todo-plan skill for the field and its values.
+
 Then run the todo-plan skill's graduation triage over the **whole**
 existing Lessons Learned list -- promote/keep/delete every entry, not
 only what this work added -- so settled entries from earlier work do not
-accumulate.
+accumulate. Entries predating the field get one now; assigning it is the
+triage.
 
 **A lesson needs the mechanism, not the symptom.** "X inherits the global
 config and starts OAuth flows" beats "X was noisy." The symptom tells the
@@ -98,11 +105,13 @@ Anything you found that is *not* drift: pre-existing bugs, deferred work
 the doc names as future, follow-ups you chose not to do. File them. Do not
 leave them in a PR description, where they die when the PR merges.
 
-### 5. Update TODO_PLAN
+### 5. Update the plan and the tasks
 
-Mark the phase shipped, and list the outstanding drift issues under it, so
-the work stays **visibly incomplete** until they are settled. -> the
-todo-plan skill
+Move shipped tasks into `tasks/done/`, and cut the outstanding drift as
+new task files (`kind: bug`) named in `TODO_PLAN.md`'s "Now", so the work
+stays **visibly incomplete** until they are settled. Then prune
+`tasks/done/`: delete every entry whose work has shipped and whose lessons
+have graduated. -> the todo-plan skill
 
 ### 6. Hand off the status transition
 
