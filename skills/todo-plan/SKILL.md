@@ -36,7 +36,7 @@ every cold start stays short.
 
 ```markdown
 ---
-id: red-cock-hills
+id: red-fox-hills
 kind: task
 title: one line, so an index can be built without reading the prose
 created: YYYY-MM-DD
@@ -51,7 +51,7 @@ The body.
 Four fields are required -- `id`, `kind`, `title`, `created`. The other
 three are edges, and each is present only when it exists.
 
-**Filename:** `<id>-short-slug.md`, e.g. `red-cock-hills-ghost-meter.md`.
+**Filename:** `<id>-short-slug.md`, e.g. `red-fox-hills-ghost-meter.md`.
 The ID is the join key, the slug is for humans reading `ls`, and the path
 is free to change. Resolve by prefix glob: `tasks/**/<id>-*.md`.
 
@@ -166,7 +166,7 @@ words distinct in everything you write.
 **An ID is an opaque string, minted by the naming tool. Never compose one
 by hand, and never parse one.**
 
-It may look like `red-cock-hills` or `alpha-gamma-alpha` or anything else
+It may look like `red-fox-hills` or `alpha-gamma-alpha` or anything else
 the tool emits. The scheme is the tool's business and may change; nothing
 else in the fleet is allowed to depend on its shape.
 
@@ -204,7 +204,7 @@ beyond it.
 | | Tier 1 -- the repo has a task tool | Tier 0 -- fallback |
 |---|---|---|
 | Who mints | the tool | you, by hand |
-| Scheme | opaque, e.g. `red-cock-hills` | `task-NNN`, one past the highest |
+| Scheme | opaque, e.g. `red-fox-hills` | `task-NNN`, one past the highest |
 | Collision check | every ID under `tasks/`, retried | one `ls tasks/` |
 | Graph checking | its checker, in CI | none |
 
@@ -228,15 +228,15 @@ renumbering the later one and fixing its inbound references.
 
 **Mixing the two schemes in one repo is free.** A repo that starts on
 `task-001` and later gets a tool ends up with `task-001` beside
-`red-cock-hills`, permanently, and that is fine -- it is the direct payoff
+`red-fox-hills`, permanently, and that is fine -- it is the direct payoff
 of never parsing an ID. Adopting a tool is a no-op migration: nothing is
 renamed, nothing is backfilled, no edge changes. **Never renumber to tidy
 up**; it breaks every inbound reference and buys nothing.
 
 ### Verify inbound references, always
 
-`T-003` mistyped will not resolve and is obviously wrong. `red-cock-hills`
-mistyped as `red-cock-hill` -- or invented outright -- looks entirely
+`T-003` mistyped will not resolve and is obviously wrong. `red-fox-hills`
+mistyped as `red-fox-hill` -- or invented outright -- looks entirely
 legitimate, because word-triples are exactly the shape a language model
 confabulates fluently.
 
