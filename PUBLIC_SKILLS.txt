@@ -4,6 +4,7 @@
 # conscious decision to publish it. Add the directory name (one per line,
 # # comments ignored) in the same commit that adds the skill.
 architecture
+cdp-browser
 chrome-mcp
 coding
 concept
