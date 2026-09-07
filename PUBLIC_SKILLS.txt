@@ -14,6 +14,11 @@ github-workflow
 lmde-dashboards
 markdown
 planning
+plannotator
+plannotator-annotate
+plannotator-install
+plannotator-last
+plannotator-review
 release
 retrospective
 sdlc
