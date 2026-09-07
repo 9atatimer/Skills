@@ -89,3 +89,26 @@ test("it digests the manifest, not just the skills tree", async () => {
   const after = await runStamp(root);
   assert.notEqual(after, before);
 });
+
+test("it changes the stamp when a persona under agents/ changes", async () => {
+  // Given a stamped payload with an agents/ tree, When a persona body is
+  // edited, Then the stamp differs -- agents/ is a payload member like
+  // skills/, and clai's currency check must see it move.
+  const root = makePayload();
+  mkdirSync(join(root, "agents"));
+  writeFileSync(join(root, "agents", "designer.md"), "v1\n");
+  const before = await runStamp(root);
+  writeFileSync(join(root, "agents", "designer.md"), "v2\n");
+  const after = await runStamp(root);
+  assert.notEqual(after, before);
+});
+
+test("a payload with no agents/ tree still digests to the clai fixture", async () => {
+  // Given the skills+manifest fixture and no agents/, When stamp runs, Then
+  // the byte-for-byte lock with clai's Python digest still holds -- the
+  // agents/ member is optional, and its absence must not perturb the digest
+  // of a tree that never had one.
+  const root = makePayload();
+  await runStamp(root);
+  assert.equal(readFileSync(join(root, "SOURCE_STAMP"), "utf8").trim(), FIXTURE_DIGEST);
+});

@@ -10,25 +10,28 @@ version bump -- a merge to `main` publishes, and that publish is the rollout.
 ```
 skills/<name>/SKILL.md    the skills themselves
 skills/<name>/...         a skill's supporting files, if it has any
+agents/<name>.md          agent personas (see agents/README.md)
 mcp/manifest.json         the MCP server catalog provisioned alongside them
 SOURCE_STAMP              content digest of the payload (generated at pack time)
 ```
 
-All three are payload members, and clai reads all three:
+All four are payload members:
 
-| member | purpose |
-|--------|---------|
-| `skills/` | materialized into each agent's skills dir |
-| `mcp/manifest.json` | the MCP server catalog |
-| `SOURCE_STAMP` | currency check; regenerated at pack time, never committed |
+| member | purpose | read by clai |
+|--------|---------|--------------|
+| `skills/` | materialized into each agent's skills dir | yes |
+| `agents/` | personas, one file each, for `.claude/agents/` and `.opencode/agents/` | not yet |
+| `mcp/manifest.json` | the MCP server catalog | yes |
+| `SOURCE_STAMP` | currency check; regenerated at pack time, never committed | yes |
 
-**This repository carries skills and nothing else.** Version pins for the
-fleet executables (clai, ast-mcp, gadmin) are ENVIRONMENT, not skills; they
-live beside the acquire engine in the tooling repos -- tds-utils
-`lmde/lib/pins.env` and template-tools
-`packages/naatm-sandbox/lib/pins.env`. They briefly shipped in this payload,
-which meant moving skills here dragged clai's version policy along with
-them.
+**This repository carries agent-facing prompt content and nothing else** --
+skills (how a phase is done) and personas (who is doing it). Version pins
+for the fleet executables (clai, ast-mcp, gadmin) are ENVIRONMENT, not
+prompt content; they live beside the acquire engine in the tooling repos
+-- tds-utils `lmde/lib/pins.env` and template-tools
+`packages/naatm-sandbox/lib/pins.env`. They briefly shipped in this
+payload, which meant moving skills here dragged clai's version policy
+along with them.
 
 ## Consuming it
 
@@ -62,8 +65,9 @@ generated mirrors -- edit skills here, never there.
 `.github/workflows/publish.yml` publishes `@nine-at-a-time-media/skills` to
 GitHub Packages on every push to `main`.
 
-The version is `0.2.<commit count over skills/ and mcp/manifest.json>` --
-deterministic, monotonic, and needing no human bump. **The 0.2 series is
+The version is `0.2.<commit count over the payload and packaging paths>`
+(the list is `VERSION_PATHS` in `scripts/version.mjs`) -- deterministic,
+monotonic, and needing no human bump. **The 0.2 series is
 load-bearing.** template-tools published this same package name up through
 `0.1.85`; a `0.1.<count>` scheme here would land on versions that already
 exist, the publish step would skip them as already-published, and the fleet

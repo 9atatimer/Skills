@@ -1,0 +1,29 @@
+# PUBLIC_SKILLS.txt -- the publication allowlist consumed by
+# scripts/publicity-guard.mjs. A skill directory under skills/ may only be
+# committed or pushed if its name is listed here; listing a skill IS the
+# conscious decision to publish it. Add the directory name (one per line,
+# # comments ignored) in the same commit that adds the skill.
+architecture
+chrome-mcp
+coding
+concept
+design
+designomatic
+gates
+github-workflow
+lmde-dashboards
+markdown
+planning
+release
+retrospective
+sdlc
+style-bash
+style-python
+style-typescript
+tech-radar
+testing
+testing-node
+testing-nuxt
+testing-python
+todo-plan
+wrapup

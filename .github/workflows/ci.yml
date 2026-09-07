@@ -1,0 +1,28 @@
+# ci.yml -- the non-discretionary gate: tests plus the publicity guard
+# (scripts/publicity-guard.mjs --all) over the full tree, so nothing the
+# guard's denylists cover can merge even if a local commit bypassed the
+# husky hooks. Make the `ci` check required on main (Settings -> Rulesets)
+# to remove the discretion.
+#
+# ci.magic (the natural-language assertion rung) is wired separately once
+# the naatm-ci-magic invocation is ported from template-tools.
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: tests
+        run: npm test
+      - name: publicity guard (full tree)
+        run: npm run guard

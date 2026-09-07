@@ -75,6 +75,16 @@ of the three).
   - Emitted events or returned values
   - Side effects at system boundaries
 
+**Bookkeeping needs no test.** A test asserts a contract someone depends
+on, and its failure message names the harm. If you cannot say who is
+harmed and what they observe when it breaks, there is no behavior, so
+there is no test -- and no RED-first either, because it was never a
+defect. `.gitignore` entries, lint and formatter config, comments, file
+layout, dependency housekeeping: a one-line commit, nothing more. The
+check is the victim, not the file type. A `files` list that decides what
+ships is a behavior (a change that cannot publish itself); an ignore line
+is not.
+
 ### 2. Reliability and Determinism
 
 - Tests must be **non-flaky**, **order-independent**, and **hermetic**
