@@ -7,7 +7,8 @@ description: "Get the plannotator CLI onto a machine that does not have it, with
 
 > **Purpose:** turn "the binary is missing" into a working install, on a
 > machine where the documented one-liner is not allowed to be used.
-> **Written against:** plannotator 0.27.11.
+> **Written against:** plannotator 0.27.12, built from the fork's `main`
+> (see "Clone the fork, not upstream").
 
 Plannotator is a local, browser-based review layer -- plans, diffs, and
 documents open in an annotation UI, the human marks them up, and structured
@@ -51,17 +52,28 @@ If the human decides they want the upstream installer anyway, that is their
 call to make and theirs to run -- hand them the line and let them paste it.
 Do not run it for them.
 
-## Build from a checkout
+## Clone the fork, not upstream
 
-Clone into the fleet's third-party area, so it sits with other upstream
-code rather than beside the human's own repos:
+The fleet builds from its own fork, `9atatimer/plannotator`, so the code
+cannot change underneath the machine between a read and a build. Upstream
+is a second remote, used only to pull forward. Clone into the third-party
+area, so it sits with other upstream code rather than beside the human's
+own repos:
 
 ```bash
-git clone https://github.com/backnotprop/plannotator.git \
-    ~/workplace/third-party/plannotator
+gh repo clone 9atatimer/plannotator ~/workplace/third-party/plannotator
+git -C ~/workplace/third-party/plannotator remote add upstream \
+    https://github.com/backnotprop/plannotator.git
 ```
 
-Then build. These are the release workflow's own steps, not an
+The fork's `main` tracks upstream `main`, not a release tag. Upstream cuts
+lightweight, unsigned tags and rewrites history between them, so a tag pin
+buys nothing a fork commit does not. Decided 2026-09-06: always forward,
+build the latest.
+
+## Build from a checkout
+
+Build from the fork's `main`. These are the release workflow's own steps, not an
 approximation of them -- `bun install`, the two UI builds, then the
 single-file compile:
 
@@ -96,7 +108,17 @@ comes from per-agent hooks, which are separate:
 
 - **Claude Code:** a plugin providing `PreToolUse`/`EnterPlanMode` ->
   `plannotator improve-context` and `PermissionRequest`/`ExitPlanMode` ->
-  `plannotator`. It ships hooks only, no skills.
+  `plannotator`. It ships hooks only, no skills. The human installs it
+  from the fork, not upstream, so plugin and binary come from one tree:
+  `/plugin marketplace add 9atatimer/plannotator`, then
+  `/plugin install plannotator@plannotator`, then restart. The marketplace
+  clones the fork's default branch; `gitCommitSha` in
+  `~/.claude/plugins/installed_plugins.json` should equal the commit the
+  binary was built from.
+- **Unattended sessions:** the `ExitPlanMode` hook's timeout is 345600
+  seconds, four days. A plan exit in a headless or channel-driven session
+  (Telegram, SSH with no forwarded port) blocks until someone opens the
+  browser UI. Keep plan mode out of sessions nobody is watching.
 - **Other agents:** upstream's `scripts/install.sh` writes their hooks,
   commands, and config. It is the human's to run, and `--skip-skills` is
   worth knowing about if this fleet's vendored plannotator skills are
@@ -106,6 +128,25 @@ So a machine can be in a legitimate half-state: the binary works when
 called directly, and plan review never fires on its own. If the human
 expected the automatic behaviour, the hooks are what is missing, not the
 binary.
+
+## Updating
+
+Forward only. Never force-push the fork's `main`; upstream rewrites its
+own history, so the fork's `main` is a merge line over upstream's, and
+GitHub's "sync fork" button produces the same shape.
+
+```bash
+R=~/workplace/third-party/plannotator
+git -C $R fetch upstream main
+git -C $R merge --no-ff --no-edit upstream/main
+git -C $R push origin main
+```
+
+Then rebuild (the steps above), and the human refreshes the plugin with
+`/plugin marketplace update plannotator`. The plugin version follows the
+fork's `package.json`, so a bump there is picked up without a reinstall.
+Compare `gitCommitSha` against `git -C $R rev-parse HEAD` afterwards; if
+they differ, plugin and binary are from different trees.
 
 ## When it breaks later
 
