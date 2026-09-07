@@ -7,8 +7,10 @@ description: "Get the plannotator CLI onto a machine that does not have it, with
 
 > **Purpose:** turn "the binary is missing" into a working install, on a
 > machine where the documented one-liner is not allowed to be used.
-> **Written against:** plannotator 0.27.12, built from the fork's `main`
-> (see "Clone the fork, not upstream").
+> **Written against:** plannotator, built from the fork's `main` (see
+> "Clone the fork, not upstream"). Not version-pinned -- policy is to
+> always build latest; do not assume a fixed release the way the vendored
+> plannotator-* skills do.
 
 Plannotator is a local, browser-based review layer -- plans, diffs, and
 documents open in an annotation UI, the human marks them up, and structured
@@ -61,10 +63,15 @@ area, so it sits with other upstream code rather than beside the human's
 own repos:
 
 ```bash
-gh repo clone 9atatimer/plannotator ~/workplace/third-party/plannotator
+git clone https://github.com/9atatimer/plannotator.git \
+    ~/workplace/third-party/plannotator
 git -C ~/workplace/third-party/plannotator remote add upstream \
     https://github.com/backnotprop/plannotator.git
 ```
+
+(Not `gh repo clone`: for a fork, it auto-adds `upstream` itself, so the
+`remote add` above would fail with "remote upstream already exists" --
+and plain `git clone` needs no `gh` prerequisite.)
 
 The fork's `main` tracks upstream `main`, not a release tag. Upstream cuts
 lightweight, unsigned tags and rewrites history between them, so a tag pin
@@ -137,12 +144,29 @@ GitHub's "sync fork" button produces the same shape.
 
 ```bash
 R=~/workplace/third-party/plannotator
+git -C $R checkout main
 git -C $R fetch upstream main
+git -C $R log --oneline main..upstream/main
+```
+
+Review that list, then merge and rebuild locally:
+
+```bash
 git -C $R merge --no-ff --no-edit upstream/main
+```
+
+If the merge conflicts, resolve it as any merge -- do not force through
+with `-X ours`/`-X theirs`; a silently-resolved conflict is exactly the
+kind of drift this fork exists to prevent.
+
+**Rebuild and verify (steps above). Stop there.** Pushing changes what
+every machine in the fleet builds next -- that push is the human's to run:
+
+```bash
 git -C $R push origin main
 ```
 
-Then rebuild (the steps above), and the human refreshes the plugin with
+Then the human refreshes the plugin with
 `/plugin marketplace update plannotator`. The plugin version follows the
 fork's `package.json`, so a bump there is picked up without a reinstall.
 Compare `gitCommitSha` against `git -C $R rev-parse HEAD` afterwards; if
