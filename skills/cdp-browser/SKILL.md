@@ -173,6 +173,17 @@ outlive a single repo checkout.
   to that existing process instead of launching fresh, that's usually
   fine and happens automatically. If a genuinely fresh process is needed,
   fully quit the browser (not just its tabs) first.
+- **OAuth/SSO logins can refuse to complete under CDP.** Confirmed with
+  Google's "Continue with Google": it refuses to sign in ("This browser or
+  app may not be secure") whenever the browser has an active CDP/remote-
+  debugging attachment, regardless of which Chromium browser or who
+  attached. Plain email/password logins are unaffected -- only SSO/OAuth
+  flows hit this. If a target site's login goes through such a flow: fully
+  quit the browser, relaunch the same profile with **no debug flags at
+  all**, sign in there, fully quit again, then reconnect over CDP as
+  normal -- the resulting session cookies are on disk and carry over
+  regardless of debug flags. This is a one-time cost per session expiry,
+  not a per-use ritual.
 
 ## Etiquette
 
