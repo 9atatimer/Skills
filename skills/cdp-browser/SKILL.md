@@ -162,6 +162,17 @@ outlive a single repo checkout.
 - **Directory creation isn't guaranteed.** Don't assume
   `--userDataDir` is created automatically if missing -- `mkdir -p` it
   yourself before first launch.
+- **A debugging port is owned by one live process, and closing tabs
+  doesn't release it.** Closing every open tab/page through the MCP
+  server's own tools does NOT quit the underlying browser process -- it
+  stays alive holding the profile lock and the port. A later attempt to
+  bind that same port/profile again -- whether the MCP server relaunching,
+  or a separate manual CLI invocation -- doesn't create a second listener;
+  it just hands off to (focuses) the still-running process, same as the
+  already-running-instance gotcha above. If something needs to reconnect
+  to that existing process instead of launching fresh, that's usually
+  fine and happens automatically. If a genuinely fresh process is needed,
+  fully quit the browser (not just its tabs) first.
 
 ## Etiquette
 
