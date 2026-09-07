@@ -50,6 +50,14 @@ parent=$(gh repo view "$origin_url" --json parent --jq .parent.nameWithOwner)
 gh repo view "$parent" --json defaultBranchRef --jq .defaultBranchRef.name
 ```
 
+**`gh repo clone` auto-adds `upstream` for a fork.** Cloning a fork with
+`gh repo clone <fork>` silently sets a remote named `upstream` pointing at
+the parent. A follow-on `git remote add upstream <url>` then fails with
+"remote upstream already exists" -- confirmed 2026-09-07,
+`9atatimer/Skills` PR #18. Either rely on the auto-added remote (check its
+URL matches what you expect first) or clone with plain `git clone` and add
+`upstream` yourself; do not do both.
+
 **Fallback when `gh` is unavailable.** git alone cannot answer `isFork`, so
 topology degrades to a convention: an `upstream` remote is *assumed* to mean
 fork mode. Say so rather than asserting it, and get both sides' defaults:
