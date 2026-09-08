@@ -184,6 +184,15 @@ outlive a single repo checkout.
   normal -- the resulting session cookies are on disk and carry over
   regardless of debug flags. This is a one-time cost per session expiry,
   not a per-use ritual.
+- **A security-hardened browser's own protections can independently break
+  OAuth logins, on top of any CDP-detection above.** Confirmed with Brave:
+  its Shields/fingerprinting-protection features break Google Workspace
+  sign-in on their own (`brave/brave-browser#22112`), with no automation
+  or CDP involved at all. These are two separate, stackable causes -- a
+  browser swap (e.g. Brave to Chrome or Chrome for Testing) can fix this
+  one, but does NOT fix the CDP-detection gotcha above, which is
+  browser-agnostic. Don't assume switching browsers alone resolves an
+  OAuth failure under CDP; check which cause (or both) applies.
 
 ## Etiquette
 
