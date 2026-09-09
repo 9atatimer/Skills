@@ -19,7 +19,19 @@ description: "Writing or surgically editing Markdown files, especially design do
 ### Structure
 
 - **Blank line after headings**: Always put a blank line between a heading and its content
-- **Blank line before lists**: Always put a blank line before bullet or numbered lists
+- **Blank line before lists**: Always put a blank line before any list
+- **Bullet lists only -- never an ordered list**: write `-`, never `1.` `2.` `3.`.
+  This is a hard rule, not a preference. A numbered list claims a sequence
+  the content usually does not have, and every insertion or deletion
+  renumbers items that other documents may already cite. Bugs, todos and
+  lessons especially are never presented as a numbered sequence -- they are
+  an unordered set that grows and shrinks. Where order genuinely matters,
+  say so in the prose ("do this before that") or name the dependency;
+  where identity matters, give the item a stable identifier.
+- **Stable identifiers are not lists**: a minted, cross-referenced id --
+  `task-023`, a `D14` key-decision row, a `Q2` open question -- is a name,
+  and stays. The rule above bans ordered *list markup* and the practice of
+  numbering items by position, not the practice of naming them.
 - **Consistent heading levels**: Don't skip levels (e.g., H2 -> H4)
 - **No duplicate headings**: Each heading at the same level should be unique within its parent
 
@@ -57,9 +69,9 @@ related:
 
 ### Tool workflow
 
-1. **list_sections** -- Get current section IDs and structure
-2. **get_section** -- Fetch content of section you want to edit
-3. **update_section** -- Replace section content (preserves subsections by default)
+- **list_sections** -- Get current section IDs and structure
+- **get_section** -- Fetch content of section you want to edit
+- **update_section** -- Replace section content (preserves subsections by default)
 
 Section IDs regenerate after each edit, so re-run `list_sections` if you need to make another edit.
 
@@ -93,11 +105,11 @@ Section IDs regenerate after each edit, so re-run `list_sections` if you need to
 
 Before editing a Markdown file:
 
-1. Check for smart quotes: `perl -CSD -ne 'print "$.: $_" if /[\x{2018}\x{2019}\x{201C}\x{201D}]/' file.md`
-2. If found, convert them first: `perl -CSD -i -pe 's/[\x{201C}\x{201D}]/"/g; s/[\x{2018}\x{2019}]/\x27/g' file.md`
-3. Decide: surgical edit or full rewrite?
-4. If surgical: use markdown-editor workflow above
-5. If rewrite: read file, modify in response, write_file
+- Check for smart quotes: `perl -CSD -ne 'print "$.: $_" if /[\x{2018}\x{2019}\x{201C}\x{201D}]/' file.md`
+- If found, convert them first: `perl -CSD -i -pe 's/[\x{201C}\x{201D}]/"/g; s/[\x{2018}\x{2019}]/\x27/g' file.md`
+- Decide: surgical edit or full rewrite?
+- If surgical: use markdown-editor workflow above
+- If rewrite: read file, modify in response, write_file
 
 ## Design doc conventions
 
