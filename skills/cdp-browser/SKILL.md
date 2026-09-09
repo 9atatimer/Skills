@@ -42,7 +42,7 @@ disposable automation infrastructure? That's `chrome-mcp`.
 +-- <profile-location>/ <- gitignored, isolated user-data-dir (see below)
 ```
 
-Two ways to connect `chrome-devtools-mcp` to the real browser:
+The ways to connect `chrome-devtools-mcp` to the real browser:
 
 - **MCP-managed launch** -- the MCP server launches and owns the browser
    process itself, via `--executablePath` + `--userDataDir`. Simplest;

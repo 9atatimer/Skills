@@ -329,9 +329,13 @@ migration is one docs-only commit, separate from any feature work.
 - **Lessons route by law 15.** Settled ones go straight to their layer;
   only genuinely unsettled ones enter the plan's Lessons Learned, with
   `about: wip`.
-- **Then cut the mono-file down to the `TODO_PLAN.md` schema above** (or
-  delete it outright if it was `TODO.md`/`BUGS.md` beside a real plan).
-  Nothing that survived may still hold a task body.
+- **Then leave exactly one plan file: the root `TODO_PLAN.md`, on the
+  schema above.** A standalone legacy file (`TODO.md`, `BUGS.md`,
+  `TODOS.md`, `LESSONS.md`) beside a real plan is deleted outright once
+  drained. If the legacy file *was* the repo's only plan, reduce it to
+  the schema and rename it to `TODO_PLAN.md` at the root -- never leave
+  the plan under a noncanonical name. Nothing that survives may still
+  hold a task body.
 
 ---
 

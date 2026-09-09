@@ -151,7 +151,11 @@ skill.
     are names, not positions, and they are exactly why the laws in this
     section are numbered -- they are cited as "law 15" from other skills.
     A number you can cite is an identifier; a number that shifts when you
-    insert above it is a list, and lists get bullets. The same test governs
+    insert above it is a list, and lists get bullets. The one exception
+    to the ban on ordered markup follows from that: a step list whose
+    numbers other text actually cites ("proceed to step 3") keeps its
+    `1.` `2.` markers -- there the number is the step's name, and
+    converting it breaks every citation into it. The same test governs
     numbers outside list markup: a count in a lead-in ("the five gates"),
     a numbered heading nobody cites, "the third option" -- all rot on the
     next edit. A number earns its place only as a measured quantity, a
