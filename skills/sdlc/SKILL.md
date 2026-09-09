@@ -133,6 +133,23 @@ skill.
     on the PR alongside the fix, or the review is invisible to every
     later reader. A self-review never satisfies Zero Unreviewed Code.
     -> the gates skill
+17. **Bullet lists only; never an ordered list.** In every document this
+    process produces -- design records, as-builts, `TODO_PLAN.md`, task
+    files, `AGENT.md`, skills, PR and issue bodies -- write `-`, never
+    `1.` `2.` `3.`. Numbering claims a sequence the content usually does
+    not have, and it renumbers under every insertion, so a citation to
+    "item 3" rots silently. **Bugs, todos and lessons are never a numbered
+    sequence**: they are an unordered set that grows and shrinks, and the
+    numbering invites the false reading that item 1 outranks item 9. Where
+    order really is load-bearing, say it in prose or name the dependency
+    -- `blocked_by` in a task file is the machine-readable form. Where
+    identity is what you wanted, mint a stable identifier instead: a
+    `task-NNN` id, a `D14` key-decision row, a `Q2` open question. Those
+    are names, not positions, and they are exactly why the laws in this
+    section are numbered -- they are cited as "law 15" from other skills.
+    A number you can cite is an identifier; a number that shifts when you
+    insert above it is a list, and lists get bullets.
+    -> the markdown skill
 
 ## The Eight Phases
 
@@ -212,15 +229,15 @@ an input is never assured, and its absence is not by itself a defect.**
 
 Three rules for arriving in the middle:
 
-1. **Enter at the phase the work is actually in**, not at phase 1. Locate
-   it by what exists, then load that phase's skill.
-2. **Do not backfill an upstream artifact to fill a slot.** A concept
-   reconstructed after funding, or a design doc written to justify
-   finished code, documents nothing that happened. If an upstream artifact
-   is genuinely needed -- there is no approved design and you are about to
-   implement -- that is a real gate, and you stop and produce it properly.
-3. **Do not skip a gate because you came in late.** Elision is by rule
-   (above). "I joined at phase 5" is not one of the rules.
+- **Enter at the phase the work is actually in**, not at phase 1. Locate
+  it by what exists, then load that phase's skill.
+- **Do not backfill an upstream artifact to fill a slot.** A concept
+  reconstructed after funding, or a design doc written to justify
+  finished code, documents nothing that happened. If an upstream artifact
+  is genuinely needed -- there is no approved design and you are about to
+  implement -- that is a real gate, and you stop and produce it properly.
+- **Do not skip a gate because you came in late.** Elision is by rule
+  (above). "I joined at phase 5" is not one of the rules.
 
 Backing up a phase is allowed and cheap: an idea that turns out to be
 unframed goes back to concept, a design that will not survive its seams
