@@ -30,16 +30,16 @@ legitimate:
 Concepts are **not completed thoughts.** Aspirations are **not necessarily
 achievable.** Neither fact is a defect to be corrected in this phase.
 
-Three rules follow from that, and they are the whole discipline of phase 1:
+These rules follow from that, and they are the whole discipline of phase 1:
 
-1. **Never filter for feasibility.** "We cannot do that" is a phase 2
+- **Never filter for feasibility.** "We cannot do that" is a phase 2
    sentence. An unachievable want is still the most accurate statement of
    what the human is after, and design needs it in order to find the
    reachable thing next to it. Write it down as said.
-2. **Never converge.** The pull toward "so here is the answer" is strong,
+- **Never converge.** The pull toward "so here is the answer" is strong,
    and it is the failure mode of this phase. Half-formed is a valid state
    for a concept to be in when the session ends.
-3. **Never decide.** You may record what the human decided in front of
+- **Never decide.** You may record what the human decided in front of
    you. You may not decide anything on their behalf, including what is out
    of scope.
 
@@ -165,14 +165,14 @@ prompt for one.
 
 ## Spikes
 
-Throwaway code that answers one question is legitimate here, under three
+Throwaway code that answers one question is legitimate here, under these
 conditions:
 
-1. **One question, written down first.** "Can Workers stream through a
+- **One question, written down first.** "Can Workers stream through a
    Durable Object?" -- not "explore Workers."
-2. **Time-boxed and deleted.** The code dies; the finding is what you
+- **Time-boxed and deleted.** The code dies; the finding is what you
    keep.
-3. **The finding is evidence, not spec.** A spike proves something is
+- **The finding is evidence, not spec.** A spike proves something is
    possible, never that it is the design. Re-derive in phase 2.
 
 Record the finding in the concept's Notes, or on the issue -- wherever

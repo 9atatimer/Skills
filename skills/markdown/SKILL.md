@@ -32,6 +32,14 @@ description: "Writing or surgically editing Markdown files, especially design do
   `task-023`, a `D14` key-decision row, a `Q2` open question -- is a name,
   and stays. The rule above bans ordered *list markup* and the practice of
   numbering items by position, not the practice of naming them.
+- **Numbers must earn their place -- everywhere, not just in lists**: a
+  number belongs in prose only when it carries value nothing else can -- a
+  measured quantity, a minted identifier, a section or step number that
+  other text actually cites. Everything else rots: a count in a lead-in
+  ("the five rules follow") goes stale on the next insertion; a numbered
+  heading nobody cites is a renumber waiting to happen; "the third option"
+  breaks when an option is added above it. Refer to things by name, not by
+  position or tally, and when in doubt leave the number out.
 - **Consistent heading levels**: Don't skip levels (e.g., H2 -> H4)
 - **No duplicate headings**: Each heading at the same level should be unique within its parent
 

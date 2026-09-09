@@ -26,7 +26,7 @@ Work through all six. A docs-only PR, never bundled into the feature PR --
 doc changes buried in a large code diff do not get read, and that is
 exactly how unreviewed decisions ship.
 
-### 1. Cut drift issues
+### Cut drift issues
 
 Walk the design doc section by section against the code. Every divergence
 gets an issue, with `file:line` and a concrete consequence. Cross-link them
@@ -51,7 +51,7 @@ stated constraint -- especially a security constraint -- say so out loud in
 its own issue, framed as a decision for a human. **Do not soften the rule
 in the doc so the code conforms.**
 
-### 2. Append Key Decisions
+### Append Key Decisions
 
 The design doc's Key Decisions table is an append-only decision log, and it
 is the *only* section an implementer may touch:
@@ -63,7 +63,7 @@ is the *only* section an implementer may touch:
 
 Every other section is frozen until a human amends it. -> the design skill
 
-### 3. Record lessons learned
+### Record lessons learned
 
 Record what surprised you, what bit you, what the next agent must not
 repeat -- **at the narrowest layer whose readers need it** (the sdlc
@@ -99,13 +99,13 @@ the causal reason for the gap.* If you cannot state the third part, you
 have not finished diagnosing -- say so honestly rather than writing a
 lesson that only records confusion.
 
-### 4. Record discovered issues
+### Record discovered issues
 
 Anything you found that is *not* drift: pre-existing bugs, deferred work
 the doc names as future, follow-ups you chose not to do. File them. Do not
 leave them in a PR description, where they die when the PR merges.
 
-### 5. Update the plan and the tasks
+### Update the plan and the tasks
 
 Move shipped tasks into `tasks/done/`, and cut the outstanding drift as
 new task files (`kind: bug`) named in `TODO_PLAN.md`'s "Now", so the work
@@ -113,7 +113,7 @@ stays **visibly incomplete** until they are settled. Then prune
 `tasks/done/`: delete every entry whose work has shipped and whose lessons
 have graduated. -> the todo-plan skill
 
-### 6. Hand off the status transition
+### Hand off the status transition
 
 **Only a human moves a design doc to IMPLEMENTED**, and only once the drift
 issues are closed. IMPLEMENTED means shipped, as-built updated, drift

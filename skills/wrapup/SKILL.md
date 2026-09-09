@@ -56,6 +56,10 @@ archived and re-read by nobody.
 | A repo convention that got clarified | The repo's agent instruction file (`AGENT.md` / `AGENTS.md` / `CLAUDE.md`) |
 | Everything else session-local: reasoning, dead ends, scratch state | Let it die with the session. That is what archiving is for. (Code is never in this row -- see "First: preserve the work itself") |
 
+When the sweep meets a legacy mono-file (`TODO.md`, `BUGS.md`, or a
+`TODO_PLAN.md` carrying task bodies), do not add to it -- flag it, or
+migrate it per the todo-plan skill if time allows.
+
 When the sweep touches `TODO_PLAN.md`, also run the todo-plan skill's
 graduation triage over the whole Lessons Learned list -- promote/keep/
 delete every entry, not only this session's additions. A sweep that

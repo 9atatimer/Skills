@@ -65,7 +65,7 @@ of the three).
 
 # 1. Goals and Principles
 
-### 1. Test Behavior, Not Internal Implementation (Black Box)
+### Test Behavior, Not Internal Implementation (Black Box)
 
 - Test visible behavior: state transitions, emitted events/actions, side effects, output
 - **Strictly forbidden:** Testing internal variables, private methods, or implementation details
@@ -85,13 +85,13 @@ check is the victim, not the file type. A `files` list that decides what
 ships is a behavior (a change that cannot publish itself); an ignore line
 is not.
 
-### 2. Reliability and Determinism
+### Reliability and Determinism
 
 - Tests must be **non-flaky**, **order-independent**, and **hermetic**
 - Every test must clean up all mocks, state, timers, and fixtures
 - External dependencies **must be faked** in unit tests
 
-### 3. Performance Requirements (CRITICAL)
+### Performance Requirements (CRITICAL)
 
 **Unit tests complete in milliseconds. A test that takes over 1 second is BROKEN.**
 
@@ -101,10 +101,10 @@ is not.
 
 #### Common Causes of Slow/Hanging Tests
 
-1. **Real I/O instead of fakes** -- Network calls, file system, databases, subprocesses
-2. **Sleep statements** -- Never use real sleeps in unit tests; use fake clocks or event coordination
-3. **Unbounded waits** -- Waiting on events/promises without guaranteed resolution
-4. **Flaky or unimplemented tests left running** -- See below
+- **Real I/O instead of fakes** -- Network calls, file system, databases, subprocesses
+- **Sleep statements** -- Never use real sleeps in unit tests; use fake clocks or event coordination
+- **Unbounded waits** -- Waiting on events/promises without guaranteed resolution
+- **Flaky or unimplemented tests left running** -- See below
 
 #### Skip Flaky Tests, Don't Run and Hope
 
@@ -115,7 +115,7 @@ Every test framework has two mechanisms: **skip** and **expected failure**. They
 - **Skip** means the test is NOT executed at all. The runner sees the skip marker and moves on immediately. Use skip for tests that might hang, test unimplemented features, or depend on unavailable resources.
 - **Expected failure** (xfail, .fails, etc.) means the test IS executed, but failure is tolerated. If the test hangs, expected failure does nothing to save you. Use ONLY for tests that fail fast and reliably -- a known bug you haven't fixed yet.
 
-### 4. Guiding Philosophy
+### Guiding Philosophy
 
 **We want our tests to break when our code is broken, not when our code has changed; we want bug detection, not change detection.**
 
@@ -125,21 +125,21 @@ Every test framework has two mechanisms: **skip** and **expected failure**. They
 
 We strictly define three layers of testing. Do not blur the lines between them.
 
-### 1. Unit Tests
+### Unit Tests
 
 - **Definition:** Deterministic, in-process tests
 - **Scope:** Single function, class, or component in isolation
 - **Faking:** All external dependencies must be faked
 - **Goal:** Verify logic correctness and edge cases
 
-### 2. Integration Tests
+### Integration Tests
 
 - **Definition:** Nondeterministic (potentially), on-host tests
 - **Scope:** Two or more real components working together
 - **Faking:** Do NOT fake the communication layer between components. They must actually talk to each other.
 - **Goal:** Verify the wiring and contracts between components
 
-### 3. End-to-End (E2E) Tests
+### End-to-End (E2E) Tests
 
 - **Definition:** Nondeterministic, on-network tests
 - **Scope:** The full system stack, including real external services
@@ -177,13 +177,13 @@ Every test must start with clean state:
 
 When creating or overhauling test suites, follow this proven sequence:
 
-### Step 1: Start with Skeleton Tests
+### Start with Skeleton Tests
 
 Write test cases that call the real (not-yet-implemented) API and assert on expected behavior.
 Tests fail because the code does not exist yet -- not because of placeholder assertions like `assert false`.
 This gives you a clear roadmap before writing any implementation.
 
-### Step 2: Identify and Setup Fakes First
+### Identify and Setup Fakes First
 
 Before implementing any tests:
 
@@ -191,18 +191,18 @@ Before implementing any tests:
 - Create reusable, resettable fake instances
 - Set up framework-appropriate setup/teardown hooks
 
-### Step 3: Implement One Test at a Time
+### Implement One Test at a Time
 
 - Start with the **simplest** test case
 - Debug the test and its fakes until green
 - Only move to the next test when current test passes
 - Each green test validates both the behavior and the fake setup
 
-### Step 4: Iterate by Complexity
+### Iterate by Complexity
 
-1. Simple happy paths first
-2. Edge cases and error conditions next
-3. Complex interactions and multi-step workflows last
+- Simple happy paths first
+- Edge cases and error conditions next
+- Complex interactions and multi-step workflows last
 
 **Philosophy:** Never write multiple broken tests at once. Each green test
 validates your fakes, creating a solid foundation for more complex tests.
@@ -214,26 +214,26 @@ Writing 20 broken tests simultaneously makes debugging exponentially harder.
 
 ### Systematic Debugging Sequence
 
-#### 1. Isolate Tests Methodically
+#### Isolate Tests Methodically
 
 Run only the failing test file, then the specific test case.
 If it passes in isolation but fails in suite, you have shared state.
 
-#### 2. Start with Minimal Test Case
+#### Start with Minimal Test Case
 
 Fix the **simplest** failing test first -- it often reveals patterns for fixing others.
 
 - **Bad:** Trying to fix all failures at once
 - **Good:** Fix one test completely, understand the root cause, then apply to others
 
-#### 3. Two-Sided Investigation Pattern
+#### Two-Sided Investigation Pattern
 
 ALWAYS examine both sides:
 
 - **The test**: Is the assertion correct? Are fakes set up properly?
 - **The code under test**: Did the behavior actually change?
 
-#### 4. Common Failure Patterns
+#### Common Failure Patterns
 
 **Fake/Mock Not Returning Expected Data**
 
@@ -253,7 +253,7 @@ ALWAYS examine both sides:
 - Ensure all async fakes resolve immediately
 - Check for unbounded waits without timeout
 
-#### 5. When Stuck
+#### When Stuck
 
 If you can't diagnose a failure after 2-3 attempts:
 

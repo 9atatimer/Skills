@@ -29,21 +29,21 @@ untouched; no `chrome://inspect/#remote-debugging` toggle anywhere.
 
 Attaching the MCP to your normal Chrome via `--autoConnect`:
 
-1. Requires `chrome://inspect/#remote-debugging` enabled on your real
+- Requires `chrome://inspect/#remote-debugging` enabled on your real
    profile -- persistent toggle, sets `navigator.webdriver = true`, ships
    an "automation" banner.
-2. Pops a permission dialog on every agent attach.
-3. Means every agent session sees your real cookies and bookmarks.
+- Pops a permission dialog on every agent attach.
+- Means every agent session sees your real cookies and bookmarks.
 
 ## Why not just let the MCP launch its own Chrome
 
 `chrome-devtools-mcp`'s default is to launch a fresh Chromium with
 `--enable-automation`. As of Chrome 142:
 
-1. **`--load-extension` was silently removed** for branded Chrome under
+- **`--load-extension` was silently removed** for branded Chrome under
    `--enable-automation`. The "Extension loaded" toast appears; nothing
    loads. See [seleniumbase issue #4053][selb].
-2. **All extension installs are blocked** in `--enable-automation`
+- **All extension installs are blocked** in `--enable-automation`
    Chromes: Web Store, Load unpacked, command line. Nothing works.
 
 [selb]: https://github.com/seleniumbase/SeleniumBase/issues/4053
@@ -72,7 +72,7 @@ automation" build and looks/feels like Chrome.
 
 ## Setup recipe
 
-### 1. Drop these three scripts into your repo
+### Drop these scripts into your repo
 
 Replace `<project>` everywhere with your project name. If you have no
 extension to preload, delete the `--chrome-arg` line in `mcp-launch.sh`
@@ -142,7 +142,7 @@ exec npx -y "chrome-devtools-mcp@${CDM_VERSION}" \
 
 `chmod +x scripts/cft/*.sh`.
 
-### 2. Register the MCP server, project-scoped
+### Register the MCP server, project-scoped
 
 The agent-neutral requirements: register the server at **project scope**
 (so the entry lives in the repo and other agents/collaborators see it),
@@ -168,13 +168,13 @@ project-scoped equivalent.
 }
 ```
 
-### 3. Run once to install
+### Run once to install
 
 ```bash
 scripts/cft/install.sh
 ```
 
-### 4. Restart the agent in the project
+### Restart the agent in the project
 
 Restart your coding agent (e.g. Claude Code) so it picks up the new MCP
 entry; on first MCP tool call, the wrapper launches

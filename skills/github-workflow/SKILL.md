@@ -148,21 +148,21 @@ Pick the flow matching the derived topology.
 All AI review cycles happen within a single PR. Do not create multiple PRs
 or close/re-open PRs.
 
-1. **Push** your branch to `origin`.
-2. **Open a PR** targeting the default branch. **Do NOT open it as a
+- **Push** your branch to `origin`.
+- **Open a PR** targeting the default branch. **Do NOT open it as a
    draft** -- Copilot does not review draft PRs, so a draft silently never
    gets reviewed and the review-watch loop polls forever. Open it
    ready-for-review (or run `gh pr ready <NUMBER>` immediately). Do not put
    `[WIP]` in the title.
-3. **Title:** use a clean conventional-commit summary
+- **Title:** use a clean conventional-commit summary
    (e.g. `feat(scope): short description`).
-4. **Iterative AI review:** Copilot reviews the open PR. After each
+- **Iterative AI review:** Copilot reviews the open PR. After each
    productive push, re-request with
    `gh pr edit <NUMBER> --add-reviewer @copilot` (Copilot does not
    auto-re-review on `synchronize`). Repeat: address feedback, push,
    re-request, wait -- subject to the per-reviewer turn cap in the gates
    skill.
-5. **Human review:** once AI review cycles settle, the human takes over for
+- **Human review:** once AI review cycles settle, the human takes over for
    final review and merge (directly, or by commanding tedium -- see Landing
    via tedium below). Do NOT create a second "final" PR.
 
@@ -172,11 +172,11 @@ To avoid charging Copilot review cycles to the organization:
 
 **Stage 1: PR to fork (for AI code review)**
 
-1. Push branch to `origin` (your fork)
-2. Create a **normal (non-draft) PR** targeting the fork's default branch
-3. Request a Copilot review: `gh pr edit <NUMBER> --add-reviewer @copilot`
-4. Copilot reviews happen here -- charged to your personal account
-5. Address all Copilot feedback. **Re-request review after each push** --
+- Push branch to `origin` (your fork)
+- Create a **normal (non-draft) PR** targeting the fork's default branch
+- Request a Copilot review: `gh pr edit <NUMBER> --add-reviewer @copilot`
+- Copilot reviews happen here -- charged to your personal account
+- Address all Copilot feedback. **Re-request review after each push** --
    Copilot does not auto-re-review on `synchronize`
 
 > **Do not use a Draft PR for Stage 1.** Copilot does not review draft
@@ -188,11 +188,11 @@ To avoid charging Copilot review cycles to the organization:
 
 **Stage 2: Final PR to upstream (for human review and merge)**
 
-1. Once Copilot review is complete, create a new PR from the same branch
-2. Target the upstream default branch
-3. This is the production PR
-4. Human reviews and merges
-5. Close the Stage 1 PR
+- Once Copilot review is complete, create a new PR from the same branch
+- Target the upstream default branch
+- This is the production PR
+- Human reviews and merges
+- Close the Stage 1 PR
 
 ### Landing via tedium (merge bot)
 
@@ -270,14 +270,14 @@ exactly the trap.
 
 ## Development Workflow
 
-1. **Branch creation:** create a feature branch from the default branch
+- **Branch creation:** create a feature branch from the default branch
    (per topology table above)
-2. **Implementation:** make changes locally
-3. **Validation:** run linter, type checker, tests
-4. **Stage and commit:** stage verified changes, commit with a descriptive
+- **Implementation:** make changes locally
+- **Validation:** run linter, type checker, tests
+- **Stage and commit:** stage verified changes, commit with a descriptive
    message
-5. **Push:** push to `origin`
-6. **PR:** create a PR with a clear description
+- **Push:** push to `origin`
+- **PR:** create a PR with a clear description
 
 ### Git Hook Discipline (scalpel, not axe)
 
@@ -288,9 +288,9 @@ blanket-skipping the suite -- is **the gates skill**.
 
 ## GitHub Tool Usage
 
-Three families of verbs, in **token-frugal preference order**:
+Families of verbs, in **token-frugal preference order**:
 
-1. **`gadmin`** -- ships as the `@nine-at-a-time-media/admin` npm package
+- **`gadmin`** -- ships as the `@nine-at-a-time-media/admin` npm package
    (source: `Nine-At-A-Time-Media/template-tools`, `packages/naatm-admin`;
    registry: GitHub Packages, `https://npm.pkg.github.com`; install:
    `npm install -g @nine-at-a-time-media/admin`). A bare global install
@@ -311,13 +311,13 @@ Three families of verbs, in **token-frugal preference order**:
      - `gadmin github-gitapi` -- node, native `fetch()` + `$GITHUB_TOKEN`,
        zero deps (the sandbox-friendly tier).
 
-2. **GitHub MCP tools (`mcp__github__*`)** -- use when `gadmin` lacks a
+- **GitHub MCP tools (`mcp__github__*`)** -- use when `gadmin` lacks a
    verb you need. Responses are typed and complete but include large echoed
    payloads (e.g. every reply confirms by echoing the parent comment's
    `diff_hunk`), so they cost ~5--10x more tokens than `gadmin` for the
    same operation. Avoid them for hot loops over many comments.
 
-3. **`gh` CLI** -- last-resort fallback when neither `gadmin` nor MCP cover
+- **`gh` CLI** -- last-resort fallback when neither `gadmin` nor MCP cover
    the operation. (Exception: for the two verbs below that have no `gadmin`
    wrapper yet -- PR-state checks and Copilot re-request -- prefer `gh`
    over MCP when it is on `$PATH`; it is cheaper there.)

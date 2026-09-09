@@ -11,16 +11,16 @@ description: "Crafting, version-controlling, and deploying Grafana dashboards in
 > refactors, and optimizes dashboard JSON; the human provides design
 > intent or UI exports for fine-tuning.
 
-## 1. The Design Loop (Agent-Led)
+## The Design Loop (Agent-Led)
 
 Grafana dashboards are complex JSON objects. While they can be crafted in
 the UI, the agent manages their lifecycle in the repository.
 
-1. **Draft**: the agent generates or updates the dashboard JSON based on
+- **Draft**: the agent generates or updates the dashboard JSON based on
    available metrics and user intent.
-2. **Deploy**: the agent wraps the JSON in a Kubernetes ConfigMap and
+- **Deploy**: the agent wraps the JSON in a Kubernetes ConfigMap and
    applies it to the cluster.
-3. **Refine (optional human input)**:
+- **Refine (optional human input)**:
    - The human can make ad-hoc adjustments in the Grafana UI
      (`http://localhost:3000`).
    - To persist these, the human exports the **JSON Model** and provides
@@ -28,7 +28,7 @@ the UI, the agent manages their lifecycle in the repository.
    - The agent proofs the JSON (removes volatile fields, ensures
      consistency) and updates the repo.
 
-## 2. The Deployment Pipeline (Code-First)
+## The Deployment Pipeline (Code-First)
 
 The agent ensures every dashboard is a managed part of the LMDE.
 
@@ -66,7 +66,7 @@ Ensure the component's `setup.sh` script applies any new dashboard specs:
 kubectl apply -f "${SCRIPT_DIR}/specs/grafana/dashboards/"
 ```
 
-## 3. Best Practices
+## Best Practices
 
 - **Sidecar requirement**: ensure the Grafana `sidecar.dashboards.enabled`
   value is set to `true`.
@@ -78,7 +78,7 @@ kubectl apply -f "${SCRIPT_DIR}/specs/grafana/dashboards/"
 - **Labels**: always ensure your Prometheus queries filter by meaningful
   labels (e.g., `job="otel-collector"`) to avoid metric crosstalk.
 
-## 4. Current Console Inventory
+## Current Console Inventory
 
 | Console | Path | Status |
 |---------|------|--------|

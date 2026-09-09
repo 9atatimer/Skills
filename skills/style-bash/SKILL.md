@@ -19,12 +19,12 @@ Follow these instructions whenever you create or edit Bash scripts in this repos
   Do not "fix" them by adding `-e`; their headers say so explicitly.
 
 ## Required Script Layout
-Structure every script in five clear sections:
-1. **Header** -- Shebang and a comment block describing purpose, usage, prerequisites, and side effects
-2. **Shared Libraries** -- `source` statements for shared helpers (if any)
-3. **Helper Functions** -- One function per logical operation, short and single-purpose
-4. **Main Orchestrator** -- A `main()` function that sequences the helpers
-5. **Execution Guard** -- `main "$@"` at the end of the file
+Structure every script in clear sections, in this order:
+- **Header** -- Shebang and a comment block describing purpose, usage, prerequisites, and side effects
+- **Shared Libraries** -- `source` statements for shared helpers (if any)
+- **Helper Functions** -- One function per logical operation, short and single-purpose
+- **Main Orchestrator** -- A `main()` function that sequences the helpers
+- **Execution Guard** -- `main "$@"` at the end of the file
 
 > **Where Bash sits in the architecture.** A shell script is usually an *edge*
 > (a mechanism: it shells out to git, curl, the filesystem). That is fine -- but

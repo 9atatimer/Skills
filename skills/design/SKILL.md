@@ -97,7 +97,7 @@ for it (e.g. "LLM vendor -> CompletionPort, model id supplied at the edge").
 
 ## Authoring a New Design Doc
 
-### 1. Gather Context
+### Gather Context
 
 Before writing, understand:
 
@@ -142,7 +142,7 @@ Three rules govern that conversion:
 working as intended, not a gap to backfill: gather the same context from
 the issue and the conversation and carry on.
 
-### 2. Start from the Template
+### Start from the Template
 
 Copy `docs/design/TEMPLATE.md` to a new file following naming conventions:
 
@@ -154,26 +154,26 @@ Copy `docs/design/TEMPLATE.md` to a new file following naming conventions:
 (As-built system documentation is not a design doc -- it belongs in
 `docs/arch/`. See the architecture skill.)
 
-### 3. Fill Sections in Order
+### Fill Sections in Order
 
 **Do not skip sections.** Write them in this order:
 
-1. **Header block** -- Status starts as DRAFT, fill date and authors
-2. **Overview** -- 2-3 sentences max. If you can't explain it briefly, you don't understand it yet
-3. **Goals** -- Testable success criteria. Each goal should be verifiable
-4. **Non-Goals** -- Explicit scope boundaries. Think: "what will someone ask for that we should say no to?"
-5. **Architecture Overview** -- ASCII diagram of major components and data flow
-6. **Design** -- The meat. Break into subsystems, each with responsibilities and interfaces
-7. **State Machine** -- If the system has lifecycle states (most do), document transitions
-8. **Data Model** -- Tables, fields, relationships, constraints
-9. **Security Considerations** -- Auth, secrets, attack vectors, mitigations
-10. **Key Decisions** -- Table of choices with rationale. This is the most valuable section for future readers
-11. **Open Questions** -- Be honest about unknowns. This builds trust
-12. **Rejections** -- Alternatives considered and explicitly dismissed, each with a one-line reason. Prevents future maintainers from relitigating settled decisions. Distinct from Non-Goals (which is scope) and Key Decisions (which is what was chosen) -- this captures what was *not* chosen and why
-13. **Future Considerations** -- Explicitly deferred work
-14. **Related Documents** -- Links to other design docs
+- **Header block** -- Status starts as DRAFT, fill date and authors
+- **Overview** -- 2-3 sentences max. If you can't explain it briefly, you don't understand it yet
+- **Goals** -- Testable success criteria. Each goal should be verifiable
+- **Non-Goals** -- Explicit scope boundaries. Think: "what will someone ask for that we should say no to?"
+- **Architecture Overview** -- ASCII diagram of major components and data flow
+- **Design** -- The meat. Break into subsystems, each with responsibilities and interfaces
+- **State Machine** -- If the system has lifecycle states (most do), document transitions
+- **Data Model** -- Tables, fields, relationships, constraints
+- **Security Considerations** -- Auth, secrets, attack vectors, mitigations
+- **Key Decisions** -- Table of choices with rationale. This is the most valuable section for future readers
+- **Open Questions** -- Be honest about unknowns. This builds trust
+- **Rejections** -- Alternatives considered and explicitly dismissed, each with a one-line reason. Prevents future maintainers from relitigating settled decisions. Distinct from Non-Goals (which is scope) and Key Decisions (which is what was chosen) -- this captures what was *not* chosen and why
+- **Future Considerations** -- Explicitly deferred work
+- **Related Documents** -- Links to other design docs
 
-### 4. Apply the Style Guide
+### Apply the Style Guide
 
 Follow `docs/design/STYLE-GUIDE.md` rigorously:
 
@@ -263,11 +263,11 @@ When reviewing, organize feedback as:
 
 When asked to improve an existing doc:
 
-1. **Read the full doc first** -- Understand the intent before suggesting changes
-2. **Check against the template** -- Identify missing sections
-3. **Apply the style guide** -- Fix vague language, add tables, improve diagrams
-4. **Preserve the author's intent** -- Improve clarity without changing decisions
-5. **Add, don't remove** -- Missing sections should be added; existing content should be refined
+- **Read the full doc first** -- Understand the intent before suggesting changes
+- **Check against the template** -- Identify missing sections
+- **Apply the style guide** -- Fix vague language, add tables, improve diagrams
+- **Preserve the author's intent** -- Improve clarity without changing decisions
+- **Add, don't remove** -- Missing sections should be added; existing content should be refined
 
 ### Common Improvements
 
@@ -287,16 +287,16 @@ When asked to improve an existing doc:
 
 A design doc's value is realized when it drives implementation:
 
-1. **Architecture (phase 3):** name the seams the change adds, against the
+- **Architecture (phase 3):** name the seams the change adds, against the
    as-built in `docs/arch/`. The output lands in this doc. -> the
    architecture skill
-2. **Planning (phase 3b):** break the design into test-first phases,
+- **Planning (phase 3b):** break the design into test-first phases,
    recorded as task files under `tasks/` and ordered in the repo's root
    `TODO_PLAN.md`. -> the planning skill
-3. **Behaviors and Code (phases 4-5):** implement RED -> GREEN -> COMMIT
+- **Behaviors and Code (phases 4-5):** implement RED -> GREEN -> COMMIT
    against the design doc. **The doc is frozen from APPROVED onward** --
    see Drift below
-4. **Retrospective (phase 8):** walk the doc against the code and file
+- **Retrospective (phase 8):** walk the doc against the code and file
    every divergence. Do **not** silently "update the doc to match". -> the
    retrospective skill
 
