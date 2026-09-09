@@ -124,7 +124,7 @@ conversation with the human, not a transcription.**
 | Anything the agent assumed | confirmed or dropped | the human, before anything else |
 | Alternatives dismissed aloud | Rejections | you, from the record |
 
-Three rules govern that conversion:
+These rules govern that conversion:
 
 - **A concept with no Goals, Non-Goals or Rejections is complete.** Those
   are outputs of this phase. Do not treat their absence as a defect in the
@@ -414,7 +414,7 @@ DRAFT  -->  REVIEW  -->  APPROVED  -->  IMPLEMENTED
   human's first read should not be spent on what a panel would have caught
 - **REVIEW -> APPROVED:** Reviewers agree on the approach
 - **APPROVED -> IMPLEMENTED:** **shipped, as-built updated, drift closed.**
-  Human-only. All three conditions, not just the first: code that is merged
+  Human-only. All of the conditions, not merely the merge: code that is merged
   but not released is not in the shared architecture, and the status is a
   lie while drift is open. An implementer never marks its own work
   IMPLEMENTED

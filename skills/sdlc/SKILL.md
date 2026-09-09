@@ -239,7 +239,7 @@ concept behind it, a branch already coding against a doc nobody approved.
 Each phase names the inputs it hopes for. **Hope is the correct strength:
 an input is never assured, and its absence is not by itself a defect.**
 
-Three rules for arriving in the middle:
+The rules for arriving in the middle:
 
 - **Enter at the phase the work is actually in**, not at phase 1. Locate
   it by what exists, then load that phase's skill.

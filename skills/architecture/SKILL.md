@@ -40,7 +40,7 @@ moves: the status advances APPROVED -> IMPLEMENTED -> SUPERSEDED, and the
 Key Decisions log is append-only. Freezing the body is what makes drift
 visible; freezing the status would make the ladder unusable.
 
-Two rules follow, and they are absolute:
+These rules follow, and they are absolute:
 
 - **Phase 3 reads `docs/arch/` and writes nothing to it.** The forward
   half of this skill produces a seam list that lands *in the design doc*.
@@ -240,7 +240,7 @@ is to be looked at.
 
 ### Drift: this phase records, the issue accuses
 
-When the code does something the design never specified, **two things
+When the code does something the design never specified, **both of these
 happen, and they are not alternatives**:
 
 - **`docs/arch/` records it as fact.** That is the as-built's whole job. An

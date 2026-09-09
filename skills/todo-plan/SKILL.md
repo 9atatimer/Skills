@@ -48,7 +48,7 @@ implements: docs/design/DESIGN.auth.md
 The body.
 ```
 
-Four fields are required -- `id`, `kind`, `title`, `created`. The other
+Required fields: `id`, `kind`, `title`, `created`. The other
 three are edges, and each is present only when it exists.
 
 **Filename:** `<id>-short-slug.md`, e.g. `red-fox-hills-ghost-meter.md`.
@@ -79,7 +79,7 @@ people argue about and no tool reads, which is worse than having none.
 
 - `task` -- the default.
 - `bug` -- law 14 governs its body, and law 5 demands a RED test before
-  the fix. Two rules, both already written, both keyed on this value.
+  the fix. Both rules are already written, and both key on this value.
 
 `spike` passes the test on the merits: its exit condition is genuinely
 different -- it closes by producing a finding, and its code is deleted
@@ -170,7 +170,7 @@ It may look like `red-fox-hills` or `alpha-gamma-alpha` or anything else
 the tool emits. The scheme is the tool's business and may change; nothing
 else in the fleet is allowed to depend on its shape.
 
-Three rules follow, and they are the whole of it:
+These rules follow, and they are the whole of it:
 
 - **Never infer anything from an ID.** Not creation order, not kind, not
   the area of the code it touches. IDs do not sort, and two adjacent-looking
@@ -319,10 +319,15 @@ migration is one docs-only commit, separate from any feature work.
   Defects get `kind: bug` and a body restated as evidence per law 14;
   everything else is `kind: task`. An item too vague to give a title is
   an item to raise with the human, not to copy over.
-- **Old numbers die with the file.** A number that was only a position
-  vanishes. Where something else genuinely cites "item 7", put "formerly
-  item 7 of TODO.md" in the task body so the citation stays resolvable
-  from grep, and fix the citer when you next touch it.
+- **Old numbers die with the migration -- fix every citer now, not
+  later.** A number that was only a position vanishes. Where something
+  else genuinely cites "item 7", update the citer in the same migration
+  commit: for an open item, point it at the minted task ID (and put
+  "formerly item 7 of TODO.md" in the task body so grep still resolves
+  the old phrase); for a completed item, whose body is deleted, replace
+  the citation with a self-contained historical note ("formerly item 7
+  of TODO.md, done") -- deferring the repair leaves it dangling forever,
+  because nothing will exist to resolve it against.
 - **Completed items are deleted, not moved to `tasks/done/`.** `done/`
   holds the current cycle; the mono-file's history is not a cycle, and
   git history already holds it.
@@ -412,7 +417,7 @@ has the context that made the routing obvious.
 already settled and is naming its own destination, so write it there
 directly and never record it here first.
 
-Two things the field is good for beyond routing:
+What the field is good for beyond routing:
 
 - **A lesson you cannot label is one you have not finished diagnosing.**
   If you cannot say which layer's readers need this, you are still

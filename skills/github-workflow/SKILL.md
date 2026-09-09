@@ -95,7 +95,7 @@ expect a data file inside this skill directory.
 
 ## Gates are phase 6
 
-Two laws that used to live here are now the gates skill, because they
+The laws that used to live here are now the gates skill, because they
 govern every rung of the gate ladder and not just the PR:
 
 - **Clear the gate before you move it.** You must meet or exceed the
@@ -302,7 +302,7 @@ Families of verbs, in **token-frugal preference order**:
    coordinates are the fleet default. Reachable on `$PATH` via a global install or
    per-project via `node_modules/.bin/gadmin` / `npx gadmin`. Preferred for
    reads (comments, CI logs) and writes (replies); output is filtered to
-   the fields you triage on, so it stays small in context. Three sub-tiers,
+   the fields you triage on, so it stays small in context. Sub-tiers --
    fall back in order:
 
      - `gadmin github` -- bash, requires `gh` CLI on `$PATH`.

@@ -66,7 +66,7 @@ delete every entry, not only this session's additions. A sweep that
 never opens the file skips this; the retrospective's mandatory triage
 is the backstop that keeps the list from accumulating.
 
-## The two laws
+## The laws
 
 **1. Record only what is wasteful to forget.** The test for each
 candidate: would a future session burn real time rediscovering this?

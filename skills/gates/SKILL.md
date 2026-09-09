@@ -22,7 +22,7 @@ expensive:
 | 4 | Agentic review (Copilot by default) | the PR | the review-watch loop, below |
 | 5 | Human review and merge authorization | the PR | address or defer; never merge around it |
 
-**A red gate is a diagnosis prompt, not an obstacle.** The two laws below
+**A red gate is a diagnosis prompt, not an obstacle.** The laws below
 govern every rung, and neither has an agent-accessible exception.
 
 ## ci.magic (rung 3)

@@ -123,7 +123,7 @@ Every test framework has two mechanisms: **skip** and **expected failure**. They
 
 # Test Layers & Definitions
 
-We strictly define three layers of testing. Do not blur the lines between them.
+We strictly define the layers of testing. Do not blur the lines between them.
 
 ### Unit Tests
 
