@@ -37,7 +37,7 @@ Behavior:
 - Wait for the annotation session to finish.
 - If feedback is returned, incorporate it into the follow-up response.
 - If the session closes without feedback, mention that briefly and continue.
-- An approval may still carry notes — a `"decision": "approved"` result with a
+- An approval may still carry notes -- a `"decision": "approved"` result with a
    `"feedback"` field. Read those notes and carry them into subsequent work, but
    do not redo the message over them: they are guidance, not a change request.
 

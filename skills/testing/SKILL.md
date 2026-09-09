@@ -63,7 +63,7 @@ of the three).
 
 ---
 
-# 1. Goals and Principles
+# Goals and Principles
 
 ### Test Behavior, Not Internal Implementation (Black Box)
 
@@ -121,7 +121,7 @@ Every test framework has two mechanisms: **skip** and **expected failure**. They
 
 ---
 
-# 2. Test Layers & Definitions
+# Test Layers & Definitions
 
 We strictly define three layers of testing. Do not blur the lines between them.
 
@@ -148,7 +148,7 @@ We strictly define three layers of testing. Do not blur the lines between them.
 
 ---
 
-# 3. Test Doubles: Fakes Over Mocks
+# Test Doubles: Fakes Over Mocks
 
 ### Why Fakes
 
@@ -173,7 +173,7 @@ Every test must start with clean state:
 
 ---
 
-# 4. Test Development Workflow
+# Test Development Workflow
 
 When creating or overhauling test suites, follow this proven sequence:
 
@@ -210,7 +210,7 @@ Writing 20 broken tests simultaneously makes debugging exponentially harder.
 
 ---
 
-# 5. Debugging Failing Tests
+# Debugging Failing Tests
 
 ### Systematic Debugging Sequence
 
@@ -263,7 +263,7 @@ If you can't diagnose a failure after 2-3 attempts:
 
 ---
 
-# 6. Test Naming
+# Test Naming
 
 Tests should read as behavioral specifications:
 
@@ -278,7 +278,7 @@ Given <precondition>, When <action>, Then <expected result>.
 
 ---
 
-# 7. Quick Checklist
+# Quick Checklist
 
 - [ ] Test written FIRST (Red-Green-Refactor)
 - [ ] Tests describe behavior, not implementation

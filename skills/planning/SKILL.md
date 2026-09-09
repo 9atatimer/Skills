@@ -479,7 +479,7 @@ Always include this in TODO_PLANs:
 
 ### Test Separation (Strict)
 
-**Three separate buckets - never mix:**
+**Separate buckets -- never mix:**
 
 - **Unit Tests** (`tests/unit/**/*.test.[ext]`)
    - Run with: `[command]`

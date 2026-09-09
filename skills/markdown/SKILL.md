@@ -27,7 +27,11 @@ description: "Writing or surgically editing Markdown files, especially design do
   lessons especially are never presented as a numbered sequence -- they are
   an unordered set that grows and shrinks. Where order genuinely matters,
   say so in the prose ("do this before that") or name the dependency;
-  where identity matters, give the item a stable identifier.
+  where identity matters, give the item a stable identifier. The one
+  exception mirrors the identifier carve-out below: ordered markup may
+  stay on a step list whose numbers other text actually cites (e.g. a
+  workflow whose prose says "proceed to step 3") -- there the number is
+  the step's name, and a citation into it must never dangle.
 - **Stable identifiers are not lists**: a minted, cross-referenced id --
   `task-023`, a `D14` key-decision row, a `Q2` open question -- is a name,
   and stays. The rule above bans ordered *list markup* and the practice of

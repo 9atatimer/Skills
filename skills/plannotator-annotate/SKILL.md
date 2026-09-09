@@ -33,7 +33,7 @@ Behavior:
 - Wait for the browser review to finish.
 - If annotations are returned, address them directly.
 - If the session closes without feedback, say so briefly and continue.
-- An approval may still carry notes — a `"decision": "approved"` result with a
+- An approval may still carry notes -- a `"decision": "approved"` result with a
    `"feedback"` field. Read those notes and carry them into subsequent work, but
    do not revise the document over them: they are guidance, not a change request.
 - If the command reports that the arguments could not be resolved to a file,

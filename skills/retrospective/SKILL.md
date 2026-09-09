@@ -22,7 +22,7 @@ that closes the loop was hidden behind the rule that kept you out of it.
 
 ## The checklist
 
-Work through all six. A docs-only PR, never bundled into the feature PR --
+Work through the whole checklist. A docs-only PR, never bundled into the feature PR --
 doc changes buried in a large code diff do not get read, and that is
 exactly how unreviewed decisions ship.
 
