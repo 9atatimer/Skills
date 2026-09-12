@@ -19,13 +19,13 @@ Deliver maintainable, testable, low-risk code for a fast-moving startup -- ship 
 
 These gates are non-negotiable. Do not skip them because the change "looks small."
 
-1. **Design gate.** There must be an approved design doc for the tool you are touching.
+- **Design gate.** There must be an approved design doc for the tool you are touching.
    - Every tool/package has a `DESIGN.<name>.md` under `docs/design/`.
    - If it does not exist or is ambiguous, stop and use the design skill to write/fix it first.
-2. **Architecture gate.** Every volatile axis this change introduces is named and mapped to one seam, against the as-built in `docs/arch/`. A seam first discovered while coding was never reviewed. -> the architecture skill
-3. **Plan gate.** For any multi-step feature, build the phased, test-first plan with the planning skill and record it per the todo-plan skill.
-4. **Test gate.** Write the failing test first (see Section 3). No production code without a failing test demanding it.
-5. **Tech gate.** Any off-the-shelf dependency must be on the **Adopt** or **Trial** ring of the tech-radar skill. Never introduce a `Hold`/`Verboten` technology, and never silently add a dependency that is not on the radar -- propose adding it first.
+- **Architecture gate.** Every volatile axis this change introduces is named and mapped to one seam, against the as-built in `docs/arch/`. A seam first discovered while coding was never reviewed. -> the architecture skill
+- **Plan gate.** For any multi-step feature, build the phased, test-first plan with the planning skill and record it per the todo-plan skill.
+- **Test gate.** Write the failing test first (see Section 3). No production code without a failing test demanding it.
+- **Tech gate.** Any off-the-shelf dependency must be on the **Adopt** or **Trial** ring of the tech-radar skill. Never introduce a `Hold`/`Verboten` technology, and never silently add a dependency that is not on the radar -- propose adding it first.
 
 ---
 
@@ -140,7 +140,7 @@ a re-swap, where an assertion that the call happened does not.
 
 ## 2. Anatomy of a Code File
 
-Every source file is laid out top-to-bottom in this fixed order. A reader should be able to scroll once and understand the file. (The language `STYLE.*` guide refines the syntax; this is the universal skeleton -- e.g. the style-bash skill's five-section layout is this same shape for shell.)
+Every source file is laid out top-to-bottom in this fixed order. A reader should be able to scroll once and understand the file. (The language `STYLE.*` guide refines the syntax; this is the universal skeleton -- e.g. the style-bash skill's script layout is this same shape for shell.)
 
 ```
 1. Module header        Docstring/comment: what this file is, which ports/deps it owns

@@ -42,12 +42,12 @@ disposable automation infrastructure? That's `chrome-mcp`.
 +-- <profile-location>/ <- gitignored, isolated user-data-dir (see below)
 ```
 
-Two ways to connect `chrome-devtools-mcp` to the real browser:
+The ways to connect `chrome-devtools-mcp` to the real browser:
 
-1. **MCP-managed launch** -- the MCP server launches and owns the browser
+- **MCP-managed launch** -- the MCP server launches and owns the browser
    process itself, via `--executablePath` + `--userDataDir`. Simplest;
    the server's lifecycle is the browser's lifecycle. Use this by default.
-2. **Attach to an already-running instance** -- via `--browserUrl`,
+- **Attach to an already-running instance** -- via `--browserUrl`,
    pointed at a browser someone launched by hand. Useful for manual
    debugging, or when something outside the MCP server needs to own the
    browser's lifecycle.

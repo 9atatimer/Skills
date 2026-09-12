@@ -27,11 +27,23 @@ description: "Writing or surgically editing Markdown files, especially design do
   lessons especially are never presented as a numbered sequence -- they are
   an unordered set that grows and shrinks. Where order genuinely matters,
   say so in the prose ("do this before that") or name the dependency;
-  where identity matters, give the item a stable identifier.
+  where identity matters, give the item a stable identifier. The one
+  exception mirrors the identifier carve-out below: ordered markup may
+  stay on a step list whose numbers other text actually cites (e.g. a
+  workflow whose prose says "proceed to step 3") -- there the number is
+  the step's name, and a citation into it must never dangle.
 - **Stable identifiers are not lists**: a minted, cross-referenced id --
   `task-023`, a `D14` key-decision row, a `Q2` open question -- is a name,
   and stays. The rule above bans ordered *list markup* and the practice of
   numbering items by position, not the practice of naming them.
+- **Numbers must earn their place -- everywhere, not just in lists**: a
+  number belongs in prose only when it carries value nothing else can -- a
+  measured quantity, a minted identifier, a section or step number that
+  other text actually cites. Everything else rots: a count in a lead-in
+  ("the five rules follow") goes stale on the next insertion; a numbered
+  heading nobody cites is a renumber waiting to happen; "the third option"
+  breaks when an option is added above it. Refer to things by name, not by
+  position or tally, and when in doubt leave the number out.
 - **Consistent heading levels**: Don't skip levels (e.g., H2 -> H4)
 - **No duplicate headings**: Each heading at the same level should be unique within its parent
 

@@ -22,7 +22,7 @@ expensive:
 | 4 | Agentic review (Copilot by default) | the PR | the review-watch loop, below |
 | 5 | Human review and merge authorization | the PR | address or defer; never merge around it |
 
-**A red gate is a diagnosis prompt, not an obstacle.** The two laws below
+**A red gate is a diagnosis prompt, not an obstacle.** The laws below
 govern every rung, and neither has an agent-accessible exception.
 
 ## ci.magic (rung 3)
@@ -157,9 +157,9 @@ spend attention on it.
 The pre-commit/pre-push hooks (`@nine-at-a-time-media/hooks`) are the
 contract; a failing hook is a diagnosis prompt, not an obstacle. In order:
 
-1. **Diagnose and fix the real issue.** A lint error, failing test, or
+- **Diagnose and fix the real issue.** A lint error, failing test, or
    leaked secret the hook catches is the hook doing its job.
-2. **If one specific check cannot run in the current environment** --
+- **If one specific check cannot run in the current environment** --
    scanner binary absent with only a docker fallback and no docker daemon,
    E2E needing a live backend the sandbox lacks -- skip that check alone
    with its sentry file: `NO.LINT`, `NO.TEST`, `NO.E2E`, `NO.BUILD`,
@@ -168,7 +168,7 @@ contract; a failing hook is a diagnosis prompt, not an obstacle. In order:
    machine-local; touch them in the repo root, never commit them. Create
    one per genuinely-impossible check, each for a concrete infrastructure
    reason you can state, and run the checks the hook *can* still perform.
-3. **Never blanket-skip the suite.** `HUSKY=0`, `HUSKY_SKIP`, and
+- **Never blanket-skip the suite.** `HUSKY=0`, `HUSKY_SKIP`, and
    `git commit --no-verify` silence every check at once, including the
    ones that would have run fine. Do not reach for them because one check
    is broken -- that is the axe where the sentry is the scalpel. (CI
@@ -186,10 +186,10 @@ For repos whose default branch is protected by required status checks
 (the repo lists the check names): PRs cannot merge until
 all checks pass. If a check fails:
 
-1. Read the job output:
+- Read the job output:
    `gadmin github actions get-job --run <ID> --job <NAME>`
-2. Fix the issue locally
-3. Push the fix -- checks re-run automatically
+- Fix the issue locally
+- Push the fix -- checks re-run automatically
 
 ## Reviewer Selection (agentic reviewers)
 
@@ -263,22 +263,22 @@ greptile at all.
 
 ### Transport
 
-Three tiers in preference order -- your environment determines which
+Tiers in preference order -- your environment determines which
 applies:
 
-1. **Native event delivery** -- the harness or UI delivers PR activity
+- **Native event delivery** -- the harness or UI delivers PR activity
    (reviews, CI) into the session on its own. No explicit subscription
    call is needed; events arrive automatically. Skip to "On each wake or
    event" when one fires.
 
-2. **Explicit event subscription (push)** -- the environment provides a
+- **Explicit event subscription (push)** -- the environment provides a
    GitHub events tool; subscribe it to the PR. In Claude Code with the
    GitHub MCP server loaded, that is `mcp__github__subscribe_pr_activity`
    with the PR number; events arrive as `<github-webhook-activity>`
    blocks, the call is idempotent, and the subscription is auto-removed
    on merge/close. Other agents: their equivalent subscription tool.
 
-3. **Polling -- ONLY on a human-started schedule.**
+- **Polling -- ONLY on a human-started schedule.**
    Polling exists solely for environments with no event delivery. It
    uses whatever scheduling primitive the agent offers (in Claude Code,
    `ScheduleWakeup`), and even there it is available only when the human
@@ -309,6 +309,10 @@ applies:
    re-enters this flow.
 
 ### On each wake or event
+
+The steps here and in Automated Review Response below are numbered
+because other text cites them by number -- law 17's identifier
+carve-out, not an ordered list.
 
 1. **Switch to the PR's head branch** (`git switch <BRANCH>`) before any
    `gadmin` or `gh` call -- otherwise `gadmin` may abort with a
@@ -504,7 +508,7 @@ Stop when any of these fires:
 
 When the turn cap fires for a reviewer:
 
-1. **Ensure the `pr-todo` label exists first** -- `gh issue create
+- **Ensure the `pr-todo` label exists first** -- `gh issue create
    --label` rejects a label the repo does not have, so this must
    precede any issue creation ("already exists" errors are fine to
    ignore):
@@ -523,7 +527,7 @@ When the turn cap fires for a reviewer:
    listed issues. Opening plain issues only requires the repo to be
    visible to you, so the deferral itself still lands upstream.
 
-2. **One issue per coherent piece of remaining feedback** (batch
+- **One issue per coherent piece of remaining feedback** (batch
    trivially related nits into a single issue). Issue Anatomy (the
    github-workflow skill) governs the body: record what the reviewer observed and why it is
    deferred, not the fix they suggested:
@@ -541,7 +545,7 @@ When the turn cap fires for a reviewer:
    backlog belongs where human review and merge happen, not in the
    personal fork, even though Stage-1 review threads live on the fork.
 
-3. **Reply on each deferred thread, then resolve the thread -- two
+- **Reply on each deferred thread, then resolve the thread -- two
    separate calls.** The reply goes via
    `gadmin github reply --repo <OWNER/REPO> --id <ID> --type reject
    --msg "Deferred to <issue-url> (pr-todo)"`. The annotated reject
@@ -582,7 +586,7 @@ When the turn cap fires for a reviewer:
    mode: the fork). A native `defer` reply type and a thread-resolve
    verb (exposing thread node ids) are tracked gadmin enhancements.
 
-4. **Do not re-request review** from that reviewer on this PR again --
+- **Do not re-request review** from that reviewer on this PR again --
    no `--add-reviewer @copilot`, no `request_copilot_review`. The cap
    is a stop on the trigger, not just on your responses.
 
@@ -613,7 +617,7 @@ until settled or capped.
 ```
 
 `/loop` is the human starting the schedule -- the only sanctioned
-source of a polling cadence (see Transport tier 3). Do not recreate the
+source of a polling cadence (see Transport, the polling tier). Do not recreate the
 loop with self-set timers when the human has not invoked it.
 
 Self-pacing (`/loop` with no fixed interval) lets the agent pick the

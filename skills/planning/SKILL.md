@@ -15,7 +15,9 @@ description: "Phase 3b of the SDLC, the epilogue to architecture: turning an app
 > breaking work into testable, committable phases. Where the template
 > below reads like a standalone document, treat it as the shape of your
 > *thinking*: its content is distributed across task files, not written
-> into one.
+> into one. If the repo instead has a legacy mono-file (a `TODO.md` or
+> `BUGS.md`, or a `TODO_PLAN.md` carrying task bodies), migrate it into
+> `tasks/` first, per the todo-plan skill, before authoring the route.
 
 > **Purpose:** Create resilient, BDD-driven implementation plans that fight compact amnesia
 > **When to use:** After the architecture phase has named the seams, before any behavior is written
@@ -46,11 +48,11 @@ architecture skill
 
 ## Core Philosophy: Test-First, Commit Often, Document Always
 
-**The Three Pillars of Amnesia-Resistant Planning:**
+**The Pillars of Amnesia-Resistant Planning:**
 
-1. **RED -> GREEN -> COMMIT** -- Never implement without a failing test first
-2. **Small Steps** -- Each step = ONE test passing = ONE commit (not 7 features)
-3. **Learning Checkpoints** -- Force documentation of discoveries every 2-3 commits
+- **RED -> GREEN -> COMMIT** -- Never implement without a failing test first
+- **Small Steps** -- Each step = ONE test passing = ONE commit (not 7 features)
+- **Learning Checkpoints** -- Force documentation of discoveries every 2-3 commits
 
 **Why this matters:**
 
@@ -63,7 +65,7 @@ architecture skill
 
 ## Anti-Patterns to AVOID [NO]
 
-### 1. Implementation-First Planning
+### Implementation-First Planning
 
 **BAD (Implementation-First):**
 ```markdown
@@ -84,10 +86,10 @@ architecture skill
 
 - 7 features before commit = hours of work
 - No tests mentioned
-- If amnesia hits at item 4, must re-read all code to figure out state
+- If amnesia hits mid-list, must re-read all code to figure out state
 - "Implement then test" encourages skipping tests
 
-### 2. Coarse Commit Granularity
+### Coarse Commit Granularity
 
 **BAD:**
 ```markdown
@@ -103,7 +105,7 @@ architecture skill
 - "Test suites" = when? After all 20 tests? Or each?
 - No recovery points mid-phase
 
-### 3. Vague Acceptance Criteria
+### Vague Acceptance Criteria
 
 **BAD:**
 ```markdown
@@ -120,7 +122,7 @@ architecture skill
 - Not test-driven
 - Subjective ("works" = ???)
 
-### 4. Missing Amnesia Recovery Protocol
+### Missing Amnesia Recovery Protocol
 
 **BAD:**
 
@@ -157,11 +159,11 @@ architecture skill
 
 **BDD/TDD Process:**
 
-1. Write skeleton tests FIRST (call the real API, assert on expected behavior)
-2. Tests fail because the code does not exist yet -- never use placeholder assertions like `assert False`
-3. Implement ONE test at a time
-4. Green before moving to next test
-5. Commit after EACH test passes (not after phase)
+- Write skeleton tests FIRST (call the real API, assert on expected behavior)
+- Tests fail because the code does not exist yet -- never use placeholder assertions like `assert False`
+- Implement ONE test at a time
+- Green before moving to next test
+- Commit after EACH test passes (not after phase)
 
 **Commit Strategy:**
 
@@ -194,13 +196,13 @@ architecture skill
 
 If you lose context mid-session:
 
-1. **Check last commit:** `git log -1 --oneline`
-2. **Read commit message:** Tells you what test passed
-3. **Check `TODO_PLAN.md`'s Now list**, then open that task file: find
+- **Check last commit:** `git log -1 --oneline`
+- **Read commit message:** Tells you what test passed
+- **Check `TODO_PLAN.md`'s Now list**, then open that task file: find
    where you were, see what is next
-4. **Run tests:** `[test command]` -- what's still RED?
-5. **Read last learning checkpoint:** Context of decisions made
-6. **Continue from next RED test**
+- **Run tests:** `[test command]` -- what's still RED?
+- **Read last learning checkpoint:** Context of decisions made
+- **Continue from next RED test**
 
 **Example:**
 ```bash
@@ -370,14 +372,14 @@ Next time I would:
 
 ## Key Principles Explained
 
-### 1. RED -> GREEN -> COMMIT Cycle
+### RED -> GREEN -> COMMIT Cycle
 
 **Always follow this sequence:**
 
-1. **Write test (RED)**: Test fails because feature doesn't exist
-2. **Implement feature (GREEN)**: Make test pass with simplest code
-3. **Commit (CHECKPOINT)**: Save progress with clear message
-4. **Repeat**: Next test
+- **Write test (RED)**: Test fails because feature doesn't exist
+- **Implement feature (GREEN)**: Make test pass with simplest code
+- **Commit (CHECKPOINT)**: Save progress with clear message
+- **Repeat**: Next test
 
 **Why:**
 
@@ -394,7 +396,7 @@ feat(auth): implement email validation (GREEN)
 docs(auth): update TODO with validation learnings
 ```
 
-### 2. One Test = One Commit
+### One Test = One Commit
 
 **NOT:**
 ```markdown
@@ -417,7 +419,7 @@ Commit: feat(auth): implement all validation
   -> Commit: feat(auth): add email format validation (GREEN)
 ```
 
-### 3. Learning Checkpoints Every 2-3 Commits
+### Learning Checkpoints Every 2-3 Commits
 
 **Trigger checkpoint when:**
 
@@ -440,7 +442,7 @@ Commit: feat(auth): implement all validation
 - Prevents re-learning same lessons
 - Shows progress even if amnesia hits
 
-### 4. Explicit Amnesia Recovery Protocol
+### Explicit Amnesia Recovery Protocol
 
 **Include this section in EVERY TODO_PLAN:**
 
@@ -449,13 +451,13 @@ Commit: feat(auth): implement all validation
 
 If you lose context mid-session:
 
-1. **Check last commit:** `git log -1 --oneline`
-2. **Read commit message:** Tells you what test passed
-3. **Check `TODO_PLAN.md`'s Now list**, then open that task file: find
+- **Check last commit:** `git log -1 --oneline`
+- **Read commit message:** Tells you what test passed
+- **Check `TODO_PLAN.md`'s Now list**, then open that task file: find
    where you were, see what is next
-4. **Run tests:** `[test command]` -- what's still RED?
-5. **Read last learning checkpoint:** Context of decisions made
-6. **Continue from next RED test**
+- **Run tests:** `[test command]` -- what's still RED?
+- **Read last learning checkpoint:** Context of decisions made
+- **Continue from next RED test**
 ```
 
 **Why:**
@@ -477,9 +479,9 @@ Always include this in TODO_PLANs:
 
 ### Test Separation (Strict)
 
-**Three separate buckets - never mix:**
+**Separate buckets -- never mix:**
 
-1. **Unit Tests** (`tests/unit/**/*.test.[ext]`)
+- **Unit Tests** (`tests/unit/**/*.test.[ext]`)
    - Run with: `[command]`
    - Environment: `[test env]`
    - All external dependencies MOCKED
@@ -487,13 +489,13 @@ Always include this in TODO_PLANs:
    - **NO sleep(), NO wall-clock dependencies**
    - Deterministic, fast, isolated
 
-2. **Integration Tests** (`tests/integration/**/*.test.[ext]`)
+- **Integration Tests** (`tests/integration/**/*.test.[ext]`)
    - Run with: `[command]`
    - Real external services
    - Longer timeout allowed (30s default)
    - Still NO sleep() - use await on real operations
 
-3. **E2E Tests** (`tests/e2e/**/*.test.[ext]`)
+- **E2E Tests** (`tests/e2e/**/*.test.[ext]`)
    - Run with: `[command]`
    - Full system test
    - Slowest, most realistic
@@ -524,12 +526,12 @@ Always include:
 ```markdown
 **BDD/TDD Process:**
 
-1. Create `tests/unit/test_[feature].py`
-2. Write test calling real API with real assertions on expected behavior
-3. Run: `pytest tests/unit/test_[feature].py` (RED -- code not implemented yet)
-4. Implement feature
-5. Run: `pytest tests/unit/test_[feature].py` (GREEN)
-6. Commit: `feat([module]): implement [feature] (GREEN)`
+- Create `tests/unit/test_[feature].py`
+- Write test calling real API with real assertions on expected behavior
+- Run: `pytest tests/unit/test_[feature].py` (RED -- code not implemented yet)
+- Implement feature
+- Run: `pytest tests/unit/test_[feature].py` (GREEN)
+- Commit: `feat([module]): implement [feature] (GREEN)`
 
 **Testing Framework:** pytest
 **Mocking:** unittest.mock or pytest-mock
@@ -541,12 +543,12 @@ Always include:
 ```markdown
 **BDD/TDD Process:**
 
-1. Create `test/[feature].test.ts`
-2. Write test calling real API with real assertions on expected behavior
-3. Run: `npm run test:unit -- [feature]` (RED -- code not implemented yet)
-4. Implement feature
-5. Run: `npm run test:unit -- [feature]` (GREEN)
-6. Commit: `feat([module]): implement [feature] (GREEN)`
+- Create `test/[feature].test.ts`
+- Write test calling real API with real assertions on expected behavior
+- Run: `npm run test:unit -- [feature]` (RED -- code not implemented yet)
+- Implement feature
+- Run: `npm run test:unit -- [feature]` (GREEN)
+- Commit: `feat([module]): implement [feature] (GREEN)`
 
 **Testing Framework:** Vitest (Jest is Hold -- see the tech-radar and testing-node skills)
 **Mocking:** vi.mock()
@@ -849,12 +851,12 @@ Decisions: Used re.search instead of parsing
 
 ## Summary: The Golden Rules
 
-1. **Tests FIRST** -- Write failing test before any implementation
-2. **One test, one commit** -- Each passing test = checkpoint
-3. **Small phases** -- 2-5 commits max per phase
-4. **Learning checkpoints** -- Document every 2-3 commits
-5. **Amnesia protocol** -- Explicit recovery instructions
-6. **Clear acceptance** -- Acceptance = tests passing, not vibes
+- **Tests FIRST** -- Write failing test before any implementation
+- **One test, one commit** -- Each passing test = checkpoint
+- **Small phases** -- 2-5 commits max per phase
+- **Learning checkpoints** -- Document every 2-3 commits
+- **Amnesia protocol** -- Explicit recovery instructions
+- **Clear acceptance** -- Acceptance = tests passing, not vibes
 
 **Remember:** You're writing for a future version of yourself with zero memory. Make it impossible to get lost.
 

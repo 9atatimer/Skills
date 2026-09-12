@@ -33,12 +33,12 @@ the radar and keeping it out of the core are the same discipline.
 
 **Rules:**
 
-1. Before reaching for an off-the-shelf solution, check this file.
-2. Only **Adopt** or **Trial** technologies may be introduced in new code.
-3. If what you need is **not on the radar at all**, do not silently add it.
+- Before reaching for an off-the-shelf solution, check this file.
+- Only **Adopt** or **Trial** technologies may be introduced in new code.
+- If what you need is **not on the radar at all**, do not silently add it.
    Propose it in the design doc / PR, and add it here (with a one-line
    rationale) as part of the same change.
-4. This file is project-owned. Derivatives of the template edit it to reflect
+- This file is project-owned. Derivatives of the template edit it to reflect
    their stack; `naatm-prompts sync` will not clobber local edits.
 
 ## Who owns the radar, and when
@@ -132,6 +132,6 @@ proposal makes the choice reviewable, the landing keeps the file honest.
 
 When a task needs something not listed:
 
-1. State the need and the candidate in the design doc (and PR description).
-2. Name the ring you are placing it in and why (one line).
-3. Add the row here in the same change. The radar must never drift behind the code.
+- State the need and the candidate in the design doc (and PR description).
+- Name the ring you are placing it in and why (one line).
+- Add the row here in the same change. The radar must never drift behind the code.

@@ -40,7 +40,7 @@ moves: the status advances APPROVED -> IMPLEMENTED -> SUPERSEDED, and the
 Key Decisions log is append-only. Freezing the body is what makes drift
 visible; freezing the status would make the ladder unusable.
 
-Two rules follow, and they are absolute:
+These rules follow, and they are absolute:
 
 - **Phase 3 reads `docs/arch/` and writes nothing to it.** The forward
   half of this skill produces a seam list that lands *in the design doc*.
@@ -62,7 +62,7 @@ approval covers the design *and* its seams as one reviewed artifact. If you
 find a missing seam after approval, that is drift: cut an issue, do not
 quietly edit the record. -> the retrospective skill
 
-### 1. Read the as-built first
+### Read the as-built first
 
 Start in `docs/arch/`. You are placing a change into a system that already
 exists, and the as-built is the only document that claims to describe it
@@ -70,7 +70,7 @@ truthfully. If `docs/arch/` is missing or visibly stale, say so -- a stale
 as-built makes every downstream estimate fiction, and fixing it is cheaper
 now than after you have planned against a fantasy.
 
-### 2. Name the axes of change (the seams)
+### Name the axes of change (the seams)
 
 This is the core work of the phase. Separate what is **stable** (the
 meaning -- decisions and rules in the problem's language) from what is
@@ -92,7 +92,7 @@ Two failure modes, equally real:
   benefit. Seam only at real axes of change (YAGNI); if you considered a
   seam and rejected it, that belongs in the design doc's Rejections.
 
-### 3. Propose tech-radar rows
+### Propose tech-radar rows
 
 **The radar is owned by this phase and consulted in phase 5.** Anything
 off-the-shelf that this change introduces gets proposed here, in the design
@@ -103,7 +103,7 @@ existing rule -- the radar must never drift ahead of or behind the code),
 and it is audited at 7a. Proposing in phase 3 is what makes the choice
 reviewable *before* it is load-bearing.
 
-### 4. Output
+### Output
 
 Everything from this phase lands **inside the design doc**, not in
 `docs/arch/`:
@@ -195,18 +195,18 @@ the at-a-glance view for humans; both must agree.
 
 Content, in the order a new reader needs it:
 
-1. **Component inventory.** What exists, what each one is responsible for,
+- **Component inventory.** What exists, what each one is responsible for,
    and where its source lives.
-2. **The seams.** Each port/policy/parameter that is actually in the code,
+- **The seams.** Each port/policy/parameter that is actually in the code,
    and what implementations sit behind it today. This is the section that
    makes the Swap test answerable without reading the source.
-3. **Flows.** How a request, an event, or a deploy actually moves through
+- **Flows.** How a request, an event, or a deploy actually moves through
    the components.
-4. **Deployment facts.** Where each component runs, what it is triggered
+- **Deployment facts.** Where each component runs, what it is triggered
    by, what it depends on at runtime.
-5. **Radar reality.** Which off-the-shelf tech is genuinely in use, and on
+- **Radar reality.** Which off-the-shelf tech is genuinely in use, and on
    which ring. Reconcile against the tech-radar skill.
-6. **Lessons the shape taught us.** Where the current structure fights us.
+- **Lessons the shape taught us.** Where the current structure fights us.
    This is the input the next design phase reads.
 
 ### Diagrams are HTML
@@ -225,22 +225,22 @@ is to be looked at.
 
 ### The 7a checklist
 
-1. **Update the component inventory** for anything added, removed, or
+- **Update the component inventory** for anything added, removed, or
    renamed by this release.
-2. **Update the seams** -- new ports, new implementations behind existing
+- **Update the seams** -- new ports, new implementations behind existing
    ports, seams that turned out to be ceremony and were inlined.
-3. **Regenerate or hand-edit the diagrams** so they match the prose.
-4. **Audit the radar.** Every dependency this release actually uses is on
+- **Regenerate or hand-edit the diagrams** so they match the prose.
+- **Audit the radar.** Every dependency this release actually uses is on
    the radar, on the ring it was proposed at. A dependency that landed
    without a row is a finding for the retrospective, not something to
    quietly add.
-5. **Record what the shape taught you**, if anything.
-6. **Record built-but-not-designed facts.** See below -- this is the half
+- **Record what the shape taught you**, if anything.
+- **Record built-but-not-designed facts.** See below -- this is the half
    of drift that belongs here rather than in an issue.
 
 ### Drift: this phase records, the issue accuses
 
-When the code does something the design never specified, **two things
+When the code does something the design never specified, **both of these
 happen, and they are not alternatives**:
 
 - **`docs/arch/` records it as fact.** That is the as-built's whole job. An

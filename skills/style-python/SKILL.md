@@ -11,11 +11,11 @@ description: "Writing or modifying Python: uv, Ruff, strict mypy (no Any), pytes
 
 **BDD/TDD is THE way.** Every feature, every fix, every refactor starts with a failing test. No exceptions.
 
-1. **Tests first, always** -- Write the test, watch it fail, make it pass, refactor
-2. **Readability is paramount** -- Code is read far more than written
-3. **Explicit over implicit** -- No magic, no surprises
-4. **Type everything** -- Static analysis catches bugs before runtime
-5. **Automate formatting** -- Never argue about style
+- **Tests first, always** -- Write the test, watch it fail, make it pass, refactor
+- **Readability is paramount** -- Code is read far more than written
+- **Explicit over implicit** -- No magic, no surprises
+- **Type everything** -- Static analysis catches bugs before runtime
+- **Automate formatting** -- Never argue about style
 
 > **The Red-Green-Refactor cycle is not optional.** If you're writing code without a failing test driving that code, you're doing it wrong.
 
@@ -88,9 +88,9 @@ Use `Protocol` over ABC. Use `Self` for fluent returns. **Never use `Any`** -- p
 
 ### The TDD Workflow (Non-Negotiable)
 
-1. **RED**: Write a failing test that describes the behavior you want
-2. **GREEN**: Write the minimum code to make the test pass
-3. **REFACTOR**: Clean up while keeping tests green
+- **RED**: Write a failing test that describes the behavior you want
+- **GREEN**: Write the minimum code to make the test pass
+- **REFACTOR**: Clean up while keeping tests green
 
 You do not write production code without a failing test demanding it. Period.
 

@@ -81,7 +81,10 @@ skill.
    feature and defect alike, distinguished by `kind: task | bug`.
    Reference a task by its ID, never by its path: closing one moves the
    file. The local store works with no network, so the SDLC still runs
-   for an offline or purely local project. -> the todo-plan skill
+   for an offline or purely local project. A legacy mono-file (a
+   `TODO.md`/`BUGS.md`, or a `TODO_PLAN.md` carrying task bodies) is
+   migrated into `tasks/` before the plan is worked, not alongside.
+   -> the todo-plan skill
 10. **Branch + PR discipline.** Never work on the default branch. Feature
     branch -> PR. -> the github-workflow skill
 11. **Clear the gate before you move it.** You must meet or exceed the
@@ -148,7 +151,16 @@ skill.
     are names, not positions, and they are exactly why the laws in this
     section are numbered -- they are cited as "law 15" from other skills.
     A number you can cite is an identifier; a number that shifts when you
-    insert above it is a list, and lists get bullets.
+    insert above it is a list, and lists get bullets. The one exception
+    to the ban on ordered markup follows from that: a step list whose
+    numbers other text actually cites ("proceed to step 3") keeps its
+    `1.` `2.` markers -- there the number is the step's name, and
+    converting it breaks every citation into it. The same test governs
+    numbers outside list markup: a count in a lead-in ("the five gates"),
+    a numbered heading nobody cites, "the third option" -- all rot on the
+    next edit. A number earns its place only as a measured quantity, a
+    minted identifier, or a section/step number other text actually cites;
+    otherwise refer by name and leave the number out.
     -> the markdown skill
 
 ## The Eight Phases
@@ -227,7 +239,7 @@ concept behind it, a branch already coding against a doc nobody approved.
 Each phase names the inputs it hopes for. **Hope is the correct strength:
 an input is never assured, and its absence is not by itself a defect.**
 
-Three rules for arriving in the middle:
+The rules for arriving in the middle:
 
 - **Enter at the phase the work is actually in**, not at phase 1. Locate
   it by what exists, then load that phase's skill.
