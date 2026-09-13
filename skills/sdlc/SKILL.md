@@ -53,9 +53,20 @@ skill.
    hand off the status transition. A passing suite and a clean bot review say
    nothing about whether you built what was designed. -> the retrospective
    skill
-5. **Test first (TDD/BDD).** Write the failing test before the code.
-   Follow RED -> GREEN -> COMMIT, one behavior per commit. No production
-   code without a failing test demanding it. -> the testing skill
+5. **Test first; keep the behavior test.** Write the failing test before
+   the code. Follow RED -> GREEN -> COMMIT, one behavior per commit. No
+   production code without a failing test demanding it.
+
+   TDD and BDD are not alternatives, and the slash that used to be here
+   read as though they were. **TDD is the means**: driving a unit from a
+   failing test is how correct code gets written, and it is welcome
+   wherever it helps. **BDD is the deliverable**: the test that is *kept*
+   must name something a human does and what they then observe. A test of
+   a mechanism dies the day the mechanism is replaced and stays green
+   while the feature is unusable; a test of the behavior survives the
+   rewrite and is the only kind that can report the feature is missing.
+   Scaffolding may be written and may be thrown away -- it is not what the
+   suite is for. -> the testing skill
 6. **Stable core, volatile edges.** Separate what the software *means*
    (decisions and rules, in the problem's language) from how it *connects
    to the world* (vendors, HTTP, fs, env vars, model ids). The core
