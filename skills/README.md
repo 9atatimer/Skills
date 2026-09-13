@@ -31,6 +31,16 @@ epilogue, typically invoked as `/wrapup`), and the tool skills
 (`chrome-mcp`, `lmde-dashboards`) are not phases -- they are loaded
 whenever their subject comes up.
 
+Neither are the infrastructure skills. `infra` is the map -- where the
+fleet's terraform lives (the private infra repo each consuming repo's
+`AGENT.md` names), the deploy/infra boundary, and the rule that agents
+plan and humans apply; `cloudflare-ops`, `gcp-ops` and `aws-ops` carry
+one provider surface each; `infra-credentials` carries provisioning and
+governing credentials (the `release` skill carries consuming them); and
+`infra-handoff` is the `/infra-handoff` command that ends an infra change
+with the block the human applies from. Load `infra` the moment a task
+touches a resource, then the surface skill.
+
 ## How it is consumed
 
 Two components split the job, and the boundary between them matters:

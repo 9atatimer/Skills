@@ -162,6 +162,17 @@ skill.
     minted identifier, or a section/step number other text actually cites;
     otherwise refer by name and leave the number out.
     -> the markdown skill
+18. **Infrastructure lives in the infra repo; agents plan, humans apply.**
+    Every long-lived cloud resource -- DNS, Access, routes, buckets,
+    tokens, service accounts, managed services -- is terraform in the
+    fleet's private infra repo, named in each repo's `AGENT.md` under
+    "Infrastructure". Deploy workflows stay with the code they ship. An
+    agent writes the config and hands the human the plan line; it never
+    runs `apply`, `import`, `state mv` or `destroy`, never passes
+    `-auto-approve`, never mints or seeds a credential, and never creates
+    a resource by hand to unblock a deploy. A move or refactor is proven
+    by an empty plan. -> the infra skill (and infra-credentials,
+    cloudflare-ops, gcp-ops, aws-ops for the surface in play)
 
 ## The Eight Phases
 
