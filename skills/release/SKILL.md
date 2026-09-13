@@ -27,6 +27,26 @@ A change that ships nowhere elides this phase and 7a together. That is a
 correct no-op, not a loophole: work that reaches no shared environment
 changes no shared architecture.
 
+### GitHub's `/releases/latest/` excludes prereleases
+
+Any manifest or installer that hardcodes a GitHub Releases "latest" URL
+(`.../releases/latest/download/<asset>`) will 404 for every consumer until
+a non-prerelease release exists on that repo -- "latest" is defined to skip
+prereleases entirely, with no fallback. A repo whose only tag so far is a
+beta/rc prerelease has no "latest" to resolve to, even though the tag and
+its assets are right there. The failure shows up one hop downstream of
+where you'd look: the manifest itself may fetch fine (if it's referenced by
+tag), while a `download`/asset URL *inside* that manifest that still uses
+the `/latest/` alias fails, which reads as a bug in the consumer rather
+than a stale URL.
+
+Prefer a tag-specific URL (`.../releases/download/<tag>/<asset>`) in
+anything shipped as part of a release artifact -- template the actual tag
+in at build time rather than hand-writing `/latest/`. Reserve `/latest/`
+for update-check URLs meant to always point at whatever is newest, and only
+once you know the repo will always have a non-prerelease release by the
+time anyone reads it.
+
 ## Supply chain
 
 What you ship is only as trustworthy as what you built it from.
