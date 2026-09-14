@@ -89,9 +89,10 @@ consumer's `AGENT.md`.
 - A terraform backend on R2 uses the `s3` backend with
   `skip_credentials_validation`, `skip_region_validation`,
   `skip_metadata_api_check` and path-style addressing. Under Terraform
-  1.5 use the singular `endpoint` argument; the `endpoints {}` block is
-  1.6+ and fails to parse on the older pin. One bucket, one key per
-  module (`<module>/terraform.tfstate`).
+  1.5 use the singular `endpoint` argument; the `endpoints = { s3 = ...
+  }` attribute is 1.6+ and on 1.5.6 `init` fails with `Unsupported
+  argument ... Did you mean "endpoint"?`. One bucket, one key per module
+  (`<module>/terraform.tfstate`).
 
 ## API tokens and scope
 

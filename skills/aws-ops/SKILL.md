@@ -43,13 +43,14 @@ description: "Operating what the fleet reaches through the AWS API surface: S3-c
 - Backend `s3` with `bucket`, `key = "<module>/terraform.tfstate"`,
   `region = "auto"`, the R2 endpoint, and the four skips
   (`skip_credentials_validation`, `skip_region_validation`,
-  `skip_metadata_api_check`, `force_path_style` or
-  `use_path_style` by provider version). No DynamoDB lock table exists
-  on R2; locking is absent, so one machine at a time remains the rule.
+  `skip_metadata_api_check`, and `force_path_style` on Terraform 1.5 or
+  `use_path_style` on 1.6+ -- the backend is Terraform core, so the
+  core version decides). No DynamoDB lock table exists on R2; locking
+  is absent, so one machine at a time remains the rule.
 - Under Terraform 1.5 the endpoint is the singular `endpoint`
-  argument; the `endpoints {}` block parses only on 1.6+. A module that
-  pins 1.5.6 and copies the block form fails at `init` with a message
-  about an unsupported block.
+  argument; the `endpoints = { s3 = ... }` attribute parses only on
+  1.6+. A module that pins 1.5.6 and copies the attribute form fails at
+  `init` with `Unsupported argument ... Did you mean "endpoint"?`.
 - The backend credential arrives as `AWS_ACCESS_KEY_ID` /
   `AWS_SECRET_ACCESS_KEY` in the environment under `op run`; the
   backend block never holds them. A backend whose credential item does
