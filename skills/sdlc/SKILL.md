@@ -61,12 +61,16 @@ skill.
    read as though they were. **TDD is the means**: driving a unit from a
    failing test is how correct code gets written, and it is welcome
    wherever it helps. **BDD is the deliverable**: the test that is *kept*
-   must name something a human does and what they then observe. A test of
-   a mechanism dies the day the mechanism is replaced and stays green
-   while the feature is unusable; a test of the behavior survives the
-   rewrite and is the only kind that can report the feature is missing.
-   Scaffolding may be written and may be thrown away -- it is not what the
-   suite is for. -> the testing skill
+   names a contract someone depends on, and its failure message names the
+   harm. Usually that is a human action and what they then observe; for
+   the architect behaviors of phase 3 it is a named structural contract
+   (Grep, Swap, Decision, Arrow), whose dependant is the next person who
+   needs the seam. What it is never is the mechanism's own internals: that
+   test dies the day the mechanism is replaced and stays green while the
+   feature is unusable, where a contract test survives the rewrite and is
+   the only kind that can report the thing is missing. Scaffolding may be
+   written and may be thrown away -- it is not what the suite is for.
+   -> the testing skill
 6. **Stable core, volatile edges.** Separate what the software *means*
    (decisions and rules, in the problem's language) from how it *connects
    to the world* (vendors, HTTP, fs, env vars, model ids). The core

@@ -681,14 +681,21 @@ rejected thread collapses it behind a "Resolved" fold, so without the
 mirror comment the human sees a clean PR and never learns feedback was
 declined. One comment per review pass, not one per rejection.
 
-**Step 4: RED test first, then implement the agreed fixes, commit, and
-PUSH.** A review finding is a defect, and law 5 does not lapse because the
-defect arrived by comment rather than by bug report: write the failing test
-before the fix, and make it fail for the reason the reviewer gave. The test
-that is kept states the behavior the reviewer's case would break -- what a
-human does and what they then see -- not the internal state the fix
-happens to change. A finding with no behavior behind it is a finding worth
-questioning.
+**Step 4: RED test first where there is behavior, then implement the agreed
+fixes, commit, and PUSH.** A finding about executable behavior is a defect,
+and law 5 does not lapse because the defect arrived by comment rather than
+by bug report: write the failing test before the fix, and make it fail for
+the reason the reviewer gave. The test that is kept states the contract the
+reviewer's case would break -- what a human does and what they then see --
+not the internal state the fix happens to change.
+
+**Findings about bookkeeping get no invented test.** Prose, comments,
+spelling, config, file layout and dependency housekeeping are covered by
+the testing skill's bookkeeping rule: if you cannot say who is harmed and
+what they observe, there is no behavior, so there is no RED-first either.
+Fix it and move on. The rule above is not a licence to manufacture a test
+so a docs correction can look rigorous -- and a finding about executable
+code that still has no statable harm is a finding worth questioning.
 
 All fixes go in one commit (or one per logical group) together with their
 tests, **never amend a pushed commit**. Note the resulting SHA. The push is
