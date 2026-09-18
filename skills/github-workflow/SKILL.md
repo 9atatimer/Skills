@@ -196,7 +196,7 @@ To avoid charging Copilot review cycles to the organization:
 
 ### Landing via tedium (merge bot)
 
-Repos with the tedium App installed land PRs through the merge bot (see
+Repos with the tedium App installed may land PRs through the merge bot (see
 template-tools' `docs/design/DESIGN.TEDIUM.md`). The rule is: **the gates
 authorize merges; tedium executes them.** A repo is enrolled when its
 default branch carries a `tedium.toml`; its agent instruction file names
@@ -216,8 +216,9 @@ only when all four hold on the current head:
 - no `hold` label is on the PR.
 
 Anything short of that is not "almost": a red `review-settled` means a
-review is still owed on this head (push, then re-request the reviewer;
-resolve every thread; post the self-review epilogue), and the agent waits
+review is still owed on this head (re-request the reviewer on the latest
+push if none is on it; resolve every thread; post the self-review
+epilogue), and the agent waits
 for the status, never lands around it. A human with write access may
 comment `tedium land` at any time and that remains the human merge
 decision. `tedium dryrun` is unrestricted: it builds on `tedium/try` and
