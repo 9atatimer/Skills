@@ -85,6 +85,43 @@ check is the victim, not the file type. A `files` list that decides what
 ships is a behavior (a change that cannot publish itself); an ignore line
 is not.
 
+### A name is not a behavior
+
+The failure mode is subtle enough to be worth an example, because it
+survives review and it makes coverage look real.
+
+```python
+def test_a_server_still_starts_against_an_unmigrated_store(self, db):
+    """Given an unmigrated store, When a desk starts, Then it comes up."""
+    drop_desk_tables(db)
+    store = DeskStore(db)
+    try:
+        store.abandon_stale_calls()
+    finally:
+        store.close()
+```
+
+It shipped. It has no assert statement at all: it passes because nothing
+raises, and it never starts a server. The docstring is in Given/When/Then
+and describes a behavior the body does not exercise -- which is worse than
+no test, because the next reader sees the case is covered.
+
+Two checks catch it:
+
+- **Does the body do what the name says?** If the name says a server
+  starts, a server starts. Setup may reach into the store; the *acting*
+  and the *asserting* go through the door the human uses.
+- **Can it fail?** A test with no assertion, or one whose only assertion
+  is that nothing raised, is asserting the absence of a crash -- say so in
+  the name, or give it the assertion it implies.
+
+The same check catches the commoner version: a test that names a behavior
+and then asserts an internal value. If the failure message would read
+`assert lease == 780.0` rather than something the human would notice,
+the name is writing a cheque the body does not honour. TDD is welcome to
+produce that test on the way to correct code -- it is just not the one to
+keep.
+
 ### Reliability and Determinism
 
 - Tests must be **non-flaky**, **order-independent**, and **hermetic**
