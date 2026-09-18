@@ -15,6 +15,7 @@ designomatic
 gates
 github-workflow
 iac
+knowledge-base
 lmde-dashboards
 markdown
 planning
