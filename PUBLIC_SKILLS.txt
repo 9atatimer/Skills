@@ -6,12 +6,15 @@
 architecture
 cdp-browser
 chrome-mcp
+cloudflare-hosting
+cloudflare-think
 coding
 concept
 design
 designomatic
 gates
 github-workflow
+iac
 lmde-dashboards
 markdown
 planning

@@ -31,6 +31,14 @@ epilogue, typically invoked as `/wrapup`), and the tool skills
 (`chrome-mcp`, `lmde-dashboards`) are not phases -- they are loaded
 whenever their subject comes up.
 
+Neither are the platform skills. `iac` is the umbrella for declared
+infrastructure (where Terraform lives, authority, state); the Cloudflare
+pair hangs under it: `cloudflare-hosting` for anything served from a
+Cloudflare account and `cloudflare-think` for an AI assistant built on
+`@cloudflare/think`. `iac` and `cloudflare-hosting` are the sre's
+territory (phase 7 and the as-built); `cloudflare-think` is loaded by
+whoever is coding the assistant (phase 5).
+
 ## How it is consumed
 
 Two components split the job, and the boundary between them matters:
