@@ -12,6 +12,7 @@ design
 designomatic
 gates
 github-workflow
+knowledge-base
 lmde-dashboards
 markdown
 planning
