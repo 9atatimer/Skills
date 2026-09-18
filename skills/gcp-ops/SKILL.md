@@ -10,7 +10,7 @@ description: "Operating the fleet's Google Cloud estate through terraform and re
 > hazards are specific: a credential that reaches terraform through a
 > variable, a secret version that lands in state, a second machine
 > applying against an empty state, a project service disabled on
-> destroy. This skill names them. The infra skill governs who applies.
+> destroy. This skill names them. The iac skill governs who applies.
 
 ## Authentication
 
