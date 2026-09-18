@@ -14,7 +14,8 @@ description: "Giving an LLM working knowledge of a pile of documents somebody el
 > checklist.
 > **Companion skills:** coding (stable core / volatile edges -- this skill
 > is an application of it), testing, tech-radar (rows land with the code),
-> design (the corpus model belongs in the design doc).
+> design (the corpus model belongs in the design doc), cloudflare-think
+> (an assistant that answers from a corpus calls retrieval as a tool).
 
 ## The short version
 
