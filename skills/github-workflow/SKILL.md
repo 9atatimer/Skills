@@ -196,16 +196,33 @@ To avoid charging Copilot review cycles to the organization:
 
 ### Landing via tedium (merge bot)
 
-Repos with the tedium App installed may land PRs through the merge bot
-(see template-tools' `docs/design/DESIGN.TEDIUM.md`). The rule "humans merge, agents do
-not" refines to: **humans authorize merges; tedium executes them.** An
-explicit `@tedium land` comment from a human with write access IS the
-human merge decision. Zero-unreviewed-code is unchanged -- `land` may only
-be issued when every pushed commit has been reviewed. Agents never comment
-`@tedium land` on their own initiative; `@tedium dryrun` is fine for
-agents wanting a green-proof without landing. Never add `tedium/*` to
-protected-branch patterns; the bot's staging branches must remain
-force-pushable and deletable by the App.
+Repos with the tedium App installed land PRs through the merge bot (see
+template-tools' `docs/design/DESIGN.TEDIUM.md`). The rule is: **the gates
+authorize merges; tedium executes them.** A repo is enrolled when its
+default branch carries a `tedium.toml`; its agent instruction file names
+the required checks. A repo WITHOUT a `tedium.toml` is still human-merge:
+there an agent never merges and never comments `tedium land`.
+
+On an enrolled repo an agent MAY comment `tedium land` on its own PR, and
+only when all four hold on the current head:
+
+- the repo has tedium enabled (the `tedium.toml` is present on the
+  default branch and the repo's agent instruction file says so);
+- `gate`, the repo's required CI check, is green on the head;
+- `review-settled`, the review status, is green on the head -- the
+  required reviewer's newest review is on this commit and every review
+  thread is resolved (the gates skill's Zero Unreviewed Code, made
+  mechanical);
+- no `hold` label is on the PR.
+
+Anything short of that is not "almost": a red `review-settled` means a
+review is still owed on this head (push, then re-request the reviewer;
+resolve every thread; post the self-review epilogue), and the agent waits
+for the status, never lands around it. A human with write access may
+comment `tedium land` at any time and that remains the human merge
+decision. `tedium dryrun` is unrestricted: it builds on `tedium/try` and
+lands nothing. Never add `tedium/*` to protected-branch patterns; the
+bot's build branches must remain force-pushable and deletable by the App.
 
 ### PR Template (both workflows)
 
