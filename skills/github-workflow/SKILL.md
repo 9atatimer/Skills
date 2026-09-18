@@ -393,3 +393,16 @@ every commit. When the repo declares stage-only mode:
 - The user reviews staged changes, commits, pushes, and creates the PR
 
 This overrides the Development Workflow steps 4-6 above.
+
+## After a merge: markers before the commit
+
+- A merge that reports a conflict in one file has usually left markers
+  in others too. Before `git add`, grep the WHOLE tree, not the file
+  you resolved: `git grep -n '^<<<<<<< \|^>>>>>>> ' -- . ':!node_modules'`
+  (or `git diff --check`). A `git add -A` after resolving one file
+  commits the markers in the rest, and the push carries them to the PR.
+- `git checkout --ours <file>` after a merge only takes effect on a file
+  git marked as conflicted; on an auto-merged file it prints "Updated 0
+  paths" and leaves both sides' additions in place. Read the merged file
+  for a duplicated section before assuming yours won.
+

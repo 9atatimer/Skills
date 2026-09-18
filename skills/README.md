@@ -66,6 +66,19 @@ Skills float to registry latest -- there is no version to pin and no human
 rollout step -- but they are **not** unpublished. This repository publishes
 the payload on every merge to `main`, and that publish is the rollout.
 
+## Before authoring a skill
+
+Fetch `main` and grep it for the topic first (`git fetch origin main &&
+git grep -il '<topic>' origin/main -- skills agents`). Sessions run in
+parallel and skills float to registry latest, so a skill on the same
+subject may have landed since your session started -- the provisioner's
+session-resume report lists new skill directories, and that list is
+your signal. When one exists, extend it or hang a narrower skill under
+it; two umbrellas for one subject leave every consumer loading the wrong
+one. The infra work of 2026-09 authored `infra` and `cloudflare-ops`
+against a main that had just gained `iac` and `cloudflare-hosting`; both
+were retired unpublished.
+
 ## Pure-shared and machine-overwritten
 
 Provision owns this managed skill set and overwrites it freely on every run.
