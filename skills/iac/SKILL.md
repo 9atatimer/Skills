@@ -252,8 +252,29 @@ Rules that hold across all three:
   `init` on the pinned toolchain is a defect with an issue, not a
   known quirk.
 
+## Moves and refactors
+
+- A rename, a move between directories or repos, a module split, or a
+  provider upgrade must produce an EMPTY plan when the human runs it. A
+  move that plans a create or a destroy is an outage with a commit
+  message.
+- Keep `.tf` files and the lock file byte-identical across a move
+  wherever the tooling allows; edit only README, scripts and comments
+  for the new paths, and paste the `diff -r` proof in the PR.
+- State files travel with the module, by the human, on the laptop, and
+  BEFORE the app repo pulls the deletion: they were never committed, so
+  `git show` recovers config only, and a `git clean` after the merge is
+  the loss path. Copy out first, `init` in the new home, confirm `No
+  changes.`, then delete the old copy.
+- A backend block is never edited as a side effect of a move; changing
+  it is a state migration with its own issue and its own empty-plan
+  proof. The old location gets a tombstone README naming the new home.
+
 ## Related
 
+- the gcp-ops, aws-ops and infra-credentials skills: the surfaces and
+  the credential lifecycle under this umbrella; the infra-handoff skill
+  produces the block that ends a change
 - the cloudflare-hosting skill: what wrangler owns and what Terraform
   owns on that platform, token scopes, Access
 - the release skill: the vault credential chain and deploy workflows

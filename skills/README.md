@@ -37,7 +37,12 @@ pair hangs under it: `cloudflare-hosting` for anything served from a
 Cloudflare account and `cloudflare-think` for an AI assistant built on
 `@cloudflare/think`. `iac` and `cloudflare-hosting` are the sre's
 territory (phase 7 and the as-built); `cloudflare-think` is loaded by
-whoever is coding the assistant (phase 5).
+whoever is coding the assistant (phase 5). Three more hang under `iac`:
+`gcp-ops` and `aws-ops` carry one provider surface each, and
+`infra-credentials` carries provisioning and governing credentials (the
+`release` skill carries consuming them). `infra-handoff` is the
+`/infra-handoff` command that ends an infra change with the block the
+human applies from.
 
 ## How it is consumed
 

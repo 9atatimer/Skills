@@ -262,6 +262,9 @@ zonal.
 | the deploy shipped localhost values | a bare `wrangler deploy` with no `--env` |
 | a probe is green and the feature is dead | the probe never exercised the credential or the upstream; run the real-behaviour smoke |
 | `terraform apply` fails on a hostname | the worker with the Custom Domain has not deployed yet |
+| API error `9106` under Terraform | no Authorization header reached the API: the token variable is empty, terraform ran bare instead of under `op run` |
+| API error `10000` on an account endpoint | the token authenticated and lacks that permission: scope, not plumbing |
+| `1010` `auth.forbidden` on an account resource | a zone-scoped token; the resource is not zonal (see the iac skill's minting posture) |
 
 Verify a suspect token read-only (`GET /user/tokens/verify`) before
 blaming the deploy tool.

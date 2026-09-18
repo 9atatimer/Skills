@@ -4,6 +4,7 @@
 # conscious decision to publish it. Add the directory name (one per line,
 # # comments ignored) in the same commit that adds the skill.
 architecture
+aws-ops
 cdp-browser
 chrome-mcp
 cloudflare-hosting
@@ -13,8 +14,11 @@ concept
 design
 designomatic
 gates
+gcp-ops
 github-workflow
 iac
+infra-credentials
+infra-handoff
 knowledge-base
 lmde-dashboards
 markdown

@@ -99,8 +99,18 @@ Two standing repo-policy patterns to expect (the repo's own file wins):
   directory (e.g. `scripts/CD/`) as CI-only; honor it.
 - Staging/preview deploys go through the repo's npm targets, not by
   invoking the underlying tool (wrangler, terraform, gcloud) directly.
+- The resources a deploy lands on -- routes, Access gates, buckets,
+  tokens, service accounts -- are not the deploy's to create. They are
+  terraform in the fleet's infra repo, named under "Infrastructure" in
+  the consuming repo's `AGENT.md`; a deploy that needs one that does not
+  exist stops and raises it there. -> the iac skill
 
 ## The credential chain (org standard: 1Password master key)
+
+This section covers CONSUMING a credential from a workflow. Where a
+credential comes from -- vaults, service accounts, minting, item
+categories, seeding, rotation, the fleet registry -- is the
+infra-credentials skill.
 
 The fleet standard is ONE GitHub secret per workflow family: a 1Password
 **service-account token**. Every other credential is fetched at runtime
