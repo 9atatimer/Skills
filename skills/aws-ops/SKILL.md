@@ -1,6 +1,6 @@
 ---
 name: aws-ops
-description: "Operating what the fleet reaches through the AWS API surface: S3-compatible object storage on Cloudflare R2 through the AWS CLI and SDKs (endpoint, region auto, credential_process, profiles), a terraform s3 backend on R2, and the rules for a real AWS account should one come into use (OIDC federation over static keys, one role per workload, the state-bucket-plus-lock-table scaffold). Load with the infra skill whenever a task uses AWS_* credentials, an S3 URL, or the aws CLI, whichever cloud is actually behind it. Skip for R2 bucket and token provisioning (cloudflare-ops)."
+description: "Operating what the fleet reaches through the AWS API surface: S3-compatible object storage on Cloudflare R2 through the AWS CLI and SDKs (endpoint, region auto, credential_process, profiles), a terraform s3 backend on R2, and the rules for a real AWS account should one come into use (OIDC federation over static keys, one role per workload, the state-bucket-plus-lock-table scaffold). Load with the iac skill whenever a task uses AWS_* credentials, an S3 URL, or the aws CLI, whichever cloud is actually behind it. Skip for R2 bucket and token provisioning (cloudflare-hosting)."
 ---
 
 # AWS-surface operations
@@ -19,7 +19,7 @@ description: "Operating what the fleet reaches through the AWS API surface: S3-c
   the CLI takes `--endpoint-url` per call or `endpoint_url` in the
   profile, and `region = auto` in `~/.aws/config`.
 - The credential pair is derived from a Cloudflare API token (the
-  cloudflare-ops skill): Access Key ID is the token ID, Secret Access
+  cloudflare-hosting skill): Access Key ID is the token ID, Secret Access
   Key is the SHA-256 of the token value. It is stored as a 1Password
   LOGIN item (`username` = key id, `password` = secret) so both fields
   survive the item category.
@@ -91,7 +91,7 @@ description: "Operating what the fleet reaches through the AWS API surface: S3-c
 
 ## Related
 
-- the cloudflare-ops skill -- minting the R2 token the pair derives from
-- the infra skill -- the state posture and who migrates it
+- the cloudflare-hosting skill -- minting the R2 token the pair derives from
+- the iac skill -- the state posture and who migrates it
 - the infra-credentials skill -- item categories and the registry
 - the release skill -- the workflow that consumes the pair

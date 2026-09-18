@@ -61,6 +61,6 @@ order. Fill every one; write `none` rather than omit.
 
 ## Related
 
-- the infra skill -- the authority ladder this command implements
-- the cloudflare-ops, gcp-ops, aws-ops skills -- the scope probes and
+- the iac skill -- the authority ladder this command implements
+- the cloudflare-hosting, gcp-ops, aws-ops skills -- the scope probes and
   verify endpoints to cite in Pre-flight

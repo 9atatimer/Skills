@@ -7,7 +7,8 @@ architecture
 aws-ops
 cdp-browser
 chrome-mcp
-cloudflare-ops
+cloudflare-hosting
+cloudflare-think
 coding
 concept
 design
@@ -15,9 +16,10 @@ designomatic
 gates
 gcp-ops
 github-workflow
-infra
+iac
 infra-credentials
 infra-handoff
+knowledge-base
 lmde-dashboards
 markdown
 planning

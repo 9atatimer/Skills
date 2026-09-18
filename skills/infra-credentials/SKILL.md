@@ -1,6 +1,6 @@
 ---
 name: infra-credentials
-description: "Provisioning and governing the credentials infrastructure needs: the vault boundary (a personal vault mints, headless per-purpose vaults are read by scoped service accounts), one service account per purpose and per tier, minting under human interactive authority only, 1Password item categories and the field names they force, GitHub secrets versus variables and how they are seeded, rotation in place, and the credential registry kept in the infra repo. Load with the infra skill whenever a task mints, wires, renames, rotates or inventories a credential. Skip for how a workflow consumes an op:// reference at run time and diagnoses a red deploy (release) and for session-side secret containment (the repo's secrets-vault design)."
+description: "Provisioning and governing the credentials infrastructure needs: the vault boundary (a personal vault mints, headless per-purpose vaults are read by scoped service accounts), one service account per purpose and per tier, minting under human interactive authority only, 1Password item categories and the field names they force, GitHub secrets versus variables and how they are seeded, rotation in place, and the credential registry kept in the infra repo. Load with the iac skill whenever a task mints, wires, renames, rotates or inventories a credential. Skip for how a workflow consumes an op:// reference at run time and diagnoses a red deploy (release) and for session-side secret containment (the repo's secrets-vault design)."
 ---
 
 # Infrastructure credentials
@@ -146,8 +146,8 @@ set. A consumer absent from the registry is a finding, not a formality.
 
 - the release skill -- consuming the chain at run time; diagnosing a
   red deploy rung by rung
-- the infra skill -- the authority ladder and where the registry lives
-- the cloudflare-ops and gcp-ops skills -- what each provider's token or
+- the iac skill -- the authority ladder and where the registry lives
+- the cloudflare-hosting and gcp-ops skills -- what each provider's token or
   service account must be scoped to
 - the gates skill -- the scanners and the terraform artifact check that
   keep values out of git

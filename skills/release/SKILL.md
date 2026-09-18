@@ -103,7 +103,7 @@ Two standing repo-policy patterns to expect (the repo's own file wins):
   tokens, service accounts -- are not the deploy's to create. They are
   terraform in the fleet's infra repo, named under "Infrastructure" in
   the consuming repo's `AGENT.md`; a deploy that needs one that does not
-  exist stops and raises it there. -> the infra skill
+  exist stops and raises it there. -> the iac skill
 
 ## The credential chain (org standard: 1Password master key)
 

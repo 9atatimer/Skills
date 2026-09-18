@@ -1,6 +1,6 @@
 ---
 name: gcp-ops
-description: "Operating the fleet's Google Cloud estate through terraform and read-only verification: Application Default Credentials, one identity per workload per tier, Cloud Run services, Secret Manager read as a data source with versions seeded out of band, IAM bindings, project services, and logging-based metrics with alert policies and uptime checks. Load with the infra skill whenever a task touches a GCP resource. Skip for the container image or the service's code (coding, release)."
+description: "Operating the fleet's Google Cloud estate through terraform and read-only verification: Application Default Credentials, one identity per workload per tier, Cloud Run services, Secret Manager read as a data source with versions seeded out of band, IAM bindings, project services, and logging-based metrics with alert policies and uptime checks. Load with the iac skill whenever a task touches a GCP resource. Skip for the container image or the service's code (coding, release)."
 ---
 
 # GCP operations
@@ -111,7 +111,7 @@ description: "Operating the fleet's Google Cloud estate through terraform and re
 
 ## Related
 
-- the infra skill -- where the modules live and who applies
+- the iac skill -- where the modules live and who applies
 - the infra-credentials skill -- the 1Password item behind every seeded
   version
 - the release skill -- the deploy that ships the image and the

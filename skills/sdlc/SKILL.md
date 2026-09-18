@@ -171,8 +171,8 @@ skill.
     runs `apply`, `import`, `state mv` or `destroy`, never passes
     `-auto-approve`, never mints or seeds a credential, and never creates
     a resource by hand to unblock a deploy. A move or refactor is proven
-    by an empty plan. -> the infra skill (and infra-credentials,
-    cloudflare-ops, gcp-ops, aws-ops for the surface in play)
+    by an empty plan. -> the iac skill (and infra-credentials,
+    cloudflare-hosting, gcp-ops, aws-ops for the surface in play)
 
 ## The Eight Phases
 
