@@ -92,7 +92,7 @@ blocked by a gate is not authorization to move it.
 
 - **NEVER land code no one has reviewed. The target is 0% unreviewed
   code.** Every pushed commit must be looked at by a reviewer --
-  agentic (Copilot, codex) or human -- before the PR merges.
+  agentic (Copilot, Codex) or human -- before the PR merges.
 - **`review-settled` is this law as a commit status.** On an enrolled
   repo the status is green on a head iff the required reviewer's newest
   review is on that head AND every review thread is resolved; the ruleset
@@ -193,8 +193,8 @@ was and was not verified against.
 ## Branch Protection and Required Checks
 
 Every enrolled repo's default branch requires two checks on the PR head,
-and its agent instruction file names them (the "Landing via tedium"
-section): `gate`, the one always-present CI check that needs every suite
+and its agent instruction file names them (that file's "Landing via
+tedium" section): `gate`, the one always-present CI check that needs every suite
 in that repo, and `review-settled`. A new CI job goes into `gate`'s
 `needs`; a job outside it cannot block a landing, and a per-workflow
 `paths:` filter that makes a required check absent hangs the bot. PRs
