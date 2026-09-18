@@ -1,8 +1,13 @@
 # ci.yml -- the non-discretionary gate: tests plus the publicity guard
 # (scripts/publicity-guard.mjs --all) over the full tree, so nothing the
 # guard's denylists cover can merge even if a local commit bypassed the
-# husky hooks. Make the `ci` check required on main (Settings -> Rulesets)
-# to remove the discretion.
+# husky hooks.
+#
+# `gate` is the one always-present check the main ruleset requires and
+# tedium waits for (issue #33): it needs every other job and fails on any
+# failure or cancellation. Add every new job to its `needs`. The tedium/*
+# branches are where tedium builds its staging commits; without them in
+# the trigger a batch waits timeout_sec for a check that never runs.
 #
 # ci.magic (the natural-language assertion rung) is wired separately once
 # the naatm-ci-magic invocation is ported from template-tools.
@@ -11,7 +16,7 @@ name: ci
 
 on:
   push:
-    branches: [main]
+    branches: [main, tedium/merge, tedium/try]
   pull_request:
 
 jobs:
@@ -26,3 +31,21 @@ jobs:
         run: npm test
       - name: publicity guard (full tree)
         run: npm run guard
+
+  gate:
+    name: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    if: always()
+    needs: [ci]
+    permissions: {}
+    steps:
+      - name: Every needed job succeeded
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          echo "$RESULTS"
+          if echo "$RESULTS" | grep -Eq '"result": *"(failure|cancelled|skipped)"'; then
+            echo "::error::a needed job failed, was cancelled, or was skipped"
+            exit 1
+          fi

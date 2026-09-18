@@ -1,0 +1,30 @@
+# tedium.toml -- landing rules for the tedium merge bot
+# (template-tools packages/naatm-tedium). Read from THIS branch (main),
+# never from the PR, so a PR cannot rewrite the rules that judge it;
+# CODEOWNERS puts this file under a human owner.
+
+# The check that must report green on the staging commit tedium builds
+# on tedium/merge (and tedium/try for a dryrun): the `gate` job in
+# .github/workflows/ci.yml, which needs every other job.
+status = ["gate"]
+
+# Commit statuses that must be green on the PR head before it is
+# batched: the review signal (.github/workflows/review-settled.yml).
+pr_status = ["review-settled"]
+
+# A PR carrying this label is never batched.
+block_labels = ["hold"]
+
+# One PR per batch, initially: every landing here publishes the skills
+# payload the whole fleet provisions on its next session, so a batch is
+# a release and a bisect is a bad release.
+max_batch_size = 1
+
+# ci runs in well under a minute; 30 min covers runner queueing.
+timeout_sec = 1800
+
+delete_merged_branches = true
+
+# PRs touching the paths CODEOWNERS names need a code-owner approval
+# before tedium lands them -- the merge rules themselves live here.
+use_codeowners = true
