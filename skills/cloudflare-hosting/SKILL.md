@@ -96,8 +96,12 @@ preview deploy.
 - **Service binding, not public fetch, between workers.** Access gates
   the hostname; a public subrequest carries no Access credential and
   gets a login page. A binding never re-enters the edge, needs no
-  service token, and is GET-only if you type it that way. Absent under
-  `wrangler dev` on a laptop, where the peer is loopback.
+  service token, and is GET-only if you type it that way. On a laptop,
+  run both workers under one `wrangler dev` session (multiple configs)
+  and the binding resolves locally, so dev exercises the production
+  topology. A loopback fallback is only for a peer that is not a wrangler
+  worker at all (a framework dev server), and it must refuse a REMOTE
+  peer with no binding rather than fall through to a public fetch.
 - **KV** for a value that must be rewritten from inside the isolate (a
   rotating credential). Worker secrets are write-only in-isolate.
 - **R2** for bytes too big for a Durable Object SQLite row. Lifecycle
@@ -238,7 +242,8 @@ groups (the dashboard shows Write as "Edit").
 | deploy a worker that binds KV | plus Workers KV Storage Write | |
 | apply routes and namespaces (Terraform) | Workers KV Storage Write | Workers Routes Write |
 | apply Access apps and policies (Terraform) | Access: Apps and Policies Write | DNS Write if Terraform owns records |
-| mint tokens or service tokens | the human's Global API Key, laptop only (the iac skill) | |
+| mint Access service tokens (Terraform) | Access: Service Tokens Write, account scope (a zone-scoped Access grant cannot; the resource is not zonal) | |
+| mint API tokens | the human's Global API Key, laptop only (the iac skill's credential-minting posture) | |
 | R2 state backend | an R2 API token scoped to the state bucket; S3-compatible key pair | |
 
 A scoped token that fails `auth.forbidden` on an account-level resource

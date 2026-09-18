@@ -24,20 +24,24 @@ gets one before its Terraform changes.
 
 ## Where the code lives
 
-- **Any module whose inputs are non-public identifiers lives in the
-  private ops repo.** Account ids, zone ids, project ids, vault UUIDs,
-  Access policy emails, team domains, and Access application ids are
-  non-public; a module that needs them as inputs or defaults cannot sit
-  in a public repo, and the fleet's direction is that it does not sit in
-  the app repo either. The private ops repo is one place with one
-  README per module and one authority model, and it is where a person
-  with an incident looks first.
-- **An app repo keeps a module only when it is inseparable from that
-  app's deploy** and the app repo is itself private: a route on the
-  app's own hostname, the namespaces its worker binds. Even then the
-  module's identifiers are variables with documented defaults, the
-  `.env.op` names the vault by UUID, and the app repo's instruction file
-  says the module exists and where its state is.
+Decide placement in this order; the first rule that applies wins.
+
+- **A public repo holds no module with identifiers.** Account ids, zone
+  ids, project ids, vault UUIDs, Access policy emails, team domains, and
+  Access application ids are non-public, as inputs or as defaults. A
+  public app repo's infrastructure lives in the private ops repo,
+  always.
+- **A private app repo may keep a module only while it is inseparable
+  from that app's deploy**: a route on the app's own hostname, the
+  namespaces its own worker binds. This is a tolerated state, not a
+  home: the fleet's direction is that it moves to the ops repo when next
+  touched and its state can be migrated. While it stays, its
+  identifiers are variables with documented defaults, the `.env.op`
+  names the vault by UUID, and the app repo's instruction file says the
+  module exists, where its state is, and that it is a mover.
+- **Everything else lives in the private ops repo**: one place with one
+  README per module and one authority model, and where a person with an
+  incident looks first.
 - **Cross-repo references are by path and by id.** The app repo's ops
   docs name the ops-repo module (`ops/terraform/<name>`) that holds the
   resource it depends on; the worker's config names the resource by its
@@ -139,11 +143,15 @@ Rules that hold across all three:
 - The fleet-wide state home is an open question tracked in the private
   ops repo; a module does not settle it alone. Until it is settled, do
   not apply a local-state module from more than one machine.
-- A remote backend whose credential does not resolve is run with a
-  gitignored `backend_override.tf` declaring `backend "local" {}`;
-  Terraform's `_override.tf` merge takes it. Delete the override and run
-  `init -migrate-state` once the credential exists; the issue that owns
-  minting it is named in the README.
+- A module that has NEVER been applied against its remote backend may
+  bootstrap with a gitignored `backend_override.tf` declaring
+  `backend "local" {}`; Terraform's `_override.tf` merge takes it.
+  Delete the override and run `init -migrate-state` once the credential
+  exists; the issue that owns minting it is named in the README. A
+  module whose remote state already holds resources gets no such
+  escape: an empty local state has no snapshot of them, and the plan it
+  produces recreates what exists. Restore backend access first, and if
+  the remote state is unreachable, that module is blocked, not local.
 - A backend's argument set depends on the Terraform version: the plural
   `endpoints {}` block needs a newer Terraform than the singular
   `endpoint`, and a repo pinned below it fails to parse outright. The

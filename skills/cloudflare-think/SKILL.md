@@ -43,9 +43,13 @@ package at all. -> the tech-radar skill
 **A vendor README is not the vendor's behaviour.** Think's README has
 shipped with claims the code did not honour, each failing silently
 (options ignored in the wrong position, a config shape that killed every
-turn). Before building on a feature: `npm pack @cloudflare/think@<pin>`,
-read `dist/think.d.ts` and the `docs/` that ship in the tarball. Types
-are generated from the code and cannot drift from it.
+turn). Before building on a feature: `npm pack @cloudflare/think@<pin>`
+and read what ships in the tarball. The `.d.ts` settles SHAPES (an
+option's position, a config's type, a union's members); for runtime
+facts (hook order, what the constructor assigns, whether an option is
+honoured) read the shipped `dist/*.js` where the call happens, then
+confirm with a test against the pinned version. The README settles
+nothing.
 
 ## Where it sits in the architecture
 
@@ -198,11 +202,18 @@ and `this.ctx` are available there; `this.name` is not.
   verifies it from server-only config. Both deploy workflows read the
   same vault field, which is what keeps them in agreement. Fail closed:
   unconfigured `503`, mismatch `401`, before any store access.
-- **Attribution crosses the seam.** The session carries the initiating
-  user's id (seeded by the client at session start, forwarded by the
-  worker); a headless run carries a per-run capability instead of the
-  standing secret, in a private instance field for the length of one
-  turn and never in synced state.
+- **Attribution crosses the seam, and the client is not its source.**
+  The actor the tool route records must come from a verified identity:
+  the Access assertion on the WebSocket upgrade (the `cf-access-jwt-`
+  `assertion` header, validated against the team's certificates), or a
+  server-minted session credential. A user id the client seeds into
+  synced state is client-asserted, and since clients replace state
+  wholesale, any authenticated caller could name another user. The
+  worked example shipped that way as a recorded PoC compromise with a
+  blocking issue; it is not the pattern. A headless run carries a per-run
+  capability instead of the standing secret, in a private instance field
+  for the length of one turn and never in synced state, and the route
+  reads the actor from the run record.
 - **The prompt tells the model what a tool does to the world**: a
   "create" that lands as a draft, an "update" that files a proposal and
   changes nothing live. The model repeats what the prompt says, so the
