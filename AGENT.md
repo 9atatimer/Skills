@@ -34,12 +34,16 @@ no staging: the review is the only gate before the fleet.
 PRs land through the tedium merge bot; the rules are in `tedium.toml` on
 `main` and the gates skill assumes what follows.
 
-- **Required checks**, on every PR head and on the staging commit tedium
-  builds: `gate` (the `ci.yml` job that needs every other job) and
-  `review-settled` (the commit status from
-  `.github/workflows/review-settled.yml`: Copilot's newest review is on
-  the head and every thread is resolved). Both are required by the `main`
-  ruleset.
+- **Required checks.** `gate` (the `ci.yml` job that needs every other
+  job) must be green on the PR head AND on the staging commit tedium
+  builds on `tedium/merge` (`status` in `tedium.toml`). `review-settled`
+  (the commit status from `.github/workflows/review-settled.yml`:
+  Copilot's newest review is on the head and every thread is resolved)
+  must be green on the PR head only (`pr_status`); the staging commit
+  never carries it. The `main` ruleset requires both on the PR head once
+  the fleet's GitHub terraform is applied. A PR from a fork runs with a
+  read-only token and never gets a `review-settled` status: fork PRs are
+  human-merge.
 - **`gate` is the only name to add to.** A new CI job goes into `gate`'s
   `needs`; a job outside it cannot block a landing.
 - **One PR per batch** (`max_batch_size = 1`): each landing is a publish.
