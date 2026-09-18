@@ -24,10 +24,17 @@ class BlockKind(Enum):
 
 @dataclass(frozen=True, slots=True)
 class Provenance:
+    """Where a block came from. Paged media fill page and bbox; unpaged
+    media (HTML, email, transcripts, audio) fill anchor instead -- a
+    fragment id, a character offset, or a timestamp. At least one of the
+    two must be present, which is the invariant an adapter has to satisfy
+    before the block may be indexed."""
+
     document_id: str
     revision: str
-    page: int              # 1-based, as a human counts pages
-    bbox: tuple[float, float, float, float] | None  # x0, y0, x1, y1
+    page: int | None = None      # 1-based, as a human counts pages
+    bbox: tuple[float, float, float, float] | None = None  # x0, y0, x1, y1
+    anchor: str | None = None    # "#sec-3", "char:10423", "t=00:12:33"
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,12 +55,25 @@ class Extraction:
 
 
 @dataclass(frozen=True, slots=True)
+class IndexVersion:
+    """The reindex key, in one value. Any field changing invalidates the
+    passages and vectors written under it, which is what makes a partial
+    reindex safe: the old and new sets never mix in a query."""
+
+    extractor: str             # "docling" | "marker"
+    extractor_version: str     # library version AND pipeline: "2.7/vlm"
+    chunk_policy_version: str  # bumped whenever chunking changes
+    embedding_model_id: str
+
+
+@dataclass(frozen=True, slots=True)
 class Passage:
     passage_id: str
     corpus_id: str
     text: str              # what gets embedded, already contextualized
     heading_path: tuple[str, ...]
-    provenance: Provenance
+    provenance: tuple[Provenance, ...]  # primary first; merged peers add
+                                        # the locations they came from
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,6 +86,7 @@ class ScoredPassage:
 ## The ports
 
 ```python
+from collections.abc import Sequence
 from typing import Protocol
 
 
@@ -92,7 +113,7 @@ class PassageIndexPort(Protocol):
         corpus_id: str,
         passages: Sequence[Passage],
         vectors: Sequence[Sequence[float]],
-        model_id: str,
+        version: IndexVersion,
     ) -> None: ...
 
     def search(
@@ -101,7 +122,7 @@ class PassageIndexPort(Protocol):
         corpus_id: str,          # never optional, never defaulted
         query_text: str,
         query_vector: Sequence[float],
-        model_id: str,
+        version: IndexVersion,   # both legs of a hybrid query filter on it
         limit: int,
     ) -> Sequence[ScoredPassage]: ...
 
@@ -115,7 +136,10 @@ class RerankPort(Protocol):
 ```
 
 `corpus_id` is a required keyword on every index method. That is the
-tenancy invariant expressed where it cannot be skipped.
+tenancy invariant expressed where it cannot be skipped. `IndexVersion`
+travels with both writes and reads for the same reason: a reindex in
+flight writes a second set of passages beside the live one, and a query
+that does not name its version silently blends them.
 
 ## Chunk policy lives in the core
 
@@ -131,20 +155,35 @@ TokenCounter = Callable[[str], int]
 
 @dataclass(frozen=True, slots=True)
 class ChunkPolicy:
+    version: str = "v1"                 # goes into IndexVersion
     max_tokens: int = 512
     merge_peers: bool = True
-    include_heading_path: bool = True   # the contextualization decision
+    include_heading_path: bool = True    # the contextualization decision
 
     def passages(
         self, extraction: Extraction, corpus_id: str, count: TokenCounter
     ) -> Iterable[Passage]:
         """Group blocks into passages under max_tokens, never splitting a
-        table row, always prefixing the heading path when configured."""
+        table row, always prefixing the heading path when configured, and
+        carrying every merged block's Provenance onto the passage.
+
+        Body elided: this is the shape, not a drop-in implementation. The
+        repo writes it against its own extraction, and the contract suite
+        is what holds it to the invariants.
+        """
+        raise NotImplementedError
 ```
 
-An adapter may *implement* this by delegating to Docling's `HybridChunker`
-(see `docling.md`) -- the policy still owns the parameters and the
-invariants, so a Marker corpus and a Docling corpus chunk the same way.
+Bump `version` whenever any of those decisions change. A chunking change
+with the version unchanged leaves old and new passages indistinguishable
+in the index, which is the one reindex failure that cannot be detected
+after the fact.
+
+The policy may delegate the mechanics to Docling's `HybridChunker` (see
+`docling.md`) when the extraction came from Docling, and do the same
+grouping over Marker's `chunks` blocks when it did not. The parameters,
+the version, and the invariants stay here either way, which is what keeps
+a Marker corpus and a Docling corpus chunked the same.
 
 ## Adapter skeletons
 
@@ -196,9 +235,26 @@ class MarkerExtractor:
     """
 
     def __init__(self) -> None:
+        # Built once and held for the process lifetime -- rebuilding it
+        # per document reloads the model weights.
         self._converter = PdfConverter(
             artifact_dict=create_model_dict(),
             config={"output_format": "chunks"},
+        )
+
+    def extract(
+        self, *, document_id: str, revision: str, data: bytes, media_type: str
+    ) -> Extraction:
+        rendered = self._converter(_as_temp_file(data, media_type))
+        return Extraction(
+            document_id=document_id,
+            revision=revision,
+            extractor="marker",
+            extractor_version=marker.__version__,
+            blocks=tuple(
+                _block_from_chunk(chunk, document_id, revision)
+                for chunk in rendered.blocks
+            ),
         )
 ```
 
@@ -207,10 +263,15 @@ class MarkerExtractor:
 class HttpExtractor:
     """DocumentExtractionPort against a docling-serve or marker_server
     sidecar. The default shape for a non-Python app: same port, the
-    process boundary is the adapter's business."""
+    process boundary is the adapter's business. Body elided -- it posts
+    the bytes, polls the task, and maps the response to Extraction."""
 
     def __init__(self, base_url: str, client: HttpClient) -> None: ...
 ```
+
+The two in-process skeletons show the shape and the mapping seam
+(`_to_block`, `_block_from_chunk`); the mapping itself is the adapter's
+real work and is where the contract suite points.
 
 The fake that unit tests use is the fourth adapter, and it is the one most
 of the suite runs against:
@@ -226,16 +287,26 @@ class FakeExtractor:
 
 ## Composition root
 
-The only place that knows which extractor exists. One line changes when a
-hobby project turns commercial.
+The only place that knows which extractor exists. One setting changes
+when a hobby project turns commercial -- and an unknown value fails
+loudly rather than falling through to a default, because the default
+would be a license decision made by a typo.
 
 ```python
+EXTRACTORS: dict[str, Callable[[], DocumentExtractionPort]] = {
+    "docling": DoclingExtractor,
+    "marker": MarkerExtractor,
+}
+
+
 def build_ingestion(settings: Settings) -> IngestDocument:
-    extractor: DocumentExtractionPort = (
-        DoclingExtractor()
-        if settings.extractor == "docling"
-        else MarkerExtractor()
-    )
+    try:
+        extractor = EXTRACTORS[settings.extractor]()
+    except KeyError:
+        raise ConfigurationError(
+            f"unknown extractor {settings.extractor!r}; "
+            f"expected one of {sorted(EXTRACTORS)}"
+        ) from None
     return IngestDocument(
         extractor=extractor,
         embedder=OpenAICompatEmbedder(settings.embedding_model),

@@ -50,14 +50,20 @@ create table passages (
   corpus_id     uuid not null references corpora(id) on delete cascade,
   document_id   uuid not null references documents(id) on delete cascade,
   revision      text not null,
-  page          int  not null,
-  bbox          jsonb,
+  page          int,          -- paged media
+  bbox          jsonb,        -- paged media
+  anchor        text,         -- unpaged media: fragment, offset, timestamp
+  constraint passages_locatable check (page is not null or anchor is not null),
   heading_path  text[] not null default '{}',
   content       text not null,
+  -- 1536 is an EXAMPLE. The dimension must match the embedding model:
+  -- text-embedding-3-small is 1536, all-MiniLM-L6-v2 is 384. Getting it
+  -- wrong fails on the first insert.
   embedding     vector(1536) not null,
   model_id      text not null,
   extractor     text not null,
   extractor_ver text not null,
+  chunk_pol_ver text not null,
   content_fts   tsvector generated always as (to_tsvector('english', content)) stored,
   created_at    timestamptz not null default now()
 );
@@ -65,17 +71,40 @@ create table passages (
 create index on passages using hnsw (embedding vector_cosine_ops);
 create index on passages using gin (content_fts);
 create index on passages (corpus_id, document_id);
+
+-- The second enforcement point. The port's required corpus_id is the
+-- first; neither is sufficient alone.
+alter table passages enable row level security;
+
+create policy passages_by_membership on passages
+  for all
+  using (
+    exists (
+      select 1 from corpus_members m
+      where m.corpus_id = passages.corpus_id and m.user_id = auth.uid()
+    )
+  );
 ```
 
 Notes that are not optional:
 
 - `on delete cascade` from both corpus and document is how "deletion means
   deletion" stops being a promise and becomes a constraint.
-- `model_id`, `extractor`, and `extractor_ver` are the reindex key. Without
-  them, "what is stale" is guesswork.
-- Enable row-level security on this table and write the corpus policy. The
-  port's required `corpus_id` and the RLS policy are two independent
-  enforcement points for the same invariant; keep both.
+- The `passages_locatable` check is the provenance invariant in the
+  storage layer: a paged document fills `page` (and usually `bbox`), an
+  unpaged one -- HTML, email, a transcript -- fills `anchor`, and a row
+  with neither cannot be cited, so it cannot be stored.
+- `model_id`, `extractor`, `extractor_ver`, and `chunk_pol_ver` are the
+  reindex key -- the columns behind `IndexVersion` in `ports.md`. The
+  extractor version carries the pipeline too (`"2.7/vlm"`), because a
+  classical and a VLM run of the same library produce different text.
+  Without all four, "what is stale" is guesswork, and a chunking change
+  is the case that leaves no trace at all.
+- The policy above assumes a `corpus_members` table and Supabase's
+  `auth.uid()`; substitute the app's own membership rule, but do not ship
+  the table without one -- an un-policied table with RLS enabled is at
+  least closed, while an un-enabled one is open to every role that can
+  reach it.
 - The vector dimension is in the DDL, so a model with a different
   dimension is a migration. Under the expand-contract rule that means a
   new column or a new table, never an in-place type change.
@@ -89,44 +118,70 @@ score calibration between the two.
 
 ```sql
 create or replace function search_passages(
-  p_corpus_id uuid,
-  p_query     text,
-  p_embedding vector(1536),
-  p_model_id  text,
-  p_limit     int default 20
-) returns table (id uuid, content text, document_id uuid, page int, score float)
+  p_corpus_id    uuid,
+  p_query        text,
+  p_embedding    vector(1536),
+  p_model_id     text,
+  p_extractor    text,
+  p_extractor_ver text,
+  p_chunk_pol_ver text,
+  p_limit        int default 20
+) returns table (
+  id uuid, content text, document_id uuid, revision text,
+  page int, bbox jsonb, anchor text, heading_path text[], score float
+)
 language sql stable as $$
-  with semantic as (
-    select p.id, row_number() over (order by p.embedding <=> p_embedding) as rank
+  with live as (
+    select p.*
     from passages p
-    where p.corpus_id = p_corpus_id and p.model_id = p_model_id
-    order by p.embedding <=> p_embedding
+    where p.corpus_id     = p_corpus_id
+      and p.model_id      = p_model_id
+      and p.extractor     = p_extractor
+      and p.extractor_ver = p_extractor_ver
+      and p.chunk_pol_ver = p_chunk_pol_ver
+  ),
+  semantic as (
+    select l.id, row_number() over (order by l.embedding <=> p_embedding) as rank
+    from live l
+    order by l.embedding <=> p_embedding
     limit p_limit * 4
   ),
   lexical as (
-    select p.id,
-           row_number() over (
-             order by ts_rank_cd(p.content_fts, websearch_to_tsquery('english', p_query)) desc
-           ) as rank
-    from passages p
-    where p.corpus_id = p_corpus_id
-      and p.content_fts @@ websearch_to_tsquery('english', p_query)
-    limit p_limit * 4
+    select l.id,
+           row_number() over (order by l.rk desc) as rank
+    from (
+      select l.id,
+             ts_rank_cd(l.content_fts, websearch_to_tsquery('english', p_query)) as rk
+      from live l
+      where l.content_fts @@ websearch_to_tsquery('english', p_query)
+      order by rk desc
+      limit p_limit * 4
+    ) l
   )
-  select p.id, p.content, p.document_id, p.page,
-         coalesce(1.0 / (60 + s.rank), 0.0) + coalesce(1.0 / (60 + l.rank), 0.0) as score
+  select p.id, p.content, p.document_id, p.revision,
+         p.page, p.bbox, p.anchor, p.heading_path,
+         coalesce(1.0 / (60 + s.rank), 0.0) + coalesce(1.0 / (60 + x.rank), 0.0) as score
   from semantic s
-  full outer join lexical l using (id)
-  join passages p on p.id = coalesce(s.id, l.id)
+  full outer join lexical x using (id)
+  join live p on p.id = coalesce(s.id, x.id)
   order by score desc
   limit p_limit;
 $$;
 ```
 
+Three things in that query are not decoration. The `live` CTE applies the
+whole `IndexVersion` once, so **both** legs see the same index generation
+-- filtering only the semantic leg lets full-text search return
+old-generation passages during a reindex. The lexical leg carries an
+explicit `order by` inside its `limit`, since a `limit` without one takes
+an arbitrary subset and the window rank then describes whatever survived.
+And the projection returns revision, bbox, and heading path, because the
+port hands back a `Passage` and a citation cannot be reconstructed from
+content and a page number.
+
 The constant 60 is the standard RRF damping term; it is a tuning
 parameter, not a magic number, and the eval harness below is how it gets
-tuned. Filtering on `model_id` in the semantic leg is what keeps a
-half-finished reindex from poisoning results.
+tuned.
 
 ## Reranking
 
@@ -171,8 +226,10 @@ Retrieval quality is a test. Without it, every tuning change is a guess.
 
 ## Reindex
 
-Cheap to forget, expensive to discover. Reindex when the extractor version,
-the pipeline (classical vs VLM), the chunk policy, or the embedding model
-changes. Keep the original bytes so it is always possible, do it into a new
-model id rather than in place, and cut over when the eval says the new
-index is at least as good.
+Cheap to forget, expensive to discover. Reindex when any field of
+`IndexVersion` changes: the extractor, its version or pipeline (classical
+vs VLM), the chunk policy version, or the embedding model. Each one has a
+column, so a reindex writes a second generation beside the live one and
+queries keep naming the generation they want. Keep the original bytes so
+it is always possible, and cut over when the eval says the new generation
+is at least as good.

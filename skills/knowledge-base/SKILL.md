@@ -52,10 +52,12 @@ Three invariants. Each one is a defect when violated, not a preference:
   the extractor gives one). The product promise is "where did you get
   that"; an unanswerable citation is a broken promise, and provenance
   cannot be reconstructed after chunking.
-- **An embedding names its model.** Vectors from two models in one index
-  rank as noise and fail silently -- nothing errors, the answers just get
-  worse. The model id and the extractor version together are the reindex
-  key.
+- **An embedding names its index generation.** Vectors from two models in
+  one index rank as noise and fail silently -- nothing errors, the answers
+  just get worse. The reindex key is the extractor, its version and
+  pipeline, the chunk policy version, and the embedding model id, carried
+  together (`IndexVersion` in the ports reference) on every write and
+  every query.
 - **A retrieval names its corpus.** The tenancy filter is a **parameter of
   the port**, not something the caller remembers to pass. A caller who can
   forget it will, and that is a data breach rather than a bug.
@@ -70,7 +72,7 @@ knowledge base impossible to move off its first vendor.
 | Chunk policy: what a passage is, how big, what context rides with it | The extractor (Marker, Docling, a hosted API) |
 | Retrieval policy: k, hybrid weighting, filters, freshness | The OCR engine and the layout model |
 | Citation rules: what must be cited, what "not in the corpus" means | The embedding model and its client |
-| Reindex policy: which version changes force which rebuild | The vector store (pgvector, a vector database) |
+| Reindex policy: which version changes force which rebuild, and what a query's index generation is | The vector store (pgvector, a vector database) |
 | Ingestion lifecycle: the states a document moves through | The reranker, the LLM, the queue, the object store |
 
 The grep test applies unchanged: `docling`, `marker`, `openai`, a model id,
