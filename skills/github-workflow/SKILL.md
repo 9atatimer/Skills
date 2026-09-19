@@ -197,6 +197,46 @@ To avoid charging Copilot review cycles to the organization:
   merge
 - Close the Stage 1 PR
 
+### Stacked PRs (GitHub Stacks)
+
+When one change genuinely depends on another -- code then its docs, a
+retrospective then the todos it produced -- do not bundle them into one PR
+and do not pretend they are independent. Chain them: each PR targets the
+head branch of the one below, and the bottom targets the default branch.
+Then **register the chain as a stack**, so GitHub treats it as a unit,
+shows the position in each PR, and rebases the ones above when a lower one
+merges or changes.
+
+Public preview since 2026-07-30; `gh` 2.99 has no `stack` command, so drive
+it with `gh api`:
+
+```
+# list stacks; a PR also carries a "stack" object (number, size, position)
+gh api repos/OWNER/REPO/stacks
+gh api repos/OWNER/REPO/pulls/NUMBER --jq '.stack'
+
+# create from an ordered list, bottom first
+echo '{"pull_requests":[11,12]}' | gh api -X POST repos/OWNER/REPO/stacks --input -
+
+# append to the top of an existing stack
+echo '{"pull_requests":[21]}' | gh api -X POST repos/OWNER/REPO/stacks/STACK/add --input -
+
+# remove unmerged PRs (200 = stack survives, 204 = dissolved)
+gh api -X POST repos/OWNER/REPO/stacks/STACK/unstack --input -
+```
+
+Three traps met in practice (2026-09-18):
+
+- **`-f key=value` sends strings and the API rejects them** --
+  `"11" is not of type "integer"`. Pipe a JSON body through `--input -`.
+- **A merged PR cannot join a stack** (422). Register the stack when you
+  open the chain, not after someone starts merging it.
+- **GitHub may create a stack for you** when PRs already target each other,
+  so check `.stack` before creating one and appending instead.
+
+Merge bottom-up. Each PR still has to stand on its own: one story, its own
+reviewable diff.
+
 ### Landing via tedium (merge bot)
 
 Repos with the tedium App installed may land PRs through the merge bot (see
