@@ -200,6 +200,32 @@ We strictly define the layers of testing. Do not blur the lines between them.
 - One-off tests where building a full fake would be disproportionate
 - Never as the default strategy
 
+### A fake process must model the real one's lifetime
+
+A fake standing in for something long-lived -- a browser, a server, a
+daemon -- has to **stay running**. Faking its output is not enough. Code
+that supervises a process watches two things: what it says, and whether it
+is still there. A stub that records its arguments and exits immediately
+gets the first right and tells the second a lie: it looks exactly like a
+crash.
+
+This does not fail where you wrote it. Supervising code typically probes
+for readiness and then checks liveness, so an exiting stub leaves a window
+about one process-spawn wide in which the probe reads "not ready yet" and
+the liveness check then finds a corpse. On a fast machine the stub wins
+that race every time and the suite is green; on a loaded CI runner it
+loses it now and then. The tell is a flake that **moves**: a different
+case fails each run, all of them calling the same fixture. A defect in the
+code under test does not wander like that -- when the failures move and
+the fixture is common, suspect the fixture.
+
+The check, before writing any process double: what does the code under
+test observe about this thing besides its output? If "is it still alive"
+is on the list, the double needs a lifetime, and the test needs to reap it
+in teardown. Cover the other direction too, on purpose -- a process that
+dies without ever becoming ready is a real case, and it should be a test
+rather than an accident of scheduling.
+
 ### Test Isolation
 
 Every test must start with clean state:
