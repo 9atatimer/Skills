@@ -8,7 +8,11 @@ description: "Phase 6 of the SDLC: everything that stands between a pushed commi
 > **Purpose:** get a change from pushed to mergeable without lowering the
 > bar to do it.
 > **Exit gate:** every check green, every piece of feedback in a recorded
-> state, and a human (or tedium under a human's authorization) merges.
+> state, and the gates authorize the merge -- on an enrolled repo (a
+> `tedium.toml` on the default branch), that means `review-settled` green
+> on the head with no turn cap fired and no open `pr-todo` issue against
+> the PR, and tedium executes it; on any other repo, where no
+> `review-settled` status exists, a human authorizes and merges.
 
 A gate is anything that can say no. They run in a ladder, cheapest and
 earliest first, and each one exists because the later ones are more
@@ -20,7 +24,7 @@ expensive:
 | 2 | CI status checks | the PR | read the job log, fix, push |
 | 3 | ci.magic assertions | the PR | the assertion names the file and the violation |
 | 4 | Agentic review (Copilot by default) | the PR | the review-watch loop, below |
-| 5 | Human review and merge authorization | the PR | address or defer; never merge around it |
+| 5 | Review settled (Copilot; Codex where the repo requires it) and merge authorization by the gates: the repo's required check `gate` plus the `review-settled` status, both green on the head | the PR | address or defer; never merge around it. On a repo without `tedium.toml`, a human reviews and merges |
 
 **A red gate is a diagnosis prompt, not an obstacle.** The laws below
 govern every rung, and neither has an agent-accessible exception.
@@ -90,12 +94,29 @@ blocked by a gate is not authorization to move it.
 
 - **NEVER land code no one has reviewed. The target is 0% unreviewed
   code.** Every pushed commit must be looked at by a reviewer --
-  agentic (Copilot, codex) or human -- before the PR merges.
-- A push after the latest review reopens the question: those tail
-  commits are unreviewed until an agentic re-review runs (within the
-  per-reviewer turn cap) or a human explicitly looks at them. Never merge a PR
-  whose tail commits nobody has seen; when the cap has fired, say so
-  in the handoff so the human knows the tail is theirs to review.
+  agentic (Copilot, Codex) or human -- before the PR merges.
+- **`review-settled` is this law as a commit status.** On an enrolled
+  repo the status is green on a head iff every required reviewer's newest
+  review is on that head AND every review thread is resolved; the ruleset
+  requires it and tedium checks it before batching. A push after the
+  latest review turns it red on the new head: those tail commits are
+  unreviewed until an agentic re-review runs (within the per-reviewer
+  turn cap) or a human explicitly looks at them. Never merge a PR whose
+  tail commits nobody has seen; when the cap has fired, the remaining
+  feedback becomes `pr-todo` issues and the PR is handed to a human --
+  say so in the handoff so the human knows the tail is theirs to review.
+  There is no workflow trigger for a thread being resolved: the epilogue
+  comment (law 16) is what re-evaluates the status after the last thread
+  closes.
+- **A cap-fired `review-settled` is not a self-land license.** The
+  deferral procedure just above -- file `pr-todo` issues, reject each
+  remaining comment, resolve each thread -- satisfies both of
+  `review-settled`'s conditions without fixing anything and without a new
+  push, so the status can read green on a head whose reviewer feedback
+  was explicitly deferred to a human. The agent-initiated `tedium land`
+  preconditions (github-workflow skill, Landing via tedium) exclude this
+  case by name: no turn cap fired, no open `pr-todo` issue against the
+  PR.
 - **Feedback is never dropped. Acting on it is optional; recording it
   is not.** Every piece of reviewer feedback ends in exactly one of
   four recorded states: fixed (accept reply + SHA), rebutted (reject
@@ -182,9 +203,13 @@ was and was not verified against.
 
 ## Branch Protection and Required Checks
 
-For repos whose default branch is protected by required status checks
-(the repo lists the check names): PRs cannot merge until
-all checks pass. If a check fails:
+Every enrolled repo's default branch requires two checks on the PR head,
+and its agent instruction file names them (that file's "Landing via
+tedium" section): `gate`, the one always-present CI check that needs every suite
+in that repo, and `review-settled`. A new CI job goes into `gate`'s
+`needs`; a job outside it cannot block a landing, and a per-workflow
+`paths:` filter that makes a required check absent hangs the bot. PRs
+cannot merge until all required checks pass. If a check fails:
 
 - Read the job output:
    `gadmin github actions get-job --run <ID> --job <NAME>`
