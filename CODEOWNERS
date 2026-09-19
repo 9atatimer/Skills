@@ -1,0 +1,26 @@
+# CODEOWNERS -- read by tedium from main (use_codeowners = true in
+# tedium.toml): a PR touching these paths needs an approving review from
+# an owner before the bot will land it, and the ruleset's Copilot review
+# does not count. Last match wins, so broad patterns are listed before
+# the narrower ones nested inside them.
+
+# The merge rules themselves: what may land and how.
+tedium.toml                  @9atatimer
+CODEOWNERS                   @9atatimer
+.github/workflows/           @9atatimer
+
+# The executable payload: every agent in the fleet loads skills/ and
+# agents/ verbatim and calls mcp/ servers by this catalog, and
+# publicity-guard.mjs decides what of any of it may ever be published.
+# A change here changes what every agent does on its next session, the
+# same stakes as a change to the merge rules above.
+agents/                      @9atatimer
+mcp/                         @9atatimer
+skills/                      @9atatimer
+scripts/publicity-guard.mjs  @9atatimer
+
+# Narrower than skills/ above; kept explicit because these three are the
+# merge rules themselves, not just payload.
+skills/github-workflow/      @9atatimer
+skills/gates/                @9atatimer
+skills/sdlc/                 @9atatimer
