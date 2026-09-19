@@ -8,9 +8,11 @@ description: "Phase 6 of the SDLC: everything that stands between a pushed commi
 > **Purpose:** get a change from pushed to mergeable without lowering the
 > bar to do it.
 > **Exit gate:** every check green, every piece of feedback in a recorded
-> state, `review-settled` green on the head, and the gates authorize the
-> merge -- tedium executes it on an enrolled repo (a `tedium.toml` on the
-> default branch), a human on any other.
+> state, and the gates authorize the merge -- on an enrolled repo (a
+> `tedium.toml` on the default branch), that means `review-settled` green
+> on the head with no turn cap fired and no open `pr-todo` issue against
+> the PR, and tedium executes it; on any other repo, where no
+> `review-settled` status exists, a human authorizes and merges.
 
 A gate is anything that can say no. They run in a ladder, cheapest and
 earliest first, and each one exists because the later ones are more
@@ -94,7 +96,7 @@ blocked by a gate is not authorization to move it.
   code.** Every pushed commit must be looked at by a reviewer --
   agentic (Copilot, Codex) or human -- before the PR merges.
 - **`review-settled` is this law as a commit status.** On an enrolled
-  repo the status is green on a head iff the required reviewer's newest
+  repo the status is green on a head iff every required reviewer's newest
   review is on that head AND every review thread is resolved; the ruleset
   requires it and tedium checks it before batching. A push after the
   latest review turns it red on the new head: those tail commits are
@@ -106,6 +108,15 @@ blocked by a gate is not authorization to move it.
   There is no workflow trigger for a thread being resolved: the epilogue
   comment (law 16) is what re-evaluates the status after the last thread
   closes.
+- **A cap-fired `review-settled` is not a self-land license.** The
+  deferral procedure just above -- file `pr-todo` issues, reject each
+  remaining comment, resolve each thread -- satisfies both of
+  `review-settled`'s conditions without fixing anything and without a new
+  push, so the status can read green on a head whose reviewer feedback
+  was explicitly deferred to a human. The agent-initiated `tedium land`
+  preconditions (github-workflow skill, Landing via tedium) exclude this
+  case by name: no turn cap fired, no open `pr-todo` issue against the
+  PR.
 - **Feedback is never dropped. Acting on it is optional; recording it
   is not.** Every piece of reviewer feedback ends in exactly one of
   four recorded states: fixed (accept reply + SHA), rebutted (reject

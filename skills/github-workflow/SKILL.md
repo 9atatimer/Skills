@@ -162,9 +162,10 @@ or close/re-open PRs.
    auto-re-review on `synchronize`). Repeat: address feedback, push,
    re-request, wait -- subject to the per-reviewer turn cap in the gates
    skill.
-- **Human review:** once AI review cycles settle, the human takes over for
-   final review and merge (directly, or by commanding tedium -- see Landing
-   via tedium below). Do NOT create a second "final" PR.
+- **Landing:** once AI review cycles settle, see Landing via tedium below
+   for how the PR merges -- an enrolled repo may land through the gates
+   themselves; any other repo has the human take over for final review and
+   merge. Do NOT create a second "final" PR.
 
 ### Two-Stage PR Workflow (fork + upstream)
 
@@ -186,12 +187,14 @@ To avoid charging Copilot review cycles to the organization:
 > satisfies the cost-control rationale. There is no `[WIP]` title prefix in
 > this flow; the separate Stage-2 PR is the production signal.
 
-**Stage 2: Final PR to upstream (for human review and merge)**
+**Stage 2: Final PR to upstream (for review and landing)**
 
 - Once Copilot review is complete, create a new PR from the same branch
 - Target the upstream default branch
 - This is the production PR
-- Human reviews and merges
+- Landing: see Landing via tedium below -- an enrolled repo may land
+  through the gates themselves; any other repo has the human review and
+  merge
 - Close the Stage 1 PR
 
 ### Landing via tedium (merge bot)
@@ -204,15 +207,27 @@ the required checks. A repo WITHOUT a `tedium.toml` is still human-merge:
 there an agent never merges and never comments `tedium land`.
 
 On an enrolled repo an agent MAY comment `tedium land` on its own PR, and
-only when all four hold on the current head:
+only when all six hold on the current head:
 
 - the repo has tedium enabled (the `tedium.toml` is present on the
   default branch and the repo's agent instruction file says so);
 - `gate`, the repo's required CI check, is green on the head;
-- `review-settled`, the review status, is green on the head -- the
+- `review-settled`, the review status, is green on the head -- every
   required reviewer's newest review is on this commit and every review
   thread is resolved (the gates skill's Zero Unreviewed Code, made
   mechanical);
+- no per-reviewer turn cap has fired on this PR, and no open `pr-todo`
+  issue references it. A cap-fired PR can still show a green
+  `review-settled`: the deferral procedure (file `pr-todo` issues, reject
+  each remaining comment, resolve each thread) satisfies both of that
+  status's conditions without fixing anything and without a new push, so
+  this is checked separately and never assumed from the status alone;
+- every path CODEOWNERS names on this PR's diff has an approving review
+  from its owner on the head commit. tedium enforces this independently
+  of `gate` and `review-settled` (a bors-style CodeOwners port,
+  `packages/naatm-tedium/src/command/codeOwners.ts` in template-tools),
+  so a repo with `use_codeowners = true` blocks landing on it even when
+  the other conditions are green;
 - no `hold` label is on the PR.
 
 Anything short of that is not "almost": a red `review-settled` means a
