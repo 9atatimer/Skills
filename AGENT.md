@@ -44,15 +44,28 @@ PRs land through the tedium merge bot; the rules are in `tedium.toml` on
   the fleet's GitHub terraform is applied. A PR from a fork runs with a
   read-only token and never gets a `review-settled` status: fork PRs are
   human-merge.
+- **`review-settled` cannot report yet -- nothing can land here until this
+  clears.** `.github/workflows/review-settled.yml` calls the reusable
+  workflow at `9atatimer/tds-utils/.github/workflows/review-settled.yml@master`,
+  which is not on tds-utils `main` yet: it ships in
+  `9atatimer/tds-utils#293`, still open (confirmed: fetching that path at
+  `ref=master` from the GitHub API 404s, and every `review-settled` run on
+  this repo's own PRs fails immediately, `gh run list -R 9atatimer/Skills
+  --workflow review-settled.yml`). Since `tedium.toml` sets `pr_status =
+  ["review-settled"]`, tedium can never batch a PR here until #293 merges
+  to tds-utils `main`. Follow-up once it merges: pin this workflow's
+  `uses:` (and pass `tools_ref:`) to #293's merge commit rather than
+  trusting `@master` to stay green.
 - **`gate` is the only name to add to.** A new CI job goes into `gate`'s
   `needs`; a job outside it cannot block a landing.
 - **One PR per batch** (`max_batch_size = 1`): each landing is a publish.
 - **`hold` label** keeps a PR out of the queue. `tedium dryrun` builds it
   on `tedium/try` without publishing anything.
-- **CODEOWNERS** (`tedium.toml`, `CODEOWNERS`, `.github/workflows/`, and
-  the `github-workflow`, `gates` and `sdlc` skills -- the merge rules
-  themselves) need a human owner's approval before tedium lands a change
-  to them.
+- **CODEOWNERS** covers the merge rules themselves (`tedium.toml`,
+  `CODEOWNERS`, `.github/workflows/`) and the executable payload every
+  agent in the fleet loads and runs (`skills/`, `agents/`, `mcp/`,
+  `scripts/publicity-guard.mjs`); a PR touching any of it needs a human
+  owner's approval before tedium lands it.
 - **`tedium/merge` and `tedium/try` are the bot's build branches**: never
   protect them, never commit to them, never base work on them.
 - Second repo in the go-live rollout, after tds-utils.
