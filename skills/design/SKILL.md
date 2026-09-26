@@ -113,10 +113,16 @@ The rules the table must satisfy:
   what makes the use cases composable: one can call another, a test can
   drive one with no handler in front, and the CLI, the HTTP route, and the
   worker are three thin entry points over the same surface.
-- **Ports arrive as keyword dependencies**, after the values. The ports
-  column must name only seams from this document's seam list (phase 3);
-  a port that appears here and nowhere else is an axis of change nobody
-  named.
+- **Several rows may share one use case.** A happy path and its error
+  paths are scenarios of the same function, as the example shows; they
+  get separate rows because each is a separate kept test. A row whose
+  inputs or outputs differ is a different use case.
+- **Ports arrive as keyword dependencies**, after the values. In phase 2
+  the ports column names the *axis of change* the behavior depends on
+  ("the completion vendor", "the counter store"); phase 3 replaces each
+  with the seam it chose, and the column must then name only seams from
+  this document's seam list. A port that appears here and nowhere else is
+  an axis of change nobody named.
 - **Every noun is in the ubiquitous language.** If the signature says
   `Verdict`, the Data Model section defines `Verdict` and the code spells
   it `Verdict`. One concept, one name, everywhere.

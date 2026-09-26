@@ -98,15 +98,21 @@ Seams answer where the core meets the world. They say nothing about the
 inside of the core, and a change whose only architectural output is a seam
 list gets a hexagon: a domain, some ports, and the workflow smeared across
 whatever calls them. The second output of this phase is the **module
-map**: each unit of the change assigned to one of the three layers, and
-each behavior in the design's Behaviors and Interfaces table traced to its
-use case.
+map**: each unit of the change -- core and edge alike -- assigned to one
+layer, and each row in the design's Behaviors and Interfaces table traced
+to its use case.
 
 | Layer | Holds | Rule |
 |---|---|---|
 | domain | rules, values, invariants, named policies | pure; no port reaches it |
-| application | one use case per behavior in the design's table | ports as keyword dependencies; domain values in and out |
+| application | the use cases, one per behavior in the design's table | ports as keyword dependencies; domain values in and out |
+| ports | one interface per seam in the seam list | owned by the core; imports only domain types |
+| adapters | one implementation per port per mechanism | the edge: the only layer that imports a vendor, `fs`, `fetch`, or `process.env` |
 | composition root | the container: one per runtime (CLI, server, worker) | the only code that names a concrete adapter |
+
+The first two rows and the last are the layers *inside* the core that the
+seam list does not describe; ports and adapters are the seam list itself,
+placed. A unit that fits no row is a unit whose job is unclear.
 
 The map is small -- a table or a tree of module names with a layer beside
 each -- and it is judged by the coding skill's Trace, Purity, and Wiring

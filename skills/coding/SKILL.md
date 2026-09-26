@@ -70,7 +70,7 @@ Run these against any change. They are checks, not opinions, and **a change pass
 
 | Test | Question | Fail means |
 |---|---|---|
-| **Trace test** | Does every behavior in the design's Behaviors and Interfaces table map to exactly one application function, with the signature the table gives it? | A behavior with no home (logic in a handler or a helper), or one function doing two behaviors |
+| **Trace test** | Does every row in the design's Behaviors and Interfaces table map to exactly one application function, with the signature the table gives it? Several rows may share one function -- a happy path and its error paths are scenarios of the same use case | A row with no home (logic in a handler or a helper), or one row's behavior split across two functions |
 | **Purity test** | Does any domain function take a port, a callback that does I/O, or a clock? | Workflow leaked into the rules -- lift the orchestration to the application layer and pass the domain a value |
 | **Wiring test** | Is there exactly one place per runtime (CLI, worker, server) that names concrete adapters, and can it be built with every adapter faked? | Wiring scattered into use cases or handlers; or a use case that constructs its own dependencies |
 
