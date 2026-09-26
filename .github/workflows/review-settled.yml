@@ -1,10 +1,18 @@
 # review-settled.yml -- post the `review-settled` commit status on every
-# PR head: green iff Copilot's newest review is on the current head and
-# every review thread is resolved. The main ruleset requires it; tedium
-# checks it in `pr_status` (tedium.toml) before batching a PR.
+# PR head: green iff the gate reviewer's newest review is on the current
+# head and every review thread is resolved. The main ruleset requires it;
+# tedium checks it in `pr_status` (tedium.toml) before batching a PR.
+#
+# The gate reviewer is Codex (`reviewers:` below; every login listed must
+# have reviewed, so list one). Copilot is out of quota on this account and
+# the self-adversarial review in the gates skill does the reviewing; the
+# bot is the mechanical gate over an already-reviewed diff. Summon it
+# with a PR comment: "@codex review".
 #
 # The checker is the reusable workflow in the public tds-utils repo
-# (9atatimer/tds-utils .github/workflows/review-settled.yml). GitHub has
+# (9atatimer/tds-utils .github/workflows/review-settled.yml), pinned to a
+# commit of master rather than trusting `@master` to stay green; bump
+# `uses:` and `tools_ref:` together to move it. GitHub has
 # no workflow trigger for a thread being resolved, so this fires on the
 # review, on replies in threads, on PR comments (the epilogue posted
 # after resolving), on pushes, and by hand.
@@ -45,11 +53,12 @@ jobs:
     if: >-
       (github.event_name != 'issue_comment' || github.event.issue.pull_request != null)
       && (github.event.pull_request == null || github.event.pull_request.head.repo.full_name == github.repository)
-    uses: 9atatimer/tds-utils/.github/workflows/review-settled.yml@master
+    uses: 9atatimer/tds-utils/.github/workflows/review-settled.yml@020aaf53d8c87830ad26491a089ff692cf846bd0
     permissions:
       statuses: write
       pull-requests: read
       contents: read
     with:
-      reviewers: copilot-pull-request-reviewer
+      reviewers: chatgpt-codex-connector
+      tools_ref: 020aaf53d8c87830ad26491a089ff692cf846bd0
       pr: ${{ github.event.pull_request.number || github.event.issue.number || inputs.pr }}

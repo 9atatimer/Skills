@@ -11,6 +11,8 @@ import {
   parseTermList,
   scanText,
   checkSkillPaths,
+  isAsciiProsePath,
+  scanAscii,
 } from "../scripts/publicity-guard.mjs";
 
 test("parseTermList drops comments, blanks, and case", () => {
@@ -66,4 +68,26 @@ test("checkSkillPaths blocks a skill directory missing from the manifest", () =>
 
 test("checkSkillPaths ignores top-level files under skills/", () => {
   assert.deepEqual(checkSkillPaths(["skills/README.md"], "anything"), []);
+});
+
+
+test("isAsciiProsePath covers payload markdown and root docs only", () => {
+  assert.equal(isAsciiProsePath("skills/x/SKILL.md"), true);
+  assert.equal(isAsciiProsePath("agents/sre.md"), true);
+  assert.equal(isAsciiProsePath("README.md"), true);
+  assert.equal(isAsciiProsePath("docs/arch/topo.html"), false);
+  assert.equal(isAsciiProsePath("evals/README.md"), false);
+  assert.equal(isAsciiProsePath("scripts/x.mjs"), false);
+});
+
+test("scanAscii names the first offending code point per line", () => {
+  const hits = scanAscii("skills/x/SKILL.md", "fine\nbad \u2014 dash \u2026\nok\n");
+  assert.equal(hits.length, 1);
+  assert.equal(hits[0].line, 2);
+  assert.match(hits[0].term, /^U\+2014/);
+  assert.equal(hits[0].category, "non-ASCII in prose (sdlc law 12)");
+});
+
+test("scanAscii passes plain ASCII including -- and ->", () => {
+  assert.deepEqual(scanAscii("agents/x.md", "a -- b -> c ... 'd'\n"), []);
 });
