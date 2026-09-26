@@ -268,6 +268,12 @@ it does internally.
 - When a credential is rotated or re-homed, update the 1Password item in
   place (keep the same item ID) rather than minting a sibling item, so
   every op:// consumer keeps working without a sweep.
+- Deploy tools run on project-local state (coding skill, section 6):
+  `cfw` for wrangler, the tool's config variable otherwise. A stored
+  login in `$HOME` silently governs every project on the machine -- an
+  expired `~/.wrangler` login once vetoed a container deploy although
+  `CLOUDFLARE_API_TOKEN` was set (template-tools#699). Auth is the token
+  from 1Password, per run; never `wrangler login`.
 
 ## Exit gate
 
