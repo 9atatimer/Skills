@@ -19,7 +19,7 @@ description: "Phase 3 and 7a of the SDLC: naming the seams and drawing the modul
 | Describes | what we intend to build | what is deployed right now |
 | Truth kind | aspirational | factual |
 | Lifecycle | **body frozen at APPROVED** | **living, never frozen** |
-| Written by | the designer, before code | the releaser, after shipping |
+| Written by | the design author, before code | the releaser, after shipping |
 | Wrong when | rewritten to match the code | contains anything not yet shipped |
 
 **That opposition is why they are separate trees.** They fail in opposite
