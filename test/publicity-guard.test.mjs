@@ -88,6 +88,14 @@ test("scanAscii names the first offending code point per line", () => {
   assert.equal(hits[0].category, "non-ASCII in prose (sdlc law 12)");
 });
 
+test("scanAscii draws the line at 0x7F, not at Latin-1", () => {
+  // A regex widened to [^\x00-\xff] would admit accented Latin text and
+  // still pass the em-dash case above; this pins the boundary.
+  const hits = scanAscii("skills/x/SKILL.md", "caf\u00e9\n");
+  assert.equal(hits.length, 1);
+  assert.match(hits[0].term, /^U\+00E9/);
+});
+
 test("scanAscii passes plain ASCII including -- and ->", () => {
   assert.deepEqual(scanAscii("agents/x.md", "a -- b -> c ... 'd'\n"), []);
 });

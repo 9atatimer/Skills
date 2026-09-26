@@ -137,8 +137,9 @@ opinion on a diff you wrote, and especially before a human is asked to
 spend attention on it.
 
 This pass is where the reviewing happens. The agentic reviewer bot that
-follows (Codex, Copilot) is the mechanical gate over a diff that has
-already been through it, not the first pair of eyes.
+follows (Copilot; Codex only when a human summons it -- Reviewer
+Selection below) is the mechanical gate over a diff that has already
+been through it, not the first pair of eyes.
 
 **Running it:**
 
@@ -163,9 +164,11 @@ already been through it, not the first pair of eyes.
 - **Defend what you disagree with; do not be a pushover.** A reviewer
   finding is evidence, not authority, and a lesser model is wrong at
   least as often as you are. Where you disagree, the finding goes to the
-  human with your rebuttal beside it -- what the reviewer claimed, why
-  you think the code is right as written, what you would need to see to
-  change your mind -- and the human judges. Folding on every finding to
+  human in the epilogue below, with your rebuttal beside it -- what the
+  reviewer claimed, why you think the code is right as written, what you
+  would need to see to change your mind -- and the human judges. Nothing
+  here goes through the per-thread reply machinery of Automated Review
+  Response: these reviewers post no threads. Folding on every finding to
   make the table green is the failure mode this rule exists to name.
 
 **The epilogue (always):**
@@ -176,8 +179,8 @@ already been through it, not the first pair of eyes.
   PR, post ONE summary comment on that PR alongside the fix commits:
   what was reviewed (commits, paths), each reviewer's persona and model
   and its verdict, the collated findings with their dispositions (fixed
-  with the SHA, rebutted with the reason and put to the human), and
-  which tests the reviewers ran. The epilogue is the
+  with the SHA, or rebutted with the reason, awaiting the human's
+  judgement), and which tests the reviewers ran. The epilogue is the
   review's durable record; the fix alone is not, because a later
   reader cannot reconstruct the why from a diff.
 - Post the epilogue WITH the fix, not instead of it -- one comment
@@ -187,9 +190,9 @@ already been through it, not the first pair of eyes.
 **What it does not buy:**
 
 - Self-adversarial review NEVER satisfies Zero Unreviewed Code. The
-  sub-agent runs in your session, on your context, at your direction;
-  it is a cheap correction for author blindness, not an independent
-  reviewer. The agentic and human review rungs run unchanged, and the
+  sub-agents run in your session, on your context, at your direction;
+  they are a cheap correction for author blindness, not independent
+  reviewers. The agentic and human review rungs run unchanged, and the
   epilogue exists partly so those reviewers can see what was already
   caught and fixed.
 

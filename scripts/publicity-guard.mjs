@@ -101,6 +101,9 @@ export function isAsciiProsePath(relpath) {
 }
 
 export function scanAscii(relpath, text) {
+  // One finding per offending line (the first code point), not one per
+  // character: the fix is "re-type this line", and a line-level report
+  // keeps the output the size of the problem.
   const findings = [];
   const lines = text.split("\n");
   for (let i = 0; i < lines.length; i++) {

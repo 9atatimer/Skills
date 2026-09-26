@@ -45,16 +45,15 @@ PRs land through the tedium merge bot; the rules are in `tedium.toml` on
   the fleet's GitHub terraform is applied. A PR from a fork runs with a
   read-only token and never gets a `review-settled` status: fork PRs are
   human-merge.
-- **Codex is the gate reviewer; Copilot is not.** Copilot is out of
-  quota on this account, so `.github/workflows/review-settled.yml` lists
-  `chatgpt-codex-connector` as the one reviewer whose newest review must
-  sit on the head (the reusable checker requires every listed login, so
-  it lists one). Summon it with a PR comment, `@codex review`, once the
-  self-adversarial review (the gates skill) is done and its epilogue is
-  posted; never re-summon it for a push that only answers its own
-  findings until those are fixed and resolved. The checker is pinned by
-  commit (`uses:` and `tools_ref:` carry the same tds-utils sha); bump
-  both together.
+- **Copilot is the gate reviewer; Codex is human-summoned only.**
+  `.github/workflows/review-settled.yml` lists `copilot-pull-request-reviewer`
+  as the reviewer whose newest review must sit on the head. The reusable
+  checker requires every listed login, so it cannot express "Copilot or
+  Codex"; while Copilot is out of quota the status stays red and PRs are
+  human-merge. An agent never posts `@codex review` (the gates skill,
+  Reviewer Selection); Copilot is the only reviewer an agent may summon.
+  The checker is pinned by commit (`uses:` and `tools_ref:` carry the
+  same tds-utils sha); bump both together.
 - **Prose is scanned for ASCII at commit time.** The publicity guard
   refuses any byte over 0x7F in markdown under `skills/`, `agents/`, and
   the repo root. Law 12 says it up front; the guard is what makes it
