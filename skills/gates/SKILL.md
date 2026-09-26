@@ -201,6 +201,14 @@ When a sentry was needed, say so in the session (which checks, why, and
 what you ran manually to compensate) so the human knows what the commit
 was and was not verified against.
 
+**A fresh worktree runs no hooks at all.** husky resolves its hooks from the
+checkout's `node_modules`; a `git worktree add` with no `npm ci` has none,
+so every commit there skips the whole suite -- silently, with no error and
+no sentry. Observed on template-tools PR #700: its new pre-commit guard
+never ran on its own commits, and would have blocked its own test file.
+Run `npm ci` in a new worktree before the first commit, or run the checks
+the hook would have run by hand and say so.
+
 ## Branch Protection and Required Checks
 
 Every enrolled repo's default branch requires two checks on the PR head,

@@ -234,6 +234,14 @@ Every test must start with clean state:
 - Temp directories auto-cleaned by the test framework
 - No global state mutation -- if unavoidable, restore in teardown
 
+### A guard needs an accept case
+
+A check that refuses things needs a test that valid input gets through. A
+suite made only of refusal cases stays green when the check refuses
+everything: template-base PR #86's state-guard suite passed 10/10 with the
+path check mutated to never match. Once per new guard, mutate it both ways
+-- refuse all, accept all -- and confirm the suite goes red each time.
+
 ---
 
 # Test Development Workflow
