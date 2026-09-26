@@ -260,6 +260,17 @@ Tests exist to document and protect *what the system does*, not *how it does it*
 * Do not add speculative features or abstractions (see the YAGNI counter-warning in Section 1.4)
 * Follow existing project conventions and patterns where applicable
 * Do not refactor unrelated areas unless explicitly required
+* **Tool state is project-local -- each project is its own silo.** A
+  CLI's mutable state (auth session, config, logs, cached credentials)
+  lives under the project, never in `$HOME` or the keychain. Set the
+  tool's own config variable to `<project>/.state/<tool>` (`DOCKER_CONFIG`,
+  `CLOUDSDK_CONFIG`, `AWS_CONFIG_FILE`, `UV_PROJECT_ENVIRONMENT`); a tool
+  with none runs through a per-process runner (wrangler -> `cfw`,
+  `@nine-at-a-time-media/deploy`). Never `wrangler login`, a keychain
+  `credsStore`, or a project-wide `HOME` / `XDG_CONFIG_HOME` export (it
+  moves gh, git and op too). Immutable toolchain installs (`~/.nvm`, the
+  npm cache) may be shared. Authority: template-tools
+  `docs/design/DESIGN.HERMETIC-TOOL-STATE.md`.
 
 ---
 
