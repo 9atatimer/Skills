@@ -202,6 +202,13 @@ skill.
     a resource by hand to unblock a deploy. A move or refactor is proven
     by an empty plan. -> the iac skill (and infra-credentials,
     cloudflare-hosting, gcp-ops, aws-ops for the surface in play)
+19. **Name the kind: `PR#1234`, `Issue#4321` -- never a bare `#1234`.**
+    Humans cannot tell a PR from an Issue by its number; GitHub numbers
+    both from one sequence. Every number you write names its kind, in
+    chat, commits, PR and issue bodies, review replies, and plan files.
+    Another repo's number also names the repo: `quillmap PR#392`. The
+    one exception is a closing keyword (`Closes #N`), which GitHub only
+    parses bare. -> the github-workflow skill
 
 ## The Eight Phases
 

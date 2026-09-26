@@ -54,7 +54,7 @@ gh repo view "$parent" --json defaultBranchRef --jq .defaultBranchRef.name
 `gh repo clone <fork>` silently sets a remote named `upstream` pointing at
 the parent. A follow-on `git remote add upstream <url>` then fails with
 "remote upstream already exists" -- confirmed 2026-09-07,
-`9atatimer/Skills` PR #18. Either rely on the auto-added remote (check its
+`9atatimer/Skills` PR#18. Either rely on the auto-added remote (check its
 URL matches what you expect first) or clone with plain `git clone` and add
 `upstream` yourself; do not do both.
 
@@ -297,21 +297,24 @@ body; do not go hunting for one.
 
 ## Naming issues and PRs
 
-**Always say which kind a number is: `issue #458`, `PR #459`.** Never a bare
-`#458`.
+**Always say which kind a number is: `Issue#458`, `PR#459`.** Never a bare
+`#458`. Humans do not know the difference, and this is the sdlc skill's
+law 19.
 
 GitHub renders both identically and numbers them from one shared sequence, so
 a bare `#N` tells the reader nothing about whether it points at a defect
 record or a diff -- and those want opposite reactions. "Blocked on #71" is
-unreadable; "blocked on PR #71" says wait for a merge, "blocked on issue #71"
+unreadable; "blocked on PR#71" says wait for a merge, "blocked on Issue#71"
 says someone has to decide something.
 
 This holds everywhere a number appears: commit messages, PR bodies, issue
-bodies, review replies, `TODO_PLAN.md`, and chat with the human.
+bodies, review replies, `TODO_PLAN.md`, and chat with the human. In chat
+and rendered markdown, make it a link: `[PR#459](https://github.com/owner/repo/pull/459)`.
 
-**Cross-repo references carry the repo:** `template-base#71`, or the full
-`owner/repo#71` when the org is not obvious from context. A bare number is
-always read as this repo.
+**Cross-repo references carry the repo and the kind:** `template-base PR#71`,
+or `owner/template-base Issue#71` when the org is not obvious from context.
+`template-base#71` is still bare -- it names the repo but not the kind. A
+reference without a repo is always read as this repo.
 
 **Exception: closing keywords take the bare form.** GitHub's
 auto-close parser recognizes only `Closes #N`; `Closes issue #N` is
