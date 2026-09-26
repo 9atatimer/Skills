@@ -13,6 +13,11 @@
 //   node scripts/publicity-guard.mjs --push     # outgoing commits, ranges on stdin
 //   node scripts/publicity-guard.mjs --all      # every tracked file (CI / audit)
 //
+// A third check rides along: prose under skills/, agents/ and the root
+// markdown is ASCII only (the sdlc skill's law 12). The law tells an
+// agent up front; this is the scanner that makes it mechanical, so no
+// review cycle is spent on a stray em-dash or curly quote.
+//
 // Zero dependencies, like everything else in this package. False positive?
 // Rename or reword if you can; only a repo owner widens ALLOW_TERMS.
 
@@ -84,6 +89,38 @@ export function scanText(relpath, text, terms, category) {
   return findings;
 }
 
+// Prose that must be ASCII: the payload's markdown and the root docs.
+// Diagrams live in .html (the architecture skill), which is not scanned.
+export function isAsciiProsePath(relpath) {
+  if (!relpath.endsWith(".md")) return false;
+  return (
+    relpath.startsWith("skills/") ||
+    relpath.startsWith("agents/") ||
+    !relpath.includes("/")
+  );
+}
+
+export function scanAscii(relpath, text) {
+  // One finding per offending line (the first code point), not one per
+  // character: the fix is "re-type this line", and a line-level report
+  // keeps the output the size of the problem.
+  const findings = [];
+  const lines = text.split("\n");
+  for (let i = 0; i < lines.length; i++) {
+    const m = /[^\x00-\x7f]/u.exec(lines[i]);
+    if (m) {
+      const cp = m[0].codePointAt(0).toString(16).padStart(4, "0");
+      findings.push({
+        path: relpath,
+        line: i + 1,
+        term: `U+${cp.toUpperCase()} ${m[0]}`,
+        category: "non-ASCII in prose (sdlc law 12)",
+      });
+    }
+  }
+  return findings;
+}
+
 export function checkSkillPaths(relpaths, manifestText) {
   const allowed = new Set(parseTermList(manifestText));
   const findings = [];
@@ -140,10 +177,13 @@ function collectTargets(mode, stdinText) {
     return targets;
   }
   if (mode === "--all") {
+    // The index, not HEAD: ls-files lists index paths, and a staged rename
+    // or add is in the index before it is in HEAD. On a CI checkout the
+    // two are identical.
     return git("ls-files", "-z")
       .split("\0")
       .filter(Boolean)
-      .map((p) => [p, `HEAD:${p}`]);
+      .map((p) => [p, `:${p}`]);
   }
   throw new Error(`usage: publicity-guard.mjs --staged | --push | --all`);
 }
@@ -159,7 +199,7 @@ function manifestAt(mode, targets) {
   // skill and listing it in one commit passes, and a commit that forgets
   // the listing fails even if the working tree has it.
   const spec =
-    mode === "--staged"
+    mode === "--staged" || mode === "--all"
       ? `:${MANIFEST_NAME}`
       : `${(targets[0] ?? [null, "HEAD:"])[1].split(":")[0] || "HEAD"}:${MANIFEST_NAME}`;
   try {
@@ -192,6 +232,7 @@ function main() {
     const text = contentAt(revSpec);
     findings.push(...scanText(relpath, text ?? "", obscene, "obscenity (LDNOOBW)"));
     findings.push(...scanText(relpath, text ?? "", WORK_TERMS, "work/IP marker"));
+    if (isAsciiProsePath(relpath)) findings.push(...scanAscii(relpath, text ?? ""));
   }
 
   if (findings.length === 0) return 0;

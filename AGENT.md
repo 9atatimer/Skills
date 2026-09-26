@@ -38,24 +38,27 @@ PRs land through the tedium merge bot; the rules are in `tedium.toml` on
   job) must be green on the PR head AND on the staging commit tedium
   builds on `tedium/merge` (`status` in `tedium.toml`). `review-settled`
   (the commit status from `.github/workflows/review-settled.yml`:
-  Copilot's newest review is on the head and every thread is resolved)
+  the gate reviewer's newest review is on the head and every thread is
+  resolved)
   must be green on the PR head only (`pr_status`); the staging commit
   never carries it. The `main` ruleset requires both on the PR head once
   the fleet's GitHub terraform is applied. A PR from a fork runs with a
   read-only token and never gets a `review-settled` status: fork PRs are
   human-merge.
-- **`review-settled` cannot report yet -- nothing can land here until this
-  clears.** `.github/workflows/review-settled.yml` calls the reusable
-  workflow at `9atatimer/tds-utils/.github/workflows/review-settled.yml@master`,
-  which is not on tds-utils `main` yet: it ships in
-  `9atatimer/tds-utils#293`, still open (confirmed: fetching that path at
-  `ref=master` from the GitHub API 404s, and every `review-settled` run on
-  this repo's own PRs fails immediately, `gh run list -R 9atatimer/Skills
-  --workflow review-settled.yml`). Since `tedium.toml` sets `pr_status =
-  ["review-settled"]`, tedium can never batch a PR here until #293 merges
-  to tds-utils `main`. Follow-up once it merges: pin this workflow's
-  `uses:` (and pass `tools_ref:`) to #293's merge commit rather than
-  trusting `@master` to stay green.
+- **Copilot is the gate reviewer; Codex is human-summoned only.**
+  `.github/workflows/review-settled.yml` lists `copilot-pull-request-reviewer`
+  as the reviewer whose newest review must sit on the head. The reusable
+  checker requires every listed login, so it cannot express "Copilot or
+  Codex"; while Copilot is out of quota the status stays red and PRs are
+  human-merge. An agent never posts `@codex review` (the gates skill,
+  Reviewer Selection); Copilot is the only reviewer an agent may summon.
+  The checker is pinned by commit (`uses:` and `tools_ref:` carry the
+  same tds-utils sha); bump both together.
+- **Prose is scanned for ASCII at commit time.** The publicity guard
+  refuses any byte over 0x7F in markdown under `skills/`, `agents/`, and
+  the repo root. Law 12 says it up front; the guard is what makes it
+  mechanical, so no review cycle is spent on it. `.html` diagrams are not
+  scanned.
 - **`gate` is the only name to add to.** A new CI job goes into `gate`'s
   `needs`; a job outside it cannot block a landing.
 - **One PR per batch** (`max_batch_size = 1`): each landing is a publish.

@@ -136,18 +136,40 @@ stance -- applied here to code. Run one whenever you want a second
 opinion on a diff you wrote, and especially before a human is asked to
 spend attention on it.
 
+This pass is where the reviewing happens. The agentic reviewer bot that
+follows (Copilot; Codex only when a human summons it -- Reviewer
+Selection below) is the mechanical gate over a diff that has already
+been through it, not the first pair of eyes.
+
 **Running it:**
 
-- **A separate agent, not a second read.** Spawn a sub-agent whose brief
-  is adversarial: assume the author is wrong until the code proves
-  otherwise, verify every claim independently (read the files, run the
-  hermetic tests yourself), report findings with severity and evidence,
-  and fix nothing -- the reviewer reports, the author triages.
+- **Three separate agents, not a second read.** Spawn three sub-agents on
+  lesser models than your own, each with a persona you choose for this
+  diff -- a security engineer for an auth change, an SRE for a deploy
+  workflow, a pedantic tech writer for prose, a maintainer who has to
+  live with it in a year. Cheap models are the point: the lens is what
+  finds things, and three lenses beat one. Every brief is adversarial:
+  assume the author is wrong until the code proves otherwise, verify
+  every claim independently (read the files, run the hermetic tests
+  yourself), report findings with severity and evidence, and fix nothing
+  -- the reviewer reports, the author triages.
+- **Collate before acting.** One triage table across all three: the same
+  finding from two reviewers is one row, and two reviewers who contradict
+  each other are visible as such rather than argued with one at a time.
 - **Findings come back as bug reports, not verdicts.** Triage them with
   exactly the machinery of any agentic review: verify each against the
-  code, fix what is real, rebut what is wrong with a concrete reason.
-  Silently dropping a finding is as forbidden here as it is for any
-  reviewer's feedback.
+  code, fix what you agree with, rebut what is wrong with a concrete
+  reason. Silently dropping a finding is as forbidden here as it is for
+  any reviewer's feedback.
+- **Defend what you disagree with; do not be a pushover.** A reviewer
+  finding is evidence, not authority, and a lesser model is wrong at
+  least as often as you are. Where you disagree, the finding goes to the
+  human in the epilogue below, with your rebuttal beside it -- what the
+  reviewer claimed, why you think the code is right as written, what you
+  would need to see to change your mind -- and the human judges. Nothing
+  here goes through the per-thread reply machinery of Automated Review
+  Response: these reviewers post no threads. Folding on every finding to
+  make the table green is the failure mode this rule exists to name.
 
 **The epilogue (always):**
 
@@ -155,9 +177,10 @@ spend attention on it.
   every later reader is concerned -- the session transcript is archived
   and nobody re-reads it. When the diff under review has (or gets) a
   PR, post ONE summary comment on that PR alongside the fix commits:
-  what was reviewed (commits, paths), the reviewer's verdict, each
-  finding with its disposition (fixed with the SHA, rebutted with the
-  reason), and which tests the reviewer ran. The epilogue is the
+  what was reviewed (commits, paths), each reviewer's persona and model
+  and its verdict, the collated findings with their dispositions (fixed
+  with the SHA, or rebutted with the reason, awaiting the human's
+  judgement), and which tests the reviewers ran. The epilogue is the
   review's durable record; the fix alone is not, because a later
   reader cannot reconstruct the why from a diff.
 - Post the epilogue WITH the fix, not instead of it -- one comment
@@ -167,9 +190,9 @@ spend attention on it.
 **What it does not buy:**
 
 - Self-adversarial review NEVER satisfies Zero Unreviewed Code. The
-  sub-agent runs in your session, on your context, at your direction;
-  it is a cheap correction for author blindness, not an independent
-  reviewer. The agentic and human review rungs run unchanged, and the
+  sub-agents run in your session, on your context, at your direction;
+  they are a cheap correction for author blindness, not independent
+  reviewers. The agentic and human review rungs run unchanged, and the
   epilogue exists partly so those reviewers can see what was already
   caught and fixed.
 
