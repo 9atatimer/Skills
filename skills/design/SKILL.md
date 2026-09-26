@@ -1,6 +1,6 @@
 ---
 name: design
-description: "Phase 2 of the SDLC: writing, reviewing, or improving a design doc; use before starting any feature that lacks one. Covers the required sections incl. Rejections, the freeze at APPROVED, and the status ladder. Skip when naming seams or updating the as-built (architecture), building the phased plan (planning), or implementing against an approved design (coding)."
+description: "Phase 2 of the SDLC: writing, reviewing, or improving a design doc; use before starting any feature that lacks one. Covers the required sections incl. Behaviors and Interfaces (the use-case table that is the BDD surface) and Rejections, the freeze at APPROVED, and the status ladder. Skip when naming seams or updating the as-built (architecture), building the phased plan (planning), or implementing against an approved design (coding)."
 ---
 
 # SKILL: Design Document Authoring & Review (Phase 2)
@@ -86,6 +86,54 @@ for it (e.g. "LLM vendor -> CompletionPort, model id supplied at the edge").
 
 ---
 
+## Behaviors and Interfaces (the BDD surface)
+
+Goals say what success looks like. They do not say what a caller calls.
+Between a goal and a function signature there is a design step, and if the
+doc does not take it, the implementer takes it alone, unreviewed, in phase
+5 -- which is how a repo ends up with a domain, some ports, and every
+workflow living in a CLI handler. **This section is required**, and it is
+the section phases 3, 4, and 5 all read.
+
+One row per behavior. A behavior is something a human (or a calling
+component) does and then observes; its home is one **application-layer
+function** -- a use case -- whose signature the row gives:
+
+```
+| Behavior | Use case (signature) | Ports it needs | Given / When / Then |
+|---|---|---|---|
+| An assertion is judged | `judge_assertion(assertion: Assertion, *, completion: CompletionPort) -> Verdict` | CompletionPort | Given a PR and an assertion, When the judge runs, Then a Verdict names pass/fail and the evidence |
+| An unreadable verdict never fails a clean PR | (same use case; an error path) | CompletionPort | Given a completion that cannot be parsed, When the judge runs, Then the Verdict is `inconclusive`, not `fail` |
+```
+
+The rules the table must satisfy:
+
+- **Inputs and outputs are domain values** -- the nouns this document
+  defines, never a wire format, an SDK type, or an adapter handle. That is
+  what makes the use cases composable: one can call another, a test can
+  drive one with no handler in front, and the CLI, the HTTP route, and the
+  worker are three thin entry points over the same surface.
+- **Ports arrive as keyword dependencies**, after the values. The ports
+  column must name only seams from this document's seam list (phase 3);
+  a port that appears here and nowhere else is an axis of change nobody
+  named.
+- **Every noun is in the ubiquitous language.** If the signature says
+  `Verdict`, the Data Model section defines `Verdict` and the code spells
+  it `Verdict`. One concept, one name, everywhere.
+- **The Given/When/Then is the test that will be kept.** Phase 4 writes it
+  as a RED test against exactly this signature, with fakes behind exactly
+  these ports (the testing skill). A row that cannot be written as a
+  failing test is not a behavior; move it to Goals or delete it.
+- **Rules are not rows.** "The tax rate for digital goods is zero" is a
+  domain rule the use case calls; it is tested as a pure function and
+  belongs in Design or Data Model, not here. This table is the workflow
+  surface, not the rulebook.
+
+A design doc without this table describes a system nobody can call. It is
+not complete, and it must not be approved.
+
+---
+
 ## When to Invoke This Skill
 
 - User asks to write, draft, or create a design doc
@@ -164,6 +212,7 @@ Copy `docs/design/TEMPLATE.md` to a new file following naming conventions:
 - **Non-Goals** -- Explicit scope boundaries. Think: "what will someone ask for that we should say no to?"
 - **Architecture Overview** -- ASCII diagram of major components and data flow
 - **Design** -- The meat. Break into subsystems, each with responsibilities and interfaces
+- **Behaviors and Interfaces** -- the BDD surface: one row per behavior, naming the use-case function that carries it. See "Behaviors and Interfaces" below. This is where the API is designed; without it the agent designs it while coding, and nobody reviews that
 - **State Machine** -- If the system has lifecycle states (most do), document transitions
 - **Data Model** -- Tables, fields, relationships, constraints
 - **Security Considerations** -- Auth, secrets, attack vectors, mitigations
@@ -203,7 +252,7 @@ Run through these checks:
 
 **Structure:**
 
-- [ ] Has all required sections (header, overview, goals, non-goals, design, key decisions, open questions, rejections)
+- [ ] Has all required sections (header, overview, goals, non-goals, design, behaviors and interfaces, key decisions, open questions, rejections)
 - [ ] Header has status, date, authors
 - [ ] Status uses standard vocabulary (DRAFT / REVIEW / APPROVED / IMPLEMENTED / SUPERSEDED)
 
@@ -232,6 +281,9 @@ Run through these checks:
 - [ ] Could a new team member understand the "why" behind each decision?
 - [ ] Are error cases and edge cases documented?
 - [ ] Are the axes of change named, each mapped to one seam, with vendor/mechanism names kept out of the core? (no single-impl-forever ports)
+- [ ] Does every behavior have a row in Behaviors and Interfaces, with a use-case signature whose inputs and outputs are domain values and whose ports are all in the seam list?
+- [ ] Does every noun in those signatures appear in the Data Model or a glossary, under exactly one name?
+- [ ] Is there a module map (phase 3) that puts each use case in the application layer, each rule in the domain, and names the composition root per runtime?
 
 ### Review Output Format
 
@@ -294,7 +346,8 @@ A design doc's value is realized when it drives implementation:
    recorded as task files under `tasks/` and ordered in the repo's root
    `TODO_PLAN.md`. -> the planning skill
 - **Behaviors and Code (phases 4-5):** implement RED -> GREEN -> COMMIT
-   against the design doc. **The doc is frozen from APPROVED onward** --
+   against the design doc -- each RED test drives the use case its
+   Behaviors and Interfaces row names, by that signature. **The doc is frozen from APPROVED onward** --
    see Drift below
 - **Retrospective (phase 8):** walk the doc against the code and file
    every divergence. Do **not** silently "update the doc to match". -> the

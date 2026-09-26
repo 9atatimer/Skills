@@ -11,18 +11,37 @@ frameworks, and projects. It is written for coding agents and must be followed e
 ## Where behaviors come from
 
 Phase 4 is not "write some tests." It is the phase that turns the two
-approved artifacts into executable claims, and there are **two distinct
-sources**. A suite drawn from only one of them has a predictable blind
+approved artifacts into executable claims, and there are **three distinct
+sources**. A suite drawn from only some of them has a predictable blind
 spot.
 
-**Design behaviors** come from the design doc. Each Goal is a testable
-success criterion by construction -- that is why the design skill demands
-Goals be verifiable. Each Non-Goal is worth a test only where its
-violation would be silent. Each state machine transition, each data-model
-constraint, and each rule in the Security section is a behavior.
+**Use-case behaviors** come from the design doc's Behaviors and Interfaces
+table, and they are the tests that are kept. Each row names a behavior,
+the application-layer function that carries it, the ports it takes, and a
+Given/When/Then. The RED test calls **that function by that signature**,
+with an in-memory fake behind each port the row lists, and asserts on the
+domain value it returns or the fake it wrote to. It does not go through
+the CLI or the HTTP route in front of the use case (that is an entry-point
+test, and thin entry points rarely need one), and it does not reach past
+it into a helper (that is a domain test, below). Driving the use case
+directly is what makes the test survive a rewrite of either neighbour.
 
-> Goal: "an unreadable verdict never fails a clean PR" -> a test that feeds
-> the judge an unparseable response and asserts the PR is not blocked.
+> Row: "an unreadable verdict never fails a clean PR" ->
+> `judge_assertion(assertion, completion=FakeCompletion(returns=garbage))`
+> returns a Verdict that is `inconclusive`, not `fail`.
+
+**Domain rules** come from Design and Data Model: the pure functions and
+invariant-bearing types the use cases call. Their tests take values and
+assert on values, with **no fake at all**. A domain test that needs a fake
+is a Purity test failure in the code, not a gap in the test kit.
+
+**Design goals** still count. Each Goal is a testable success criterion by
+construction -- that is why the design skill demands Goals be verifiable.
+Most goals are already covered by a use-case row; one that is not is
+either a missing row (add it, before approval) or a cross-cutting
+property (latency, a security rule, a state-machine transition) that gets
+its own test. Each Non-Goal is worth a test only where its violation would
+be silent.
 
 **Architect behaviors** come from the seams named in phase 3. These are
 the mechanical tests of the coding skill, Section 1.2, written as real
@@ -32,8 +51,12 @@ test cases rather than left as review-time opinions:
 |---|---|
 | Grep | the core names no vendor, SDK, `fetch`, `process.env`, `fs`, or model string |
 | Swap | a second implementation registers behind the seam with zero core edits |
-| Decision | each named decision resolves in one place, in the problem's language |
 | Arrow | every import crosses inward |
+| Trace | every row of Behaviors and Interfaces resolves to one exported application function with that signature |
+| Purity | no domain module imports a port or takes a callable that does I/O |
+| Wiring | the composition root builds with every port faked |
+| Decision | each named decision resolves in one place, in the problem's language |
+| Language | every noun in a use-case signature is defined in the design, under one spelling |
 
 These are cheap, durable, and catch the failure that unit tests never
 will -- a leak into the core reads as a passing test suite right up until
@@ -69,6 +92,7 @@ of the three).
 
 - Test visible behavior: state transitions, emitted events/actions, side effects, output
 - **Strictly forbidden:** Testing internal variables, private methods, or implementation details
+- **The public API is the use-case surface** -- the application-layer functions the design's Behaviors and Interfaces table names -- plus the pure domain functions beneath them. A handler in front of a use case is an entry point, not the API
 - Test exclusively via:
   - Public API boundaries
   - Observable state changes

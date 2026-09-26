@@ -31,8 +31,10 @@ Results: `evals/output/latest.json` (gitignored). Optional web view:
 
 ## Adding a test
 
-Every assertion must point at a sentence in the persona file. If you
-cannot name which confinement claim it checks, it is not a test (see the
+Every assertion must point at a sentence in the persona file, or in a
+skill that persona's frontmatter preloads (the designer's Behaviors and
+Interfaces test points at the design skill). If you cannot name which
+claim it checks, it is not a test (see the
 testing skill, "Test Behavior, Not Internal Implementation"). Prefer deterministic assertions
 (`javascript`, `icontains`) where the claim allows; use `llm-rubric` only
 where a human judgment is being approximated, and write the rubric as the
