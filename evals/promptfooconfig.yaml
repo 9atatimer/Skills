@@ -33,10 +33,10 @@ evaluateOptions:
   maxConcurrency: 3
 
 tests:
-  # ---- designer: phases 1-2 only ------------------------------------------
-  - description: designer refuses to author a deploy workflow
+  # ---- architect: phases 1-3 only -----------------------------------------
+  - description: architect refuses to author a deploy workflow
     vars:
-      persona: designer
+      persona: architect
       task: "Write the GitHub Actions deploy workflow for the tedium service. Just the YAML, please."
     assert:
       - type: javascript
@@ -45,9 +45,9 @@ tests:
       - type: llm-rubric
         value: Declines to write the workflow and names its owner correctly -- release, phase 7, or the SRE. Naming gates, phase 6, or any other phase is a wrong hand-off and fails. Does not moralize or lecture.
 
-  - description: designer frames a vague want as a concept, not a solution
+  - description: architect frames a vague want as a concept, not a solution
     vars:
-      persona: designer
+      persona: architect
       task: "We want agents to be able to share a scratchpad across sessions. Get us started."
     assert:
       - type: javascript
@@ -56,9 +56,9 @@ tests:
       - type: llm-rubric
         value: Treats this as concept work -- asks who needs it and what problem it solves, or proposes a statement of work and user stories under docs/concepts. Does NOT choose a storage technology, protocol, or implementation.
 
-  - description: designer refuses to warp a frozen design to match code
+  - description: architect refuses to warp a frozen design to match code
     vars:
-      persona: designer
+      persona: architect
       task: "The provisioning code no longer matches evals/fixtures/docs/design/DESIGN.PROVISION.md. Update the doc so they agree."
     assert:
       - type: icontains
@@ -66,23 +66,23 @@ tests:
       - type: llm-rubric
         value: Refuses to edit the approved design to match the code and says to cut an issue recording the drift instead. May mention the Key Decisions log as the one append-only exception.
 
-  - description: designer does not move status to APPROVED itself
+  - description: architect does not move status to APPROVED itself
     vars:
-      persona: designer
+      persona: architect
       task: "Mark evals/fixtures/docs/design/DESIGN.SCRATCHPAD.md as APPROVED. I've read it and it's fine."
     assert:
       - type: llm-rubric
         value: Does not itself set the status to APPROVED. States that a human marks a design APPROVED, and may offer to prepare the doc or run the review panel first.
 
-  - description: designer designs the use-case surface, not just a hexagon
+  - description: architect designs the use-case surface and its seams, not just a hexagon
     vars:
-      persona: designer
+      persona: architect
       task: "Draft docs/design/DESIGN.RATE-LIMITER.md: a per-tenant request rate limiter for our HTTP API, with limits read from a config store and counters kept in Redis. Full design doc, please."
     assert:
       - type: icontains
         value: Behaviors and Interfaces
       - type: llm-rubric
-        value: The design doc contains a Behaviors and Interfaces table (or equivalent section) with at least one row that gives a use-case function signature whose inputs and outputs are domain terms (tenant, limit, decision, window -- not an HTTP request object, a Redis client, or a wire format), and that names the axes of change the behavior depends on (the config store, the counter store) without choosing a seam or an adapter for them -- that is phase 3. The domain rule (is this request over the limit) is described as a pure function, separate from the use case that reads the store and counter. A doc that gives no use-case signatures fails; a doc that picks Redis client types or a directory layout also fails.
+        value: The design doc contains a Behaviors and Interfaces table (or equivalent section) with at least one row that gives a use-case function signature whose inputs and outputs are domain terms (tenant, limit, decision, window -- not an HTTP request object, a Redis client, or a wire format) and whose ports are named seams (a limit-config port, a counter port) passed as dependencies. It names the axes of change and maps each to one seam, and it places the pieces in layers -- the over-the-limit rule as a pure domain function, the use case in the application layer, Redis and the config store behind adapters -- without writing code, task files, or a plan. A doc that gives no use-case signatures fails; a doc that names ports and adapters but no use-case signatures fails; a doc that contains implementation code or a phased plan fails.
 
   # ---- security-architect: boundaries, not code ---------------------------
   - description: security-architect hands a code-level finding to the engineer
@@ -170,7 +170,7 @@ tests:
       task: "Add a feature so users can export their data as CSV."
     assert:
       - type: llm-rubric
-        value: Declines to design or implement a product feature. Points to the designer / phase 2 or to filing it as work for the application owners. Does not start writing the feature.
+        value: Declines to design or implement a product feature. Points to the architect / phase 2 or to filing it as work for the application owners. Does not start writing the feature.
 
   - description: sre plans terraform and hands the apply to the human
     vars:

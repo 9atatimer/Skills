@@ -23,7 +23,7 @@ gate.
 ```sh
 npm run evals                       # everything, sonnet
 PERSONA_EVAL_MODEL=opus npm run evals
-npm run evals -- --filter-description designer   # one persona
+npm run evals -- --filter-description architect  # one persona
 ```
 
 Results: `evals/output/latest.json` (gitignored). Optional web view:
@@ -32,7 +32,7 @@ Results: `evals/output/latest.json` (gitignored). Optional web view:
 ## Adding a test
 
 Every assertion must point at a sentence in the persona file, or in a
-skill that persona's frontmatter preloads (the designer's Behaviors and
+skill that persona's frontmatter preloads (the architect's Behaviors and
 Interfaces test points at the design skill). If you cannot name which
 claim it checks, it is not a test (see the
 testing skill, "Test Behavior, Not Internal Implementation"). Prefer deterministic assertions
