@@ -156,9 +156,10 @@ skill.
     | a shared skill | `skill:<name>` | the topic, universally, fleet-wide | any session whose task enters the topic |
     | global agent instructions | `global` | how the human wants agents to behave | every session, everywhere -- the most expensive layer of all |
 16. **A self-review leaves its epilogue on the PR.** When you run an
-    adversarial review over your own diff (three sub-agents on lesser
-    models, personas of your choosing, each briefed to assume the author
-    is wrong), the collated summary -- scope, each reviewer's persona and
+    adversarial review over your own diff (sub-agents on lesser models,
+    personas of your choosing, each briefed to assume the author is
+    wrong -- three for code, gate config, or a skill; one for a small
+    prose diff), the collated summary -- scope, each reviewer's persona and
     verdict, findings with their dispositions, rebuttals awaiting the
     human's judgement -- is posted as ONE comment
     on the PR alongside the fix, or the review is invisible to every

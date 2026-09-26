@@ -135,10 +135,12 @@ applies to design records -- a separate reviewer with an adversarial
 stance -- applied here to code. **Run it before every PR a human is
 asked to review**, not when you feel like a second opinion: an author
 who decides case by case decides "not this one" on the diffs that most
-need it. Size it to the diff. Three reviewers for anything executable, a
-gate's configuration, or a skill's operating rules (the fleet loads and
-runs those); one reviewer is enough for a docs-only diff a human can
-read in a minute, and the epilogue says which you ran and why.
+need it. Size it to the diff. Use three reviewers for anything
+executable, for a gate's configuration, and for any change to a skill or
+persona file -- those are operating rules the fleet loads and runs, so
+there is no "docs-only" edit to one. Use one reviewer for a prose diff
+a human can read in a minute: a README, a design record, a plan. The
+epilogue says which you ran and why.
 
 This pass is where the reviewing happens. The agentic reviewer bot that
 follows (Copilot; Codex only when a human summons it -- Reviewer
@@ -147,8 +149,8 @@ been through it, not the first pair of eyes.
 
 **Running it:**
 
-- **Separate agents, not a second read.** Spawn three sub-agents (one,
-  for the small docs-only case above) on lesser models than your own,
+- **Separate agents, not a second read.** Spawn sub-agents -- three, or
+  one for the small prose case above -- on lesser models than your own,
   each with a persona you choose for this diff -- a security engineer for an auth change, an SRE for a deploy
   workflow, a pedantic tech writer for prose, a maintainer who has to
   live with it in a year. Cheap models are the point: the lens is what
