@@ -1,6 +1,6 @@
 ---
 name: architecture
-description: "Phase 3 and 7a of the SDLC: naming the seams a change will add (before code) and recording the as-built of the deployed system in docs/arch/ (at release). Covers the docs/design vs docs/arch folder law, as-built content and HTML diagrams, and tech-radar row ownership. Load before planning any change that adds a component, seam, or dependency, and again when a change ships. Skip for a change that adds none of those and ships nowhere."
+description: "Phase 3 and 7a of the SDLC: naming the seams and drawing the module map (domain / application / composition root) a change will add (before code) and recording the as-built of the deployed system in docs/arch/ (at release). Covers the docs/design vs docs/arch folder law, as-built content and HTML diagrams, and tech-radar row ownership. Load before planning any change that adds a component, seam, or dependency, and again when a change ships. Skip for a change that adds none of those and ships nowhere."
 ---
 
 # SKILL: Architecture (Phases 3 and 7a)
@@ -92,6 +92,40 @@ Two failure modes, equally real:
   benefit. Seam only at real axes of change (YAGNI); if you considered a
   seam and rejected it, that belongs in the design doc's Rejections.
 
+### Draw the module map (the layers)
+
+Seams answer where the core meets the world. They say nothing about the
+inside of the core, and a change whose only architectural output is a seam
+list gets a hexagon: a domain, some ports, and the workflow smeared across
+whatever calls them. The second output of this phase is the **module
+map**: each unit of the change -- core and edge alike -- assigned to one
+layer, and each row in the design's Behaviors and Interfaces table traced
+to its use case.
+
+| Layer | Holds | Rule |
+|---|---|---|
+| domain | rules, values, invariants, named policies | pure; no port reaches it |
+| application | the use cases, one per behavior in the design's table | ports as keyword dependencies; domain values in and out |
+| ports | one interface per seam in the seam list | owned by the core; imports only domain types |
+| adapters | one implementation per port per mechanism | the edge: the only layer that imports a vendor, `fs`, `fetch`, or `process.env` |
+| composition root | the container: one per runtime (CLI, server, worker) | the only code that names a concrete adapter |
+
+The first two rows and the last are the layers *inside* the core that the
+seam list does not describe; ports and adapters are the seam list itself,
+placed. A unit that fits no row is a unit whose job is unclear.
+
+The map is small -- a table or a tree of module names with a layer beside
+each -- and it is judged by the coding skill's Trace, Purity, and Wiring
+tests before a line is written: does every behavior have exactly one use
+case; does any domain module need a port; is there one composition root
+per runtime. Layers are not directories; a one-file tool keeps them as
+three regions of the file. What matters is that the assignment is made
+here, reviewed with the seams, and frozen with the record.
+
+Check the language while you are here: every noun in a use-case signature
+is a term the Data Model defines, under one spelling. Two names for one
+concept at this stage become two modules for one concept in phase 5.
+
 ### Propose tech-radar rows
 
 **The radar is owned by this phase and consulted in phase 5.** Anything
@@ -111,6 +145,7 @@ Everything from this phase lands **inside the design doc**, not in
 | Work | Lands in |
 |---|---|
 | The seam list, each axis mapped to one port/policy/parameter | Architecture Overview + Design |
+| The module map: each unit in one layer; each behavior traced to one use case | Architecture Overview + Behaviors and Interfaces |
 | Each seam choice with its rationale | Key Decisions |
 | Seams considered and rejected as ceremony | Rejections |
 | Proposed radar rows | Key Decisions (and the radar, with the code) |
@@ -121,7 +156,10 @@ Everything from this phase lands **inside the design doc**, not in
 Once the axes are named, run `designomatic run <draft> --panel seam-review`.
 It is a one-cycle panel asking exactly this phase's question: is each axis
 named, does each map to exactly one seam, and is anything seamed that has one
-implementation and always will. -> the designomatic skill
+implementation and always will. Ask the layer question in the same pass,
+whether or not the repo's panel names it: is every behavior traced to one
+application function, is any domain module handed a port, and is there one
+composition root per runtime. -> the designomatic skill
 
 This is the cheapest point to catch a missing seam. One discovered later,
 while coding, was never reviewed -- and the record's freeze at APPROVED makes
@@ -130,7 +168,9 @@ it unwritable by then, so it becomes drift rather than design.
 ### Exit gate
 
 Every volatile axis this change introduces is named and mapped to exactly
-one seam; every new dependency has a proposed ring. The design record is now
+one seam; every behavior in the design's table is traced to one use case in
+the application layer, with a pure domain beneath it and one composition
+root per runtime; every new dependency has a proposed ring. The design record is now
 complete and approvable -- **a human approves, and the record freezes.**
 Then phase 3b (planning) can compute the route.
 
@@ -200,6 +240,11 @@ Content, in the order a new reader needs it:
 - **The seams.** Each port/policy/parameter that is actually in the code,
    and what implementations sit behind it today. This is the section that
    makes the Swap test answerable without reading the source.
+- **The use-case surface.** The application-layer functions that exist,
+   each with the behavior it carries and the ports it takes, and where the
+   composition root for each runtime lives. This is what makes the Trace
+   and Wiring tests answerable, and it is the API the next design composes
+   against.
 - **Flows.** How a request, an event, or a deploy actually moves through
    the components.
 - **Deployment facts.** Where each component runs, what it is triggered

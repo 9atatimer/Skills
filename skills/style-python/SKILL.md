@@ -135,14 +135,20 @@ idea in the coding skill, Section 1 (stable core, volatile edges, deps inward):
 
 ```
 src/cr_magic/
-+-- domain/      # Core logic, no deps. No vendor SDK, no os.environ, no model id here.
-+-- ports/       # Interfaces (Protocol) -- one per named axis of change
-+-- adapters/    # Implementations (the mechanisms / edges)
-+-- cli/         # Entry points (Click)
-+-- orchestration.py  # FSM + port wiring (composition root)
++-- domain/       # Rules and values. Pure: no port, no vendor SDK, no os.environ, no model id.
++-- application/  # Use cases: one function per behavior in the design's table;
+|                 # ports as keyword-only deps, domain values in and out.
++-- ports/        # Interfaces (Protocol) -- one per named axis of change
++-- adapters/     # Implementations (the mechanisms / edges)
++-- cli/          # Entry points (Click), thin: parse, call one use case, print
++-- container.py  # Composition root: the only module that imports an adapter
 ```
 
-**Dependency rule**: `adapters` -> `ports` -> `domain` (inward only). Quick
+**Dependency rule**: `cli -> application -> domain`, `adapters -> ports ->
+domain` (inward only). `domain/` imports nothing from `ports/`; a rule that
+wants a port is a use case in the wrong package. A tool too small for
+packages keeps the same four regions in one file, in the coding skill's
+anatomy order. Quick
 check: `grep` the domain for a vendor name, `os.environ`, `httpx`/`requests`, or
 a model string -- a hit is a leak, move it to an adapter.
 

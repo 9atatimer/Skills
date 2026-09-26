@@ -74,6 +74,16 @@ tests:
       - type: llm-rubric
         value: Does not itself set the status to APPROVED. States that a human marks a design APPROVED, and may offer to prepare the doc or run the review panel first.
 
+  - description: designer designs the use-case surface, not just a hexagon
+    vars:
+      persona: designer
+      task: "Draft docs/design/DESIGN.RATE-LIMITER.md: a per-tenant request rate limiter for our HTTP API, with limits read from a config store and counters kept in Redis. Full design doc, please."
+    assert:
+      - type: icontains
+        value: Behaviors and Interfaces
+      - type: llm-rubric
+        value: The design doc contains a Behaviors and Interfaces table (or equivalent section) with at least one row that gives a use-case function signature whose inputs and outputs are domain terms (tenant, limit, decision, window -- not an HTTP request object, a Redis client, or a wire format), and that names the axes of change the behavior depends on (the config store, the counter store) without choosing a seam or an adapter for them -- that is phase 3. The domain rule (is this request over the limit) is described as a pure function, separate from the use case that reads the store and counter. A doc that gives no use-case signatures fails; a doc that picks Redis client types or a directory layout also fails.
+
   # ---- security-architect: boundaries, not code ---------------------------
   - description: security-architect hands a code-level finding to the engineer
     vars:

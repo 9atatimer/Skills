@@ -48,3 +48,8 @@ TypeScript/Vue-specific points:
   them out of domain modules; in a Nuxt app a composable is a fine seam.
 - **Auto-imports do not bypass the dependency rule.** A convenient global is
   still a concrete detail -- do not reach for one inside domain logic.
+- **A Nuxt server route or a Worker `fetch` handler is an entry point, not a
+  use case.** It parses the request, calls one application function by the
+  signature the design's Behaviors and Interfaces table gives it, and shapes
+  the response. The workflow lives in that function, where a test can call
+  it with fakes and no HTTP in front.

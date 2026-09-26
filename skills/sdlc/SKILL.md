@@ -71,17 +71,28 @@ skill.
    the only kind that can report the thing is missing. Scaffolding may be
    written and may be thrown away -- it is not what the suite is for.
    -> the testing skill
-6. **Stable core, volatile edges.** Separate what the software *means*
-   (decisions and rules, in the problem's language) from how it *connects
-   to the world* (vendors, HTTP, fs, env vars, model ids). The core
-   imports nothing concrete; dependencies point inward
-   (`cli -> application -> domain`, `adapters -> ports -> domain`).
+6. **Stable core, volatile edges -- on three axes, not one.** Separate
+   what the software *means* (decisions and rules, in the problem's
+   language) from how it *connects to the world* (vendors, HTTP, fs, env
+   vars, model ids). The core imports nothing concrete; dependencies point
+   inward (`cli -> application -> domain`, `adapters -> ports -> domain`).
    Quick check: if "we now also use <new vendor>" would touch the core,
    there is a missing seam. Counter-check: a port with one
    forever-implementation is ceremony -- seam only at real axes of change
-   (YAGNI). Clean / Hexagonal / DDD are three names for this one idea,
-   not three checklists. -> the architecture skill (where the seams are
-   named) and the coding skill (where they are built)
+   (YAGNI). That is the **core vs edge** axis, and it is the one agents
+   hear. Two more hold with equal force. **Layers inside the core:** the
+   domain is pure rules and values (no port ever reaches it), the
+   application is workflow (one function per behavior, ports as
+   dependencies, domain values in and out -- the BDD surface), and the
+   composition root is wiring (the only code that names a concrete
+   adapter). Functional in the domain, procedural in the workflow; DI
+   starts at the use case and never goes below it. **Language and
+   boundaries:** the nouns in the code are the nouns in the design doc,
+   and each invariant has one owner. Clean, Hexagonal, Layered, and DDD
+   each guard one of these; a change is architecturally done only when it
+   passes the mechanical tests of all three axes. -> the architecture
+   skill (where the seams and the module map are named) and the coding
+   skill (where they are built and tested)
 7. **File anatomy.** Lay every source file out top-to-bottom: module
    header, imports, constants, flags/config, then per sub-component
    predicates -> helpers -> flow functions -> entry points. -> the coding
@@ -217,7 +228,7 @@ one-pass the tests. Do not.
 |---|---|---|---|
 | 1 Concept | `docs/concepts/<idea>/` -- statement of work + user stories | a human funds it | the concept skill |
 | 2 Design | `docs/design/DESIGN.<name>.md` | a human marks it APPROVED | the design skill; run the panel before the human -> the designomatic skill |
-| 3 Architecture | the seam list, inside the design doc | seams named, radar rows proposed | the architecture skill |
+| 3 Architecture | the seam list and the module map, inside the design doc | seams named, behaviors traced to use cases, radar rows proposed | the architecture skill |
 | 3b Planning | `tasks/`, ordered in `TODO_PLAN.md` | a phased, test-first route | the planning skill |
 | 4 Behaviors | the next behavior, RED | it fails because the code does not exist | the testing skill + the stack-specific one |
 | 5 Code | source | GREEN | the coding skill + the language style skill |
