@@ -235,8 +235,12 @@ checkout's `node_modules`; a `git worktree add` with no `npm ci` has none,
 so every commit there skips the whole suite -- silently, with no error and
 no sentry. Observed on template-tools PR #700: its new pre-commit guard
 never ran on its own commits, and would have blocked its own test file.
-Run `npm ci` in a new worktree before the first commit, or run the checks
-the hook would have run by hand and say so.
+Install the repo's hooks in a new worktree before the first commit -- and
+check that `.husky/pre-commit` exists, because `npm ci` alone may not be
+enough: template-base generates that shim from its `prepare` script
+(`naatm-hooks install`), so `npm ci --ignore-scripts` left it absent and
+the commit again ran no checks (template-base PR #89). Otherwise run the
+checks the hook would have run by hand and say so.
 
 ## Branch Protection and Required Checks
 

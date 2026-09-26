@@ -266,6 +266,19 @@ everything: template-base PR #86's state-guard suite passed 10/10 with the
 path check mutated to never match. Once per new guard, mutate it both ways
 -- refuse all, accept all -- and confirm the suite goes red each time.
 
+### A fake cannot test a third-party tool's behavior
+
+A fake of an external CLI encodes your assumption about that CLI, so a
+suite built on it proves only the assumption. template-tools' `cfw` tests
+used a fake docker and asserted "the seeded config has no `credsStore`",
+which was true -- and the real docker CLI still sent the registry
+credential to the macOS keychain, because with no `auths` entry it
+auto-detects a credential helper on PATH (template-tools#711). When a claim
+is about what a third-party tool does, at least one test runs the real
+binary -- with its side-effect edges faked (here, fake `docker-credential-*`
+helpers first on PATH) -- and is skipped, never faked, when the tool is
+absent.
+
 ---
 
 # Test Development Workflow
