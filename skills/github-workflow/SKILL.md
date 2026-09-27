@@ -270,6 +270,19 @@ only when all six hold on the current head:
   the other conditions are green;
 - no `hold` label is on the PR.
 
+**Designated pipeline exception.** The default stands: outside those six
+conditions an agent never lands on its own initiative. The one exception
+is an automated pipeline that the repo's agent instruction file names
+explicitly as allowed to land (first instance: GammaGo's Monster Handbook
+art pipeline), and only on that pipeline's own PRs. There `review-settled`
+is not required; every other condition still holds, and the pipeline still
+never pushes to the default branch -- it opens a PR, the gates run, tedium
+lands it. The repo's `gate` is the review: that is the repo owner's
+recorded decision, and the owner's standing designation in the instruction
+file is the human authorization the gates skill's Zero Unreviewed Code law
+requires. It holds only while `gate` actually checks that pipeline's
+output; a gate that passes the pipeline's changes unexamined voids it.
+
 Anything short of that is not "almost": a red `review-settled` means a
 review is still owed on this head (re-request the reviewer on the latest
 push if none is on it; resolve every thread; post the self-review
