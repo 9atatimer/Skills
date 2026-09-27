@@ -28,6 +28,16 @@ description: "Operating what the fleet reaches through the AWS API surface: S3-c
   1Password item at call time and prints the JSON the CLI expects, or
   export `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` under `op run`
   for the one command that needs them.
+- A `credential_process` runs when the client is BUILT, not when it is
+  first used: boto3's `Session(profile_name=...).client("s3")` resolves
+  credentials synchronously, and a missing profile raises at `Session()`.
+  botocore puts no timeout on the process. So in a CLI whose commands do
+  not all touch the bucket, build the client lazily on first use and
+  remember a failed build (one cost per run, never a crash in a command
+  that never archives); and bound the helper itself (kill `op read`
+  after a few seconds -- macOS ships no `timeout`, so a background job
+  plus a watcher does it), because a locked 1Password in an unattended
+  run otherwise waits forever on an unlock prompt nobody answers.
 - R2 has no IAM, no bucket policies, no KMS: authorization is the
   token's scope (bucket-level read or read+write), and that is all.
   Tooling that tries `GetBucketPolicy`, `PutBucketEncryption` or STS
