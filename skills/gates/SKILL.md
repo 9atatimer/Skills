@@ -116,6 +116,17 @@ blocked by a gate is not authorization to move it.
   There is no workflow trigger for a thread being resolved: the epilogue
   comment (law 16) is what re-evaluates the status after the last thread
   closes.
+- **`review-settled` fails open on a quota notice, and only on one.**
+  When a required reviewer's newest post on the PR is its "unable to
+  review ... reached their quota limit" notice, it will never review (the
+  owner's ruling, 2026-09-26): the PR does not wait for it, every review
+  thread must still be resolved, and the status reads `FAIL-OPEN:
+  <reviewer> is out of quota` -- never "reviewed". Any other "unable to
+  review" notice is not a go: re-request the reviewer. Silence is not a
+  go either. Never report a FAIL-OPEN green as reviewed, and never
+  re-request a reviewer that answered with a quota notice. A FAIL-OPEN
+  head is unreviewed by that agent: a recorded exception to Zero
+  Unreviewed Code, not a review.
 - **A cap-fired `review-settled` is not a self-land license.** The
   deferral procedure just above -- file `pr-todo` issues, reject each
   remaining comment, resolve each thread -- satisfies both of
