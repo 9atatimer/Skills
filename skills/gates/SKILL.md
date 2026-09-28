@@ -118,8 +118,8 @@ blocked by a gate is not authorization to move it.
   closes.
 - **`review-settled` fails open on a reviewer that will never review --
   deliberately, and visibly.** A reviewer out of quota (Copilot, since
-  2026-09-26: tds-internal#93) must not hold every PR forever. Two ways
-  in: the repo's caller names it in `fail_open_reviewers` with a
+  2026-09-26, by the owner's ruling) must not hold every PR forever. Two
+  ways in: the repo's caller names it in `fail_open_reviewers` with a
   `fail_open_reason` (the recorded choice; it works before the reviewer
   has posted anything), or the reviewer's newest post is its quota notice
   ("unable to review ... reached their quota limit") on any commit. Either
