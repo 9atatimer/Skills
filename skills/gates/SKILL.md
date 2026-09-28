@@ -82,9 +82,10 @@ sides of the account boundary:
   ```
 
   The exact `op://` reference is a fleet fact, not a skill fact: the
-  playbook above carries the cut-and-paste form, and the credential
-  registry (tds-internal `ops/credentials/REGISTRY.md`) is where it is
-  recorded. Re-run the loop after each new adopter and on each rotation.
+  playbook above carries the cut-and-paste form, and the fleet's
+  credential registry (the private infra repo's `ops/credentials/`) is
+  where it is recorded. Re-run the loop after each new adopter and on
+  each rotation.
 
 A new repository seeded from a template inherits the workflow, not the
 secret and not necessarily the right reference: check both on its first
