@@ -151,6 +151,18 @@ Rules of the chain:
   (an infra vault the repo owns). A 1Password service account *cannot*
   be granted a personal/Private vault, so `op://Private/...` references
   are interactive-only by construction -- they can never work in CI.
+- **A scheduled run on a laptop is unattended too.** The 1Password CLI's
+  desktop-app integration authorizes each new CLI session with an
+  on-screen prompt, so `op read` from a scheduled agent's shell blocks on
+  a prompt nobody answers (`authorization timeout`, `promptError`) even
+  with the app unlocked, and works only while a human has just authorized
+  a session by hand. Give that path a store it can read without a prompt
+  -- on macOS the login keychain (`security find-generic-password`, ACL
+  granted at seeding, the read bounded by a timeout so a locked keychain
+  falls through instead of hanging) -- seeded from the 1Password item,
+  which stays the source of truth and is re-copied on rotation. Never
+  leave such a read unbounded: botocore and most SDKs put no timeout on a
+  credential process, so a hung read hangs the run.
 - **Secret naming:** either the generic `OP_SERVICE_ACCOUNT_TOKEN` (the
   name the action reads natively) or a purpose-named org secret
   (`<PURPOSE>_OP_SA_TOKEN`) mapped onto it in the workflow's `env:`.
@@ -281,6 +293,18 @@ The change is deployed, published, or tagged; the rollout reached its
 final stage or was deliberately stopped; `docs/arch/` was updated at 7a to
 describe what now runs. Then the retrospective can diff the frozen design
 against a true as-built.
+
+**A capability an unattended path depends on is live only once that path
+has run it.** A hand run from an interactive shell proves the code, not
+the deployment: the interactive shell carries things the unattended one
+does not -- direnv exports, an authorized 1Password CLI session, an
+unlocked keychain, a logged-in browser -- and a capability that reads any
+of them works by hand and silently does nothing on the schedule. Observed
+2026-09-27 (GammaGo issue 396): an archive verified by a hand-run backfill
+uploaded nothing from every scheduled run for a day, because its bucket
+name lived only in `.envrc`. The evidence that closes the loop is the
+unattended run's own output (its PR, its log, the object it wrote), cited
+where the hand run's would have been.
 
 ## Related
 
