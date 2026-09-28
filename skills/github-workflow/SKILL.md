@@ -367,6 +367,15 @@ exactly the trap.
    message
 - **Push:** push to `origin`
 - **PR:** create a PR with a clear description
+- **Land documentation branches quickly.** A repo-wide format migration
+  (a Markdown-to-HTML move, a reformat) is the likeliest way to orphan an
+  in-flight doc branch; the longer it lives, the more of it is rewritten
+  underneath it.
+- **`git mv` merges cleanly by rename detection -- for the moved file
+  only.** The base branch's edits to the old path follow the move, but a
+  file the base branch ADDED at the old location, or a dependent that
+  still points there, is invisible to the merge. Grep for the old path
+  after merging.
 
 ### Git Hook Discipline (scalpel, not axe)
 

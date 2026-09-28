@@ -102,6 +102,12 @@ preview deploy.
   topology. A loopback fallback is only for a peer that is not a wrangler
   worker at all (a framework dev server), and it must refuse a REMOTE
   peer with no binding rather than fall through to a public fetch.
+- **Static sites are Workers Static Assets, not Pages.** An assets-only
+  Worker (an `[assets]` block, no `main`) is reachable over a service
+  binding -- proved by experiment. The `env.ASSETS.fetch()` docs
+  constrain RPC methods only; do not read them as "bindings cannot reach
+  assets". Adding a `main` just to be bindable buys a Worker invocation
+  on every non-asset request.
 - **KV** for a value that must be rewritten from inside the isolate (a
   rotating credential). Worker secrets are write-only in-isolate.
 - **R2** for bytes too big for a Durable Object SQLite row. Lifecycle

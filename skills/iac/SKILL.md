@@ -200,7 +200,12 @@ Rules that hold across all three:
   and major versions never mixed within a module family (a v4 and a v5
   Cloudflare provider disagree on resource names and argument shapes; a
   resource that exists only in v5 gets its own root module with its own
-  pin).
+  pin). The Cloudflare v5 provider rewrote the API-token resource:
+  `policies` is an attribute list, `resources` is `jsonencode(...)`, and
+  permission groups come from the
+  `cloudflare_api_token_permission_groups_list` data source. v4-style
+  examples plan against nothing; `terraform validate` against the real
+  provider is the check.
 - Container images referenced by DIGEST, not tag; only a digest makes a
   rollback deterministic.
 - Deploy parameters that are decisions (instance caps, concurrency,

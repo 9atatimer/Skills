@@ -44,6 +44,12 @@ Structure every script in clear sections, in this order:
 
 ## Error Handling and Messaging
 - Use structured error messages that tell a human what went wrong and what to check next
+- **`! a && b && c` negates only `a`**; it parses as `(! a) && b && c`. For
+  "abort if any check fails", write
+  `if a && b && c; then :; else abort; fi`, never a leading `!` on a chain.
+- **BSD/macOS `grep -rIl` prints bare relative paths**, with no `./`
+  prefix. Filter on the bare path (`grep -v '^node_modules/'`), not on
+  `^\./`, or the filter silently matches nothing on a Mac.
 - Let `main` exit on the first failure by propagating non-zero statuses (`set -e`)
 - Provide actionable error messages
 - **Under `set -euo pipefail`, redirecting stderr does NOT prevent the
