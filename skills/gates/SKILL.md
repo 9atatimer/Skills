@@ -116,20 +116,17 @@ blocked by a gate is not authorization to move it.
   There is no workflow trigger for a thread being resolved: the epilogue
   comment (law 16) is what re-evaluates the status after the last thread
   closes.
-- **`review-settled` fails open on a reviewer that will never review --
-  deliberately, and visibly.** A reviewer out of quota (Copilot, since
-  2026-09-26, by the owner's ruling) must not hold every PR forever. Two
-  ways in: the repo's caller names it in `fail_open_reviewers` with a
-  `fail_open_reason` (the recorded choice; it works before the reviewer
-  has posted anything), or the reviewer's newest post is its quota notice
-  ("unable to review ... reached their quota limit") on any commit. Either
-  way that reviewer is not required, every review thread still is, and
-  the status reads `FAIL-OPEN: <reviewer> not required (<reason>)` --
-  never "reviewed". A quota notice is not a review: do not report a
-  FAIL-OPEN green as reviewed, and do not re-request a reviewer that
-  answered with one. A FAIL-OPEN head is unreviewed by that agent; this
-  is a recorded exception to Zero Unreviewed Code, not a review. Remove
-  the `fail_open_*` inputs from the caller when the reviewer returns.
+- **`review-settled` fails open on a quota notice, and only on one.**
+  When a required reviewer's newest post on the PR is its "unable to
+  review ... reached their quota limit" notice, it will never review (the
+  owner's ruling, 2026-09-26): the PR does not wait for it, every review
+  thread must still be resolved, and the status reads `FAIL-OPEN:
+  <reviewer> is out of quota` -- never "reviewed". Any other "unable to
+  review" notice is not a go: re-request the reviewer. Silence is not a
+  go either. Never report a FAIL-OPEN green as reviewed, and never
+  re-request a reviewer that answered with a quota notice. A FAIL-OPEN
+  head is unreviewed by that agent: a recorded exception to Zero
+  Unreviewed Code, not a review.
 - **A cap-fired `review-settled` is not a self-land license.** The
   deferral procedure just above -- file `pr-todo` issues, reject each
   remaining comment, resolve each thread -- satisfies both of
