@@ -45,6 +45,14 @@ things matter when one goes red:
   about your diff. Inconclusive means the agent answered and could not
   tell. Neither is a finding against your code; do not "fix" a diff to
   satisfy one.
+- **A skip is not a pass.** When ci.magic cannot run -- a missing or
+  wrong credential, say -- it reports a GREEN "skipped". Absence of red
+  is not evidence the assertions held; after any credential or workflow
+  change, read the run and confirm the rows were actually evaluated.
+- **Write placement rules as whitelists.** "Mechanics live only in X and
+  Y" catches a new zone nobody enumerated; "no mechanics in A, B, C" lets
+  everything through an unlisted D. Blacklists are how a numeric value
+  slips into prose the gate never named.
 
 The threshold is a gate like any other -- raising it may take effect
 immediately, lowering it is governed by the first law below.
@@ -193,6 +201,21 @@ been through it, not the first pair of eyes.
   after triage completes, never a running narration, and never a
   summary that promises fixes not yet pushed.
 
+**When a finding names N instances of a pattern, N is a sample, not a
+list.** Script the sweep for the whole class before pushing the fix
+(extract the values, search for every written form of them); the script
+finds what the reviewer never named, and the next round will name those.
+
+**Probe sub-agent tooling before fanning out.** Dispatch one cheap agent
+doing one trivial write and confirm it landed. The orchestrator's own
+tools working is no evidence the sub-agents' do: a fleet whose Edit/Write
+are denied burns its whole budget and writes nothing.
+
+**Promote repeated catches into a gate.** A rule that lives only in a
+batch prompt or a review brief dies with the session. Anything an ad-hoc
+brief catches twice is a candidate for a real check -- a ci.magic
+assertion, a script, a test -- or the next batch relearns it.
+
 **What it does not buy:**
 
 - Self-adversarial review NEVER satisfies Zero Unreviewed Code. The
@@ -256,6 +279,12 @@ cannot merge until all required checks pass. If a check fails:
    `gadmin github actions get-job --run <ID> --job <NAME>`
 - Fix the issue locally
 - Push the fix -- checks re-run automatically
+
+**A PR with a merge conflict runs no `pull_request` workflows.** GitHub
+cannot build the merge commit, so a fix pushed to a conflicted PR is never
+evaluated and the old red (or nothing) stays on it. After any push, confirm
+the checks actually ran on the new head; if none did, resolve the conflict
+first.
 
 ## Reviewer Selection (agentic reviewers)
 
