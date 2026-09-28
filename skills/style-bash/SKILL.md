@@ -47,9 +47,11 @@ Structure every script in clear sections, in this order:
 - **`! a && b && c` negates only `a`**; it parses as `(! a) && b && c`. For
   "abort if any check fails", write
   `if a && b && c; then :; else abort; fi`, never a leading `!` on a chain.
-- **BSD/macOS `grep -rIl` prints bare relative paths**, with no `./`
-  prefix. Filter on the bare path (`grep -v '^node_modules/'`), not on
-  `^\./`, or the filter silently matches nothing on a Mac.
+- **`grep -rl` path prefixes follow the operand, not the platform.** `.`
+  yields `./node_modules/x`; `*` or no operand yields bare
+  `node_modules/x`. A downstream filter written for one form silently
+  matches nothing on the other: exclude at the source with
+  `--exclude-dir=node_modules`, or match both (`^(\./)?node_modules/`).
 - Let `main` exit on the first failure by propagating non-zero statuses (`set -e`)
 - Provide actionable error messages
 - **Under `set -euo pipefail`, redirecting stderr does NOT prevent the
