@@ -321,8 +321,21 @@ unreadable; "blocked on PR#71" says wait for a merge, "blocked on Issue#71"
 says someone has to decide something.
 
 This holds everywhere a number appears: commit messages, PR bodies, issue
-bodies, review replies, `TODO_PLAN.md`, and chat with the human. In chat
-and rendered markdown, make it a link: `[PR#459](https://github.com/owner/repo/pull/459)`.
+bodies, review replies, `TODO_PLAN.md`, and chat with the human.
+
+**In chat and rendered markdown, every mention is a link whose text carries
+owner, repo, kind, and number:**
+
+```
+[<owner>/<repo> PR#459](https://github.com/<owner>/<repo>/pull/459)
+[<owner>/<repo> Issue#458](https://github.com/<owner>/<repo>/issues/458)
+```
+
+Every mention, not just the first: the human has several repos open in
+several terminals, and a terminal that hides link targets shows only the
+text. No naked URL in prose, and no `[PR#459](...)` whose text drops the
+repo. Commit messages are not rendered, so they carry the plain text form
+(`owner/repo PR#459`) instead.
 
 **Cross-repo references carry the repo and the kind:** `template-base PR#71`,
 or `owner/template-base Issue#71` when the org is not obvious from context.
