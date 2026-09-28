@@ -5,8 +5,11 @@
 #
 # The gate reviewer is Copilot (`reviewers:` below). The checker requires
 # EVERY listed login to have reviewed the head, so the list names one; it
-# cannot express "any of". While Copilot is out of quota this status stays
-# red and PRs are human-merge. Codex is a human-summoned fallback only
+# cannot express "any of". When Copilot's newest post is its quota notice
+# the checker fails open -- "FAIL-OPEN: ... is out of quota", threads still
+# required -- and it waits up to `wait_seconds` (default 180) for that
+# answer, since GitHub runs no workflow when Copilot posts; any other
+# failure notice, or silence, stays red. Codex is a human-summoned fallback only
 # ("@codex review" by the human, never posted by an agent -- the gates
 # skill, Reviewer Selection); it is not listed here because listing it
 # would require it on every PR. The self-adversarial review in the gates
@@ -57,12 +60,12 @@ jobs:
     if: >-
       (github.event_name != 'issue_comment' || github.event.issue.pull_request != null)
       && (github.event.pull_request == null || github.event.pull_request.head.repo.full_name == github.repository)
-    uses: 9atatimer/tds-utils/.github/workflows/review-settled.yml@020aaf53d8c87830ad26491a089ff692cf846bd0
+    uses: 9atatimer/tds-utils/.github/workflows/review-settled.yml@ea20985d334580a80bb18cf9b586b6dbebdf539c
     permissions:
       statuses: write
       pull-requests: read
       contents: read
     with:
       reviewers: copilot-pull-request-reviewer
-      tools_ref: 020aaf53d8c87830ad26491a089ff692cf846bd0
+      tools_ref: ea20985d334580a80bb18cf9b586b6dbebdf539c
       pr: ${{ github.event.pull_request.number || github.event.issue.number || inputs.pr }}

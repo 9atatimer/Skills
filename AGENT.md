@@ -41,7 +41,7 @@ PRs land through the tedium merge bot; the rules are in `tedium.toml` on
   the gate reviewer's newest review is on the head and every thread is
   resolved) still posts on the PR head, but since 2026-09-26 neither
   `pr_status` nor the `main` ruleset requires it: Copilot has no quota,
-  so it could never go green. The ruleset requires `gate` and a PR; only
+  and until the quota fail-open it could never go green. The ruleset requires `gate` and a PR; only
   the tedium App may bypass it. Tedium therefore lands a green PR on a
   reviewer's `r+` with no review at all; restore `review-settled` in
   `pr_status` when Copilot reviews again. A PR from a fork runs with a
@@ -50,9 +50,11 @@ PRs land through the tedium merge bot; the rules are in `tedium.toml` on
   `.github/workflows/review-settled.yml` lists `copilot-pull-request-reviewer`
   as the reviewer whose newest review must sit on the head. The reusable
   checker requires every listed login, so it cannot express "Copilot or
-  Codex"; while Copilot is out of quota the status stays red, and no
-  longer blocks anything. An agent never posts `@codex review` (the gates skill,
-  Reviewer Selection); Copilot is the only reviewer an agent may summon.
+  Codex"; when Copilot answers with its quota notice the status fails
+  open (`FAIL-OPEN: ... is out of quota`, threads still required; the
+  gates skill), and it no longer blocks anything either way. An agent
+  never posts `@codex review` (the gates skill, Reviewer Selection);
+  Copilot is the only reviewer an agent may summon.
   The checker is pinned by commit (`uses:` and `tools_ref:` carry the
   same tds-utils sha); bump both together.
 - **Prose is scanned for ASCII at commit time.** The publicity guard
