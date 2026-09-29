@@ -149,6 +149,15 @@ All AI review cycles happen within a single PR. Do not create multiple PRs
 or close/re-open PRs.
 
 - **Push** your branch to `origin`.
+- **Before any follow-up push, check the PR is still open.** A human can
+   land the PR between your commits. A push to the branch of a merged PR
+   succeeds silently -- the branch still exists until deletion -- and the
+   commits go nowhere: they are on no open PR and never reach the default
+   branch. Observed 2026-09-27: two follow-up commits pushed to a branch
+   whose PR had merged twenty minutes earlier, recovered only by
+   cherry-picking onto a fresh branch. `gh pr view <NUMBER> --json state`
+   first; if `MERGED`, cut a new branch from the default branch and open a
+   new PR (never force-push, never reopen).
 - **Open a PR** targeting the default branch. **Do NOT open it as a
    draft** -- Copilot does not review draft PRs, so a draft silently never
    gets reviewed and the review-watch loop polls forever. Open it
@@ -428,6 +437,15 @@ Families of verbs, in **token-frugal preference order**:
    `diff_hunk`), so they cost ~5--10x more tokens than `gadmin` for the
    same operation. Avoid them for hot loops over many comments.
 
+- **`gh pr create -R <slug>` resolves the HEAD repo from the cwd, not
+   from `-R`.** Run from a checkout of a different repo (the shared clone
+   while the branch lives in a worktree), it sends `<cwd-owner>:<branch>`
+   as the head and fails with "Head sha can't be blank ... No commits
+   between ...", which reads like a branch problem and is not. Observed
+   2026-09-27 opening a template-tools PR from the tds-utils clone. Use
+   the REST call, which takes head and base literally:
+   `gh api -X POST repos/<owner>/<repo>/pulls -f head=<branch> -f
+   base=<default> -f title=... -F body=@<file>`.
 - **`gh` CLI** -- last-resort fallback when neither `gadmin` nor MCP cover
    the operation. (Exception: for the two verbs below that have no `gadmin`
    wrapper yet -- PR-state checks and Copilot re-request -- prefer `gh`

@@ -250,6 +250,25 @@ in teardown. Cover the other direction too, on purpose -- a process that
 dies without ever becoming ready is a real case, and it should be a test
 rather than an accident of scheduling.
 
+### Drive a script the way its caller does
+
+A test that invokes a script under test with tidier arguments than the
+real caller uses tests a program the caller never runs. A mirror-sync
+script passed its `<package-dir>` argument straight into Node's
+`require()`; the suite handed it absolute `mkdtemp` paths and stayed
+green, the workflow handed it `packages/naatm-ci-magic` and the first
+real run died with "Cannot find module" -- a bare specifier without `./`
+or `/` is a module name, not a path. Mechanism: the argument form is part
+of the interface, and the suite had silently narrowed it.
+
+Before the first case, read how the production caller invokes the thing
+(the workflow step, the cron line, the hook) and copy that shape: relative
+or absolute paths, the cwd, quoting, env, argument order. At least one
+case runs the exact production invocation; the rest may be tidier. The
+same rule covers a CLI's own subcommand/flag forms: if the docs say
+`tool -n seed`, one test says `tool -n seed`, not a hand-built call into
+the function underneath.
+
 ### Test Isolation
 
 Every test must start with clean state:
