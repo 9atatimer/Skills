@@ -104,6 +104,7 @@ proposal makes the choice reviewable, the landing keeps the file honest.
 | Agent chat UI | **@cloudflare/ai-chat** | Pre-1.0 preview chat client for the Think protocol. Same containment rule as `@cloudflare/think`. |
 | LLM tool-calling | **ai** (Vercel AI SDK v7) | Provider-agnostic tool/stream vocabulary; what `agents` composes against. |
 | LLM provider adapter | **@ai-sdk/openai** (v4) | OpenAI provider for the AI SDK. Model id stays an edge parameter, never a domain constant. |
+| Code review engine | **Open Code Review** (`@alibaba-group/open-code-review`, the `ocr` CLI) | Apache-2.0. The `ocr` adapter behind the self-review skill's ReviewEngine port; never called from anywhere else. Install by npm at an exact version, never by its install script. Telemetry is off unless `OCR_ENABLE_TELEMETRY=1`; leave it off. The endpoint behind it is the machine's binding, not a radar choice. Skips Markdown. |
 
 ## Hold
 

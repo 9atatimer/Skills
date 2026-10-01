@@ -1,6 +1,6 @@
 ---
 name: gates
-description: "Phase 6 of the SDLC: everything that stands between a pushed commit and a mergeable one -- pre-commit scanners, CI, ci.magic assertions, agentic and human review, the self-adversarial review pass on your own diff, and the review-watch loop. Carries two standing laws: clear the gate before you move it, and zero unreviewed code. Load when a gate goes red, when driving a PR through review, when reviewing your own work, or when changing any gate's configuration. Skip for the push/PR mechanics themselves (github-workflow) and for deploy pipelines (release)."
+description: "Phase 6 of the SDLC: everything that stands between a pushed commit and a mergeable one -- pre-commit scanners, CI, ci.magic assertions, agentic and human review, the mandate to self-review your own diff (the self-review skill says how), and the review-watch loop. Carries two standing laws: clear the gate before you move it, and zero unreviewed code. Load when a gate goes red, when driving a PR through review, when reviewing your own work, or when changing any gate's configuration. Skip for the push/PR mechanics themselves (github-workflow) and for deploy pipelines (release)."
 ---
 
 # SKILL: Gates (Phase 6)
@@ -180,95 +180,26 @@ blocked by a gate is not authorization to move it.
   back through the event stream are not feedback and need no state.
   Silently ignoring feedback is the one forbidden outcome.
 
-## Self-Adversarial Review (the panel pass on your own diff)
+## Self-Review (the adversarial pass on your own diff)
 
 An author cannot review their own diff: you re-read your intent rather
-than the code. The correction is the same one the designomatic skill
-applies to design records -- a separate reviewer with an adversarial
-stance -- applied here to code. **Run it before every PR a human is
-asked to review**, not when you feel like a second opinion: an author
-who decides case by case decides "not this one" on the diffs that most
-need it. Size it to the diff. Use three reviewers for anything
-executable, for a gate's configuration, and for any change to a skill or
-persona file -- those are operating rules the fleet loads and runs, so
-there is no "docs-only" edit to one. Use one reviewer for a prose diff
-a human can read in a minute: a README, a design record, a plan. The
-epilogue says which you ran and why.
+than the code. **Run the self-review pass before every PR a human or gate
+reviewer is asked to read**, not when you feel like a second opinion: an
+author who decides case by case decides "not this one" on the diffs that
+most need it. How to run it -- the fresh-context brief, dimensions,
+evidence tiers, the verifier, one round, triage and the epilogue on the
+PR -- is the self-review skill.
 
 This pass is where the reviewing happens. The agentic reviewer bot that
 follows (Copilot; Codex only when a human summons it -- Reviewer
-Selection below) is the mechanical gate over a diff that has already
-been through it, not the first pair of eyes.
+Selection below) is the mechanical gate over a diff that has already been
+through it, not the first pair of eyes.
 
-**Running it:**
-
-- **Separate agents, not a second read.** Spawn sub-agents -- three, or
-  one for the small prose case above -- on lesser models than your own,
-  each with a persona you choose for this diff -- a security engineer for an auth change, an SRE for a deploy
-  workflow, a pedantic tech writer for prose, a maintainer who has to
-  live with it in a year. Cheap models are the point: the lens is what
-  finds things, and three lenses beat one. Every brief is adversarial:
-  assume the author is wrong until the code proves otherwise, verify
-  every claim independently (read the files, run the hermetic tests
-  yourself), report findings with severity and evidence, and fix nothing
-  -- the reviewer reports, the author triages.
-- **Collate before acting.** One triage table across all three: the same
-  finding from two reviewers is one row, and two reviewers who contradict
-  each other are visible as such rather than argued with one at a time.
-- **Findings come back as bug reports, not verdicts.** Triage them with
-  exactly the machinery of any agentic review: verify each against the
-  code, fix what you agree with, rebut what is wrong with a concrete
-  reason. Silently dropping a finding is as forbidden here as it is for
-  any reviewer's feedback.
-- **Defend what you disagree with; do not be a pushover.** A reviewer
-  finding is evidence, not authority, and a lesser model is wrong at
-  least as often as you are. Where you disagree, the finding goes to the
-  human in the epilogue below, with your rebuttal beside it -- what the
-  reviewer claimed, why you think the code is right as written, what you
-  would need to see to change your mind -- and the human judges. Nothing
-  here goes through the per-thread reply machinery of Automated Review
-  Response: these reviewers post no threads. Folding on every finding to
-  make the table green is the failure mode this rule exists to name.
-
-**The epilogue (always):**
-
-- **A self-review that never reaches the PR did not happen**, as far as
-  every later reader is concerned -- the session transcript is archived
-  and nobody re-reads it. When the diff under review has (or gets) a
-  PR, post ONE summary comment on that PR alongside the fix commits:
-  what was reviewed (commits, paths), each reviewer's persona and model
-  and its verdict, the collated findings with their dispositions (fixed
-  with the SHA, or rebutted with the reason, awaiting the human's
-  judgement), and which tests the reviewers ran. The epilogue is the
-  review's durable record; the fix alone is not, because a later
-  reader cannot reconstruct the why from a diff.
-- Post the epilogue WITH the fix, not instead of it -- one comment
-  after triage completes, never a running narration, and never a
-  summary that promises fixes not yet pushed.
-
-**When a finding names N instances of a pattern, N is a sample, not a
-list.** Script the sweep for the whole class before pushing the fix
-(extract the values, search for every written form of them); the script
-finds what the reviewer never named, and the next round will name those.
-
-**Probe sub-agent tooling before fanning out.** Dispatch one cheap agent
-doing one trivial write and confirm it landed. The orchestrator's own
-tools working is no evidence the sub-agents' do: a fleet whose Edit/Write
-are denied burns its whole budget and writes nothing.
-
-**Promote repeated catches into a gate.** A rule that lives only in a
-batch prompt or a review brief dies with the session. Anything an ad-hoc
-brief catches twice is a candidate for a real check -- a ci.magic
-assertion, a script, a test -- or the next batch relearns it.
-
-**What it does not buy:**
-
-- Self-adversarial review NEVER satisfies Zero Unreviewed Code. The
-  sub-agents run in your session, on your context, at your direction;
-  they are a cheap correction for author blindness, not independent
-  reviewers. The agentic and human review rungs run unchanged, and the
-  epilogue exists partly so those reviewers can see what was already
-  caught and fixed.
+- Self-review NEVER satisfies Zero Unreviewed Code. You chose the brief,
+  you ran the pass, and you triaged the results; it is a cheap correction
+  for author blindness, not an independent reviewer. The agentic and human
+  review rungs run unchanged, and the epilogue exists partly so those
+  reviewers can see what was already caught and fixed.
 
 ## Git Hook Discipline (scalpel, not axe)
 
@@ -878,6 +809,8 @@ include it in the next commit; if not, skip.
 
 ## Related
 
+- the self-review skill -- the adversarial pass on your own diff that
+  runs before every PR
 - the github-workflow skill -- branch, push, and PR mechanics; the remote
   topology table this skill's `--repo` targets refer to; issue anatomy for
   the `pr-todo` issues you file
