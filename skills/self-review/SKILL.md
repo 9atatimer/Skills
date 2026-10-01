@@ -109,11 +109,10 @@ did not review and why. A coverage gap is part of the result, not an error;
 it goes in the ledger.
 
 **What sits behind the engine is the binding's business, not the skill's.**
-The contract a bound model meets -- an OpenAI-compatible endpoint, native
-tool calling, a declared context limit -- is owned by whoever configures
-the machine. This skill never names a model, a host, a memory size or a
-vendor, and never writes engine configuration (`ocr config set` is not
-yours to run).
+Which model, where it runs, and what it is routed through belong to
+whoever configures the machine. This skill never names a model, a host, a
+memory size or a vendor, and never writes engine configuration (`ocr
+config set` is not yours to run).
 
 ### Adapters
 
