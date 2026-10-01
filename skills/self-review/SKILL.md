@@ -106,7 +106,7 @@ The port takes a ReviewRequest and returns findings plus a coverage report.
 |---|---|
 | `change` | Repo path, base SHA, head SHA |
 | `intent` | Path to a Markdown file holding the intent |
-| `dimensions` | The one to three dimensions for this pass (Sizing, below) |
+| `dimensions` | The two or three dimensions for this pass (Sizing, below) |
 | `rules` | The repo's rule set (a committed `.opencodereview/rule.json` when present) plus the do-not-flag list |
 | `budget` | Token ceiling for the pass |
 
@@ -138,18 +138,17 @@ remote endpoint is the machine's business. Cloud sessions normally have no
 **`ocr`:**
 
 ```bash
-git -C <repo> show <base>:.opencodereview/rule.json > <rules.json> \
-  || echo '{"rules": []}' > <rules.json>
 OCR_NO_UPDATE=1 ocr review --repo <repo> --from <base> --to <head> \
-  --rule <rules.json> --background-file <background.md> \
+  --background-file <background.md> \
   --format json --audience agent --effort low \
   --max-tokens-budget <budget> -o <out.json>
 ```
 
-- **Rules come from the base, never the head.** Left alone, `ocr` reads
-  `.opencodereview/rule.json` from the working tree, so a change could
-  exclude or rewrite the rules for its own files. `--rule` with the base's
-  copy closes that.
+- **A change that touches `.opencodereview/` is not reviewed by `ocr` or
+  `ocr-delegate`; all of it goes to `subagent`.** `ocr` always reads
+  `.opencodereview/rule.json` from the working tree, and `--rule` only
+  layers above it, so a change could exclude or rewrite the rules for its
+  own files. Untouched, the head's rules are the base's.
 - **`<background.md>` is the intent with the do-not-flag list appended.**
   `ocr` has no other channel for either.
 - **`OCR_NO_UPDATE=1` always.** Without it the launcher checks the npm
@@ -170,16 +169,18 @@ OCR_NO_UPDATE=1 ocr review --repo <repo> --from <base> --to <head> \
 - Its findings arrive as E1 at best. Its reflection filter is not our
   verifier; the verifier still runs.
 - **A file `ocr` did not review goes to `subagent`.** `ocr review --preview
-  --format json` (same refs and `--rule`) lists every file it excludes and
-  why -- tests, extensions it does not know, secret paths, size -- and the
-  result marks budget failures `failed(budget)`. Each of those files is
-  reviewed by the `subagent` adapter with the same dimensions. The ledger
-  lists only what no adapter reviewed.
+  --format json` (same refs) lists every file it excludes and why -- tests,
+  extensions it does not know, credential paths, size -- and the result
+  marks budget failures `failed(budget)`. Each of those files is reviewed by
+  the `subagent` adapter with the same dimensions, **except credential
+  paths** (`secret_exclude`): those are never sent to any model. A
+  credential file in a diff is itself a finding for the human; list it in
+  the ledger as not reviewed, and why. The ledger lists only what no
+  adapter reviewed.
 
-**`ocr-delegate`:** with the same base `<rules.json>` and
-`OCR_NO_UPDATE=1`, run `ocr delegate preview --format json --from <base>
---to <head> --rule <rules.json>` for the file list, then `ocr delegate rule
---format json --rule <rules.json> <paths...>` for each file's rules, and
+**`ocr-delegate`:** with `OCR_NO_UPDATE=1`, run `ocr delegate preview
+--format json --from <base> --to <head>` for the file list, then `ocr
+delegate rule --format json <paths...>` for each file's rules, and
 hand each finder its files and rules in the brief. Finders are sub-agents:
 pin their model as for `subagent`. Excluded files go to `subagent` exactly
 as for `ocr`. Alibaba's delegate skill says to "discard likely false
@@ -202,9 +203,8 @@ that matches wins.
 |---|---|
 | Touches a skill, persona, gate configuration or CI workflow, at any size | 3: correctness, intent compliance, security |
 | Code, over 100 lines | 3: correctness, security, and whichever of tests or intent compliance the change risks more |
-| Code, 11 to 100 lines | 2: correctness, plus security when it touches auth, input handling, secrets or dependencies, otherwise tests |
-| Code, up to 10 lines | 1: correctness |
-| Any other prose | 1: intent compliance; add correctness when it takes more than a minute to read |
+| Code, up to 100 lines | 2: correctness, plus security when it touches auth, input handling, secrets or dependencies, otherwise tests |
+| Any other prose | 2: intent compliance, correctness |
 
 Skill and persona files are operating rules the fleet loads and runs: no
 "docs-only" discount. More than three dimensions buys correlated agreement,
