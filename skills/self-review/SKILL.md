@@ -172,10 +172,12 @@ OCR_NO_UPDATE=1 ocr review --repo <repo> --from <base> --to <head> \
   verifier; the verifier still runs.
 - **What `ocr` could not review goes to `subagent`; what is out of scope
   does not.** `ocr review --preview --format json` (same refs) gives each
-  excluded file an `exclude_reason`, and the result marks budget failures
-  `failed(budget)`. Route by reason:
+  excluded file an `exclude_reason`, and the result lists every selected
+  file it failed to finish under `failed`, whatever the class (`budget`,
+  `provider`, `timeout`, `configuration`, `input`, `panic`, `cancelled`,
+  `unknown`). Route by reason:
   - to `subagent`, same dimensions: `unsupported_ext`, `too_large`,
-    `deleted`, `failed(budget)`, and `default_path` when the file is a
+    `deleted`, every `failed` file, and `default_path` when the file is a
     test -- engine limits on files still in scope.
   - nowhere, listed in the ledger with the reason: `user_exclude` (the
     repo's own committed exclusions), `provider_directory`, `binary`, and
@@ -185,8 +187,9 @@ OCR_NO_UPDATE=1 ocr review --repo <repo> --from <base> --to <head> \
     itself a finding for the human; list it as not reviewed, and why.
 
 **`ocr-delegate`:** with `OCR_NO_UPDATE=1`, run `ocr delegate preview
---format json --from <base> --to <head>` for the file list, then `ocr
-delegate rule --format json <paths...>` for each file's rules, and
+--repo <repo> --from <base> --to <head> --format json` for the file list,
+then `ocr delegate rule --repo <repo> --from <base> --to <head> --format
+json <paths...>` for each file's rules, and
 hand each finder its files and rules in the brief. Finders are sub-agents:
 pin their model as for `subagent`. Excluded files go to `subagent` exactly
 as for `ocr`. Alibaba's delegate skill says to "discard likely false
