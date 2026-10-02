@@ -6,7 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { lintTree, readTree } from "../scripts/skill-lint.mjs";
+import { lintTree, readTree, estimateTokens } from "../scripts/skill-lint.mjs";
 
 function skill(name, body, description = `Does ${name} things.`) {
   return `---\nname: ${name}\ndescription: "${description}"\n---\n\n${body}\n`;
@@ -148,11 +148,17 @@ test("an ordered list is a finding outside the allowlist and inside code fences 
   assert.deepEqual(lintTree(fenced), []);
 });
 
-test("a SKILL.md over the line budget is a finding", () => {
-  const files = tree({
-    "skills/alpha/SKILL.md": skill("alpha", "# Alpha\n" + "line\n".repeat(20)),
-  });
-  assert.deepEqual(checks(lintTree(files, { lineBudget: 10 })), ["line-budget"]);
+test("a SKILL.md over the token budget is a finding; one exactly at it is not", () => {
+  const text = skill("alpha", "# Alpha\n" + "word ".repeat(40));
+  const files = tree({ "skills/alpha/SKILL.md": text });
+  const tokens = estimateTokens(text);
+  assert.deepEqual(checks(lintTree(files, { tokenBudget: tokens - 1 })), ["token-budget"]);
+  assert.deepEqual(lintTree(files, { tokenBudget: tokens }), []);
+});
+
+test("tokens are estimated from characters, not lines", () => {
+  assert.equal(estimateTokens("x".repeat(400)), 100);
+  assert.equal(estimateTokens("\n".repeat(400)), 100);
 });
 
 test("the real tree passes", () => {

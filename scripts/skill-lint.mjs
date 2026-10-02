@@ -15,7 +15,7 @@
 //   frontmatter   SKILL.md has name == its directory and a description of
 //                 at most 1,024 characters (agentskills.io)
 //   ordered-list  no "1." lists in a SKILL.md (sdlc law 17)
-//   line-budget   no SKILL.md over LINE_BUDGET lines
+//   token-budget  no SKILL.md over TOKEN_BUDGET estimated tokens
 //
 // Run by `npm test` (so by ci.yml and `gate`) and by .husky/pre-commit:
 //   node scripts/skill-lint.mjs
@@ -27,9 +27,17 @@ import { fileURLToPath } from "node:url";
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-// Today's longest SKILL.md (gates, 906 lines). A ratchet: lower it as
-// skills move detail into reference files; never raise it to fit a file.
-export const LINE_BUDGET = 906;
+// Tokens, not lines: a SKILL.md costs context by its tokens, and a line of
+// table costs ten of prose. Estimated as characters / 4 -- no tokenizer
+// dependency, and a ratchet only needs a stable measure, not an exact one.
+// Today's largest SKILL.md (gates, ~12,000). agentskills.io's target is
+// 5,000. Lower it as skills move detail into reference files; never raise
+// it to fit a file.
+export const TOKEN_BUDGET = 12014;
+
+export function estimateTokens(text) {
+  return Math.ceil(text.length / 4);
+}
 
 export const DESCRIPTION_MAX = 1024;
 
@@ -180,10 +188,10 @@ function orderedListFindings(relpath, text) {
   return [{ path: relpath, line: i + 1, check: "ordered-list", message: "ordered list; use bullets (sdlc law 17)" }];
 }
 
-function lineBudgetFindings(relpath, text, budget) {
-  const count = text.replace(/\n$/, "").split("\n").length;
-  if (count <= budget) return [];
-  return [{ path: relpath, line: budget + 1, check: "line-budget", message: `${count} lines; the budget is ${budget}` }];
+function tokenBudgetFindings(relpath, text, budget) {
+  const tokens = estimateTokens(text);
+  if (tokens <= budget) return [];
+  return [{ path: relpath, line: 1, check: "token-budget", message: `~${tokens} tokens; the budget is ${budget}` }];
 }
 
 function referenceFindings(relpath, text, skills, indexes) {
@@ -213,7 +221,7 @@ function referenceFindings(relpath, text, skills, indexes) {
   return out;
 }
 
-export function lintTree(files, { lineBudget = LINE_BUDGET } = {}) {
+export function lintTree(files, { tokenBudget = TOKEN_BUDGET } = {}) {
   const skillFiles = [...files.keys()].filter((p) => /^skills\/[^/]+\/SKILL\.md$/.test(p));
   const skills = new Set([...files.keys()].map((p) => p.match(/^skills\/([^/]+)\//)?.[1]).filter(Boolean));
   const indexes = new Map(skillFiles.map((p) => [p.split("/")[1], sectionIndex(files.get(p))]));
@@ -223,7 +231,7 @@ export function lintTree(files, { lineBudget = LINE_BUDGET } = {}) {
     if (skillFiles.includes(relpath)) {
       findings.push(...frontmatterFindings(relpath, text));
       findings.push(...orderedListFindings(relpath, text));
-      findings.push(...lineBudgetFindings(relpath, text, lineBudget));
+      findings.push(...tokenBudgetFindings(relpath, text, tokenBudget));
     }
     findings.push(...referenceFindings(relpath, text, skills, indexes));
   }

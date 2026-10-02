@@ -117,7 +117,8 @@ merged to `main` since its base for the same nouns (`git log
 That includes the skill lint (`scripts/skill-lint.mjs`, also in the husky
 pre-commit): every "the X skill" must name a skill, every cited section
 must name a heading in that skill, plus frontmatter, ordered lists and a
-per-SKILL.md line budget. Its `LINE_BUDGET` is a ratchet: lower it when a
-skill moves detail into reference files, never raise it to fit a file.
+per-SKILL.md token budget (characters / 4). Its `TOKEN_BUDGET` is a
+ratchet: lower it when a skill moves detail into reference files, never
+raise it to fit a file.
 `npm run guard` runs the publicity guard over the full tree; `npm run
 evals` runs the skill evals under `evals/`.
