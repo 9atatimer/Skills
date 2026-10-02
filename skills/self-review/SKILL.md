@@ -27,11 +27,14 @@ description: "Reviewing your own diff before a human or a gate reviewer reads it
   finding.
 - **Every finding is verified before anyone acts on it**, by a fresh agent
   whose default stance is that the finding is wrong.
-- **One round.** A fix earns at most one re-review, scoped to the fix.
+- **One round, and only for a load-bearing fix.** A fix earns at most one
+  re-review, scoped to the fix, and a hygiene-only fix earns none.
 - **The engine is a binding.** Whatever the machine binds behind the
   ReviewEngine port does the finding; every rule below holds the same for
   every adapter.
-- **It never satisfies Zero Unreviewed Code.**
+- **It never satisfies Zero Unreviewed Code, except on a
+  documentation-only PR, where it is the whole review** -- no Copilot,
+  no Codex (Documentation-only changes, below).
 
 ---
 
@@ -79,7 +82,8 @@ description: "Reviewing your own diff before a human or a gate reviewer reads it
   or the finding goes to the human. There is no second argument: a model
   that is asked "are you sure?" folds on correct answers.
 - **One round.** After fixes, at most one re-review, scoped to the fix
-  delta, reporting high and critical only. The re-reviewer gets the
+  delta, reporting high and critical only -- and none when every fix was
+  hygiene (Re-review, below). The re-reviewer gets the
   ordinary brief over the delta and nothing else; collation, not the
   re-reviewer, drops what the ledger already disposed of.
 - **The ledger reaches the PR, or the review did not happen.**
@@ -313,12 +317,38 @@ command output.
 
 ## Re-review
 
+Only when at least one fix is load-bearing, in the gates skill's sense
+(Spend Review Turns on Load-Bearing Fixes): it changes runtime behavior, a
+contract, a security property, a test's verdict, or what a rule an agent
+or gate executes says. Wording, typos, comments, naming, formatting and the
+accuracy of human-read documentation are hygiene: fix them, record them in
+the ledger as fixed (SHA), and run no re-review for them.
+
 At most one, over `<last reviewed head>..<new head>`, reporting high and
 critical only. The re-reviewer gets the ordinary finder brief over that
 delta with `<threshold>` set to high, and nothing else -- no ledger, no
 rebuttals. (A first pass sets `<threshold>` to low.) Collation drops anything
 it re-raises that the ledger already disposed of. Each fix is new review
 surface; a loop of rounds grows findings instead of converging.
+
+---
+
+## Documentation-only changes
+
+When every changed file is human-read prose -- a README, a `docs/`
+runbook or as-built, `TODO_PLAN.md`, task files, a changelog, a
+comment-only edit to source -- this pass is the whole review. Request no
+Copilot review, ask no human to summon Codex, and run no review-watch
+loop; the epilogue on the PR is the record that satisfies Zero
+Unreviewed Code (the gates skill, Documentation-only changes get no
+agentic reviewer).
+
+- **Phases 2 and 3 are the exception.** A design record under review or a
+  phase-3 seam map gets the designomatic panel, not this pass and not
+  Copilot or Codex -> the designomatic skill.
+- **Operating rules are not documentation.** Skills, personas,
+  `AGENT.md`, prompts, CI and gate configuration take the full ladder
+  (Sizing, above: no "docs-only" discount).
 
 ---
 
@@ -352,9 +382,10 @@ confirm it finds it.
 
 ## What it does not buy
 
-- **Self-review NEVER satisfies Zero Unreviewed Code.** You chose the brief,
-  you ran the pass, and you triaged the results. The agentic and human
-  review rungs run unchanged, and the epilogue is partly for them: they see
+- **Self-review NEVER satisfies Zero Unreviewed Code**, outside a
+  documentation-only PR (Documentation-only changes, above). You chose the
+  brief, you ran the pass, and you triaged the results. Everywhere else
+  the agentic and human review rungs run unchanged, and the epilogue is partly for them: they see
   what was caught and fixed.
 - **It is not the gate reviewer.** An engine the repo runs in CI, outside
   any author's session, is a different thing; whether one may stand in for

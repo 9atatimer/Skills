@@ -105,7 +105,8 @@ govern every rung of the gate ladder and not just the PR:
   nobody else may, and an agent never may.
 - **Zero unreviewed code.** Never land code no one has reviewed, and never
   drop a piece of reviewer feedback -- acting on it is optional, recording
-  it is not.
+  it is not. A review turn is spent only on a load-bearing fix, and a
+  documentation-only PR gets the self-review pass alone (the gates skill).
 
 Reviewer selection, the review-watch loop, the automated review-response
 procedure, and the CI/ci.magic rungs are all **the gates skill**. What
@@ -165,12 +166,17 @@ or close/re-open PRs.
    `[WIP]` in the title.
 - **Title:** use a clean conventional-commit summary
    (e.g. `feat(scope): short description`).
-- **Iterative AI review:** Copilot reviews the open PR. After each
-   productive push, re-request with
+- **Iterative AI review:** Copilot reviews the open PR -- unless the PR
+   is documentation-only, which gets the adversarial self-review alone
+   and never Copilot or Codex (design and architecture drafts in phases
+   2 and 3 get designomatic instead). Re-request with
    `gh pr edit <NUMBER> --add-reviewer @copilot` (Copilot does not
-   auto-re-review on `synchronize`). Repeat: address feedback, push,
-   re-request, wait -- subject to the per-reviewer turn cap in the gates
-   skill.
+   auto-re-review on `synchronize`) only after a push that carries a
+   load-bearing fix; a hygiene-only push (wording, typos, comments,
+   documentation accuracy) is replied to with its SHA and never
+   re-reviewed. Repeat: address feedback, push, re-request when earned,
+   wait -- subject to the per-reviewer turn cap. Both rules are the
+   gates skill's Spend Review Turns on Load-Bearing Fixes.
 - **Landing:** once AI review cycles settle, see Landing via tedium below
    for how the PR merges -- an enrolled repo may land through the gates
    themselves; any other repo has the human take over for final review and
@@ -185,9 +191,14 @@ To avoid charging Copilot review cycles to the organization:
 - Push branch to `origin` (your fork)
 - Create a **normal (non-draft) PR** targeting the fork's default branch
 - Request a Copilot review: `gh pr edit <NUMBER> --add-reviewer @copilot`
+   -- unless the PR is documentation-only, which gets the self-review pass
+   alone and needs no Stage 1 (gates skill, Documentation-only changes get
+   no agentic reviewer)
 - Copilot reviews happen here -- charged to your personal account
-- Address all Copilot feedback. **Re-request review after each push** --
-   Copilot does not auto-re-review on `synchronize`
+- Address all Copilot feedback. **Re-request review after a push that
+   carries a load-bearing fix, never after a hygiene-only push** (gates
+   skill, Spend Review Turns on Load-Bearing Fixes) -- Copilot does not
+   auto-re-review on `synchronize`
 
 > **Do not use a Draft PR for Stage 1.** Copilot does not review draft
 > PRs -- a draft sits unreviewed indefinitely, so the AI-review step never
@@ -294,9 +305,11 @@ output; a gate that passes the pipeline's changes unexamined voids it.
 
 Anything short of that is not "almost": a red `review-settled` means a
 review is still owed on this head (re-request the reviewer on the latest
-push if none is on it; resolve every thread; post the self-review
-epilogue), and the agent waits
-for the status, never lands around it. A human with write access may
+push if none is on it and that push carries a load-bearing fix; resolve
+every thread; post the self-review epilogue), and the agent waits
+for the status, never lands around it. A head that is red only because
+of a hygiene-only tail, or a documentation-only PR, goes to the human to
+land; neither earns a turn just to turn the status green. A human with write access may
 comment `tedium land` at any time and that remains the human merge
 decision. `tedium dryrun` is unrestricted: it builds on `tedium/try` and
 lands nothing. Never add `tedium/*` to protected-branch patterns; the
