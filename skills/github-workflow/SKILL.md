@@ -191,6 +191,9 @@ To avoid charging Copilot review cycles to the organization:
 - Push branch to `origin` (your fork)
 - Create a **normal (non-draft) PR** targeting the fork's default branch
 - Request a Copilot review: `gh pr edit <NUMBER> --add-reviewer @copilot`
+   -- unless the PR is documentation-only, which gets the self-review pass
+   alone and needs no Stage 1 (gates skill, Documentation-only changes get
+   no agentic reviewer)
 - Copilot reviews happen here -- charged to your personal account
 - Address all Copilot feedback. **Re-request review after a push that
    carries a load-bearing fix, never after a hygiene-only push** (gates

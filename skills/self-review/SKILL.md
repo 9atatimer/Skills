@@ -320,8 +320,9 @@ command output.
 Only when at least one fix is load-bearing, in the gates skill's sense
 (Spend Review Turns on Load-Bearing Fixes): it changes runtime behavior, a
 contract, a security property, a test's verdict, or what a rule an agent
-or gate executes says. Wording, typos, comments, naming, formatting and the
-accuracy of human-read documentation are hygiene: fix them, record them in
+or gate executes says, or a command, value or step an agent will execute
+from a runbook. Wording, typos, comments, naming, formatting and the
+accuracy of prose no agent executes are hygiene: fix them, record them in
 the ledger as fixed (SHA), and run no re-review for them.
 
 At most one, over `<last reviewed head>..<new head>`, reporting high and
