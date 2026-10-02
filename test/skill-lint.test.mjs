@@ -6,7 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { lintTree, readTree, estimateTokens } from "../scripts/skill-lint.mjs";
+import { lintTree, readTree, countWords } from "../scripts/skill-lint.mjs";
 
 function skill(name, body, description = `Does ${name} things.`) {
   return `---\nname: ${name}\ndescription: "${description}"\n---\n\n${body}\n`;
@@ -63,6 +63,36 @@ test("agent personas are checked for skill references too", () => {
     "agents/sre.md": "# SRE\n\nThe gamma skill is your authority.\n",
   });
   assert.deepEqual(checks(lintTree(files)), ["skill-ref"]);
+});
+
+test("a section citation matches on whole words only", () => {
+  const files = tree({
+    "skills/alpha/SKILL.md": skill(
+      "alpha",
+      "# Alpha\n\nthe beta skill's Test cases.\nthe beta skill's Trace everything.\nthe beta skill's Sizing rule.\n",
+    ),
+    "skills/beta/SKILL.md": skill("beta", "# Beta\n\n## Testing strategy\n\n## Sizing\n\n| **Trace test** | x |\n"),
+  });
+  const findings = lintTree(files);
+  assert.deepEqual(checks(findings), ["section-ref", "section-ref"]);
+  assert.deepEqual(findings.map((f) => f.line), [8, 9]);
+});
+
+test("a long hyphenated run does not stall the lint", () => {
+  const run = "a-".repeat(100000);
+  const started = Date.now();
+  lintTree(tree({ "skills/alpha/SKILL.md": skill("alpha", `# Alpha\n\n${run}\n`) }));
+  assert.ok(Date.now() - started < 2000, `took ${Date.now() - started} ms`);
+});
+
+test("a local reference in a reference file resolves against that file", () => {
+  const files = tree({
+    "skills/alpha/SKILL.md": skill("alpha", "# Alpha\n\n## Sizing\n"),
+    "skills/alpha/references/r.md": "# R\n\n## Mine\n\nsee (Mine, above) and (Sizing, above).\n",
+  });
+  const findings = lintTree(files);
+  assert.deepEqual(checks(findings), ["section-ref"]);
+  assert.match(findings[0].message, /Sizing.*this file/);
 });
 
 test("a cited section that no heading in the target skill starts is a finding", () => {
@@ -133,35 +163,54 @@ test("frontmatter: name must match the directory, description present and short"
     "skills/alpha/SKILL.md": skill("alfa", "# Alpha\n"),
     "skills/beta/SKILL.md": skill("beta", "# Beta\n", "x".repeat(1025)),
     "skills/gamma/SKILL.md": "# Gamma, no frontmatter\n",
+    "skills/delta/SKILL.md": "---\nname: delta\n---\n\n# Delta\n",
   });
-  assert.deepEqual(checks(lintTree(files)).sort(), ["frontmatter", "frontmatter", "frontmatter"]);
+  const findings = lintTree(files);
+  assert.deepEqual(checks(findings), ["frontmatter", "frontmatter", "frontmatter", "frontmatter"]);
+  assert.match(findings.find((f) => f.path === "skills/delta/SKILL.md").message, /missing/);
+});
+
+test("a description of exactly 1,024 characters passes", () => {
+  const files = tree({ "skills/alpha/SKILL.md": skill("alpha", "# Alpha\n", "x".repeat(1024)) });
+  assert.deepEqual(lintTree(files), []);
+});
+
+test("a folded block-scalar description is measured whole", () => {
+  const long = "---\nname: alpha\ndescription: >\n  " + "word ".repeat(300) + "\n---\n\n# Alpha\n";
+  assert.deepEqual(checks(lintTree(tree({ "skills/alpha/SKILL.md": long }))), ["frontmatter"]);
+  const short = "---\nname: alpha\ndescription: |\n  Does alpha\n  things.\n---\n\n# Alpha\n";
+  assert.deepEqual(lintTree(tree({ "skills/alpha/SKILL.md": short })), []);
 });
 
 test("an ordered list is a finding outside the allowlist and inside code fences it is not", () => {
   const bad = tree({
     "skills/alpha/SKILL.md": skill("alpha", "# Alpha\n\n1. first\n2. second\n"),
   });
-  assert.deepEqual(checks(lintTree(bad)), ["ordered-list"]);
+  assert.deepEqual(lintTree(bad).map((f) => [f.check, f.line]), [["ordered-list", 8]]);
   const fenced = tree({
     "skills/alpha/SKILL.md": skill("alpha", "# Alpha\n\n```\n1. step\n```\n"),
   });
   assert.deepEqual(lintTree(fenced), []);
 });
 
-test("a SKILL.md over the token budget is a finding; one exactly at it is not", () => {
+test("a SKILL.md over the word budget is a finding; one exactly at it is not", () => {
   const text = skill("alpha", "# Alpha\n" + "word ".repeat(40));
   const files = tree({ "skills/alpha/SKILL.md": text });
-  const tokens = estimateTokens(text);
-  assert.deepEqual(checks(lintTree(files, { tokenBudget: tokens - 1 })), ["token-budget"]);
-  assert.deepEqual(lintTree(files, { tokenBudget: tokens }), []);
+  const words = countWords(text);
+  assert.deepEqual(checks(lintTree(files, { wordBudget: words - 1 })), ["word-budget"]);
+  assert.deepEqual(lintTree(files, { wordBudget: words }), []);
 });
 
-test("tokens are estimated from characters, not lines", () => {
-  assert.equal(estimateTokens("x".repeat(400)), 100);
-  assert.equal(estimateTokens("\n".repeat(400)), 100);
+test("words are counted the way wc -w counts them", () => {
+  assert.equal(countWords("  one\ttwo\n\nthree  "), 3);
+  assert.equal(countWords("| **a** | b |"), 5);
+  assert.equal(countWords("\n\n\n"), 0);
 });
 
 test("the real tree passes", () => {
-  const findings = lintTree(readTree());
+  const files = readTree();
+  assert.ok([...files.keys()].filter((p) => p.endsWith("/SKILL.md")).length >= 30, "readTree found the skills");
+  assert.ok([...files.keys()].some((p) => p.startsWith("agents/")), "readTree found the personas");
+  const findings = lintTree(files);
   assert.deepEqual(findings, [], findings.map((f) => `${f.path}:${f.line} ${f.check} ${f.message}`).join("\n"));
 });

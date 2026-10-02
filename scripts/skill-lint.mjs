@@ -15,7 +15,7 @@
 //   frontmatter   SKILL.md has name == its directory and a description of
 //                 at most 1,024 characters (agentskills.io)
 //   ordered-list  no "1." lists in a SKILL.md (sdlc law 17)
-//   token-budget  no SKILL.md over TOKEN_BUDGET estimated tokens
+//   word-budget   no SKILL.md over WORD_BUDGET words, counted as `wc -w` does
 //
 // Run by `npm test` (so by ci.yml and `gate`) and by .husky/pre-commit:
 //   node scripts/skill-lint.mjs
@@ -27,16 +27,17 @@ import { fileURLToPath } from "node:url";
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-// Tokens, not lines: a SKILL.md costs context by its tokens, and a line of
-// table costs ten of prose. Estimated as characters / 4 -- no tokenizer
-// dependency, and a ratchet only needs a stable measure, not an exact one.
-// Today's largest SKILL.md (gates, ~12,000). agentskills.io's target is
-// 5,000. Lower it as skills move detail into reference files; never raise
+// Size is what a SKILL.md costs in context, and lines do not measure it: a
+// table line holds ten lines of prose. Words are counted exactly as `wc -w`
+// counts them, so anyone can check a number with the shell. A true token
+// count needs Claude's tokenizer, which only the API exposes; an estimate
+// is not a measure. Today's largest SKILL.md is gates, at 7,624 words. A
+// ratchet: lower it as skills move detail into reference files; never raise
 // it to fit a file.
-export const TOKEN_BUDGET = 12014;
+export const WORD_BUDGET = 7624;
 
-export function estimateTokens(text) {
-  return Math.ceil(text.length / 4);
+export function countWords(text) {
+  return text.split(/\s+/).filter(Boolean).length;
 }
 
 export const DESCRIPTION_MAX = 1024;
@@ -140,10 +141,6 @@ export function sectionIndex(text) {
   return { headings, terms };
 }
 
-function firstWord(s) {
-  return s.split(/[\s,]+/)[0];
-}
-
 export function resolvesSection(rest, index) {
   const want = dropLeadingThe(rest.trim());
   const section = want.match(/^Section (\d+)\b/);
@@ -153,13 +150,35 @@ export function resolvesSection(rest, index) {
   for (const raw of index.headings) {
     const forms = [raw, raw.replace(/^[\d.]+\s+/, "")].map(dropLeadingThe);
     for (const h of forms) {
-      if (!h) continue;
-      if (want.startsWith(h)) return true;
-      if (want.length >= 4 && h.startsWith(want)) return true;
+      if (h && (isWordPrefix(h, want) || isWordPrefix(want, h))) return true;
     }
   }
-  const word = firstWord(want);
-  return index.terms.some((t) => firstWord(dropLeadingThe(t)) === word);
+  // A bold term names a defined thing ("**Trace test**"); a citation of a
+  // list of them ("Trace, Purity, and Wiring tests") resolves on its first item.
+  const item = want.split(",")[0].trim();
+  return index.terms.some((t) => isWordPrefix(item, dropLeadingThe(t)));
+}
+
+// prefix is a whole-word prefix of s: "Sizing" of "Sizing rule", never
+// "Test" of "Testing".
+function isWordPrefix(prefix, s) {
+  return s.startsWith(prefix) && (s.length === prefix.length || /[\s,]/.test(s[prefix.length]));
+}
+
+// A frontmatter scalar, including a folded or literal block (`key: >` or
+// `key: |`) whose text sits on the indented lines below it.
+function frontmatterValue(block, key) {
+  const lines = block.split("\n");
+  const i = lines.findIndex((l) => l.startsWith(`${key}:`));
+  if (i < 0) return "";
+  const head = lines[i].slice(key.length + 1).trim();
+  if (!/^[>|][+-]?$/.test(head)) return head.replace(/^"(.*)"$/, "$1");
+  const body = [];
+  for (const l of lines.slice(i + 1)) {
+    if (!/^\s/.test(l) && l.trim()) break;
+    body.push(l.trim());
+  }
+  return body.join(" ").trim();
 }
 
 function frontmatterFindings(relpath, text) {
@@ -168,9 +187,7 @@ function frontmatterFindings(relpath, text) {
   const at = (message) => ({ path: relpath, line: 1, check: "frontmatter", message });
   if (!fm) return [at("no frontmatter block")];
   const name = (fm[1].match(/^name:\s*(.*)$/m) || [])[1]?.trim();
-  const description = ((fm[1].match(/^description:\s*(.*)$/m) || [])[1] || "")
-    .trim()
-    .replace(/^"(.*)"$/, "$1");
+  const description = frontmatterValue(fm[1], "description");
   const out = [];
   if (name !== dir) out.push(at(`name "${name}" does not match directory "${dir}"`));
   if (!description) out.push(at("description is missing"));
@@ -188,40 +205,41 @@ function orderedListFindings(relpath, text) {
   return [{ path: relpath, line: i + 1, check: "ordered-list", message: "ordered list; use bullets (sdlc law 17)" }];
 }
 
-function tokenBudgetFindings(relpath, text, budget) {
-  const tokens = estimateTokens(text);
-  if (tokens <= budget) return [];
-  return [{ path: relpath, line: 1, check: "token-budget", message: `~${tokens} tokens; the budget is ${budget}` }];
+function wordBudgetFindings(relpath, text, budget) {
+  const words = countWords(text);
+  if (words <= budget) return [];
+  return [{ path: relpath, line: 1, check: "word-budget", message: `${words} words (wc -w); the budget is ${budget}` }];
 }
 
 function referenceFindings(relpath, text, skills, indexes) {
-  const own = relpath.match(/^skills\/([^/]+)\//)?.[1];
   const { flat, lines } = flatten(stripFences(text));
   const out = [];
   const at = (index, check, message) => ({ path: relpath, line: lines[index], check, message });
 
-  for (const m of flat.matchAll(/\b[Tt]he ([a-z][a-z0-9-]*) skill\b(?!s)/g)) {
+  for (const m of flat.matchAll(/\b[Tt]he ([a-z][a-z0-9-]{0,63}) skill\b(?!s)/g)) {
     const name = m[1];
     if (skills.has(name) || GENERIC_WORDS.has(name) || EXTERNAL_SKILLS.has(name)) continue;
     out.push(at(m.index, "skill-ref", `"the ${name} skill" names no directory under skills/`));
   }
 
   const cited = [
-    ...[...flat.matchAll(/\b([a-z][a-z0-9-]*) skill's ([A-Z][^.;:)]*)/g)].map((m) => [m, m[1], m[2]]),
-    ...[...flat.matchAll(/\b([a-z][a-z0-9-]*) skill, ([A-Z][^.;:)]*)/g)].map((m) => [m, m[1], m[2]]),
-    ...[...flat.matchAll(/\b([a-z][a-z0-9-]*) skill(?:'s [a-z]+)? \(([A-Z][^()]*)\)/g)].map((m) => [m, m[1], m[2]]),
-    ...[...flat.matchAll(/\(([A-Z][^()]*?), (?:above|below)\)/g)].map((m) => [m, own, m[1]]),
+    ...[...flat.matchAll(/\b([a-z][a-z0-9-]{0,63}) skill's ([A-Z][^.;:)]*)/g)].map((m) => [m, m[1], m[2]]),
+    ...[...flat.matchAll(/\b([a-z][a-z0-9-]{0,63}) skill, ([A-Z][^.;:)]*)/g)].map((m) => [m, m[1], m[2]]),
+    ...[...flat.matchAll(/\b([a-z][a-z0-9-]{0,63}) skill(?:'s [a-z]+)? \(([A-Z][^()]*)\)/g)].map((m) => [m, m[1], m[2]]),
+    ...[...flat.matchAll(/\(([A-Z][^()]*?), (?:above|below)\)/g)].map((m) => [m, null, m[1]]),
   ];
+  const self = sectionIndex(text);
   for (const [m, target, rest] of cited) {
-    const index = indexes.get(target);
+    const index = target === null ? self : indexes.get(target);
     if (!index) continue;
     if (resolvesSection(rest, index)) continue;
-    out.push(at(m.index, "section-ref", `"${rest.slice(0, 60)}" is not a section of the ${target} skill`));
+    const where = target === null ? "this file" : `the ${target} skill`;
+    out.push(at(m.index, "section-ref", `"${rest.slice(0, 60)}" is not a section of ${where}`));
   }
   return out;
 }
 
-export function lintTree(files, { tokenBudget = TOKEN_BUDGET } = {}) {
+export function lintTree(files, { wordBudget = WORD_BUDGET } = {}) {
   const skillFiles = [...files.keys()].filter((p) => /^skills\/[^/]+\/SKILL\.md$/.test(p));
   const skills = new Set([...files.keys()].map((p) => p.match(/^skills\/([^/]+)\//)?.[1]).filter(Boolean));
   const indexes = new Map(skillFiles.map((p) => [p.split("/")[1], sectionIndex(files.get(p))]));
@@ -231,7 +249,7 @@ export function lintTree(files, { tokenBudget = TOKEN_BUDGET } = {}) {
     if (skillFiles.includes(relpath)) {
       findings.push(...frontmatterFindings(relpath, text));
       findings.push(...orderedListFindings(relpath, text));
-      findings.push(...tokenBudgetFindings(relpath, text, tokenBudget));
+      findings.push(...wordBudgetFindings(relpath, text, wordBudget));
     }
     findings.push(...referenceFindings(relpath, text, skills, indexes));
   }
