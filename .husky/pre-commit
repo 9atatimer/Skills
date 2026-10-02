@@ -1,1 +1,2 @@
 node scripts/publicity-guard.mjs --staged
+node scripts/skill-lint.mjs

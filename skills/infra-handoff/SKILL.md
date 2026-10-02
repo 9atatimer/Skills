@@ -9,7 +9,7 @@ disable-model-invocation: true
 > **Purpose:** an agent's infrastructure change is finished when the
 > human has everything needed to run the plan, judge it, and apply it
 > without re-deriving anything -- and nothing more. This command writes
-> that block. The infra skill governs why the apply is not yours.
+> that block. The iac skill governs why the apply is not yours.
 
 ## What to produce
 
