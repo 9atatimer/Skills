@@ -127,7 +127,7 @@ config set` is not yours to run).
 | Adapter | Who finds | Bound when | Covers |
 |---|---|---|---|
 | `ocr` | Open Code Review's full pipeline: deterministic file selection and bundling, per-file rules, sub-agent review, its own reflection filter | `OCR_NO_UPDATE=1 ocr version` reports v1.12.5 or later, and `OCR_NO_UPDATE=1 ocr llm test` exits 0 | Source code; it skips Markdown |
-| `ocr-delegate` | `ocr` picks files and rules; fresh sub-agents of this session review | `ocr` reports v1.12.5 or later but `OCR_NO_UPDATE=1 ocr llm test` fails | Source code, on session quota |
+| `ocr-delegate` | `ocr` picks files and rules; fresh sub-agents of this session review | `OCR_NO_UPDATE=1 ocr version` reports v1.12.5 or later but `OCR_NO_UPDATE=1 ocr llm test` fails | Source code, on session quota |
 | `subagent` | Fresh-context sub-agents, briefed with the template below | Always | Everything, including prose, skill and persona files |
 
 **Selection is mechanical, per file class:** the first adapter whose

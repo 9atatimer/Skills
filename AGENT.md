@@ -95,7 +95,9 @@ self-review pass and in each of five Copilot rounds; 10 of the 16 fixes
 those rounds forced were `ocr` mechanics (rule-file layering, exclusion
 and failure classes, missing flags, output fields, minimum version). Keep a skill to what
 an agent must decide and type; put translation and routing in a tool with
-tests.
+tests. Standing exception: the `self-review` skill's `ocr` sections, until
+the tool that replaces them ships
+([Skills issue#81](https://github.com/9atatimer/Skills/issues/81)).
 
 ## Testing
 
