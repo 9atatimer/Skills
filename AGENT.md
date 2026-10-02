@@ -95,9 +95,21 @@ self-review pass and in each of five Copilot rounds; 10 of the 16 fixes
 those rounds forced were `ocr` mechanics (rule-file layering, exclusion
 and failure classes, missing flags, output fields, minimum version). Keep a skill to what
 an agent must decide and type; put translation and routing in a tool with
-tests. Standing exception: the `self-review` skill's `ocr` sections, until
-the tool that replaces them ships
-([Skills issue#81](https://github.com/9atatimer/Skills/issues/81)).
+tests. Standing exceptions, until the tool that replaces each ships: the
+`self-review` skill's `ocr` sections
+([Skills issue#81](https://github.com/9atatimer/Skills/issues/81)) and
+`skills/release/references/deploy-mechanics.md`
+([Skills issue#85](https://github.com/9atatimer/Skills/issues/85)).
+
+**Concurrent skill PRs merge textually, not semantically.** Git and
+tedium accept two PRs that touch different lines; nothing checks that
+they agree. [Skills PR#83](https://github.com/9atatimer/Skills/pull/83)
+made `docs/ops/<tool>.md` the tooling runbook while [Skills
+PR#84](https://github.com/9atatimer/Skills/pull/84) made
+`docs/runbook.<component>.md` the release runbook; both landed green within
+the hour, contradicting each other. Before landing a skill PR, read what
+merged to `main` since its base for the same nouns (`git log
+<base>..origin/main -- skills/`) and reconcile.
 
 ## Testing
 

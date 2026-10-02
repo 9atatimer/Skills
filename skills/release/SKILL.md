@@ -39,7 +39,8 @@ pipeline is missing automation -- fix the pipeline, not the bar.
 ## The runbook
 
 One per operated component (runs on a stage, or is published for others
-to install). Default home `docs/runbook.<component>.md`, never
+to install). Default home `docs/ops/<component>.md` -- the same tree as
+the tooling runbook (sdlc, Product or tooling) -- never
 `docs/arch/` (which holds only what is deployed, written at 7a); the
 repo's `AGENT.md` may name another, and an existing deploy doc that covers
 these sections IS the runbook. Living: it ships in the change's PR, and a
