@@ -127,9 +127,10 @@ Rules that keep the core stable:
 - Worker entry: `routeAgentRequest(request, env, { cors })` serves the
   interactive surface; answer any headless entry (a `POST` that drives a
   turn for a dispatched job) before it; `/health` at the worker root is
-  reachable only un-routed (see the hosting skill for why).
+  reachable only un-routed (see the cloudflare-hosting skill for why).
 
-`wrangler.jsonc` essentials, with the hosting skill owning the rest:
+`wrangler.jsonc` essentials, with the cloudflare-hosting skill owning the
+rest:
 
 ```jsonc
 {
@@ -276,7 +277,7 @@ Think-specific:
 ## The client
 
 - The browser opens a WebSocket to `/agents/<agent-path>/<session-id>`
-  (same-origin in production, by route; see the hosting skill), reads
+  (same-origin in production, by route; see the cloudflare-hosting skill), reads
   history from `.../get-messages`, and speaks `cf_agent_use_chat_request`
   / `cf_agent_use_chat_response` / `cf_agent_state` frames.
 - React apps get `useAgent` (`agents/react`) and `useAgentChat`
