@@ -55,17 +55,19 @@ classification head -- with two differences that matter:
 | **State** | Everything the judgement is about: text, structured fields, images | The question |
 | **Question** | One typed ask with a stable id: **binary** (probability of yes), **choice** (one of a named option set), or **score** (a point on an ordered rubric) | A free-text prompt |
 | **Schema** | The set of questions asked of one state in one call | A wire format |
-| **Decision** | Per question: the probability of each option, and the expected score for a rubric | A single picked answer |
+| **Decision** | Per question: the probability of each option, and the expected score for a rubric -- or, from an adapter that cannot score, the label alone, marked uncalibrated | A single picked answer dressed up as a probability |
 | **Threshold policy** | The rule that turns a Decision into an action, including when to abstain | Something the adapter or the model decides |
 | **Abstention** | The outcome "not confident enough; route elsewhere" (a rule, a human, a bigger model) | An error |
 | **Eval set** | Labelled states, with the answer each question should get | A vendor benchmark |
 
 Three invariants, each a defect when violated:
 
-- **A Decision carries probabilities, not just an answer.** An adapter that
-  can only produce a label (a parsed chat reply) must say so -- report
-  the label at probability 1.0 with a flag that it is uncalibrated -- so
-  the threshold policy never mistakes a guess for certainty.
+- **An uncalibrated Decision never meets a threshold.** An adapter that can
+  only produce a label (a parsed chat reply) reports the label with no
+  probability. The threshold policy never compares it against a threshold:
+  it acts on the label only through an explicit rule that says so -- the
+  status quo of a wrapped incumbent -- or it abstains. A sentinel such as
+  1.0 would pass every threshold and turn a guess into certainty.
 - **Thresholds live in the core.** Which probability counts as "yes", and
   when to abstain, is a business rule stated once, in the problem's
   language. A threshold inside an adapter or a prompt is a leak.
@@ -97,7 +99,7 @@ Two rules about the ladder:
 |---|---|
 | The questions, their ids and options | The model, its weights, and its revision |
 | The threshold and abstention policy | The hosted API, its endpoint, and its auth |
-| What happens on abstention | The serving runtime and the hardware |
+| What happens on abstention, and on a port failure | The serving runtime and the hardware |
 | Which eval set gates adoption, and its floor | The prompt and parser of an LLM adapter |
 
 The grep test applies: a model id, a vendor name, or an endpoint inside
@@ -113,6 +115,10 @@ domain code is a leak.
   prompting a chat model, that prompt becomes the first `DecisionPort`
   adapter, unchanged. It is the baseline every other adapter is measured
   against, and it keeps running while they are.
+- **A failure is not an answer.** When the port fails (unavailable, rejected
+  input), the core decides what happens, once, in the problem's language:
+  retry, fall back to another adapter, abstain, or deny. For a gate, a
+  failure never takes the path a "yes" would.
 - **Do not add a port for one call site that will never move.** A rule that
   will stay a rule needs no port (YAGNI; record the rejection in the design
   doc).
@@ -150,7 +156,8 @@ domain code is a leak.
   near 0.9, about nine in ten should be right. A model that is accurate but
   miscalibrated needs its thresholds chosen from the eval set, not from
   intuition.
-- **The floor goes in CI**, and per the gates skill it only moves up.
+- **The floor goes in CI**, under the gates skill's law: a change is judged
+  against the floor as it stood before the change.
 
 ## Security
 
@@ -164,13 +171,17 @@ domain code is a leak.
   revision, and it is never loaded from a moving branch.
 - **Probabilities can be gamed.** Where a party with an interest in the
   outcome controls the state (a submission, an application), a threshold
-  is a target. Keep a human or a rule on the abstention path.
+  is a target, and a gamed state clears it with a confident wrong answer
+  that never reaches the abstention path. Put a rule or a human check in
+  front of what auto-accepts, or audit a sample of above-threshold accepts
+  -- not only the abstentions.
 
 ## Testing
 
 - **Fake the port with canned Decisions.** Unit tests never load weights.
   Drive the threshold policy with probabilities just above, at, and just
-  below each threshold, and with an abstention.
+  below each threshold, with an uncalibrated Decision, and with each typed
+  failure.
 - **One contract suite, every adapter**: valid probabilities per option,
   every question in the schema answered, the typed failures raised for an
   unavailable endpoint and a rejected input. Real-model runs are marked
