@@ -1,6 +1,6 @@
 ---
 name: design
-description: "Phase 2 of the SDLC: writing, reviewing, or improving a design doc; use before starting any feature that lacks one. Covers the required sections incl. Behaviors and Interfaces (the use-case table that is the BDD surface) and Rejections, the freeze at APPROVED, and the status ladder. Skip when naming seams or updating the as-built (architecture), building the phased plan (planning), or implementing against an approved design (coding)."
+description: "Phase 2 of the SDLC: writing, reviewing, or improving a design doc; use before starting any feature that lacks one. Covers the required sections incl. Behaviors and Interfaces (the use-case table that is the BDD surface) and Rejections, the freeze at APPROVED, and the status ladder. Product only: skip for developer tooling (self-contained dev QoL, invisible to the product), which gets a docs/ops/ runbook instead (sdlc, Product or tooling). Skip also when naming seams or updating the as-built (architecture), building the phased plan (planning), or implementing against an approved design (coding)."
 ---
 
 # SKILL: Design Document Authoring & Review (Phase 2)
@@ -16,14 +16,19 @@ description: "Phase 2 of the SDLC: writing, reviewing, or improving a design doc
 
 ## The Design-Doc Rule (read first)
 
-**No implementation without an approved design doc.**
+**No product implementation without an approved design doc.** Developer
+tooling -- self-contained, dev-facing, invisible to the product -- gets no
+design doc; it gets a runbook at `docs/ops/<tool>.md`. The classification
+test is in the sdlc skill, "Product or tooling"; when in doubt, it is
+product.
 
 | You are designing... | Write | Where |
 |---|---|---|
 | A single tool / package / component | `DESIGN.<name>.md` | `docs/design/` |
 | How two specific components connect | `INTEGRATION.md` | `docs/design/` |
 
-* **Every tool gets its own `DESIGN.<name>.md`.** One tool, one design doc.
+* **Every product component gets its own `DESIGN.<name>.md`.** One
+  component, one design doc.
 * A design doc that spans multiple tools describes the boundaries and
   contracts between them, and links out to each `DESIGN.<name>.md` rather
   than duplicating them.
