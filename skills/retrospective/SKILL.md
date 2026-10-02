@@ -1,6 +1,6 @@
 ---
 name: retrospective
-description: "Phase 8 of the SDLC, and the only thing that closes the loop: walking the frozen design against the shipped code, cutting drift issues, appending Key Decisions, recording lessons in TODO_PLAN.md, and handing the status transition to a human. Load whenever an implementation lands -- green tests and a clean review are not the end of the work. This phase never elides, including when the change shipped nowhere."
+description: "Phase 8 of the SDLC, and the only thing that closes the loop: walking the frozen design against the shipped code, cutting drift issues, appending Key Decisions, recording lessons in TODO_PLAN.md, and handing the status transition to a human. Load whenever an implementation lands -- green tests and a clean review are not the end of the work. This phase never elides, including when the change shipped nowhere; for developer tooling (no design to walk) it shrinks to lessons and discovered issues."
 ---
 
 # SKILL: Retrospective (Phase 8)
@@ -13,6 +13,12 @@ description: "Phase 8 of the SDLC, and the only thing that closes the loop: walk
 **A green test suite and a clean bot review say nothing about whether you
 built what was designed.** Only this phase does. It is not optional, it is
 not "if there is time," and it does not elide.
+
+**Developer tooling runs a short retrospective.** A tool has no design
+doc and no as-built (sdlc, "Product or tooling"), so there is nothing to
+walk for drift, no Key Decisions to append and no status to hand off. Do
+the lessons and discovered-issues sections, confirm `docs/ops/<tool>.md`
+matches what shipped, and stop.
 
 This phase used to live inside the design skill, where the freeze rule
 told implementers not to be. That is why it was skipped: the one checklist

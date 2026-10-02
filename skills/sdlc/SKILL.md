@@ -19,11 +19,14 @@ before behaviors).
 These hold for every task, whether or not you have loaded the detailed
 skill.
 
-1. **Design first.** Every tool/package requires a `DESIGN.<name>.md` under
-   `docs/design/`. This is a requirement, not a statement that the doc
-   already exists -- check the convention path once, and if it is missing
-   or ambiguous, write/fix it first rather than hunting further. No
-   implementation without an approved design doc. -> the design skill
+1. **Design first -- for the product.** Every product component requires
+   a `DESIGN.<name>.md` under `docs/design/`. This is a requirement, not a
+   statement that the doc already exists -- check the convention path
+   once, and if it is missing or ambiguous, write/fix it first rather than
+   hunting further. No product implementation without an approved design
+   doc. Developer tooling is the exception: it gets no concept, no design
+   and no as-built, only a runbook under `docs/ops/` (see "Product or
+   tooling" below). -> the design skill
 2. **The design doc is frozen while you implement.** An approved doc is
    the contract your code is checked against -- never notes to reconcile.
    When the code and the doc disagree, **cut an issue; do not edit the
@@ -268,13 +271,49 @@ Small work runs a shorter loop. Drop phases by **rule**, never by feel:
 | Architecture + Planning (together) | the change adds no seam, component, or dependency, and the route is one obvious step | 6 phases |
 | Release + 7a | the change ships nowhere -- no deploy, no publish, no tag | 5 phases |
 
-**Design, Behaviors, Code, Gates, and Retrospective never elide.** Design
-is satisfiable by an existing approved doc, but it is never skipped: you
-still read it, and you still check your change against it.
+**For product work, Design, Behaviors, Code, Gates, and Retrospective
+never elide.** Design is satisfiable by an existing approved doc, but it is
+never skipped: you still read it, and you still check your change against
+it. Developer tooling is not elision by feel -- it is a classification with
+its own rule and its own record (see "Product or tooling" below).
 
 Architecture and Planning elide *together* or not at all -- planning is the
 delta between the design and the as-built, so a route computed without the
 as-built is fiction.
+
+## Product or tooling
+
+**Concept, design and as-built are written for the product. Tools get a
+runbook.** Classify the change before choosing a phase, because the answer
+decides which artifacts exist at all.
+
+A change is **tooling** when all three hold:
+
+- **It serves the people building the product** -- developer
+  quality-of-life: git hooks, scripts, CI helpers, linters, dotfiles,
+  agent configuration, local automation.
+- **It is self-contained** -- nothing else codes against its interfaces,
+  so it carries no seam another component depends on.
+- **It is invisible to the product** -- removing it would change nothing a
+  product user or a downstream consumer can observe.
+
+If any one fails, it is product. When in doubt, it is product: a missing
+design costs more than an unneeded one.
+
+| Phase | Product | Tooling |
+|---|---|---|
+| 1 Concept | per the concept skill | skipped -- an issue frames it |
+| 2 Design | `docs/design/DESIGN.<name>.md` | skipped |
+| 3 / 3b Architecture + Planning | per their skills | skipped |
+| 4-6 Behaviors, Code, Gates | always | always -- test first, branch, PR, review |
+| 7a As-built | `docs/arch/` | skipped; the runbook is the record |
+| 8 Retrospective | the full checklist | lessons and discovered issues only -- there is no design to drift from |
+
+**The tooling record is `docs/ops/<tool>.md`:** what the tool does, how
+to install, use and disable it, and its known limits. It is living --
+edit it in the same PR that changes the tool. The tooling exception
+covers the *paperwork* only: law 5 (test first), law 10 (branch + PR),
+law 11 (clear the gate) and law 14 (defect anatomy) hold unchanged.
 
 ## Entering mid-flow
 

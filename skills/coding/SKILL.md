@@ -19,9 +19,10 @@ Deliver maintainable, testable, low-risk code for a fast-moving startup -- ship 
 
 These gates are non-negotiable. Do not skip them because the change "looks small."
 
-- **Design gate.** There must be an approved design doc for the tool you are touching.
-   - Every tool/package has a `DESIGN.<name>.md` under `docs/design/`.
+- **Design gate (product only).** There must be an approved design doc for the product component you are touching.
+   - Every product component has a `DESIGN.<name>.md` under `docs/design/`.
    - If it does not exist or is ambiguous, stop and use the design skill to write/fix it first.
+   - Developer tooling (self-contained dev QoL, invisible to the product -- the sdlc skill's "Product or tooling" test) has no design doc and needs none. Its gate is an issue framing the change; its record is `docs/ops/<tool>.md`, updated in the same PR. The architecture and plan gates below do not apply to it either. The test and tech gates do.
 - **Architecture gate.** Every volatile axis this change introduces is named and mapped to one seam, against the as-built in `docs/arch/`. A seam first discovered while coding was never reviewed. -> the architecture skill
 - **Plan gate.** For any multi-step feature, build the phased, test-first plan with the planning skill and record it per the todo-plan skill.
 - **Test gate.** Write the failing test first (see Section 3). No production code without a failing test demanding it.

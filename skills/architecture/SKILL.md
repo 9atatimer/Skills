@@ -1,6 +1,6 @@
 ---
 name: architecture
-description: "Phase 3 and 7a of the SDLC: naming the seams and drawing the module map (domain / application / composition root) a change will add (before code) and recording the as-built of the deployed system in docs/arch/ (at release). Covers the docs/design vs docs/arch folder law, as-built content and HTML diagrams, and tech-radar row ownership. Load before planning any change that adds a component, seam, or dependency, and again when a change ships. Skip for a change that adds none of those and ships nowhere."
+description: "Phase 3 and 7a of the SDLC: naming the seams and drawing the module map (domain / application / composition root) a change will add (before code) and recording the as-built of the deployed system in docs/arch/ (at release). Covers the docs/design vs docs/arch folder law, as-built content and HTML diagrams, and tech-radar row ownership. Load before planning any change that adds a component, seam, or dependency, and again when a change ships. Skip for a change that adds none of those and ships nowhere, and for developer tooling, which has no as-built: its record is a docs/ops/ runbook (sdlc, Product or tooling)."
 ---
 
 # SKILL: Architecture (Phases 3 and 7a)

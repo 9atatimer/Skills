@@ -1,6 +1,6 @@
 ---
 name: concept
-description: "Phase 1 of the SDLC: turning a human's rough intention -- a problem OR an aspiration -- into a statement of work and user stories under docs/concepts/<idea>/, so a phase 2 conversation opens knowing what is on the table and what is not. Concept expresses intent; it does not design or architect. Load when the ask is vague, novel, aspirational, or has nothing written behind it yet. Skip when a funded issue or an approved design record already frames the work."
+description: "Phase 1 of the SDLC: turning a human's rough intention -- a problem OR an aspiration -- into a statement of work and user stories under docs/concepts/<idea>/, so a phase 2 conversation opens knowing what is on the table and what is not. Concept expresses intent; it does not design or architect. Load when the ask is vague, novel, aspirational, or has nothing written behind it yet. Skip when a funded issue or an approved design record already frames the work, and always for developer tooling (self-contained dev QoL, invisible to the product -- sdlc, Product or tooling)."
 ---
 
 # SKILL: Concept (Phase 1)
