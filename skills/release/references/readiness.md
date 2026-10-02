@@ -12,7 +12,7 @@
 - "None" is an answer; a blank is not. A known gap is fine if it has an
   issue -- the risk is then taken on purpose -- but a gap never waives
   what the release class owes or the exit gate (the rollback rehearsal,
-  a findable request), and **Access** and **Credentials** are answered
+  a findable request or run), and **Access** and **Credentials** are answered
   before prod, never deferred.
 - Runs for every R3 release. On a component that already has a runbook,
   answer only what the R3 trigger changes and edit the runbook.
@@ -69,4 +69,9 @@ Telemetry: <where it lands> as <service.name>. Find a request: <query>.
 ## Known gaps
 
 - <gap> (<repo> issue#N)
+
+## Launch readiness
+
+R3 answers not covered above: upstreams, limits and spend, failure
+modes, data, access, credentials (the questions in this file).
 ```

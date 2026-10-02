@@ -291,7 +291,7 @@ Run through these checks:
 - [ ] Does every behavior have a row in Behaviors and Interfaces, with a use-case signature whose inputs and outputs are domain values and whose ports are all in the seam list?
 - [ ] Does every noun in those signatures appear in the Data Model or a glossary, under exactly one name?
 - [ ] Is there a module map (phase 3) that puts each use case in the application layer, each rule in the domain, and names the composition root per runtime?
-- [ ] If it ships, does Operability name the release class, the rollback, and how a failure would be debugged?
+- [ ] If it ships, does Operability name the release class, the stages and supported platforms, the failure modes and how each is debugged, the rollout and rollback, and the data that cannot be rolled back?
 
 ### Review Output Format
 

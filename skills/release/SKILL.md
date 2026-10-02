@@ -87,8 +87,12 @@ reader; keep it legible to a human.
   prerelease dist-tag, a PR preview) or says none, and why.
 - Agents deploy to nonprod unattended. Prod is a human's call, named in
   the conversation, unless `AGENT.md` records an automatic path.
-- Build once, promote the artifact. A prod build from `main` ships
-  something nonprod never ran.
+- Build once, promote the artifact, wherever stage differences are
+  runtime config (bindings, vars, secrets). Where the platform bakes
+  config in at build time (Nuxt runtime config on Workers), build each
+  stage from the same commit, assert each build's env-file pins its
+  stage, and let nonprod's smoke prove the code (the cloudflare-hosting
+  skill).
 - A new stage's resources are terraform -- in the infra repo by default
   (the iac skill says when a project may keep them) -- applied by a
   human before the deploy that needs them (sdlc, law 18).
@@ -187,8 +191,9 @@ cloudflare-hosting skill, Deploy workflows.
 
 - Never install from a piped script. Signed package managers only.
 - Pin actions by SHA, images by digest; commit the lockfile.
-- Ship the artifact you verified; prove it where the format allows (npm
-  tarball sha256).
+- Ship the artifact you verified -- or, for a build-time-configured
+  stage, the same commit; prove it where the format allows (npm tarball
+  sha256).
 - Publish credentials are deploy credentials -> the infra-credentials
   skill.
 - A dependency that shipped without a radar row is a retrospective

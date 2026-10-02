@@ -39,10 +39,11 @@ Decide placement in this order; the first rule that applies wins.
   stores a credential.
 - **The ops repo is the default for everything else too.** A private
   app repo MAY keep a module that is non-security and only ever its own
-  -- its worker's routes and custom domains, the namespaces its worker
-  binds, a project-only SaaS resource -- for a reason the ops repo's
-  policy lists (easier: it changes with the code; smoother automation:
-  the deploy pipeline drives it; tool-embedded). It never has to.
+  -- its worker's routes, the namespaces its worker binds, a
+  project-only SaaS resource -- for a reason the ops repo's policy lists
+  (easier: it changes with the code; smoother automation: the deploy
+  pipeline drives it; tool-embedded). It never has to. A Worker Custom
+  Domain is wrangler's, never terraform's (the cloudflare-hosting skill).
 - **A project module is Tower-ready**, so the fleet's plan/apply server
   could take it over by configuration: state in the shared remote
   backend under its own key, credentials by `op://` reference from a

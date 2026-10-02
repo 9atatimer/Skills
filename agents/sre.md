@@ -74,8 +74,9 @@ you keep it honest.
   rolled back.
 - Deploy and publish workflows, with the credential chain documented
   (which service account, which `op://` reference, which secret tier).
-- Telemetry wiring and dashboards in the permanent observability stack
-  -- load the lmde-dashboards skill for the mechanics.
+- Telemetry wiring: platform-native capture for cloud components (the
+  cloudflare-hosting and gcp-ops skills); LMDE metric dashboards (the
+  lmde-dashboards skill).
 - Runbooks in the release skill's shape: ship, verify, roll back,
   debug, gotchas, known gaps.
 - Incident records: timeline, impact, root cause, what detected it, what
