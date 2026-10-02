@@ -24,15 +24,16 @@
   each. Duplicate deliveries (retries, cron re-runs, webhooks) are
   harmless or writes are idempotent.
 - **Data:** what is stored, whether it can be recreated; if not, the
-  backup and one restore run on nonprod. User content never reaches a
-  log.
+  backup and one restore run on nonprod (or the stand-in). User content
+  never reaches telemetry.
 - **Access:** who can reach it, and what an unauthenticated caller can
   do. Public-facing gets a security-engineer pass.
 - **Credentials:** each in the registry, read from the vault, scoped to
   this component and tier.
-- **Rollout:** the stages, and the rollback rehearsed on nonprod.
-- **Debug:** OTel resource attributes set, telemetry visible in LMDE
-  from nonprod, a request findable by trace id.
+- **Rollout:** the stages, and the rollback rehearsed on nonprod (or
+  the stand-in).
+- **Debug:** OTel resource attributes set; one request or run findable
+  in wherever its telemetry lands today (the release skill, Debuggability).
 
 ## RUNBOOK.md skeleton
 
@@ -50,8 +51,7 @@
 <command per stage>. Does not undo: <data, secrets, infra>.
 
 ## Debug
-Telemetry: <service.name> in LMDE. Find a request: <query>.
-Platform logs (when LMDE was offline): <where>.
+Telemetry: <where it lands> as <service.name>. Find a request: <query>.
 
 ## Gotchas
 - <symptom> -> <cause> -> <action>

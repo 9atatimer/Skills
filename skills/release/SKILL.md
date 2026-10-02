@@ -30,7 +30,7 @@ pipeline is missing automation -- fix the pipeline, not the bar.
 | R0 | ships nowhere | nothing |
 | R1 | a change inside an operated component, no new surface | a pipeline ships it; proven on nonprod (or the named stand-in) before prod; docs the diff made false are fixed in the same PR |
 | R2 | new endpoint, command, flag, config key, secret, scheduled job, dependency, or data migration | R1 + its telemetry; the runbook delta; expand-contract for anything a running version still names; a flag if risky or half-built |
-| R3 | new component, stage, data store, external dependency, user population, or platform | R2 + `references/readiness.md`; rollback rehearsed on nonprod |
+| R3 | new component, stage, data store, external dependency, user population, or platform | R2 + `references/readiness.md`; rollback rehearsed on nonprod (or the named stand-in) |
 
 - Calling a release a lower class than its triggers lowers a gate (the
   gates skill). Higher is always allowed.
@@ -40,17 +40,19 @@ pipeline is missing automation -- fix the pipeline, not the bar.
 ## The runbook
 
 One per operated component (runs on a stage, or is published for others
-to install). Default home `docs/arch/<topic>/RUNBOOK.md`; the repo's
-`AGENT.md` may name another, and an existing deploy doc that covers these
-sections IS the runbook. Living and factual, like the as-built. A release
-edits only the sections it changed. Skeleton: `references/readiness.md`.
+to install). Default home `docs/runbook.<component>.md`, never
+`docs/arch/` (which holds only what is deployed, written at 7a); the
+repo's `AGENT.md` may name another, and an existing deploy doc that covers
+these sections IS the runbook. Living: it ships in the change's PR, and a
+release edits only the sections it changed. Skeleton:
+`references/readiness.md`.
 
 - **Ship** -- per stage: URL, deploying workflow, who may start it.
 - **Verify** -- the post-deploy smoke and what green looks like.
 - **Roll back** -- the command; what it does not undo (data, secrets,
   infra).
-- **Debug** -- where its telemetry lands and the query that finds a
-  request by id.
+- **Debug** -- where its telemetry lands and how to find one request
+  or one run there.
 - **Gotchas** -- the traps an agent will otherwise hit.
 - **Known gaps** -- each with its issue.
 
@@ -116,16 +118,19 @@ red smoke. No alerting; nothing here notifies anyone.
   stages or two versions are indistinguishable.
 - **Propagate trace context** (`traceparent`) across every hop you own,
   and log inside the active span so log records carry the trace id.
-- **Structured logs only:** key-value, one event per record. Never a
-  secret, token, or user content.
+- **Structured logs only:** key-value, one event per record.
+- **No secret, token, or user content in any telemetry:** log fields,
+  span and resource attributes, metric labels. Traces carry URLs and
+  headers by default; scrub them at the exporter.
 - **Unattended jobs log each run's outcome** (what it wrote, or why it
   did nothing), so "did it run" is a query.
-- **Sink: the LMDE observability stack** (tds-utils
-  `lmde/components/observability/`). Local tools export to
-  `localhost:4318`; cloud components reach it through the fleet's tunnel
-  with a per-component Access service token. Endpoint and credential
-  names are repo facts in `AGENT.md`. Laptop off = cloud telemetry
-  dropped; the platform's own log retention is the fallback.
+- **Sink, today:** the platform's own logs and traces for cloud
+  components (Workers Logs, Cloud Logging); the LMDE collector
+  (tds-utils `lmde/components/observability/`) for local tools, which
+  stores metrics only -- LMDE has no log or trace backend yet. The target
+  is LMDE for everything, cloud included through an Access-gated tunnel;
+  until that is built, do not wire a cloud exporter to it. Where a
+  repo's telemetry lands is a repo fact in `AGENT.md`.
 - **Cloudflare Workers:** enable `observability` in wrangler config and
   export traces and logs to an OTLP destination; Workers export no
   metrics. -> the cloudflare-hosting skill
@@ -135,17 +140,16 @@ red smoke. No alerting; nothing here notifies anyone.
 Every rollback, hotfix, red deploy, or silent job asks: where could this
 first have been caught? Put a check there. A check beats a sentence.
 
-| Stage | Fits |
-|---|---|
-| pre-commit | seconds, local, deterministic: format, lint, secret scan, ASCII, config schema, deploy-posture check |
-| pre-push | slower local: unit tests, build |
-| CI `gate` | full suite, workflow lint, per-platform smoke |
-| deploy preflight | secrets resolved non-empty, stage named, migration applied first |
-| post-deploy | the real-behavior smoke |
+| Stage | Can see | Examples |
+|---|---|---|
+| git hooks | the local tree | lint, build, tests, secret scan, config schema, deploy-posture check |
+| CI `gate` | every platform, a clean checkout | full suite, workflow lint, per-platform smoke |
+| deploy preflight | the target stage | secrets resolved non-empty, stage named, migration applied first |
+| post-deploy | the running thing | the real-behavior smoke |
 
-Keep pre-commit fast; a slow hook gets bypassed. Hook discipline is the
-gates skill's. Declare deploy posture in the repo and assert it in CI ->
-the cloudflare-hosting skill, Deploy workflows.
+What runs in which hook, and never moving a check later, is the gates
+skill's. Declare deploy posture in the repo and assert it in CI -> the
+cloudflare-hosting skill, Deploy workflows.
 
 ## Rollout and rollback
 
@@ -187,7 +191,7 @@ the cloudflare-hosting skill, Deploy workflows.
 
 This skill is shared policy. The repo's `AGENT.md` holds: stages and
 URLs, deploying workflows, who may start prod, runbook home if not the
-default, OTLP endpoint and token names, supported platforms. Derive
+default, where its telemetry lands, supported platforms. Derive
 GitHub identity at runtime (the github-workflow skill). Defaults the
 repo may override: prod deploys run in CI, never from a laptop; nonprod
 deploys go through the repo's scripts, not the bare tool. A deploy that

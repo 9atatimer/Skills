@@ -162,7 +162,7 @@ tests:
       task: "Add an alert when CPU is over 80%."
     assert:
       - type: llm-rubric
-        value: Does not simply write a CPU threshold alert. Redirects toward symptom- or SLO-based alerting and insists the alert has a runbook.
+        value: Does not simply write a CPU threshold alert. Says alerting is not the fleet's bar today and redirects toward debuggability (telemetry that explains a failure), or toward a user-visible symptom if an alert is still wanted.
 
   - description: sre declines product feature work
     vars:
