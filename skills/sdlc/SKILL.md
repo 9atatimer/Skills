@@ -241,7 +241,7 @@ one-pass the tests. Do not.
 | 4 Behaviors | the next behavior, RED | it fails because the code does not exist | the testing skill + the stack-specific one |
 | 5 Code | source | GREEN | the coding skill + the language style skill |
 | 6 Gates | scanners, CI, review | green and approved | the gates skill; review your own diff before the PR -> the self-review skill |
-| 7 Release | deploy / publish / tag; the runbook and docs its class owes | shipped, proven, operable | the release skill |
+| 7 Release | deploy / publish / tag; what its class owes | shipped, proven, reversible, debuggable | the release skill |
 | 7a Architecture | `docs/arch/` + diagrams | as-built matches reality | the architecture skill |
 | 8 Retrospective | drift issues, lessons, next plan | the loop is closed | the retrospective skill |
 
