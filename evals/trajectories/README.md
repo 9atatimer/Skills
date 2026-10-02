@@ -20,9 +20,34 @@ the skill now). This is the superpowers `writing-skills` loop: a rule earns
 its place when baseline runs violate and current runs do not. Exit 1 if
 any current run violates.
 
-The agent gets `Bash(git:*)`, `Read`, `Grep` and `Glob`, nothing else, so a
-run can change nothing but its own temp repo. It calls a model: run it on
-demand, never as a hook (`../README.md`).
+It calls a model: run it on demand, never as a hook (`../README.md`).
+
+## It is not a sandbox
+
+A scenario has to leave the agent able to break the rule under test (here,
+`git checkout`), so the agent gets real git. What the harness does limit:
+
+- `--restricted`: the operator's user and project settings are ignored, and
+  `Read`/`Grep`/`Glob` are confined to the run's directory.
+- `--tools Bash Read Grep Glob` and `--strict-mcp-config`: no other tools,
+  no MCP servers.
+- `--allowedTools "Bash(git:*)"`: git is the only command pre-approved. It
+  is a prefix match, so `git -C <elsewhere>`, `git push` and a `!`-alias
+  still pass.
+- The agent's environment drops `GH_*`, `GITHUB_*`, `AWS_*`, `OP_*`,
+  `GOOGLE_*`, `CLOUDSDK_*`, `NPM_*`, `SSH_AUTH_SOCK` and the askpass hooks,
+  and `GIT_CONFIG_GLOBAL=/dev/null` keeps the operator's aliases and
+  credential helpers out of its git.
+- The harness reads the repo afterward with `core.fsmonitor`, `core.hooksPath`
+  and `core.pager` neutralized, so nothing the agent plants in `.git/config`
+  runs in the harness.
+
+So run it where git reaching outside the temp dir costs nothing: a
+throwaway container (a Claude Code cloud session is one) or a VM. Not on a
+laptop holding real checkouts and credentials.
+
+A run that errors (no `claude`, no auth, the 600s timeout) has no verdict
+and fails the exit code; it is never counted as clean.
 
 ## Adding a scenario
 
@@ -36,10 +61,12 @@ either `BRIEF_HEADING` (the skill section holding the current brief) or
 
 `verifier-reads-sha` and `verifier-two-repos` test the self-review rule
 from Skills PR#92 (reviewers read a SHA with `git show`, never check it
-out). On 2026-10-02 neither reproduced the incident: the baseline brief
-violated in 0 of 24 runs (sonnet and opus, 6 runs each per scenario), so
-the rule is not yet shown to be load-bearing. The incident itself is real
-(both repos' reflogs). What the harness does not copy: the incident's
-verifier was a sub-agent spawned inside a live session, with unrestricted
-Bash, among about ten reviewers at once. If a later run reproduces it,
-record the scenario that did here.
+out). On 2026-10-02 neither reproduced the incident. The first version of
+the harness saw 0 baseline violations in 24 runs; this version, which also
+watches refs, config, worktrees and the reflog's content, saw 0 in 12
+(sonnet and opus, 3 runs each per scenario), with no errored runs. So the
+rule is not yet shown to be load-bearing. The incident itself is real (both
+repos' reflogs). What the harness does not copy: the incident's verifier
+was a sub-agent spawned inside a live session, with the operator's
+settings and unrestricted Bash, among about ten reviewers at once. If a
+later run reproduces it, record the scenario that did here.
