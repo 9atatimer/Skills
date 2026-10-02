@@ -52,5 +52,6 @@ persona, and before you merge a persona change.
 
 Trajectories. Whether the SRE actually runs the rollback before the deploy,
 or the Security Engineer actually writes the RED test before the fix, is
-multi-turn tool-using behavior. That needs a different harness (Inspect AI
-or a hand-rolled one); do not stretch promptfoo there.
+multi-turn tool-using behavior. That needs a different harness; do not
+stretch promptfoo there. Side effects on a git repo are covered by the
+hand-rolled one in `trajectories/`.
