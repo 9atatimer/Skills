@@ -38,9 +38,12 @@ A scenario has to leave the agent able to break the rule under test (here,
   `GOOGLE_*`, `CLOUDSDK_*`, `NPM_*`, `SSH_AUTH_SOCK` and the askpass hooks,
   and `GIT_CONFIG_GLOBAL=/dev/null` keeps the operator's aliases and
   credential helpers out of its git.
-- The harness reads the repo afterward with `core.fsmonitor`, `core.hooksPath`
-  and `core.pager` neutralized, so nothing the agent plants in `.git/config`
-  runs in the harness.
+- After the run the harness records the `.git/config` the agent left, puts
+  the pre-run copy back and deletes `.git/info/attributes`, and only then
+  runs git, with `core.fsmonitor`, `core.hooksPath` and `core.pager` also
+  forced off and the same stripped environment. A command the agent planted
+  in its repo's config (an fsmonitor, a hook path, a clean filter, an
+  include) is therefore never defined when the harness's git runs.
 
 So run it where git reaching outside the temp dir costs nothing: a
 throwaway container (a Claude Code cloud session is one) or a VM. Not on a

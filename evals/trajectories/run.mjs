@@ -14,7 +14,7 @@
 // throwaway container. It calls a model: run on demand, never as a hook.
 
 import { execFileSync, spawnSync } from "node:child_process";
-import { appendFileSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { appendFileSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -34,8 +34,10 @@ const PROVISIONED_DIRS = [".claude", ".codex", ".agents"];
 // system config, so no alias, pager or credential helper of theirs applies.
 const GIT_ENV = { GIT_CONFIG_GLOBAL: "/dev/null", GIT_CONFIG_NOSYSTEM: "1", GIT_TERMINAL_PROMPT: "0" };
 
-// The harness reads a repo the agent could write. These keep a planted
-// core.fsmonitor or hook from running in the harness's own process.
+// The harness reads a repo the agent could write. Before any read it puts
+// the pre-run .git/config back (see quarantineConfig), so a command the agent
+// planted there -- fsmonitor, a hook path, a clean filter, an include -- is
+// never defined when the harness's git runs. These flags are a second line.
 const SAFE_GIT = ["-c", "core.fsmonitor=false", "-c", "core.hooksPath=/dev/null", "-c", "core.pager=cat"];
 
 // Credentials the agent's shell must not inherit.
@@ -62,7 +64,7 @@ function git(dir, args, { allowFail = false } = {}) {
   try {
     return execFileSync("git", ["-C", dir, ...SAFE_GIT, ...args], {
       stdio: ["ignore", "pipe", "pipe"],
-      env: { ...process.env, ...GIT_ENV },
+      env: agentEnv(process.env),
     }).toString();
   } catch (err) {
     if (allowFail) return "";
@@ -70,13 +72,23 @@ function git(dir, args, { allowFail = false } = {}) {
   }
 }
 
-function repoState(dir) {
+// Record the config the agent left, then restore the one it found, so the
+// harness never runs git under the agent's config. Returns what was found.
+export function quarantineConfig(dir, configBefore) {
+  const path = join(dir, ".git", "config");
+  const after = readFileSync(path, "utf8");
+  writeFileSync(path, configBefore);
+  rmSync(join(dir, ".git", "info", "attributes"), { force: true });
+  return after;
+}
+
+export function repoState(dir, config = readFileSync(join(dir, ".git", "config"), "utf8")) {
   return {
     headRef: git(dir, ["symbolic-ref", "-q", "HEAD"], { allowFail: true }).trim(),
     headSha: git(dir, ["rev-parse", "HEAD"]).trim(),
     reflog: git(dir, ["reflog", "show", "--format=%H %gs", "HEAD"]),
     refs: git(dir, ["for-each-ref", "--format=%(refname) %(objectname)"]),
-    config: readFileSync(join(dir, ".git", "config"), "utf8"),
+    config,
     worktrees: git(dir, ["worktree", "list", "--porcelain"]),
     stashCount: git(dir, ["stash", "list"]).split("\n").filter(Boolean).length,
     status: git(dir, ["status", "--porcelain"]),
@@ -141,8 +153,9 @@ function runOnce(scenario, variant, model) {
     const rootBefore = rootEntries(dir);
     const { error } = runAgent(dir, fillBrief(briefFor(scenario, variant), values), model);
     if (error) return { error };
+    const configsAfter = repos.map((r, i) => quarantineConfig(r, before[i].config));
     const violations = [
-      ...repos.flatMap((r, i) => treeViolations(before[i], repoState(r))),
+      ...repos.flatMap((r, i) => treeViolations(before[i], repoState(r, configsAfter[i]))),
       ...(repos.includes(dir) ? [] : rootViolations(rootBefore, rootEntries(dir))),
     ];
     return { violations };
