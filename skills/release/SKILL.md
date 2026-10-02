@@ -1,316 +1,241 @@
 ---
 name: release
-description: "Phase 7 of the SDLC: shipping -- deploy, publish, or tag. Covers supply-chain integrity, staged and canary rollout, deploy workflows, the 1Password-backed credential chain (service accounts, op:// references, GitHub secret tiers), pre-merge workflow verification via workflow_dispatch, and behavior-first diagnosis of failed deploys. Load when writing or fixing a deploy/publish workflow, wiring or rotating a deploy credential, or diagnosing a red CD run. Skip for ordinary PR/CI flow with no deploy boundary (github-workflow, gates) and for session-side secret handling (DESIGN.SECRETS-VAULT)."
+description: "Phase 7 of the SDLC: shipping -- deploy, publish, or tag -- so the next change ships faster. Release classes (R0-R3) that scale the bar with blast radius; the per-component runbook (ship, verify, roll back, debug, gotchas); docs as gotchas written for LLM readers; nonprod/prod stages; per-platform distribution smoke; debuggability on OpenTelemetry (traces, logs, events, metrics), landing today in platform-native logs and LMDE metrics; turning release failures into hook and CI checks; rollout, flags and rollback; supply chain; launch readiness for new components. Load when shipping anything, writing or fixing a deploy or publish workflow, adding a stage or telemetry, wiring a deploy credential, or diagnosing a red CD run. Skip for PR/CI flow with no deploy boundary (github-workflow, gates) and terraform itself (iac)."
 ---
 
-# Releases and Deploys (Phase 7)
+# Release (Phase 7)
 
-> Purpose: how fleet repos ship -- what "shipped" means, how a release
-> reaches users in stages rather than all at once, the credential chain
-> from GitHub secret to 1Password to the deploy target, how to verify a
-> workflow change before it merges, and how to diagnose a red CD run from
-> its observed behavior instead of guessing.
+> Purpose: ship features to the customer faster. Process and docs here
+> exist only to make the next release quicker or safer; a step that does
+> neither is a defect in this skill -- say so.
+
+A release is done when it is **proven** (ran on the stage that matters,
+unattended paths included), **reversible** (the rollback is known), and
+**debuggable** (when it breaks, its telemetry says why).
 
 ## What counts as a release
 
-**Deploy, publish, or tag.** A Worker releases by deploying; a package
-monorepo releases by publishing to a registry; a library releases by
-tagging. Whichever applies, that is the moment the change becomes part of
-the shared system -- and therefore the moment phase 7a fires.
+Deploy, publish, or tag: the moment the change becomes shared. Phase 7a
+fires with it (`docs/arch/` updated) -> the architecture skill. A change
+that ships nowhere elides 7 and 7a (sdlc, Elision).
 
-**Releasing obliges you to update the as-built.** `docs/arch/` describes
-the deployed system, so a release that does not reach it leaves every
-downstream reader coding against a stale map. Run 7a before the
-retrospective. -> the architecture skill
+## Size the release
 
-A change that ships nowhere elides this phase and 7a together. That is a
-correct no-op, not a loophole: work that reaches no shared environment
-changes no shared architecture.
+Put the class in the PR body (`Release: R2 -- adds export`). The class is
+the highest trigger present. Most releases are R1; if R1 feels slow, the
+pipeline is missing automation -- fix the pipeline, not the bar.
 
-### GitHub's `/releases/latest/` excludes prereleases
+| Class | Triggered by | Owes |
+|---|---|---|
+| R0 | ships nowhere | nothing |
+| R1 | a change inside an operated component, no new surface | a pipeline ships it; proven on nonprod (or the named stand-in) before prod; docs the diff made false are fixed in the same PR |
+| R2 | new endpoint, command, flag, config key, secret, scheduled job, package or library dependency, or data migration | R1 + its telemetry; the runbook delta; expand-contract for anything a running version still names; a flag if risky or half-built |
+| R3 | new component, stage, data store, external service dependency, user population, or platform | R2 + `references/readiness.md`; rollback rehearsed on nonprod (or the named stand-in) |
 
-Any manifest or installer that hardcodes a GitHub Releases "latest" URL
-(`.../releases/latest/download/<asset>`) will 404 for every consumer until
-a non-prerelease release exists on that repo -- "latest" is defined to skip
-prereleases entirely, with no fallback. A repo whose only tag so far is a
-beta/rc prerelease has no "latest" to resolve to, even though the tag and
-its assets are right there. The failure shows up one hop downstream of
-where you'd look: the manifest itself may fetch fine (if it's referenced by
-tag), while a `download`/asset URL *inside* that manifest that still uses
-the `/latest/` alias fails, which reads as a bug in the consumer rather
-than a stale URL.
+- Calling a release a lower class than its triggers lowers a gate (the
+  gates skill). Higher is always allowed.
+- A component with no runbook gets one with its next R1-R3 release: what is known now, unknowns under Known gaps with an issue.
 
-Prefer a tag-specific URL (`.../releases/download/<tag>/<asset>`) in
-anything shipped as part of a release artifact -- template the actual tag
-in at build time rather than hand-writing `/latest/`. Reserve `/latest/`
-for update-check URLs meant to always point at whatever is newest, and only
-once you know the repo will always have a non-prerelease release by the
-time anyone reads it.
+## The runbook
+
+One per operated component (runs on a stage, or is published for others
+to install). Default home `docs/runbook.<component>.md`, never
+`docs/arch/` (which holds only what is deployed, written at 7a); the
+repo's `AGENT.md` may name another, and an existing deploy doc that covers
+these sections IS the runbook. Living: it ships in the change's PR, and a
+release edits only the sections it changed. Skeleton:
+`references/readiness.md`.
+
+- **Ship** -- per stage: URL, deploying workflow, who may start it.
+- **Verify** -- the post-deploy smoke and what green looks like.
+- **Roll back** -- the command; what it does not undo (data, secrets,
+  infra).
+- **Debug** -- where its telemetry lands and how to find one request
+  or one run there.
+- **Gotchas** -- the traps an agent will otherwise hit.
+- **Known gaps** -- each with its issue.
+
+## Docs
+
+Docs are read far more often by LLMs than by humans. Write for that
+reader; keep it legible to a human.
+
+- **Record pitfalls, not descriptions.** An agent reads the code in
+  seconds. What it cannot recover is the trap: the non-obvious failure,
+  the order that matters, the thing that looks right and is not.
+- **Terse, imperative, specific.** Symptom -> cause -> action. No
+  narrative, no restating the code, no history unless it prevents a
+  repeat.
+- **Narrowest layer** (sdlc, law 15): code comment, runbook Gotchas,
+  `docs/arch/`, the repo's `AGENT.md`, a repo-owned skill (only for a
+  repeated, agent-run procedure specific to that repo), a shared skill.
+- **Mechanics go in a tested script**; the doc names the script.
+- **Ship docs in the change's PR.** A doc left saying the old thing is a
+  defect. The as-built moves at 7a.
+- **No release notes.** If a repo ever needs them, GitHub's generated
+  notes are enough.
+
+## Stages
+
+- `nonprod` and `prod` for anything with users other than its author or
+  data that cannot be recreated. Never "staging". Same shape; they differ
+  in scale, data, and the literals the tier directory pins (the iac
+  skill). The GitHub Environments that gate them are `nonprod` and
+  `production` (the infra-credentials skill); `prod` is the stage's
+  short name, not an environment name.
+- One stage only: the runbook names the stand-in (consumer CI, a
+  prerelease dist-tag, a PR preview) or says none, and why.
+- Agents deploy to nonprod unattended. Prod is a human's call, named in
+  the conversation, unless `AGENT.md` records an automatic path.
+- Build once, promote the artifact, wherever stage differences are
+  runtime config (bindings, vars, secrets). Where the platform bakes
+  config in at build time (Nuxt runtime config on Workers), build each
+  stage from the same commit, assert each build's env-file pins its
+  stage, and let nonprod's smoke prove the code (the cloudflare-hosting
+  skill).
+- A new stage's resources are terraform -- in the infra repo by default
+  (the iac skill says when a project may keep them) -- applied by a
+  human before the deploy that needs them (sdlc, law 18).
+
+## Distribution
+
+- Name supported platforms in the README. Fleet default for agent
+  tooling: linux-x64 (cloud sessions), darwin-arm64 (laptops).
+- Each claimed platform smokes the **published artifact** in CI. A
+  `py3-none-any` wheel packed into a shiv `.pyz` carried the build
+  runner's compiled deps and could not start on macOS.
+- No CI smoke on a platform = unsupported. Say so.
+- Consumers move by pin. Never re-publish or move an installed version;
+  roll forward or move the pin back. Where a merge reaches the fleet with
+  no pin in between, `AGENT.md` says so.
+
+## Debuggability (OpenTelemetry)
+
+Goal: diagnose a problem detected elsewhere -- by a user, a failed run, a
+red smoke. No alerting; nothing here notifies anyone.
+
+- **One model: OpenTelemetry.** Traces, logs, events (log records
+  carrying `event.name`), and metrics where a count is cheaper than a
+  search. Export OTLP over HTTP where a supported endpoint exists;
+  otherwise the platform's native capture of the same signals is the
+  sink. The exporter is configured at the edge; no vendor SDK in the
+  core (the coding skill's core/edge axis).
+- **Resource attributes on everything:** `service.name`,
+  `service.version` (commit sha or published version),
+  `deployment.environment.name` (`nonprod` / `prod`). Without them two
+  stages or two versions are indistinguishable.
+- **Propagate trace context** (`traceparent`) across every hop you own,
+  and log inside the active span so log records carry the trace id.
+- **Structured logs only:** key-value, one event per record.
+- **No secret, token, or user content in any telemetry:** log fields,
+  span and resource attributes, metric labels. Exclude or redact it
+  where the record is made -- platform capture records before any
+  exporter runs. Traces carry URLs and headers by default; exporter
+  scrubbing is defense in depth, not the control.
+- **Unattended jobs log each run's outcome** (what it wrote, or why it
+  did nothing), so "did it run" is a query.
+- **Sink, today:** the platform's own logs and traces for cloud
+  components (Workers Logs, Cloud Logging); the LMDE collector
+  (tds-utils `lmde/components/observability/`) for local tools, which
+  stores metrics only -- LMDE has no log or trace backend yet. The target
+  is LMDE for everything, cloud included through an Access-gated tunnel;
+  until that is built, do not wire a cloud exporter to it. Where a
+  repo's telemetry lands is a repo fact in `AGENT.md`.
+- **Cloudflare Workers:** enable `observability` in wrangler config;
+  Workers Logs then holds traces and logs. Workers can also export them
+  (not metrics) to an OTLP destination -- the future route into LMDE.
+  -> the cloudflare-hosting skill
+
+## Shift release failures left
+
+Every rollback, hotfix, red deploy, or silent job asks: where could this
+first have been caught? Put a check there. A check beats a sentence.
+
+| Stage | Can see | Examples |
+|---|---|---|
+| git hooks | the local tree | lint, build, tests, secret scan, config schema, deploy-posture check |
+| CI `gate` | every platform, a clean checkout | full suite, workflow lint, per-platform smoke |
+| deploy preflight | the target stage | secrets resolved non-empty, stage named, migration applied first |
+| post-deploy | the running thing | the real-behavior smoke |
+
+What runs in which hook, and never moving a check later, is the gates
+skill's. Declare deploy posture in the repo and assert it in CI -> the
+cloudflare-hosting skill, Deploy workflows.
+
+## Rollout and rollback
+
+| Stage | Population | Proves |
+|---|---|---|
+| Preview / PR | you | it starts and serves |
+| Nonprod | team, synthetic | integration and config |
+| Canary | a small real slice | real traffic and data |
+| Full | everyone | -- |
+
+- A canary states its signal and its duration before it starts.
+- Know the rollback before the deploy. Prefer no-rebuild mechanisms
+  (previous artifact, platform version rollback). A rollback that needs
+  green CI is not one.
+- Risky or half-built behavior ships dark behind a flag; rollback is a
+  flip. Every flag has a removal issue.
+- Data does not roll back. Removals ship expand-contract; a destructive
+  prod migration takes a backup first.
+- Never push to the default branch to exercise CD: branch, dispatch,
+  prove, merge. Know what a merge triggers before merging.
+- Never dispatch a production workflow to test it.
+- Prefer scoped, short-lived downstream tokens: blast radius is scope
+  times lifetime.
+- Stage progression is a gate (the gates skill, first law): tightening
+  is free; skipping or shortening a stage must clear today's bar.
 
 ## Supply chain
 
-What you ship is only as trustworthy as what you built it from.
+- Never install from a piped script. Signed package managers only.
+- Pin actions by SHA, images by digest; commit the lockfile.
+- Ship the artifact you verified -- or, for a build-time-configured
+  stage, the same commit; prove it where the format allows (npm tarball
+  sha256).
+- Publish credentials are deploy credentials -> the infra-credentials
+  skill.
+- A dependency that shipped without a radar row is a retrospective
+  finding -> the tech-radar skill.
 
-- **Never install from a piped script.** `curl ... | bash` executes
-  unreviewed, unsigned, unpinned code with your credentials in scope. Use
-  a package manager that verifies signatures. This is absolute; there is
-  no deadline that justifies it.
-- **Pin what you build against, float nothing at the boundary.** A deploy
-  that resolves a floating tag at run time is not reproducible, and a
-  compromised upstream reaches production without a diff. Pin actions to a
-  SHA, pin base images by digest, and commit the lockfile.
-- **The artifact you verified must be the artifact you ship.** Build once,
-  promote that build through the stages. Rebuilding per stage means the
-  thing you tested and the thing users get were produced by two different
-  runs.
-- **Prove reproducibility where the format allows it.** For npm packages,
-  the packed tarball's sha256 should match the published one; a mismatch
-  means something entered between build and publish.
-- **Publish credentials are deploy credentials.** They follow the same
-  1Password chain, the same scoping, and the same rotation discipline as
-  any other -- see below.
-- **A dependency that reached production without a radar row is a
-  finding**, not a formality to backfill quietly. Raise it in the
-  retrospective. -> the tech-radar skill
+## Repo facts
 
-## Staging and canary
+This skill is shared policy. The repo's `AGENT.md` holds: stages and
+URLs, deploying workflows, who may start prod, runbook home if not the
+default, where its telemetry lands, supported platforms. Derive
+GitHub identity at runtime (the github-workflow skill). Defaults the
+repo may override: prod deploys run in CI, never from a laptop; nonprod
+deploys go through the repo's scripts, not the bare tool. A deploy that
+needs a resource that does not exist stops and raises it in the infra
+repo -> the iac skill.
 
-A release is a sequence of increasingly expensive bets. Do not skip
-straight to the last one.
+## Mechanics
 
-| Stage | Population | What it proves | Rollback cost |
-|---|---|---|---|
-| Preview / PR environment | you | it starts and serves | none |
-| Staging | the team, synthetic traffic | integration and config are right | none |
-| Canary | a small real slice | it survives real traffic and real data | small |
-| Full | everyone | -- | large |
-
-- **Staging must differ from production only in scale and data.** A
-  staging environment with a different config shape proves nothing about
-  production; that is the failure mode where "it worked in staging"
-  becomes routine and staging quietly stops being a gate.
-- **A canary needs a signal and a bound.** Before starting one, state what
-  you will watch (error rate, latency, a specific log line) and how long
-  you will watch it. A canary nobody measures is a slow full deploy.
-- **Rollback is a first-class path, not an incident response.** Know the
-  command before you need it, and prefer a mechanism that does not require
-  a rebuild -- promoting the previous artifact, or a Worker version
-  rollback. If rolling back requires a green CI run, it is not a rollback.
-- **Never dispatch a production workflow to test it.** Staging and preview
-  targets are what verification is for (see "Verifying a workflow fix
-  before merge").
-- **Stage progression is a gate**, so it is governed by the first law of
-  the gates skill: you may tighten it whenever you like; loosening it --
-  skipping the canary, widening the slice, shortening the watch -- is a
-  change that must clear the bar as it stands today.
-
-## Where repo facts come from
-
-This skill is pure shared logic. Deploy targets, stage names, npm publish
-targets, vault names, workflow filenames, and "which merge triggers what"
-are repo policy and live in the consuming repo's agent instruction file
-(`AGENT.md` / `AGENTS.md` / `CLAUDE.md`) or its ops docs. Derive GitHub
-identity at runtime (`gh repo view "$(git remote get-url origin)"`), never
-from memory -- the same rule as the github-workflow skill.
-
-Two standing repo-policy patterns to expect (the repo's own file wins):
-
-- Production deploys run in CI, never from a laptop. A repo may mark a
-  directory (e.g. `scripts/CD/`) as CI-only; honor it.
-- Staging/preview deploys go through the repo's npm targets, not by
-  invoking the underlying tool (wrangler, terraform, gcloud) directly.
-- The resources a deploy lands on -- routes, Access gates, buckets,
-  tokens, service accounts -- are not the deploy's to create. They are
-  terraform in the fleet's infra repo, named under "Infrastructure" in
-  the consuming repo's `AGENT.md`; a deploy that needs one that does not
-  exist stops and raises it there. -> the iac skill
-
-## The credential chain (org standard: 1Password master key)
-
-This section covers CONSUMING a credential from a workflow. Where a
-credential comes from -- vaults, service accounts, minting, item
-categories, seeding, rotation, the fleet registry -- is the
-infra-credentials skill.
-
-The fleet standard is ONE GitHub secret per workflow family: a 1Password
-**service-account token**. Every other credential is fetched at runtime
-from a 1Password vault via `1password/load-secrets-action`:
-
-```yaml
-- uses: 1password/load-secrets-action@v4
-  with:
-    export-env: true
-  env:
-    OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-    SOME_DEPLOY_TOKEN: op://<vault>/<item>/<field>
-```
-
-Rules of the chain:
-
-- **Service accounts are read-only and scoped to one headless vault**
-  (an infra vault the repo owns). A 1Password service account *cannot*
-  be granted a personal/Private vault, so `op://Private/...` references
-  are interactive-only by construction -- they can never work in CI.
-- **A scheduled run on a laptop is unattended too.** The 1Password CLI's
-  desktop-app integration authorizes each new CLI session with an
-  on-screen prompt, so `op read` from a scheduled agent's shell blocks on
-  a prompt nobody answers (`authorization timeout`, `promptError`) even
-  with the app unlocked, and works only while a human has just authorized
-  a session by hand. Give that path a store it can read without a prompt
-  -- on macOS the login keychain (`security find-generic-password`, ACL
-  granted at seeding, the read bounded by a timeout so a locked keychain
-  falls through instead of hanging) -- seeded from the 1Password item,
-  which stays the source of truth and is re-copied on rotation. Never
-  leave such a read unbounded: botocore and most SDKs put no timeout on a
-  credential process, so a hung read hangs the run.
-- **Secret naming:** either the generic `OP_SERVICE_ACCOUNT_TOKEN` (the
-  name the action reads natively) or a purpose-named org secret
-  (`<PURPOSE>_OP_SA_TOKEN`) mapped onto it in the workflow's `env:`.
-  One service account per purpose; do not reuse another workflow
-  family's SA just because its secret is already shared -- it is scoped
-  to a different vault.
-- **GitHub secret tiers differ by account type.** Organizations have
-  org-level secrets (which additionally need the repo added to the
-  secret's repository-access list); personal user accounts have NO org
-  tier -- repo secrets only. Check before assuming:
-  `gh api users/<owner> --jq .type`. A workflow convention copied
-  between repos in different accounts breaks exactly here.
-- **An undefined `${{ secrets.X }}` resolves to empty string, silently.**
-  Nothing fails at reference time; the failure surfaces one step later
-  as an auth error inside the consuming action. Where a secret is
-  load-bearing, add an explicit guard step that warns when it resolved
-  empty, naming the likely cause (secret absent, or org secret not
-  shared with this repo).
-
-## op:// reference discipline
-
-- **Vault by UUID**, with a comment mapping UUID to human name, so vault
-  renames do not break the reference.
-- **Item by ID** when the title contains `@` (op:// rejects it) or when
-  rename risk matters; item by title is acceptable for stable titles.
-- **Never guess the field name -- it follows the item's category.**
-  `API_CREDENTIAL` items store the token under `credential`;
-  `LOGIN`/`PASSWORD` items under `password`. Confirm before wiring:
-
-  ```zsh
-  op item get <item> --vault <vault> --format json
-  ```
-
-  and read `fields[].label` / `fields[].reference`. A reference written
-  from convention instead of inspection fails with
-  `does not have a field '<name>'` -- and only after auth succeeds, so
-  it hides behind any earlier credential fault.
-- **All consumers point at the same item and field.** Deploy workflows
-  and local `.env.op` files must agree; a local flow that works while
-  CI reads a different field masks the CI fault. When you fix one
-  consumer, grep for the item title/ID across the repo and fix them all.
-
-## Diagnosing a red deploy: deduce from behavior
-
-Read the run log before touching anything -- each failure names its own
-layer. The GitHub Actions step header prints the step's `env:` block:
-
-- Secret shown as `***` -- present (GitHub masks real values).
-- Secret shown blank after the colon -- **empty**: not defined at that
-  scope, or an org secret not shared with the repo.
-
-That one line separates "secret missing" from "secret wrong."
-
-Then place the error on the chain -- each rung only becomes reachable
-after the previous one holds:
-
-| Symptom | Fault |
-| ------- | ----- |
-| `you must set either OP_SERVICE_ACCOUNT_TOKEN or OP_CONNECT_...` | SA token empty at this scope |
-| vault or item not found | SA authenticated but lacks a grant on that vault, or wrong vault ref |
-| `does not have a field '<name>'` | item exists; field name wrong (see category rule above) |
-| deploy tool's own auth error | chain delivered a value, but the downstream token is dead or under-scoped |
-
-Corroborating history: `gh run list --workflow <wf>` distinguishes a
-workflow that has NEVER succeeded (wiring was never right -- suspect a
-convention copied from another repo or account type) from a regression
-(something was revoked, renamed, or rotated).
-
-Verify a suspect downstream token read-only before blaming the deploy
-tool -- most providers have a verify endpoint (e.g. Cloudflare
-`GET /user/tokens/verify`). A token proven live and active moves the
-fault back into the reference that delivers it.
-
-## Verifying a workflow fix before merge
-
-`workflow_dispatch` runs the workflow file **from the ref you pass**, so
-a fix is provable pre-merge:
-
-```zsh
-gh workflow run <workflow>.yml --repo <owner/repo> --ref <branch>
-gh run watch <run-id> --repo <owner/repo> --exit-status --interval 15
-```
-
-- The workflow must declare `workflow_dispatch:` (fleet deploy workflows
-  should -- add it when authoring one, precisely so fixes can be proven
-  this way). GitHub only lists a workflow for dispatch once a version of
-  it exists on the default branch; environment protection rules may
-  additionally restrict which refs can deploy.
-- **Dispatching a deploy workflow deploys.** Know the target first.
-  Staging/preview targets are fair game for verification; never dispatch
-  a production workflow to "test" it.
-- `gh run rerun <id> --failed` re-runs a failed run against the same
-  commit -- right for retrying after an out-of-band fix (a secret added,
-  a grant made), useless for testing a workflow-file change (the old
-  file re-runs).
-- Cite the green run URL in the PR body as verification evidence.
-
-`gh run watch` is a synchronous blocking wait: it polls GitHub
-internally at `--interval` and exits when the run completes. That does
-not violate the no-self-scheduled-timers law, whose target is deferring
-agent work to a future turn on a self-set clock -- a foreground command
-that blocks the current turn until a real outcome is not that, whatever
-it does internally.
-
-## Deploy hygiene
-
-- Never push to the default branch to exercise CD; branch, dispatch,
-  prove, then merge (github-workflow skill governs the PR itself).
-- Before merging anything that matches a deploy workflow's `paths:`
-  filter, know that the merge will trigger that deploy.
-- Prefer scoped, short-lived downstream tokens where the provider
-  supports them; a leaked value's blast radius is its scope times its
-  lifetime. Session-side containment is a separate problem -- see
-  template-tools `docs/design/DESIGN.SECRETS-VAULT.md`.
-- When a credential is rotated or re-homed, update the 1Password item in
-  place (keep the same item ID) rather than minting a sibling item, so
-  every op:// consumer keeps working without a sweep.
-- Deploy tools run on project-local state (coding skill, section 6):
-  `cfw` for wrangler, the tool's config variable otherwise. A stored
-  login in `$HOME` silently governs every project on the machine -- an
-  expired `~/.wrangler` login once vetoed a container deploy although
-  `CLOUDFLARE_API_TOKEN` was set (template-tools#699). Auth is the token
-  from 1Password, per run; never `wrangler login`.
+- `references/deploy-mechanics.md` -- consuming a credential through the
+  1Password service account, op:// discipline, diagnosing a red deploy,
+  proving a workflow change with `workflow_dispatch`, the
+  `/releases/latest/` prerelease trap, project-local tool state.
+- `references/readiness.md` -- R3 questions and the runbook skeleton.
 
 ## Exit gate
 
-The change is deployed, published, or tagged; the rollout reached its
-final stage or was deliberately stopped; `docs/arch/` was updated at 7a to
-describe what now runs. Then the retrospective can diff the frozen design
-against a true as-built.
+- Shipped, to the final stage or deliberately stopped.
+- Proven: deploy run URL and green smoke cited in the PR or release
+  record; for a scheduled path, the unattended run's own output.
+- What the class owes is merged; `docs/arch/` updated at 7a.
 
-**A capability an unattended path depends on is live only once that path
-has run it.** A hand run from an interactive shell proves the code, not
-the deployment: the interactive shell carries things the unattended one
-does not -- direnv exports, an authorized 1Password CLI session, an
-unlocked keychain, a logged-in browser -- and a capability that reads any
-of them works by hand and silently does nothing on the schedule. Observed
-2026-09-27 (GammaGo issue 396): an archive verified by a hand-run backfill
-uploaded nothing from every scheduled run for a day, because its bucket
-name lived only in `.envrc`. The evidence that closes the loop is the
-unattended run's own output (its PR, its log, the object it wrote), cited
-where the hand run's would have been.
+**An unattended path is live only once it has run.** A hand run proves
+the code, not the deployment: the interactive shell carries direnv
+exports, an authorized 1Password session, an unlocked keychain. GammaGo
+issue 396: an archive verified by hand uploaded nothing from every
+scheduled run for a day, because its bucket name lived only in `.envrc`.
+
+**A release that needed a rollback or hotfix is a change failure.** The
+retrospective files the check that would have caught it.
 
 ## Related
 
-- the architecture skill -- phase 7a, which this phase triggers
-- the gates skill -- the pre-merge rungs, and the law governing any change
-  to a stage-progression rule
-- the retrospective skill -- phase 8, where a dependency that shipped
-  without a radar row becomes a filed finding
-- the tech-radar skill -- the rings a shipped dependency is audited against
+- architecture (7a), design (Operability), gates (hooks, the gate law),
+  iac and cloudflare-hosting / gcp-ops / aws-ops (stages' resources),
+  infra-credentials, lmde-dashboards (Grafana), retrospective, tech-radar

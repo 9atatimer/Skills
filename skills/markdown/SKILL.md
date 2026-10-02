@@ -7,6 +7,16 @@ description: "Writing or surgically editing Markdown files, especially design do
 
 > Guidelines for writing and surgically editing Markdown files, especially design docs.
 
+## Write for the LLM reader
+
+Fleet docs are read far more often by agents than by humans. Write so an
+agent acts correctly on the first read; keep it legible to a human.
+
+- Record pitfalls and decisions, not descriptions the code already gives.
+- Terse, imperative, specific: symptom -> cause -> action.
+- No narrative, no throat-clearing, no history unless it prevents a
+  repeat.
+
 ## Formatting Rules (for stable AST parsing)
 
 ### Characters
