@@ -149,7 +149,7 @@ function runOnce(scenario, variant, model) {
     for (const r of repos) {
       appendFileSync(join(r, ".git", "info", "exclude"), PROVISIONED_DIRS.map((d) => `${d}/`).join("\n") + "\n");
     }
-    const before = repos.map(repoState);
+    const before = repos.map((r) => repoState(r));
     const rootBefore = rootEntries(dir);
     const { error } = runAgent(dir, fillBrief(briefFor(scenario, variant), values), model);
     if (error) return { error };
