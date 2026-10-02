@@ -216,9 +216,10 @@ one only when the push since the last one changed what the change does.
 find a new defect in" is.
 
 - **Load-bearing** fixes change runtime behavior, a contract or
-  interface, a security property, a test's verdict, or a rule an agent or
-  gate executes (a skill, a persona, `AGENT.md`, a prompt, CI or gate
-  configuration). The test is the testing skill's bookkeeping rule: if
+  interface, a security property, a test's verdict, or what a rule an
+  agent or gate executes says (a skill, a persona, `AGENT.md`, a prompt,
+  CI or gate configuration). A typo or rewording in such a file that
+  leaves the rule meaning the same thing is hygiene. The test is the testing skill's bookkeeping rule: if
   you cannot say who is harmed and what they observe, the fix is not
   load-bearing.
 - **Hygiene** is everything else: wording, typos, comments, naming,
@@ -246,7 +247,9 @@ files, a changelog, a comment-only edit to source. Such a PR never
 requests Copilot and never asks a human to summon Codex. The adversarial
 self-review (the self-review skill) is the whole review: it satisfies
 Zero Unreviewed Code for that PR, its ledger on the PR is the record,
-and there is no review-watch loop.
+and there is no review-watch loop. Where the repo requires
+`review-settled`, the status stays red on such a PR: a human lands it,
+and the agent never summons a reviewer to turn it green.
 
 - **Except a design or architecture draft in phases 2 and 3.** A design
   record under review (`docs/design/`) or a phase-3 seam map gets the
@@ -762,8 +765,8 @@ Self-pacing mode is the right primitive:
 
 ```
 /loop check my open PRs for Copilot feedback, triage and respond per the
-github-workflow skill, push fixes, wait for re-review (~2 min), repeat
-until settled or capped.
+github-workflow skill, push fixes, re-request and wait (~2 min) only
+when a push was load-bearing, repeat until settled or capped.
 ```
 
 `/loop` is the human starting the schedule -- the only sanctioned

@@ -305,8 +305,8 @@ review is still owed on this head (re-request the reviewer on the latest
 push if none is on it and that push carries a load-bearing fix; resolve
 every thread; post the self-review epilogue), and the agent waits
 for the status, never lands around it. A head that is red only because
-of a hygiene-only tail goes to the human to land; it never earns a turn
-just to turn the status green. A human with write access may
+of a hygiene-only tail, or a documentation-only PR, goes to the human to
+land; neither earns a turn just to turn the status green. A human with write access may
 comment `tedium land` at any time and that remains the human merge
 decision. `tedium dryrun` is unrestricted: it builds on `tedium/try` and
 lands nothing. Never add `tedium/*` to protected-branch patterns; the

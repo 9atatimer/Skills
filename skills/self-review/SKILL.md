@@ -319,8 +319,8 @@ command output.
 
 Only when at least one fix is load-bearing, in the gates skill's sense
 (Spend Review Turns on Load-Bearing Fixes): it changes runtime behavior, a
-contract, a security property, a test's verdict, or a rule an agent or
-gate executes. Wording, typos, comments, naming, formatting and the
+contract, a security property, a test's verdict, or what a rule an agent
+or gate executes says. Wording, typos, comments, naming, formatting and the
 accuracy of human-read documentation are hygiene: fix them, record them in
 the ledger as fixed (SHA), and run no re-review for them.
 
@@ -382,9 +382,10 @@ confirm it finds it.
 
 ## What it does not buy
 
-- **Self-review NEVER satisfies Zero Unreviewed Code.** You chose the brief,
-  you ran the pass, and you triaged the results. The agentic and human
-  review rungs run unchanged, and the epilogue is partly for them: they see
+- **Self-review NEVER satisfies Zero Unreviewed Code**, outside a
+  documentation-only PR (Documentation-only changes, above). You chose the
+  brief, you ran the pass, and you triaged the results. Everywhere else
+  the agentic and human review rungs run unchanged, and the epilogue is partly for them: they see
   what was caught and fixed.
 - **It is not the gate reviewer.** An engine the repo runs in CI, outside
   any author's session, is a different thing; whether one may stand in for
