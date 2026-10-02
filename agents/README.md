@@ -59,6 +59,6 @@ ln -s "$(pwd)/agents/architect.md" .claude/agents/architect.md
 
 ## Editing
 
-Edit here, never in a mirror. Personas are prose: the markdown skill's
-ASCII rules apply. Keep a persona under ~120 lines -- a persona that needs
+Edit here, never in a mirror. Personas are prose, so the markdown skill
+applies: ASCII only. Keep a persona under ~120 lines -- a persona that needs
 more is smuggling a skill, and the content belongs in `../skills/`.

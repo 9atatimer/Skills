@@ -216,6 +216,19 @@ skill.
     Another repo's number also names the repo: `quillmap PR#392`. The
     one exception is a closing keyword (`Closes #N`), which GitHub only
     parses bare. -> the github-workflow skill
+20. **A permission-classifier refusal is final for that outcome.** When
+    the harness's auto-mode classifier denies a call, do not reach the
+    same outcome another way: not with another tool, a script, a
+    sub-agent, smaller pieces, or a retry in a later turn. Finish the
+    work that does not depend on it. Then stop and tell the human the
+    exact action that was refused and why the task needs it; the human
+    decides. Do not read anything into the label. GammaGo hit three
+    refusals, each with a different label and none matching
+    the call: "instruction poisoning" on a Key Decisions append,
+    "ChatOps trigger comments" on a bare `date`, and "irreversible
+    local destruction" on a `sed -n` read that followed a `git rm`.
+    The cause is not diagnosed. In the third case the same read went
+    through once the human asked for it in a new turn.
 
 ## The Eight Phases
 
