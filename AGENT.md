@@ -85,6 +85,20 @@ apply (`--` not an em-dash, `->` not arrow glyphs, `...` not an ellipsis,
 straight quotes), and bullet lists, never ordered lists, except where a
 step number is cited by other text.
 
+**A skill states policy; a vendor tool's mechanics belong in tested
+code.** Flags, exit codes, config-file layering and exclusion reasons
+written into a skill are surface that review cannot converge on: nothing
+executes the prose, so only a reader can catch it drifting from the tool.
+In [Skills PR#77](https://github.com/9atatimer/Skills/pull/77) the
+`self-review` skill's `ocr` adapter section drew new, valid defects in the
+self-review pass and in each of five Copilot rounds; 10 of the 16 fixes
+those rounds forced were `ocr` mechanics (rule-file layering, exclusion
+and failure classes, missing flags, output fields, minimum version). Keep a skill to what
+an agent must decide and type; put translation and routing in a tool with
+tests. Standing exception: the `self-review` skill's `ocr` sections, until
+the tool that replaces them ships
+([Skills issue#81](https://github.com/9atatimer/Skills/issues/81)).
+
 ## Testing
 
 `npm test` runs `test/*.test.mjs` under `node --test` (zero dependencies).

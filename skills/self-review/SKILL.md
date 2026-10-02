@@ -126,12 +126,13 @@ config set` is not yours to run).
 
 | Adapter | Who finds | Bound when | Covers |
 |---|---|---|---|
-| `ocr` | Open Code Review's full pipeline: deterministic file selection and bundling, per-file rules, sub-agent review, its own reflection filter | `OCR_NO_UPDATE=1 ocr llm test` exits 0 | Source code; it skips Markdown |
-| `ocr-delegate` | `ocr` picks files and rules; fresh sub-agents of this session review | `ocr` is on PATH but `OCR_NO_UPDATE=1 ocr llm test` fails | Source code, on session quota |
+| `ocr` | Open Code Review's full pipeline: deterministic file selection and bundling, per-file rules, sub-agent review, its own reflection filter | `OCR_NO_UPDATE=1 ocr version` reports v1.12.5 or later, and `OCR_NO_UPDATE=1 ocr llm test` exits 0 | Source code; it skips Markdown |
+| `ocr-delegate` | `ocr` picks files and rules; fresh sub-agents of this session review | `OCR_NO_UPDATE=1 ocr version` reports v1.12.5 or later but `OCR_NO_UPDATE=1 ocr llm test` fails | Source code, on session quota |
 | `subagent` | Fresh-context sub-agents, briefed with the template below | Always | Everything, including prose, skill and persona files |
 
 **Selection is mechanical, per file class:** the first adapter whose
-condition holds. A diff that mixes code and Markdown runs `ocr` (or
+condition holds. An `ocr` older than v1.12.5 lacks the exclusion reasons
+this skill routes on, so it binds neither `ocr` adapter. A diff that mixes code and Markdown runs `ocr` (or
 `ocr-delegate`) over the code and `subagent` over the rest. Whether `ocr`
 is a binary, a wrapper around a container, or something that forwards to a
 remote endpoint is the machine's business. Cloud sessions normally have no
