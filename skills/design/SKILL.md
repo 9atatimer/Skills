@@ -222,6 +222,7 @@ Copy `docs/design/TEMPLATE.md` to a new file following naming conventions:
 - **State Machine** -- If the system has lifecycle states (most do), document transitions
 - **Data Model** -- Tables, fields, relationships, constraints
 - **Security Considerations** -- Auth, secrets, attack vectors, mitigations
+- **Operability** -- for anything that will ship to a stage or be published: its release class (the release skill), the stages and supported platforms, the promise (an SLO if it has users other than its author), the likeliest failure modes and how each is detected, the rollout and the rollback, and what data cannot be rolled back. Phase 7 reads this section; a design that ships nowhere says so in one line
 - **Key Decisions** -- Table of choices with rationale. This is the most valuable section for future readers
 - **Open Questions** -- Be honest about unknowns. This builds trust
 - **Rejections** -- Alternatives considered and explicitly dismissed, each with a one-line reason. Prevents future maintainers from relitigating settled decisions. Distinct from Non-Goals (which is scope) and Key Decisions (which is what was chosen) -- this captures what was *not* chosen and why
@@ -290,6 +291,7 @@ Run through these checks:
 - [ ] Does every behavior have a row in Behaviors and Interfaces, with a use-case signature whose inputs and outputs are domain values and whose ports are all in the seam list?
 - [ ] Does every noun in those signatures appear in the Data Model or a glossary, under exactly one name?
 - [ ] Is there a module map (phase 3) that puts each use case in the application layer, each rule in the domain, and names the composition root per runtime?
+- [ ] If it ships, does Operability name the release class, the rollback, and how a failure would be detected?
 
 ### Review Output Format
 
