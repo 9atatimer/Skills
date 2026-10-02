@@ -1,6 +1,6 @@
 ---
 name: gates
-description: "Phase 6 of the SDLC: everything that stands between a pushed commit and a mergeable one -- pre-commit scanners, CI, ci.magic assertions, agentic and human review, the self-adversarial review pass on your own diff, and the review-watch loop. Carries two standing laws: clear the gate before you move it, and zero unreviewed code. Load when a gate goes red, when driving a PR through review, when reviewing your own work, or when changing any gate's configuration. Skip for the push/PR mechanics themselves (github-workflow) and for deploy pipelines (release)."
+description: "Phase 6 of the SDLC: everything that stands between a pushed commit and a mergeable one -- pre-commit scanners, CI, ci.magic assertions, agentic and human review, the mandate to self-review your own diff (the self-review skill says how), and the review-watch loop. Carries two standing laws: clear the gate before you move it, and zero unreviewed code. Load when a gate goes red, when driving a PR through review, when reviewing your own work, or when changing any gate's configuration. Skip for the push/PR mechanics themselves (github-workflow) and for deploy pipelines (release)."
 ---
 
 # SKILL: Gates (Phase 6)
@@ -8,7 +8,11 @@ description: "Phase 6 of the SDLC: everything that stands between a pushed commi
 > **Purpose:** get a change from pushed to mergeable without lowering the
 > bar to do it.
 > **Exit gate:** every check green, every piece of feedback in a recorded
-> state, and a human (or tedium under a human's authorization) merges.
+> state, and the gates authorize the merge -- on an enrolled repo (a
+> `tedium.toml` on the default branch), that means `review-settled` green
+> on the head with no turn cap fired and no open `pr-todo` issue against
+> the PR, and tedium executes it; on any other repo, where no
+> `review-settled` status exists, a human authorizes and merges.
 
 A gate is anything that can say no. They run in a ladder, cheapest and
 earliest first, and each one exists because the later ones are more
@@ -20,7 +24,7 @@ expensive:
 | 2 | CI status checks | the PR | read the job log, fix, push |
 | 3 | ci.magic assertions | the PR | the assertion names the file and the violation |
 | 4 | Agentic review (Copilot by default) | the PR | the review-watch loop, below |
-| 5 | Human review and merge authorization | the PR | address or defer; never merge around it |
+| 5 | Review settled (Copilot; Codex where the repo requires it) and merge authorization by the gates: the repo's required check `gate` plus the `review-settled` status, both green on the head | the PR | address or defer; never merge around it. On a repo without `tedium.toml`, a human reviews and merges |
 
 **A red gate is a diagnosis prompt, not an obstacle.** The laws below
 govern every rung, and neither has an agent-accessible exception.
@@ -41,9 +45,51 @@ things matter when one goes red:
   about your diff. Inconclusive means the agent answered and could not
   tell. Neither is a finding against your code; do not "fix" a diff to
   satisfy one.
+- **A skip is not a pass.** When ci.magic cannot run -- a missing or
+  wrong credential, say -- it reports a GREEN "skipped". Absence of red
+  is not evidence the assertions held; after any credential or workflow
+  change, read the run and confirm the rows were actually evaluated.
+- **Write placement rules as whitelists.** "Mechanics live only in X and
+  Y" catches a new zone nobody enumerated; "no mechanics in A, B, C" lets
+  everything through an unlisted D. Blacklists are how a numeric value
+  slips into prose the gate never named.
 
 The threshold is a gate like any other -- raising it may take effect
 immediately, lowering it is governed by the first law below.
+
+**Putting ci.magic on a repo has two halves, and the owner decides
+both.** The action reference and the credential are resolved on opposite
+sides of the account boundary:
+
+- **The `uses:` reference** is resolved by GitHub at "Set up job", before
+  any step and with no secret in scope. A private action reaches only
+  repositories under its OWN owner (Actions access `organization` for an
+  org, `user` for a personal account); there is no level that crosses
+  owners outside an Enterprise. A consumer under another owner references
+  a mirror of the action under that owner -- never a token that fetches
+  it. Which reference each owner uses, and how a mirror is stood up, is
+  the action's own ops playbook (template-tools
+  `docs/ops/ci-magic/PLAYBOOK.ACTION-MIRROR.md`).
+- **The credential** (`CI_MAGIC_OP_SA_TOKEN`) is an org secret for an
+  org-owned consumer and a PER-REPOSITORY secret for one under a personal
+  account, which has no org tier. Without it the action resolves and then
+  posts "skipped: missing credential" -- a green skip, not a review. Seed
+  it as one loop over the repositories that actually carry the workflow,
+  value read from the vault and never pasted:
+
+  ```
+  for r in $(gh api -X GET search/code -f q='user:<OWNER> path:.github/workflows ci-magic' --jq '.items[].repository.full_name' | sort -u); do op read '<op:// reference to the CI-Magic service-account token>' | gh secret set CI_MAGIC_OP_SA_TOKEN -R "$r" && echo "seeded $r"; done
+  ```
+
+  The exact `op://` reference is a fleet fact, not a skill fact: the
+  playbook above carries the cut-and-paste form, and the fleet's
+  credential registry (the private infra repo's `ops/credentials/`) is
+  where it is recorded. Re-run the loop after each new adopter and on
+  each rotation.
+
+A new repository seeded from a template inherits the workflow, not the
+secret and not necessarily the right reference: check both on its first
+PR before reading a green `ci.magic` as a verdict.
 
 ## Clear the Gate Before You Move It (CRITICAL)
 
@@ -90,12 +136,40 @@ blocked by a gate is not authorization to move it.
 
 - **NEVER land code no one has reviewed. The target is 0% unreviewed
   code.** Every pushed commit must be looked at by a reviewer --
-  agentic (Copilot, codex) or human -- before the PR merges.
-- A push after the latest review reopens the question: those tail
-  commits are unreviewed until an agentic re-review runs (within the
-  per-reviewer turn cap) or a human explicitly looks at them. Never merge a PR
-  whose tail commits nobody has seen; when the cap has fired, say so
-  in the handoff so the human knows the tail is theirs to review.
+  agentic (Copilot, Codex) or human -- before the PR merges.
+- **`review-settled` is this law as a commit status.** On an enrolled
+  repo the status is green on a head iff every required reviewer's newest
+  review is on that head AND every review thread is resolved; the ruleset
+  requires it and tedium checks it before batching. A push after the
+  latest review turns it red on the new head: those tail commits are
+  unreviewed until an agentic re-review runs (within the per-reviewer
+  turn cap) or a human explicitly looks at them. Never merge a PR whose
+  tail commits nobody has seen; when the cap has fired, the remaining
+  feedback becomes `pr-todo` issues and the PR is handed to a human --
+  say so in the handoff so the human knows the tail is theirs to review.
+  There is no workflow trigger for a thread being resolved: the epilogue
+  comment (law 16) is what re-evaluates the status after the last thread
+  closes.
+- **`review-settled` fails open on a quota notice, and only on one.**
+  When a required reviewer's newest post on the PR is its "unable to
+  review ... reached their quota limit" notice, it will never review (the
+  owner's ruling, 2026-09-26): the PR does not wait for it, every review
+  thread must still be resolved, and the status reads `FAIL-OPEN:
+  <reviewer> is out of quota` -- never "reviewed". Any other "unable to
+  review" notice is not a go: re-request the reviewer. Silence is not a
+  go either. Never report a FAIL-OPEN green as reviewed, and never
+  re-request a reviewer that answered with a quota notice. A FAIL-OPEN
+  head is unreviewed by that agent: a recorded exception to Zero
+  Unreviewed Code, not a review.
+- **A cap-fired `review-settled` is not a self-land license.** The
+  deferral procedure just above -- file `pr-todo` issues, reject each
+  remaining comment, resolve each thread -- satisfies both of
+  `review-settled`'s conditions without fixing anything and without a new
+  push, so the status can read green on a head whose reviewer feedback
+  was explicitly deferred to a human. The agent-initiated `tedium land`
+  preconditions (github-workflow skill, Landing via tedium) exclude this
+  case by name: no turn cap fired, no open `pr-todo` issue against the
+  PR.
 - **Feedback is never dropped. Acting on it is optional; recording it
   is not.** Every piece of reviewer feedback ends in exactly one of
   four recorded states: fixed (accept reply + SHA), rebutted (reject
@@ -106,51 +180,26 @@ blocked by a gate is not authorization to move it.
   back through the event stream are not feedback and need no state.
   Silently ignoring feedback is the one forbidden outcome.
 
-## Self-Adversarial Review (the panel pass on your own diff)
+## Self-Review (the adversarial pass on your own diff)
 
 An author cannot review their own diff: you re-read your intent rather
-than the code. The correction is the same one the designomatic skill
-applies to design records -- a separate reviewer with an adversarial
-stance -- applied here to code. Run one whenever you want a second
-opinion on a diff you wrote, and especially before a human is asked to
-spend attention on it.
+than the code. **Run the self-review pass before every PR a human or gate
+reviewer is asked to read**, not when you feel like a second opinion: an
+author who decides case by case decides "not this one" on the diffs that
+most need it. How to run it -- the fresh-context brief, dimensions,
+evidence tiers, the verifier, one round, triage and the epilogue on the
+PR -- is the self-review skill.
 
-**Running it:**
+This pass is where the reviewing happens. The agentic reviewer bot that
+follows (Copilot; Codex only when a human summons it -- Reviewer
+Selection below) is the mechanical gate over a diff that has already been
+through it, not the first pair of eyes.
 
-- **A separate agent, not a second read.** Spawn a sub-agent whose brief
-  is adversarial: assume the author is wrong until the code proves
-  otherwise, verify every claim independently (read the files, run the
-  hermetic tests yourself), report findings with severity and evidence,
-  and fix nothing -- the reviewer reports, the author triages.
-- **Findings come back as bug reports, not verdicts.** Triage them with
-  exactly the machinery of any agentic review: verify each against the
-  code, fix what is real, rebut what is wrong with a concrete reason.
-  Silently dropping a finding is as forbidden here as it is for any
-  reviewer's feedback.
-
-**The epilogue (always):**
-
-- **A self-review that never reaches the PR did not happen**, as far as
-  every later reader is concerned -- the session transcript is archived
-  and nobody re-reads it. When the diff under review has (or gets) a
-  PR, post ONE summary comment on that PR alongside the fix commits:
-  what was reviewed (commits, paths), the reviewer's verdict, each
-  finding with its disposition (fixed with the SHA, rebutted with the
-  reason), and which tests the reviewer ran. The epilogue is the
-  review's durable record; the fix alone is not, because a later
-  reader cannot reconstruct the why from a diff.
-- Post the epilogue WITH the fix, not instead of it -- one comment
-  after triage completes, never a running narration, and never a
-  summary that promises fixes not yet pushed.
-
-**What it does not buy:**
-
-- Self-adversarial review NEVER satisfies Zero Unreviewed Code. The
-  sub-agent runs in your session, on your context, at your direction;
-  it is a cheap correction for author blindness, not an independent
-  reviewer. The agentic and human review rungs run unchanged, and the
-  epilogue exists partly so those reviewers can see what was already
-  caught and fixed.
+- Self-review NEVER satisfies Zero Unreviewed Code. You chose the brief,
+  you ran the pass, and you triaged the results; it is a cheap correction
+  for author blindness, not an independent reviewer. The agentic and human
+  review rungs run unchanged, and the epilogue exists partly so those
+  reviewers can see what was already caught and fixed.
 
 ## Git Hook Discipline (scalpel, not axe)
 
@@ -180,16 +229,38 @@ When a sentry was needed, say so in the session (which checks, why, and
 what you ran manually to compensate) so the human knows what the commit
 was and was not verified against.
 
+**A fresh worktree runs no hooks at all.** husky resolves its hooks from the
+checkout's `node_modules`; a `git worktree add` with no `npm ci` has none,
+so every commit there skips the whole suite -- silently, with no error and
+no sentry. Observed on template-tools PR #700: its new pre-commit guard
+never ran on its own commits, and would have blocked its own test file.
+Install the repo's hooks in a new worktree before the first commit -- and
+check that `.husky/pre-commit` exists, because `npm ci` alone may not be
+enough: template-base generates that shim from its `prepare` script
+(`naatm-hooks install`), so `npm ci --ignore-scripts` left it absent and
+the commit again ran no checks (template-base PR #89). Otherwise run the
+checks the hook would have run by hand and say so.
+
 ## Branch Protection and Required Checks
 
-For repos whose default branch is protected by required status checks
-(the repo lists the check names): PRs cannot merge until
-all checks pass. If a check fails:
+Every enrolled repo's default branch requires two checks on the PR head,
+and its agent instruction file names them (that file's "Landing via
+tedium" section): `gate`, the one always-present CI check that needs every suite
+in that repo, and `review-settled`. A new CI job goes into `gate`'s
+`needs`; a job outside it cannot block a landing, and a per-workflow
+`paths:` filter that makes a required check absent hangs the bot. PRs
+cannot merge until all required checks pass. If a check fails:
 
 - Read the job output:
    `gadmin github actions get-job --run <ID> --job <NAME>`
 - Fix the issue locally
 - Push the fix -- checks re-run automatically
+
+**A PR with a merge conflict runs no `pull_request` workflows.** GitHub
+cannot build the merge commit, so a fix pushed to a conflicted PR is never
+evaluated and the old red (or nothing) stays on it. After any push, confirm
+the checks actually ran on the new head; if none did, resolve the conflict
+first.
 
 ## Reviewer Selection (agentic reviewers)
 
@@ -228,6 +299,17 @@ Which bot reviews a PR is policy, not agent judgment:
   fine and whose suite was green). Triage the whole review body, not the
   inline thread, and weigh each finding on the code rather than on where
   the bot filed it.
+- **Zero open threads is not zero findings.** Copilot files findings in
+  code unchanged since its previous review under a `Previously missed`
+  block in the review body, with no thread. `review-settled` counts
+  threads only, so it goes green with such a finding open. On
+  [Skills PR#77](https://github.com/9atatimer/Skills/pull/77) the fifth
+  review's only finding was body-only. The PR merged with it unanswered,
+  and a later state check that read just the threads still reported no
+  findings.
+  On every wake, and before calling a PR ready, read the newest review
+  body on the head. Give each body-only finding a recorded disposition in
+  one PR comment, exactly as a thread would get.
 
 **A bot finding is a bug report, not a verdict.** Verify it against the
 code before acting: confirm the failure it describes actually occurs.
@@ -660,6 +742,14 @@ classify each as one of:
   inline in the session as plain text (never a question-picker widget --
   they break on mobile). Do not guess.
 
+Then, for every **Agree**, ask the question triage otherwise skips: **what
+is true today that this fix could stop being true?** A review fix lands in
+working code, so its likeliest defect is not that it fails but that it
+breaks a neighbour. Name that behavior and pin it before changing
+anything; if it already has a test, say which. Round two of a review is
+usually round one's collateral damage, and it is invisible to a suite that
+only describes what the fix was supposed to add.
+
 **Step 3: Reject the ones you disagree with** immediately, with reason:
 `gadmin github reply --repo <OWNER/REPO> --id <ID> --type reject --msg "Reason for disagreement"`
 
@@ -673,10 +763,25 @@ rejected thread collapses it behind a "Resolved" fold, so without the
 mirror comment the human sees a clean PR and never learns feedback was
 declined. One comment per review pass, not one per rejection.
 
-**Step 4: Implement the agreed fixes locally, commit, and PUSH.** All
-fixes go in one commit (or one per logical group), **never amend a pushed
-commit**. Note the resulting SHA. The push is critical -- an unpushed fix
-is invisible to the reviewer.
+**Step 4: RED test first where there is behavior, then implement the agreed
+fixes, commit, and PUSH.** A finding about executable behavior is a defect,
+and law 5 does not lapse because the defect arrived by comment rather than
+by bug report: write the failing test before the fix, and make it fail for
+the reason the reviewer gave. The test that is kept states the contract the
+reviewer's case would break -- what a human does and what they then see --
+not the internal state the fix happens to change.
+
+**Findings about bookkeeping get no invented test.** Prose, comments,
+spelling, config, file layout and dependency housekeeping are covered by
+the testing skill's bookkeeping rule: if you cannot say who is harmed and
+what they observe, there is no behavior, so there is no RED-first either.
+Fix it and move on. The rule above is not a licence to manufacture a test
+so a docs correction can look rigorous -- and a finding about executable
+code that still has no statable harm is a finding worth questioning.
+
+All fixes go in one commit (or one per logical group) together with their
+tests, **never amend a pushed commit**. Note the resulting SHA. The push is
+critical -- an unpushed fix is invisible to the reviewer.
 
 **Step 5: Accept each fixed comment with the SHA:**
 `gadmin github reply --repo <OWNER/REPO> --id <ID> --type accept --msg "Agreed, fixed in <sha>"`
@@ -715,6 +820,8 @@ include it in the next commit; if not, skip.
 
 ## Related
 
+- the self-review skill -- the adversarial pass on your own diff that
+  runs before every PR
 - the github-workflow skill -- branch, push, and PR mechanics; the remote
   topology table this skill's `--repo` targets refer to; issue anatomy for
   the `pr-todo` issues you file

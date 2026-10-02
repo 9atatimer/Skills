@@ -53,20 +53,46 @@ skill.
    hand off the status transition. A passing suite and a clean bot review say
    nothing about whether you built what was designed. -> the retrospective
    skill
-5. **Test first (TDD/BDD).** Write the failing test before the code.
-   Follow RED -> GREEN -> COMMIT, one behavior per commit. No production
-   code without a failing test demanding it. -> the testing skill
-6. **Stable core, volatile edges.** Separate what the software *means*
-   (decisions and rules, in the problem's language) from how it *connects
-   to the world* (vendors, HTTP, fs, env vars, model ids). The core
-   imports nothing concrete; dependencies point inward
-   (`cli -> application -> domain`, `adapters -> ports -> domain`).
+5. **Test first; keep the behavior test.** Write the failing test before
+   the code. Follow RED -> GREEN -> COMMIT, one behavior per commit. No
+   production code without a failing test demanding it.
+
+   TDD and BDD are not alternatives, and the slash that used to be here
+   read as though they were. **TDD is the means**: driving a unit from a
+   failing test is how correct code gets written, and it is welcome
+   wherever it helps. **BDD is the deliverable**: the test that is *kept*
+   names a contract someone depends on, and its failure message names the
+   harm. Usually that is a human action and what they then observe; for
+   the architect behaviors of phase 3 it is a named structural contract
+   (Grep, Swap, Decision, Arrow), whose dependant is the next person who
+   needs the seam. What it is never is the mechanism's own internals: that
+   test dies the day the mechanism is replaced and stays green while the
+   feature is unusable, where a contract test survives the rewrite and is
+   the only kind that can report the thing is missing. Scaffolding may be
+   written and may be thrown away -- it is not what the suite is for.
+   -> the testing skill
+6. **Stable core, volatile edges -- on three axes, not one.** Separate
+   what the software *means* (decisions and rules, in the problem's
+   language) from how it *connects to the world* (vendors, HTTP, fs, env
+   vars, model ids). The core imports nothing concrete; dependencies point
+   inward (`cli -> application -> domain`, `adapters -> ports -> domain`).
    Quick check: if "we now also use <new vendor>" would touch the core,
    there is a missing seam. Counter-check: a port with one
    forever-implementation is ceremony -- seam only at real axes of change
-   (YAGNI). Clean / Hexagonal / DDD are three names for this one idea,
-   not three checklists. -> the architecture skill (where the seams are
-   named) and the coding skill (where they are built)
+   (YAGNI). That is the **core vs edge** axis, and it is the one agents
+   hear. Two more hold with equal force. **Layers inside the core:** the
+   domain is pure rules and values (no port ever reaches it), the
+   application is workflow (one function per behavior, ports as
+   dependencies, domain values in and out -- the BDD surface), and the
+   composition root is wiring (the only code that names a concrete
+   adapter). Functional in the domain, procedural in the workflow; DI
+   starts at the use case and never goes below it. **Language and
+   boundaries:** the nouns in the code are the nouns in the design doc,
+   and each invariant has one owner. Clean, Hexagonal, Layered, and DDD
+   each guard one of these; a change is architecturally done only when it
+   passes the mechanical tests of all three axes. -> the architecture
+   skill (where the seams and the module map are named) and the coding
+   skill (where they are built and tested)
 7. **File anatomy.** Lay every source file out top-to-bottom: module
    header, imports, constants, flags/config, then per sub-component
    predicates -> helpers -> flow functions -> entry points. -> the coding
@@ -129,13 +155,14 @@ skill.
     | the repo's `AGENT.md` | `repo` | that repo -- what an agent must know before it can work safely | every session in the repo; the most expensive repo-local layer |
     | a shared skill | `skill:<name>` | the topic, universally, fleet-wide | any session whose task enters the topic |
     | global agent instructions | `global` | how the human wants agents to behave | every session, everywhere -- the most expensive layer of all |
-16. **A self-review leaves its epilogue on the PR.** When you run an
-    adversarial reviewer over your own diff (a sub-agent with an
-    assume-the-author-is-wrong brief), the review's summary -- scope,
-    verdict, findings and their dispositions -- is posted as ONE comment
-    on the PR alongside the fix, or the review is invisible to every
-    later reader. A self-review never satisfies Zero Unreviewed Code.
-    -> the gates skill
+16. **A self-review leaves its epilogue on the PR.** When you run the
+    adversarial pass over your own diff (fresh-context finders by defect
+    class, a verifier that assumes each finding is wrong, one round), the
+    ledger -- scope, adapter and models, each finding with its verdict and
+    disposition, rebuttals awaiting the human's judgement, `upheld k of n`
+    -- is posted as ONE comment on the PR alongside the fix, or the review
+    is invisible to every later reader. A self-review never satisfies Zero
+    Unreviewed Code. -> the self-review skill
 17. **Bullet lists only; never an ordered list.** In every document this
     process produces -- design records, as-builts, `TODO_PLAN.md`, task
     files, `AGENT.md`, skills, PR and issue bodies -- write `-`, never
@@ -162,6 +189,24 @@ skill.
     minted identifier, or a section/step number other text actually cites;
     otherwise refer by name and leave the number out.
     -> the markdown skill
+18. **Infrastructure lives in the infra repo; agents plan, humans apply.**
+    Every long-lived cloud resource -- DNS, Access, routes, buckets,
+    tokens, service accounts, managed services -- is terraform in the
+    fleet's private infra repo, named in each repo's `AGENT.md` under
+    "Infrastructure". Deploy workflows stay with the code they ship. An
+    agent writes the config and hands the human the plan line; it never
+    runs `apply`, `import`, `state mv` or `destroy`, never passes
+    `-auto-approve`, never mints or seeds a credential, and never creates
+    a resource by hand to unblock a deploy. A move or refactor is proven
+    by an empty plan. -> the iac skill (and infra-credentials,
+    cloudflare-hosting, gcp-ops, aws-ops for the surface in play)
+19. **Name the kind: `PR#1234`, `Issue#4321` -- never a bare `#1234`.**
+    Humans cannot tell a PR from an Issue by its number; GitHub numbers
+    both from one sequence. Every number you write names its kind, in
+    chat, commits, PR and issue bodies, review replies, and plan files.
+    Another repo's number also names the repo: `quillmap PR#392`. The
+    one exception is a closing keyword (`Closes #N`), which GitHub only
+    parses bare. -> the github-workflow skill
 
 ## The Eight Phases
 
@@ -191,11 +236,11 @@ one-pass the tests. Do not.
 |---|---|---|---|
 | 1 Concept | `docs/concepts/<idea>/` -- statement of work + user stories | a human funds it | the concept skill |
 | 2 Design | `docs/design/DESIGN.<name>.md` | a human marks it APPROVED | the design skill; run the panel before the human -> the designomatic skill |
-| 3 Architecture | the seam list, inside the design doc | seams named, radar rows proposed | the architecture skill |
+| 3 Architecture | the seam list and the module map, inside the design doc | seams named, behaviors traced to use cases, radar rows proposed | the architecture skill |
 | 3b Planning | `tasks/`, ordered in `TODO_PLAN.md` | a phased, test-first route | the planning skill |
 | 4 Behaviors | the next behavior, RED | it fails because the code does not exist | the testing skill + the stack-specific one |
 | 5 Code | source | GREEN | the coding skill + the language style skill |
-| 6 Gates | scanners, CI, review | green and approved | the gates skill |
+| 6 Gates | scanners, CI, review | green and approved | the gates skill; review your own diff before the PR -> the self-review skill |
 | 7 Release | deploy / publish / tag | shipped and proven | the release skill |
 | 7a Architecture | `docs/arch/` + diagrams | as-built matches reality | the architecture skill |
 | 8 Retrospective | drift issues, lessons, next plan | the loop is closed | the retrospective skill |

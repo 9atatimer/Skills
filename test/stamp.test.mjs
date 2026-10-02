@@ -96,9 +96,9 @@ test("it changes the stamp when a persona under agents/ changes", async () => {
   // skills/, and clai's currency check must see it move.
   const root = makePayload();
   mkdirSync(join(root, "agents"));
-  writeFileSync(join(root, "agents", "designer.md"), "v1\n");
+  writeFileSync(join(root, "agents", "architect.md"), "v1\n");
   const before = await runStamp(root);
-  writeFileSync(join(root, "agents", "designer.md"), "v2\n");
+  writeFileSync(join(root, "agents", "architect.md"), "v2\n");
   const after = await runStamp(root);
   assert.notEqual(after, before);
 });

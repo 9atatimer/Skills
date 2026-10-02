@@ -27,6 +27,26 @@ A change that ships nowhere elides this phase and 7a together. That is a
 correct no-op, not a loophole: work that reaches no shared environment
 changes no shared architecture.
 
+### GitHub's `/releases/latest/` excludes prereleases
+
+Any manifest or installer that hardcodes a GitHub Releases "latest" URL
+(`.../releases/latest/download/<asset>`) will 404 for every consumer until
+a non-prerelease release exists on that repo -- "latest" is defined to skip
+prereleases entirely, with no fallback. A repo whose only tag so far is a
+beta/rc prerelease has no "latest" to resolve to, even though the tag and
+its assets are right there. The failure shows up one hop downstream of
+where you'd look: the manifest itself may fetch fine (if it's referenced by
+tag), while a `download`/asset URL *inside* that manifest that still uses
+the `/latest/` alias fails, which reads as a bug in the consumer rather
+than a stale URL.
+
+Prefer a tag-specific URL (`.../releases/download/<tag>/<asset>`) in
+anything shipped as part of a release artifact -- template the actual tag
+in at build time rather than hand-writing `/latest/`. Reserve `/latest/`
+for update-check URLs meant to always point at whatever is newest, and only
+once you know the repo will always have a non-prerelease release by the
+time anyone reads it.
+
 ## Supply chain
 
 What you ship is only as trustworthy as what you built it from.
@@ -99,8 +119,18 @@ Two standing repo-policy patterns to expect (the repo's own file wins):
   directory (e.g. `scripts/CD/`) as CI-only; honor it.
 - Staging/preview deploys go through the repo's npm targets, not by
   invoking the underlying tool (wrangler, terraform, gcloud) directly.
+- The resources a deploy lands on -- routes, Access gates, buckets,
+  tokens, service accounts -- are not the deploy's to create. They are
+  terraform in the fleet's infra repo, named under "Infrastructure" in
+  the consuming repo's `AGENT.md`; a deploy that needs one that does not
+  exist stops and raises it there. -> the iac skill
 
 ## The credential chain (org standard: 1Password master key)
+
+This section covers CONSUMING a credential from a workflow. Where a
+credential comes from -- vaults, service accounts, minting, item
+categories, seeding, rotation, the fleet registry -- is the
+infra-credentials skill.
 
 The fleet standard is ONE GitHub secret per workflow family: a 1Password
 **service-account token**. Every other credential is fetched at runtime
@@ -121,6 +151,18 @@ Rules of the chain:
   (an infra vault the repo owns). A 1Password service account *cannot*
   be granted a personal/Private vault, so `op://Private/...` references
   are interactive-only by construction -- they can never work in CI.
+- **A scheduled run on a laptop is unattended too.** The 1Password CLI's
+  desktop-app integration authorizes each new CLI session with an
+  on-screen prompt, so `op read` from a scheduled agent's shell blocks on
+  a prompt nobody answers (`authorization timeout`, `promptError`) even
+  with the app unlocked, and works only while a human has just authorized
+  a session by hand. Give that path a store it can read without a prompt
+  -- on macOS the login keychain (`security find-generic-password`, ACL
+  granted at seeding, the read bounded by a timeout so a locked keychain
+  falls through instead of hanging) -- seeded from the 1Password item,
+  which stays the source of truth and is re-copied on rotation. Never
+  leave such a read unbounded: botocore and most SDKs put no timeout on a
+  credential process, so a hung read hangs the run.
 - **Secret naming:** either the generic `OP_SERVICE_ACCOUNT_TOKEN` (the
   name the action reads natively) or a purpose-named org secret
   (`<PURPOSE>_OP_SA_TOKEN`) mapped onto it in the workflow's `env:`.
@@ -238,6 +280,12 @@ it does internally.
 - When a credential is rotated or re-homed, update the 1Password item in
   place (keep the same item ID) rather than minting a sibling item, so
   every op:// consumer keeps working without a sweep.
+- Deploy tools run on project-local state (coding skill, section 6):
+  `cfw` for wrangler, the tool's config variable otherwise. A stored
+  login in `$HOME` silently governs every project on the machine -- an
+  expired `~/.wrangler` login once vetoed a container deploy although
+  `CLOUDFLARE_API_TOKEN` was set (template-tools#699). Auth is the token
+  from 1Password, per run; never `wrangler login`.
 
 ## Exit gate
 
@@ -245,6 +293,18 @@ The change is deployed, published, or tagged; the rollout reached its
 final stage or was deliberately stopped; `docs/arch/` was updated at 7a to
 describe what now runs. Then the retrospective can diff the frozen design
 against a true as-built.
+
+**A capability an unattended path depends on is live only once that path
+has run it.** A hand run from an interactive shell proves the code, not
+the deployment: the interactive shell carries things the unattended one
+does not -- direnv exports, an authorized 1Password CLI session, an
+unlocked keychain, a logged-in browser -- and a capability that reads any
+of them works by hand and silently does nothing on the schedule. Observed
+2026-09-27 (GammaGo issue 396): an archive verified by a hand-run backfill
+uploaded nothing from every scheduled run for a day, because its bucket
+name lived only in `.envrc`. The evidence that closes the loop is the
+unattended run's own output (its PR, its log, the object it wrote), cited
+where the hand run's would have been.
 
 ## Related
 

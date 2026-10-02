@@ -44,6 +44,14 @@ Structure every script in clear sections, in this order:
 
 ## Error Handling and Messaging
 - Use structured error messages that tell a human what went wrong and what to check next
+- **`! a && b && c` negates only `a`**; it parses as `(! a) && b && c`. For
+  "abort if any check fails", write
+  `if a && b && c; then :; else abort; fi`, never a leading `!` on a chain.
+- **`grep -rl` path prefixes follow the operand, not the platform.** `.`
+  yields `./node_modules/x`; `*` or no operand yields bare
+  `node_modules/x`. A downstream filter written for one form silently
+  matches nothing on the other: exclude at the source with
+  `--exclude-dir=node_modules`, or match both (`^(\./)?node_modules/`).
 - Let `main` exit on the first failure by propagating non-zero statuses (`set -e`)
 - Provide actionable error messages
 - **Under `set -euo pipefail`, redirecting stderr does NOT prevent the
@@ -60,6 +68,15 @@ Structure every script in clear sections, in this order:
   Pick the first one when you want a specific friendly error; pick the
   second when "empty result" is a normal path that the caller already
   handles.
+- **`grep` exits 1 when it matches nothing -- that is not an error, but
+  under `pipefail` it fails the pipeline like one.** A filter stage that
+  can legitimately empty (`grep -v '^#'` over lines that are all comments,
+  or over no lines at all) takes the script down with no message, and in
+  a `var="$(...)"` assignment `set -e` exits before anything is printed.
+  Put `|| true` on the filter stage itself so the rest of the pipeline
+  still runs: `{ produce | grep -v -E '^#' || true; } | consume`. This
+  shipped in a fleet pre-commit hook and blocked ordinary commits
+  (template-tools#714).
 
 ## Testing and Verification
 - Document in commit messages whether scripts were executed or only statically inspected

@@ -1,0 +1,71 @@
+# review-settled.yml -- post the `review-settled` commit status on every
+# PR head: green iff the gate reviewer's newest review is on the current
+# head and every review thread is resolved. The main ruleset requires it;
+# tedium checks it in `pr_status` (tedium.toml) before batching a PR.
+#
+# The gate reviewer is Copilot (`reviewers:` below). The checker requires
+# EVERY listed login to have reviewed the head, so the list names one; it
+# cannot express "any of". When Copilot's newest post is its quota notice
+# the checker fails open -- "FAIL-OPEN: ... is out of quota", threads still
+# required -- and it waits up to `wait_seconds` (default 180) for that
+# answer, since GitHub runs no workflow when Copilot posts; any other
+# failure notice, or silence, stays red. Codex is a human-summoned fallback only
+# ("@codex review" by the human, never posted by an agent -- the gates
+# skill, Reviewer Selection); it is not listed here because listing it
+# would require it on every PR. The self-adversarial review in the gates
+# skill does the reviewing; the bot is the gate over an already-reviewed
+# diff.
+#
+# The checker is the reusable workflow in the public tds-utils repo
+# (9atatimer/tds-utils .github/workflows/review-settled.yml), pinned to a
+# commit of master rather than trusting `@master` to stay green; bump
+# `uses:` and `tools_ref:` together to move it. GitHub has
+# no workflow trigger for a thread being resolved, so this fires on the
+# review, on replies in threads, on PR comments (the epilogue posted
+# after resolving), on pushes, and by hand.
+
+name: review-settled
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  pull_request_review:
+    types: [submitted, dismissed]
+  pull_request_review_comment:
+    types: [created, edited]
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: Pull request number to re-evaluate
+        type: number
+        required: true
+
+concurrency:
+  group: review-settled-${{ github.event.pull_request.number || github.event.issue.number || inputs.pr }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  review-settled:
+    # issue_comment also fires for plain issues; only PR comments matter.
+    # A fork PR is skipped on the events that carry a pull_request payload:
+    # its token is read-only, so the status could never be posted and
+    # tedium would wait on it forever. On issue_comment the payload has no
+    # head repo; the checker itself refuses a fork PR from the API's
+    # isCrossRepository. Fork PRs are human-merge.
+    if: >-
+      (github.event_name != 'issue_comment' || github.event.issue.pull_request != null)
+      && (github.event.pull_request == null || github.event.pull_request.head.repo.full_name == github.repository)
+    uses: 9atatimer/tds-utils/.github/workflows/review-settled.yml@ea20985d334580a80bb18cf9b586b6dbebdf539c
+    permissions:
+      statuses: write
+      pull-requests: read
+      contents: read
+    with:
+      reviewers: copilot-pull-request-reviewer
+      tools_ref: ea20985d334580a80bb18cf9b586b6dbebdf539c
+      pr: ${{ github.event.pull_request.number || github.event.issue.number || inputs.pr }}

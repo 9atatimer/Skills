@@ -28,8 +28,21 @@ and is the one to load first when unsure:
 
 `github-workflow`, `markdown`, `tech-radar`, `wrapup` (the session
 epilogue, typically invoked as `/wrapup`), and the tool skills
-(`chrome-mcp`, `lmde-dashboards`) are not phases -- they are loaded
-whenever their subject comes up.
+(`chrome-mcp`, `knowledge-base`, `lmde-dashboards`) are not phases -- they
+are loaded whenever their subject comes up.
+
+Neither are the platform skills. `iac` is the umbrella for declared
+infrastructure (where Terraform lives, authority, state); the Cloudflare
+pair hangs under it: `cloudflare-hosting` for anything served from a
+Cloudflare account and `cloudflare-think` for an AI assistant built on
+`@cloudflare/think`. `iac` and `cloudflare-hosting` are the sre's
+territory (phase 7 and the as-built); `cloudflare-think` is loaded by
+whoever is coding the assistant (phase 5). Three more hang under `iac`:
+`gcp-ops` and `aws-ops` carry one provider surface each, and
+`infra-credentials` carries provisioning and governing credentials (the
+`release` skill carries consuming them). `infra-handoff` is the
+`/infra-handoff` command that ends an infra change with the block the
+human applies from.
 
 ## How it is consumed
 
@@ -52,6 +65,19 @@ for the sync itself.
 Skills float to registry latest -- there is no version to pin and no human
 rollout step -- but they are **not** unpublished. This repository publishes
 the payload on every merge to `main`, and that publish is the rollout.
+
+## Before authoring a skill
+
+Fetch `main` and grep it for the topic first (`git fetch origin main &&
+git grep -il '<topic>' origin/main -- skills agents`). Sessions run in
+parallel and skills float to registry latest, so a skill on the same
+subject may have landed since your session started -- the provisioner's
+session-resume report lists new skill directories, and that list is
+your signal. When one exists, extend it or hang a narrower skill under
+it; two umbrellas for one subject leave every consumer loading the wrong
+one. The infra work of 2026-09 authored `infra` and `cloudflare-ops`
+against a main that had just gained `iac` and `cloudflare-hosting`; both
+were retired unpublished.
 
 ## Pure-shared and machine-overwritten
 
