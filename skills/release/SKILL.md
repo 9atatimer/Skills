@@ -80,7 +80,9 @@ reader; keep it legible to a human.
 - `nonprod` and `prod` for anything with users other than its author or
   data that cannot be recreated. Never "staging". Same shape; they differ
   in scale, data, and the literals the tier directory pins (the iac
-  skill).
+  skill). The GitHub Environments that gate them are `nonprod` and
+  `production` (the infra-credentials skill); `prod` is the stage's
+  short name, not an environment name.
 - One stage only: the runbook names the stand-in (consumer CI, a
   prerelease dist-tag, a PR preview) or says none, and why.
 - Agents deploy to nonprod unattended. Prod is a human's call, named in

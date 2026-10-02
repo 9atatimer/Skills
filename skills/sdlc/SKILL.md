@@ -189,7 +189,7 @@ skill.
     minted identifier, or a section/step number other text actually cites;
     otherwise refer by name and leave the number out.
     -> the markdown skill
-18. **Infrastructure lives in the infra repo; agents plan, humans apply.**
+18. **Infrastructure lives in the infra repo by default; agents plan, humans apply.**
     Long-lived cloud resources are terraform in the fleet's private
     infra repo by default, named in each repo's `AGENT.md` under
     "Infrastructure". Shared, foundational and security-bearing

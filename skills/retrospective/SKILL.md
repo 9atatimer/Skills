@@ -107,10 +107,10 @@ leave them in a PR description, where they die when the PR merges.
 
 ### Turn change failures into checks
 
-If the release needed a rollback or a hotfix, or a scheduled path it
-depends on did not run, find the earliest point that would have caught it
-and file the check that goes there -- a hook, a `gate` job, a deploy
-preflight, a probe. A check beats a lesson. -> the release skill, "Shift
+If a deploy went red, the release needed a rollback or a hotfix, or a
+scheduled path it depends on did not run, find the earliest point that
+would have caught it, and file the check that goes there -- a hook, a
+`gate` job, a deploy preflight, a probe. A check beats a lesson. -> the release skill, "Shift
 release failures left"
 
 ### Update the plan and the tasks
