@@ -1,17 +1,19 @@
 # Launch readiness (release skill reference)
 
-> For R3: a new component, stage, data store, external dependency, user
+> For R3: a new component, stage, data store, external service dependency, user
 > population, or platform. Cut down from Google's launch checklist to
 > what a small fleet on managed platforms must answer.
 
 ## How it runs
 
-- The answers go into the new `RUNBOOK.md` (skeleton below). The review
-  is that diff in the release PR. No separate document.
+- The answers go into the component's runbook (the release skill, The
+  runbook; skeleton below). The review is that diff in the release PR.
+  No separate document.
 - "None" is an answer; a blank is not. A known gap is fine if it has an
-  issue -- the risk is then taken on purpose.
-- Once the runbook exists, later releases edit it; this does not run
-  again for that component.
+  issue -- the risk is then taken on purpose -- except **Access** and
+  **Credentials**: those are answered before prod, never deferred.
+- Runs for every R3 release. On a component that already has a runbook,
+  answer only what the R3 trigger changes and edit the runbook.
 
 ## Questions
 
@@ -35,27 +37,33 @@
 - **Debug:** OTel resource attributes set; one request or run findable
   in wherever its telemetry lands today (the release skill, Debuggability).
 
-## RUNBOOK.md skeleton
+## Runbook skeleton
 
 ```markdown
 # <component> -- runbook
 
 ## Ship
+
 | Stage | URL | Deployed by | Who may start it |
 |---|---|---|---|
 
 ## Verify
+
 <smoke command per stage>; green looks like <...>.
 
 ## Roll back
+
 <command per stage>. Does not undo: <data, secrets, infra>.
 
 ## Debug
+
 Telemetry: <where it lands> as <service.name>. Find a request: <query>.
 
 ## Gotchas
+
 - <symptom> -> <cause> -> <action>
 
 ## Known gaps
+
 - <gap> (<repo> issue#N)
 ```

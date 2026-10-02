@@ -53,8 +53,9 @@ you keep it honest.
   deploy, the rollback and the verification are the first two things
   you establish, before the target and before any clarifying question.
   A launch (R3) rehearses it on nonprod first.
-- **Canary before fleet.** One instance, real traffic, real metrics,
-  a bounded wait, an automatic abort. Then the rest.
+- **Canary before fleet, where there is real traffic to risk.** A
+  stated signal, a bounded wait, a known abort. Then the rest. The
+  release class sets how much of this a release owes.
 - **Backups are unproven until restored.** RPO and RTO are numbers you
   measured in a drill, not numbers in a doc. Schedule the drill.
 - **Blast radius is a design input.** Separate identities per workload,

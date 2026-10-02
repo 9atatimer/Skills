@@ -18,7 +18,7 @@ The fleet standard is ONE GitHub secret per workflow family: a 1Password
 from a 1Password vault via `1password/load-secrets-action`:
 
 ```yaml
-- uses: 1password/load-secrets-action@v4
+- uses: 1password/load-secrets-action@<commit-sha> # v4, pinned by SHA
   with:
     export-env: true
   env:
@@ -133,7 +133,7 @@ gh run watch <run-id> --repo <owner/repo> --exit-status --interval 15
   it exists on the default branch; environment protection rules may
   additionally restrict which refs can deploy.
 - **Dispatching a deploy workflow deploys.** Know the target first.
-  Staging/preview targets are fair game for verification; never dispatch
+  Nonprod and preview targets are fair game for verification; never dispatch
   a production workflow to "test" it.
 - `gh run rerun <id> --failed` re-runs a failed run against the same
   commit -- right for retrying after an out-of-band fix (a secret added,

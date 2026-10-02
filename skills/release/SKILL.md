@@ -1,6 +1,6 @@
 ---
 name: release
-description: "Phase 7 of the SDLC: shipping -- deploy, publish, or tag -- so the next change ships faster. Release classes (R0-R3) that scale the bar with blast radius; the per-component runbook (ship, verify, roll back, debug, gotchas); docs as gotchas written for LLM readers; nonprod/prod stages; per-platform distribution smoke; debuggability on OpenTelemetry (traces, logs, events, metrics) into the LMDE stack; turning release failures into hook and CI checks; rollout, flags and rollback; supply chain; launch readiness for new components. Load when shipping anything, writing or fixing a deploy or publish workflow, adding a stage or telemetry, wiring a deploy credential, or diagnosing a red CD run. Skip for PR/CI flow with no deploy boundary (github-workflow, gates) and terraform itself (iac)."
+description: "Phase 7 of the SDLC: shipping -- deploy, publish, or tag -- so the next change ships faster. Release classes (R0-R3) that scale the bar with blast radius; the per-component runbook (ship, verify, roll back, debug, gotchas); docs as gotchas written for LLM readers; nonprod/prod stages; per-platform distribution smoke; debuggability on OpenTelemetry (traces, logs, events, metrics), landing today in platform-native logs and LMDE metrics; turning release failures into hook and CI checks; rollout, flags and rollback; supply chain; launch readiness for new components. Load when shipping anything, writing or fixing a deploy or publish workflow, adding a stage or telemetry, wiring a deploy credential, or diagnosing a red CD run. Skip for PR/CI flow with no deploy boundary (github-workflow, gates) and terraform itself (iac)."
 ---
 
 # Release (Phase 7)
@@ -29,13 +29,12 @@ pipeline is missing automation -- fix the pipeline, not the bar.
 |---|---|---|
 | R0 | ships nowhere | nothing |
 | R1 | a change inside an operated component, no new surface | a pipeline ships it; proven on nonprod (or the named stand-in) before prod; docs the diff made false are fixed in the same PR |
-| R2 | new endpoint, command, flag, config key, secret, scheduled job, dependency, or data migration | R1 + its telemetry; the runbook delta; expand-contract for anything a running version still names; a flag if risky or half-built |
-| R3 | new component, stage, data store, external dependency, user population, or platform | R2 + `references/readiness.md`; rollback rehearsed on nonprod (or the named stand-in) |
+| R2 | new endpoint, command, flag, config key, secret, scheduled job, package or library dependency, or data migration | R1 + its telemetry; the runbook delta; expand-contract for anything a running version still names; a flag if risky or half-built |
+| R3 | new component, stage, data store, external service dependency, user population, or platform | R2 + `references/readiness.md`; rollback rehearsed on nonprod (or the named stand-in) |
 
 - Calling a release a lower class than its triggers lowers a gate (the
   gates skill). Higher is always allowed.
-- A component with no runbook gets one with its next release, any
-  class: what is known now, unknowns under Known gaps with an issue.
+- A component with no runbook gets one with its next R1-R3 release: what is known now, unknowns under Known gaps with an issue.
 
 ## The runbook
 
@@ -131,9 +130,10 @@ red smoke. No alerting; nothing here notifies anyone.
   is LMDE for everything, cloud included through an Access-gated tunnel;
   until that is built, do not wire a cloud exporter to it. Where a
   repo's telemetry lands is a repo fact in `AGENT.md`.
-- **Cloudflare Workers:** enable `observability` in wrangler config and
-  export traces and logs to an OTLP destination; Workers export no
-  metrics. -> the cloudflare-hosting skill
+- **Cloudflare Workers:** enable `observability` in wrangler config;
+  Workers Logs then holds traces and logs. Workers can also export them
+  (not metrics) to an OTLP destination -- the future route into LMDE.
+  -> the cloudflare-hosting skill
 
 ## Shift release failures left
 
