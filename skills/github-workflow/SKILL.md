@@ -317,11 +317,13 @@ bot's build branches must remain force-pushable and deletable by the App.
 
 **A tedium landing does not close issues.** Neither the PR body's
 `Closes #N` nor the same line in a landed commit message closes the
-issue when tedium merges. Seen in tds-utils (PR#356 and PR#357,
-2026-09-29) and in GammaGo on 2026-10-02:
-- Issue#533 closed when a human merged PR#538 in the web UI.
-- Issue#541 stayed open after tedium landed PR#542, although the PR body
-  and the commit message both carried `Closes #541`.
+issue when tedium merges. Seen with tds-utils PR#356 and tds-utils
+PR#357 (2026-09-29), and in GammaGo on 2026-10-02:
+- GammaGo Issue#533 closed when a human merged GammaGo PR#538 in the
+  web UI.
+- GammaGo Issue#541 stayed open after tedium landed GammaGo PR#542,
+  although the PR body and the commit message both carried
+  `Closes #541`.
 
 Why GitHub skips the parser for tedium's push is not diagnosed. Still
 write the keyword, because it links the issue to the PR. Once tedium

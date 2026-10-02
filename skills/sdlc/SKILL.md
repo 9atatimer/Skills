@@ -223,7 +223,7 @@ skill.
     work that does not depend on it. Then stop and tell the human the
     exact action that was refused and why the task needs it; the human
     decides. Do not read anything into the label. GammaGo hit three
-    refusals in a week, each with a different label and none matching
+    refusals, each with a different label and none matching
     the call: "instruction poisoning" on a Key Decisions append,
     "ChatOps trigger comments" on a bare `date`, and "irreversible
     local destruction" on a `sed -n` read that followed a `git rm`.
