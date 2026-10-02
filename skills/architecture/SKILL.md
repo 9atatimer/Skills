@@ -92,6 +92,11 @@ Two failure modes, equally real:
   benefit. Seam only at real axes of change (YAGNI); if you considered a
   seam and rejected it, that belongs in the design doc's Rejections.
 
+A judgement with a bounded answer -- classify, gate, route, triage, judge
+-- is an axis of its own: rules, a small encoder, a decision model, and an
+LLM can all make it. The decision-models skill names its port and says
+which to reach for.
+
 ### Draw the module map (the layers)
 
 Seams answer where the core meets the world. They say nothing about the
@@ -313,4 +318,5 @@ design against a true as-built.
   its mechanical tests
 - the planning skill -- phase 3b, this phase's epilogue
 - the tech-radar skill -- the rings; owned here, consulted in phase 5
+- the decision-models skill -- the seam for a bounded judgement
 - the retrospective skill -- phase 8, which reads the fresh as-built
