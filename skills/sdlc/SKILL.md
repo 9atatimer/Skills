@@ -155,16 +155,14 @@ skill.
     | the repo's `AGENT.md` | `repo` | that repo -- what an agent must know before it can work safely | every session in the repo; the most expensive repo-local layer |
     | a shared skill | `skill:<name>` | the topic, universally, fleet-wide | any session whose task enters the topic |
     | global agent instructions | `global` | how the human wants agents to behave | every session, everywhere -- the most expensive layer of all |
-16. **A self-review leaves its epilogue on the PR.** When you run an
-    adversarial review over your own diff (sub-agents on lesser models,
-    personas of your choosing, each briefed to assume the author is
-    wrong -- three for code, gate config, or a skill; one for a small
-    prose diff), the collated summary -- scope, each reviewer's persona and
-    verdict, findings with their dispositions, rebuttals awaiting the
-    human's judgement -- is posted as ONE comment
-    on the PR alongside the fix, or the review is invisible to every
-    later reader. A self-review never satisfies Zero Unreviewed Code.
-    -> the gates skill
+16. **A self-review leaves its epilogue on the PR.** When you run the
+    adversarial pass over your own diff (fresh-context finders by defect
+    class, a verifier that assumes each finding is wrong, one round), the
+    ledger -- scope, adapter and models, each finding with its verdict and
+    disposition, rebuttals awaiting the human's judgement, `upheld k of n`
+    -- is posted as ONE comment on the PR alongside the fix, or the review
+    is invisible to every later reader. A self-review never satisfies Zero
+    Unreviewed Code. -> the self-review skill
 17. **Bullet lists only; never an ordered list.** In every document this
     process produces -- design records, as-builts, `TODO_PLAN.md`, task
     files, `AGENT.md`, skills, PR and issue bodies -- write `-`, never
@@ -242,7 +240,7 @@ one-pass the tests. Do not.
 | 3b Planning | `tasks/`, ordered in `TODO_PLAN.md` | a phased, test-first route | the planning skill |
 | 4 Behaviors | the next behavior, RED | it fails because the code does not exist | the testing skill + the stack-specific one |
 | 5 Code | source | GREEN | the coding skill + the language style skill |
-| 6 Gates | scanners, CI, review | green and approved | the gates skill |
+| 6 Gates | scanners, CI, review | green and approved | the gates skill; review your own diff before the PR -> the self-review skill |
 | 7 Release | deploy / publish / tag | shipped and proven | the release skill |
 | 7a Architecture | `docs/arch/` + diagrams | as-built matches reality | the architecture skill |
 | 8 Retrospective | drift issues, lessons, next plan | the loop is closed | the retrospective skill |

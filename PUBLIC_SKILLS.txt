@@ -31,6 +31,7 @@ plannotator-review
 release
 retrospective
 sdlc
+self-review
 style-bash
 style-python
 style-typescript
