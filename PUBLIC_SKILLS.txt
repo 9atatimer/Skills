@@ -28,6 +28,7 @@ plannotator-annotate
 plannotator-install
 plannotator-last
 plannotator-review
+realchrome-cdp
 release
 retrospective
 sdlc
