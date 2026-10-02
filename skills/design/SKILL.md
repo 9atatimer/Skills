@@ -10,7 +10,8 @@ description: "Phase 2 of the SDLC: writing, reviewing, or improving a design doc
 > **Exit gate:** the record is complete -- *including its seams, which are
 > phase 3* -- and a human marks it APPROVED. From then on its body is frozen;
 > only the status and the append-only Key Decisions log move.
-> **References:** `docs/design/TEMPLATE.md`, `docs/design/STYLE-GUIDE.md`
+> **References:** `docs/design/TEMPLATE.md`; a repo's `docs/design/STYLE-GUIDE.md`, where
+> present, is a local copy for humans and yields to this skill where they differ
 
 ---
 
@@ -236,7 +237,9 @@ Copy `docs/design/TEMPLATE.md` to a new file following naming conventions:
 
 ### Apply the Style Guide
 
-Follow `docs/design/STYLE-GUIDE.md` rigorously:
+This skill is the standard. A repo's `docs/design/STYLE-GUIDE.md`, where one
+exists, is a local copy for human readers; where it differs from this skill,
+this skill wins and the copy is stale. The rules that matter most:
 
 - **Be explicit** -- No "handle errors gracefully"; specify retry counts, timeouts, fallback behavior
 - **Be testable** -- No "fast response times"; specify P95 latency targets
@@ -249,8 +252,9 @@ Follow `docs/design/STYLE-GUIDE.md` rigorously:
 ## Reviewing an Existing Design Doc
 
 **Run the panel before you ask a human.** `designomatic run <draft> --panel
-design-review` puts several distinct lenses over the document against this
-repo's own `STYLE-GUIDE.md` -- the same standard the checklist below states.
+design-review` puts several distinct lenses over the document against the
+SDLC skills themselves -- this one and architecture, the same standard the
+checklist below states.
 This matters most for a document *you* drafted: reviewing your own draft
 re-reads your intent rather than the text, and a panel is the cheapest
 correction for that. -> the designomatic skill
@@ -330,7 +334,7 @@ When asked to improve an existing doc:
 
 - **Read the full doc first** -- Understand the intent before suggesting changes
 - **Check against the template** -- Identify missing sections
-- **Apply the style guide** -- Fix vague language, add tables, improve diagrams
+- **Apply this skill's style rules** -- Fix vague language, add tables, improve diagrams
 - **Preserve the author's intent** -- Improve clarity without changing decisions
 - **Add, don't remove** -- Missing sections should be added; existing content should be refined
 
