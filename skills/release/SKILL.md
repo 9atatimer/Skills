@@ -87,8 +87,9 @@ reader; keep it legible to a human.
   the conversation, unless `AGENT.md` records an automatic path.
 - Build once, promote the artifact. A prod build from `main` ships
   something nonprod never ran.
-- A new stage's resources are terraform in the infra repo, applied by a
-  human, before the deploy that needs them (sdlc, law 18).
+- A new stage's resources are terraform -- in the infra repo by default
+  (the iac skill says when a project may keep them) -- applied by a
+  human before the deploy that needs them (sdlc, law 18).
 
 ## Distribution
 

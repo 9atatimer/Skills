@@ -31,17 +31,25 @@ Decide placement in this order; the first rule that applies wins.
   Access application ids are non-public, as inputs or as defaults. A
   public app repo's infrastructure lives in the private ops repo,
   always.
-- **A private app repo may keep a module only while it is inseparable
-  from that app's deploy**: a route on the app's own hostname, the
-  namespaces its own worker binds. This is a tolerated state, not a
-  home: the fleet's direction is that it moves to the ops repo when next
-  touched and its state can be migrated. While it stays, its
-  identifiers are variables with documented defaults, the `.env.op`
-  names the vault by UUID, and the app repo's instruction file says the
-  module exists, where its state is, and that it is a mover.
-- **Everything else lives in the private ops repo**: one place with one
-  README per module and one authority model, and where a person with an
-  incident looks first.
+- **Shared, foundational, or security-bearing: the private ops repo,
+  always.** Shared means two repos or pipelines could need it;
+  foundational means other infrastructure is built on it (zones,
+  accounts, the state bucket); security-bearing means Access, API
+  tokens, service accounts, IAM, secrets, or anything that mints or
+  stores a credential.
+- **The ops repo is the default for everything else too.** A private
+  app repo MAY keep a module that is non-security and only ever its own
+  -- its worker's routes and custom domains, the namespaces its worker
+  binds, a project-only SaaS resource -- for a reason the ops repo's
+  policy lists (easier: it changes with the code; smoother automation:
+  the deploy pipeline drives it; tool-embedded). It never has to.
+- **A project module is Tower-ready**, so the fleet's plan/apply server
+  could take it over by configuration: state in the shared remote
+  backend under its own key, credentials by `op://` reference from a
+  headless vault, the fleet's terraform pin, the ops repo's module
+  conventions. It is listed in the ops repo's module index, and the app
+  repo's instruction file names it. The authority model is unchanged
+  wherever a module lives.
 - **Cross-repo references are by path and by id.** The app repo's ops
   docs name the ops-repo module (`ops/terraform/<name>`) that holds the
   resource it depends on; the worker's config names the resource by its

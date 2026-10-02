@@ -190,10 +190,12 @@ skill.
     otherwise refer by name and leave the number out.
     -> the markdown skill
 18. **Infrastructure lives in the infra repo; agents plan, humans apply.**
-    Every long-lived cloud resource -- DNS, Access, routes, buckets,
-    tokens, service accounts, managed services -- is terraform in the
-    fleet's private infra repo, named in each repo's `AGENT.md` under
-    "Infrastructure". Deploy workflows stay with the code they ship. An
+    Long-lived cloud resources are terraform in the fleet's private
+    infra repo by default, named in each repo's `AGENT.md` under
+    "Infrastructure". Shared, foundational and security-bearing
+    resources always live there; a private project may keep a
+    non-security, project-only module for a listed reason (the iac
+    skill). Deploy workflows stay with the code they ship. An
     agent writes the config and hands the human the plan line; it never
     runs `apply`, `import`, `state mv` or `destroy`, never passes
     `-auto-approve`, never mints or seeds a credential, and never creates
