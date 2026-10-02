@@ -315,6 +315,19 @@ decision. `tedium dryrun` is unrestricted: it builds on `tedium/try` and
 lands nothing. Never add `tedium/*` to protected-branch patterns; the
 bot's build branches must remain force-pushable and deletable by the App.
 
+**A tedium landing does not close issues.** Neither the PR body's
+`Closes #N` nor the same line in a landed commit message closes the
+issue when tedium merges. Seen in tds-utils (PR#356 and PR#357,
+2026-09-29) and in GammaGo on 2026-10-02:
+- Issue#533 closed when a human merged PR#538 in the web UI.
+- Issue#541 stayed open after tedium landed PR#542, although the PR body
+  and the commit message both carried `Closes #541`.
+
+Why GitHub skips the parser for tedium's push is not diagnosed. Still
+write the keyword, because it links the issue to the PR. Once tedium
+reports the merge, close each issue by hand with a comment naming the
+PR.
+
 ### PR Template (both workflows)
 
 The repo's PR template lives at `.github/pull_request_template.md` -- that
