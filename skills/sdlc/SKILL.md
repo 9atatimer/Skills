@@ -165,7 +165,11 @@ skill.
     disposition, rebuttals awaiting the human's judgement, `upheld k of n`
     -- is posted as ONE comment on the PR alongside the fix, or the review
     is invisible to every later reader. A self-review never satisfies Zero
-    Unreviewed Code. -> the self-review skill
+    Unreviewed Code, except on a documentation-only PR, where it is the
+    whole review: no Copilot, no Codex (design and architecture drafts in
+    phases 2 and 3 get designomatic instead). A review turn of any kind is
+    spent only on a load-bearing fix, never on hygiene. -> the self-review
+    skill, and the gates skill (Spend Review Turns on Load-Bearing Fixes)
 17. **Bullet lists only; never an ordered list.** In every document this
     process produces -- design records, as-builts, `TODO_PLAN.md`, task
     files, `AGENT.md`, skills, PR and issue bodies -- write `-`, never

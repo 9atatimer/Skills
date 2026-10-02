@@ -42,6 +42,13 @@ your own draft: you will re-read your intent rather than the text. A panel of
 distinct lenses is the cheapest correction available for that, and under a
 subscription it costs quota rather than dollars.
 
+**In phases 2 and 3 it replaces the code reviewers, not just precedes
+them.** A design record or seam map under review gets this panel, and
+never a Copilot review or a human-summoned Codex pass: those review code,
+and spend quota on prose they cannot judge against the rubric. Outside
+those phases, a documentation-only change gets the self-review pass alone
+(the gates skill, Documentation-only changes get no agentic reviewer).
+
 Do **not** reach for it when:
 
 - The document is APPROVED. It is frozen, and designomatic refuses it --

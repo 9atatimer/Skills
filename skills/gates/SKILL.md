@@ -23,7 +23,7 @@ expensive:
 | 1 | Pre-commit hooks -- lint, build, test, gitleaks, trivy, semgrep | your machine | Git Hook Discipline, below |
 | 2 | CI status checks | the PR | read the job log, fix, push |
 | 3 | ci.magic assertions | the PR | the assertion names the file and the violation |
-| 4 | Agentic review (Copilot by default) | the PR | the review-watch loop, below |
+| 4 | Agentic review (Copilot by default; never on a documentation-only PR) | the PR | the review-watch loop, below; Spend Review Turns on Load-Bearing Fixes says when a turn is owed |
 | 5 | Review settled (Copilot; Codex where the repo requires it) and merge authorization by the gates: the repo's required check `gate` plus the `review-settled` status, both green on the head | the PR | address or defer; never merge around it. On a repo without `tedium.toml`, a human reviews and merges |
 
 **A red gate is a diagnosis prompt, not an obstacle.** The laws below
@@ -136,7 +136,11 @@ blocked by a gate is not authorization to move it.
 
 - **NEVER land code no one has reviewed. The target is 0% unreviewed
   code.** Every pushed commit must be looked at by a reviewer --
-  agentic (Copilot, Codex) or human -- before the PR merges.
+  agentic (Copilot, Codex) or human -- before the PR merges. Two
+  recorded exceptions, both in Spend Review Turns on Load-Bearing Fixes
+  below: a documentation-only PR, which the self-review pass alone
+  reviews, and a hygiene-only tail after the last agentic review, which
+  the handoff names for the human.
 - **`review-settled` is this law as a commit status.** On an enrolled
   repo the status is green on a head iff every required reviewer's newest
   review is on that head AND every review thread is resolved; the ruleset
@@ -195,11 +199,66 @@ follows (Copilot; Codex only when a human summons it -- Reviewer
 Selection below) is the mechanical gate over a diff that has already been
 through it, not the first pair of eyes.
 
-- Self-review NEVER satisfies Zero Unreviewed Code. You chose the brief,
-  you ran the pass, and you triaged the results; it is a cheap correction
-  for author blindness, not an independent reviewer. The agentic and human
-  review rungs run unchanged, and the epilogue exists partly so those
+- Self-review NEVER satisfies Zero Unreviewed Code, except on a
+  documentation-only PR, where it is the whole review (next section).
+  You chose the brief, you ran the pass, and you triaged the results; it
+  is a cheap correction for author blindness, not an independent
+  reviewer. Everywhere else the agentic and human review rungs run
+  unchanged, and the epilogue exists partly so those
   reviewers can see what was already caught and fixed.
+
+## Spend Review Turns on Load-Bearing Fixes (CRITICAL)
+
+Every review turn -- a Copilot pass, a Codex pass a human summons, a
+self-review re-review -- costs quota and wall-clock time. Ask for the next
+one only when the push since the last one changed what the change does.
+"I pushed" is not a reason to ask; "I pushed a fix a second look could
+find a new defect in" is.
+
+- **Load-bearing** fixes change runtime behavior, a contract or
+  interface, a security property, a test's verdict, or a rule an agent or
+  gate executes (a skill, a persona, `AGENT.md`, a prompt, CI or gate
+  configuration). The test is the testing skill's bookkeeping rule: if
+  you cannot say who is harmed and what they observe, the fix is not
+  load-bearing.
+- **Hygiene** is everything else: wording, typos, comments, naming,
+  formatting, and the accuracy of human-read documentation. Fix it, push
+  it, reply on its thread with the SHA, resolve it -- and do not request
+  another review for it. A review turn spent on hygiene buys a turn of
+  fresh nits.
+- **Batch before you ask.** Triage the whole review first (Automated
+  Review Response, Step 2), then push every agreed fix in one round.
+  Hygiene rides along with a load-bearing push when there is one; when
+  there is none, the round ends with no re-request.
+- **A hygiene-only tail is a recorded exception to Zero Unreviewed
+  Code.** Commits after the last agentic review that carry only hygiene
+  are not re-reviewed by that bot. Name their SHAs in the epilogue or
+  handoff comment so the human who lands the PR knows the tail is theirs
+  to read. Where the repo requires `review-settled`, the status stays red
+  on that head: say so in the handoff and let the human decide whether a
+  turn is worth spending. Never spend one just to turn a status green.
+
+### Documentation-only changes get no agentic reviewer
+
+A PR is **documentation-only** when every changed file is human-read
+prose: a README, a `docs/` runbook or as-built, `TODO_PLAN.md`, task
+files, a changelog, a comment-only edit to source. Such a PR never
+requests Copilot and never asks a human to summon Codex. The adversarial
+self-review (the self-review skill) is the whole review: it satisfies
+Zero Unreviewed Code for that PR, its ledger on the PR is the record,
+and there is no review-watch loop.
+
+- **Except a design or architecture draft in phases 2 and 3.** A design
+  record under review (`docs/design/`) or a phase-3 seam map gets the
+  designomatic panel instead of the self-review pass, and never Copilot
+  or Codex -> the designomatic skill.
+- **Operating rules are not documentation.** Skills, personas,
+  `AGENT.md`/`CLAUDE.md`, prompts, CI workflows and gate configuration
+  are executed by an agent or a gate; a PR touching any of them takes the
+  full ladder. This is the self-review skill's Sizing rule: no
+  "docs-only" discount for operating rules.
+- **A PR that mixes documentation with anything else is not
+  documentation-only.**
 
 ## Git Hook Discipline (scalpel, not axe)
 
@@ -332,7 +391,9 @@ Zero Unreviewed Code.
 ## Review-watch loop
 
 A PR review is **iterative, not one-shot**. Start this loop by default
-after opening any PR -- do not wait for the human to ask. Push fixes,
+after opening any PR -- do not wait for the human to ask -- except a
+documentation-only PR, which has no agentic reviewer and no loop (Spend
+Review Turns on Load-Bearing Fixes). Push fixes,
 nudge re-review, repeat until quiescent. Applies to human-prefixed and
 agent-prefixed PRs alike.
 
@@ -480,7 +541,8 @@ carve-out, not an ordered list.
      state under Zero Unreviewed Code), posted per the acknowledged
      reply convention below so the thread is marked addressed.
 
-5. **After a productive push**, nudge the re-review -- but only for
+5. **After a push that carries a load-bearing fix** (Spend Review Turns
+   on Load-Bearing Fixes), nudge the re-review -- but only for
    Copilot, the one reviewer an agent may summon. When codex is
    active, do NOT post `@codex review` (human-only trigger, see
    Reviewer Selection) and do not touch the Copilot request either:
@@ -510,8 +572,10 @@ carve-out, not an ordered list.
    mcp__github__request_copilot_review
    ```
 
-   Skip this step entirely if nothing was pushed this cycle -- the next
-   review would just repeat the prior one. Also skip it permanently once
+   Skip this step entirely if nothing load-bearing was pushed this cycle
+   -- a hygiene-only push gets its SHA in the thread replies and no
+   re-request, and with nothing pushed the next review would just repeat
+   the prior one. Also skip it permanently once
    the turn cap for that reviewer has fired (see Termination) --
    remaining feedback becomes `pr-todo` issues, not another cycle.
 
@@ -575,6 +639,10 @@ Stop when any of these fires:
   is distinct from the quality-drop rule below: that one fires on
   Copilot's *next* pass re-asserting a nit; this one fires *immediately*
   on the all-rejected pass, no second pass needed.
+- **Hygiene-only pass = stop.** If an iteration's accepted fixes are all
+  hygiene, push them, reply with the SHA, resolve the threads, and stop:
+  no re-request, so no further review is coming. Name the hygiene tail in
+  the handoff (Spend Review Turns on Load-Bearing Fixes).
 - **Quality drop (anti-bikeshedding).** When remaining unaddressed
   comments are nitpicks (style trivia, "consider renaming X to Y" with no
   concrete reason, alternative phrasings of working code), push back --
@@ -781,7 +849,9 @@ code that still has no statable harm is a finding worth questioning.
 
 All fixes go in one commit (or one per logical group) together with their
 tests, **never amend a pushed commit**. Note the resulting SHA. The push is
-critical -- an unpushed fix is invisible to the reviewer.
+critical -- an unpushed fix is invisible to the reviewer. Whether the push
+earns another review turn is decided by Spend Review Turns on Load-Bearing
+Fixes, not by the fact that you pushed.
 
 **Step 5: Accept each fixed comment with the SHA:**
 `gadmin github reply --repo <OWNER/REPO> --id <ID> --type accept --msg "Agreed, fixed in <sha>"`
