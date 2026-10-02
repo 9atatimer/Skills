@@ -23,7 +23,7 @@ export const CASES = [
   ...no("gates", [
     "Push my branch to my fork and open a PR against upstream.", // github-workflow
     "Write unit tests for this parser.", // testing
-    "Review my own diff before I open the PR.", // self-review
+    "Record the lesson from this bug in TODO_PLAN.md.", // todo-plan
     "Run a reviewer panel over my design doc draft.", // designomatic
     "Replace the em-dashes in this README with ASCII.", // markdown
     "What should I name my feature branch?", // github-workflow

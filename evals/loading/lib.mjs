@@ -6,19 +6,40 @@
 // (stderr noise) are skipped.
 export function loadedSkills(stream) {
   const out = [];
-  for (const line of stream.split("\n")) {
-    let e;
-    try {
-      e = JSON.parse(line);
-    } catch {
-      continue;
-    }
-    if (e?.type !== "assistant") continue;
+  for (const e of events(stream)) {
+    if (e.type !== "assistant") continue;
     for (const c of e.message?.content || []) {
       if (c.type === "tool_use" && c.name === "Skill" && c.input?.skill) out.push(c.input.skill);
     }
   }
   return out;
+}
+
+function events(stream) {
+  const out = [];
+  for (const line of stream.split("\n")) {
+    try {
+      const e = JSON.parse(line);
+      if (e && typeof e === "object") out.push(e);
+    } catch {
+      // stderr noise
+    }
+  }
+  return out;
+}
+
+// Why a run has no verdict, or null when it has one. A run's verdict is
+// only as good as its end: no result event, or an error result other than
+// running out of turns (--max-turns ends a run after its Skill call), means
+// the absence of a Skill call proves nothing.
+export function streamError(stream) {
+  const result = events(stream).filter((e) => e.type === "result").pop();
+  if (!result) return "no result event";
+  if (result.subtype === "error_max_turns") return null;
+  if (result.is_error || (result.subtype && result.subtype !== "success")) {
+    return `result ${result.subtype || "error"}${result.result ? `: ${String(result.result).slice(0, 120)}` : ""}`;
+  }
+  return null;
 }
 
 // results: [{ skill, expect, loaded?, error? }]. Per skill:

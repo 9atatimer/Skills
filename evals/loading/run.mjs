@@ -17,7 +17,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { CASES } from "./cases.mjs";
-import { loadedSkills, score } from "./lib.mjs";
+import { loadedSkills, score, streamError } from "./lib.mjs";
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
@@ -57,16 +57,23 @@ function runCase(c, model) {
     const child = spawn("claude", args, { cwd: dir, stdio: ["ignore", "pipe", "pipe"] });
     let out = "";
     child.stdout.on("data", (d) => (out += d));
-    const timer = setTimeout(() => child.kill("SIGTERM"), 300_000);
+    let timedOut = false;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      child.kill("SIGTERM");
+    }, 300_000);
+    let done = false;
     const finish = (error) => {
+      if (done) return;
+      done = true;
       clearTimeout(timer);
       rmSync(dir, { recursive: true, force: true });
       resolve(error ? { ...c, error } : { ...c, loaded: loadedSkills(out) });
     };
     child.on("error", (err) => finish(err.message));
-    // --max-turns can end a run with a nonzero exit after the Skill call;
-    // the stream still says what loaded, so only a run with no stream errors.
-    child.on("close", (code, signal) => finish(out.trim() ? null : `exit ${code}${signal ? ` (${signal})` : ""}, no output`));
+    // The exit code is not the verdict: --max-turns ends a run nonzero after
+    // its Skill call. The stream's result event is (streamError).
+    child.on("close", () => finish(timedOut ? "timed out after 300s" : streamError(out)));
   });
 }
 
