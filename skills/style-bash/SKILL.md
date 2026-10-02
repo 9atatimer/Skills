@@ -68,6 +68,15 @@ Structure every script in clear sections, in this order:
   Pick the first one when you want a specific friendly error; pick the
   second when "empty result" is a normal path that the caller already
   handles.
+- **`grep` exits 1 when it matches nothing -- that is not an error, but
+  under `pipefail` it fails the pipeline like one.** A filter stage that
+  can legitimately empty (`grep -v '^#'` over lines that are all comments,
+  or over no lines at all) takes the script down with no message, and in
+  a `var="$(...)"` assignment `set -e` exits before anything is printed.
+  Put `|| true` on the filter stage itself so the rest of the pipeline
+  still runs: `{ produce | grep -v -E '^#' || true; } | consume`. This
+  shipped in a fleet pre-commit hook and blocked ordinary commits
+  (template-tools#714).
 
 ## Testing and Verification
 - Document in commit messages whether scripts were executed or only statically inspected

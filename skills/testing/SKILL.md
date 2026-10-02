@@ -285,6 +285,13 @@ everything: template-base PR #86's state-guard suite passed 10/10 with the
 path check mutated to never match. Once per new guard, mutate it both ways
 -- refuse all, accept all -- and confirm the suite goes red each time.
 
+Nothing to check is an accept case too, and the one most often missing.
+template-tools#714: a pre-commit guard whose suite had accept cases for
+prose, comments and path arguments still exited 1 -- silently -- on a staged
+change that only deleted lines, because no case staged a change with no
+added lines to scan. For a guard over a diff, a file or a list, include the
+empty input (nothing in scope, only removals) and expect a pass.
+
 ### A fake cannot test a third-party tool's behavior
 
 A fake of an external CLI encodes your assumption about that CLI, so a
