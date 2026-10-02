@@ -10,8 +10,10 @@
   runbook; skeleton below). The review is that diff in the release PR.
   No separate document.
 - "None" is an answer; a blank is not. A known gap is fine if it has an
-  issue -- the risk is then taken on purpose -- except **Access** and
-  **Credentials**: those are answered before prod, never deferred.
+  issue -- the risk is then taken on purpose -- but a gap never waives
+  what the release class owes or the exit gate (the rollback rehearsal,
+  a findable request), and **Access** and **Credentials** are answered
+  before prod, never deferred.
 - Runs for every R3 release. On a component that already has a runbook,
   answer only what the R3 trigger changes and edit the runbook.
 

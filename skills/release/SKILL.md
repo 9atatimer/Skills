@@ -108,10 +108,12 @@ reader; keep it legible to a human.
 Goal: diagnose a problem detected elsewhere -- by a user, a failed run, a
 red smoke. No alerting; nothing here notifies anyone.
 
-- **One standard: OpenTelemetry, exported as OTLP over HTTP.** Traces,
-  logs, events (log records carrying `event.name`), and metrics where a
-  count is cheaper than a search. The exporter is configured at the edge;
-  no vendor SDK in the core (the coding skill's core/edge axis).
+- **One model: OpenTelemetry.** Traces, logs, events (log records
+  carrying `event.name`), and metrics where a count is cheaper than a
+  search. Export OTLP over HTTP where a supported endpoint exists;
+  otherwise the platform's native capture of the same signals is the
+  sink. The exporter is configured at the edge; no vendor SDK in the
+  core (the coding skill's core/edge axis).
 - **Resource attributes on everything:** `service.name`,
   `service.version` (commit sha or published version),
   `deployment.environment.name` (`nonprod` / `prod`). Without them two
@@ -120,8 +122,10 @@ red smoke. No alerting; nothing here notifies anyone.
   and log inside the active span so log records carry the trace id.
 - **Structured logs only:** key-value, one event per record.
 - **No secret, token, or user content in any telemetry:** log fields,
-  span and resource attributes, metric labels. Traces carry URLs and
-  headers by default; scrub them at the exporter.
+  span and resource attributes, metric labels. Exclude or redact it
+  where the record is made -- platform capture records before any
+  exporter runs. Traces carry URLs and headers by default; exporter
+  scrubbing is defense in depth, not the control.
 - **Unattended jobs log each run's outcome** (what it wrote, or why it
   did nothing), so "did it run" is a query.
 - **Sink, today:** the platform's own logs and traces for cloud
