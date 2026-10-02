@@ -1,6 +1,6 @@
 ---
 name: gates
-description: "Phase 6 of the SDLC: everything that stands between a pushed commit and a mergeable one -- pre-commit scanners, CI, ci.magic assertions, agentic and human review, the mandate to self-review your own diff (the self-review skill says how), and the review-watch loop. Carries two standing laws: clear the gate before you move it, and zero unreviewed code. Load when a gate goes red, when driving a PR through review, when reviewing your own work, or when changing any gate's configuration. Skip for the push/PR mechanics themselves (github-workflow) and for deploy pipelines (release)."
+description: "Phase 6 of the SDLC: everything that stands between a pushed commit and a mergeable one -- pre-commit scanners, CI, ci.magic assertions, agentic and human review, the mandate to self-review your own diff (the self-review skill says how), and the review-watch loop. Carries two standing laws: clear the gate before you move it, and zero unreviewed code. Load when a gate goes red, when driving a PR through review, when reviewing your own work, or when changing any gate's configuration, including writing a ci.magic rule. Skip for the push/PR mechanics themselves (github-workflow) and for deploy pipelines (release)."
 ---
 
 # SKILL: Gates (Phase 6)
@@ -33,7 +33,7 @@ govern every rung, and neither has an agent-accessible exception.
 
 Repos with `ci.magic` files carry natural-language assertions over globbed
 file sets, judged by a CLI coding agent (see template-tools'
-`packages/naatm-ci-magic` and its `docs/design/DESIGN.CI-MAGIC.md`). Two
+`packages/naatm-ci-magic` and its `docs/design/DESIGN.CI-MAGIC.md`). Three
 things matter when one goes red:
 
 - **The verdict is confidence-gated.** The agent reports a 0-100
@@ -49,13 +49,46 @@ things matter when one goes red:
   wrong credential, say -- it reports a GREEN "skipped". Absence of red
   is not evidence the assertions held; after any credential or workflow
   change, read the run and confirm the rows were actually evaluated.
+
+The threshold is a gate like any other -- raising it may take effect
+immediately, lowering it is governed by the first law below.
+
+**Writing a rule: match on context, never on presence.** A rule written
+as "flag X" collides with prose doing its job; write it as "flag X in
+context Y" from the start. GammaGo's first six rules took three review
+rounds to stop failing compliant prose, every round the same mistake
+([GammaGo issue#277](https://github.com/Nine-At-A-Time-Media/GammaGo/issues/277)).
+A rule that fails correct prose pushes authors toward vaguer prose to
+stay green -- worse than no rule.
+
+- **Every term carries the condition that makes it a violation.** If the
+  rule cannot state that condition, it is not ready to ship.
+- **Negation is usually compliant.** Prose that denies the forbidden
+  thing ("the world has no gods", "not supernatural") is the rule being
+  followed. Exempt it explicitly.
+- **Grep the tree for every term before listing it.** Case-insensitive
+  `ORC` (a license) hit the creature Orc; `Pathfinder` (a brand) hit the
+  ordinary noun.
+- **Never build a prohibition list from a permission list.** A
+  carve-out's list of what may be said is not a list of what may not be
+  said elsewhere; inverting it fails the prose the carve-out describes.
+- **Stance rules are not word lists.** A voice or register check states
+  its test, then a permission list longer than the prohibition; it never
+  degrades into vocabulary.
 - **Write placement rules as whitelists.** "Mechanics live only in X and
   Y" catches a new zone nobody enumerated; "no mechanics in A, B, C" lets
   everything through an unlisted D. Blacklists are how a numeric value
   slips into prose the gate never named.
-
-The threshold is a gate like any other -- raising it may take effect
-immediately, lowering it is governed by the first law below.
+- **Scope judgment rules to the diff.** Tell the rule to evaluate only
+  lines the PR adds or modifies, a file the PR adds being wholly in
+  scope. Otherwise a rule landed beside an edit audits that file's whole
+  history.
+- **Prefer `pass` when ambiguous, and close by refusing scope** ("check
+  nothing else"). An agent handed a rulebook without that line starts
+  reviewing prose.
+- **Fix the class, not the instance.** When review reports one false
+  positive, ask what else the same rule shape catches. Patching only the
+  reported term is what turns one round into three.
 
 **Putting ci.magic on a repo has two halves, and the owner decides
 both.** The action reference and the credential are resolved on opposite
