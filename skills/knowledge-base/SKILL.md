@@ -198,7 +198,7 @@ The testing skill's rules, with the traps specific to this domain:
 - **Retrieval quality is a test, not a vibe.** Twenty to fifty questions,
   each labeled with the passage that answers it. Report recall@k and MRR.
   Put the floor in CI, where the gates skill's law applies: clear the bar
-  before you move it, and a floor only moves up.
+  before you move it.
 - **Fixtures stay small.** Three short documents, committed. Never a
   40MB PDF in git.
 
