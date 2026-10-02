@@ -91,9 +91,9 @@ written into a skill are surface that review cannot converge on: nothing
 executes the prose, so only a reader can catch it drifting from the tool.
 In [Skills PR#77](https://github.com/9atatimer/Skills/pull/77) the
 `self-review` skill's `ocr` adapter section drew new, valid defects in the
-self-review pass and in each of four Copilot rounds; 9 of the 15 fixes
+self-review pass and in each of five Copilot rounds; 10 of the 16 fixes
 those rounds forced were `ocr` mechanics (rule-file layering, exclusion
-and failure classes, missing flags, output fields). Keep a skill to what
+and failure classes, missing flags, output fields, minimum version). Keep a skill to what
 an agent must decide and type; put translation and routing in a tool with
 tests.
 
