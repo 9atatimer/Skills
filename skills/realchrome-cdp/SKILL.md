@@ -36,4 +36,6 @@ touches `.cdp/last-browser`, and `cdp` never launches real Chrome.
 
 The port is shared with `cdp` (default 9322), so the `.mcp.json` `cdp`
 entry attaches to whichever browser is up, and `up` refuses while another
-browser holds the port.
+browser holds the port. The entry's `--browserUrl` is fixed: with
+`--port N`, point it (and the `curl` check) at port N, or MCP never
+attaches.
