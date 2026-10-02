@@ -299,6 +299,17 @@ Which bot reviews a PR is policy, not agent judgment:
   fine and whose suite was green). Triage the whole review body, not the
   inline thread, and weigh each finding on the code rather than on where
   the bot filed it.
+- **Zero open threads is not zero findings.** Copilot files findings in
+  code unchanged since its previous review under a `Previously missed`
+  block in the review body, with no thread. `review-settled` counts
+  threads only, so it goes green with such a finding open. On
+  [Skills PR#77](https://github.com/9atatimer/Skills/pull/77) the fifth
+  review's only finding was body-only. The PR merged with it unanswered,
+  and a later state check that read just the threads still reported no
+  findings.
+  On every wake, and before calling a PR ready, read the newest review
+  body on the head. Give each body-only finding a recorded disposition in
+  one PR comment, exactly as a thread would get.
 
 **A bot finding is a bug report, not a verdict.** Verify it against the
 code before acting: confirm the failure it describes actually occurs.
