@@ -218,14 +218,12 @@ find a new defect in" is.
 - **Load-bearing** fixes change runtime behavior, a contract or
   interface, a security property, a test's verdict, or what a rule an
   agent or gate executes says (a skill, a persona, `AGENT.md`, a prompt,
-  CI or gate configuration), or a command, value or step an agent will
-  execute from a runbook (the release skill: runbooks are written for LLM
-  readers). A typo or rewording that leaves the rule or the step meaning
-  the same thing is hygiene. The test is the testing skill's bookkeeping
+  CI or gate configuration). A typo or rewording in such a file that
+  leaves the rule meaning the same thing is hygiene. The test is the testing skill's bookkeeping
   rule: if you cannot say who is harmed and what they observe, the fix is
   not load-bearing.
 - **Hygiene** is everything else: wording, typos, comments, naming,
-  formatting, and the accuracy of prose no agent executes. Fix it, push
+  formatting, and the accuracy of human-read documentation. Fix it, push
   it, reply on its thread with the SHA, resolve it -- and do not request
   another review for it. A review turn spent on hygiene buys a turn of
   fresh nits.
