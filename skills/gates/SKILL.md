@@ -53,76 +53,11 @@ things matter when one goes red:
 The threshold is a gate like any other -- raising it may take effect
 immediately, lowering it is governed by the first law below.
 
-**Writing a rule: match on context, never on presence.** A rule written
-as "flag X" collides with prose doing its job; write it as "flag X in
-context Y" from the start. GammaGo's first six rules took three review
-rounds to stop failing compliant prose, every round the same mistake
-([GammaGo issue#277](https://github.com/Nine-At-A-Time-Media/GammaGo/issues/277)).
-A rule that fails correct prose pushes authors toward vaguer prose to
-stay green -- worse than no rule.
-
-- **Every term carries the condition that makes it a violation.** If the
-  rule cannot state that condition, it is not ready to ship.
-- **Negation is usually compliant.** Prose that denies the forbidden
-  thing ("the world has no gods", "not supernatural") is the rule being
-  followed. Exempt it explicitly.
-- **Grep the tree for every term before listing it.** Case-insensitive
-  `ORC` (a license) hit the creature Orc; `Pathfinder` (a brand) hit the
-  ordinary noun.
-- **Never build a prohibition list from a permission list.** A
-  carve-out's list of what may be said is not a list of what may not be
-  said elsewhere; inverting it fails the prose the carve-out describes.
-- **Stance rules are not word lists.** A voice or register check states
-  its test, then a permission list longer than the prohibition; it never
-  degrades into vocabulary.
-- **Write placement rules as whitelists.** "Mechanics live only in X and
-  Y" catches a new zone nobody enumerated; "no mechanics in A, B, C" lets
-  everything through an unlisted D. Blacklists are how a numeric value
-  slips into prose the gate never named.
-- **Scope judgment rules to the diff.** Tell the rule to evaluate only
-  lines the PR adds or modifies, a file the PR adds being wholly in
-  scope. Otherwise a rule landed beside an edit audits that file's whole
-  history.
-- **Prefer `pass` when ambiguous, and close by refusing scope** ("check
-  nothing else"). An agent handed a rulebook without that line starts
-  reviewing prose.
-- **Fix the class, not the instance.** When review reports one false
-  positive, ask what else the same rule shape catches. Patching only the
-  reported term is what turns one round into three.
-
-**Putting ci.magic on a repo has two halves, and the owner decides
-both.** The action reference and the credential are resolved on opposite
-sides of the account boundary:
-
-- **The `uses:` reference** is resolved by GitHub at "Set up job", before
-  any step and with no secret in scope. A private action reaches only
-  repositories under its OWN owner (Actions access `organization` for an
-  org, `user` for a personal account); there is no level that crosses
-  owners outside an Enterprise. A consumer under another owner references
-  a mirror of the action under that owner -- never a token that fetches
-  it. Which reference each owner uses, and how a mirror is stood up, is
-  the action's own ops playbook (template-tools
-  `docs/ops/ci-magic/PLAYBOOK.ACTION-MIRROR.md`).
-- **The credential** (`CI_MAGIC_OP_SA_TOKEN`) is an org secret for an
-  org-owned consumer and a PER-REPOSITORY secret for one under a personal
-  account, which has no org tier. Without it the action resolves and then
-  posts "skipped: missing credential" -- a green skip, not a review. Seed
-  it as one loop over the repositories that actually carry the workflow,
-  value read from the vault and never pasted:
-
-  ```
-  for r in $(gh api -X GET search/code -f q='user:<OWNER> path:.github/workflows ci-magic' --jq '.items[].repository.full_name' | sort -u); do op read '<op:// reference to the CI-Magic service-account token>' | gh secret set CI_MAGIC_OP_SA_TOKEN -R "$r" && echo "seeded $r"; done
-  ```
-
-  The exact `op://` reference is a fleet fact, not a skill fact: the
-  playbook above carries the cut-and-paste form, and the fleet's
-  credential registry (the private infra repo's `ops/credentials/`) is
-  where it is recorded. Re-run the loop after each new adopter and on
-  each rotation.
-
-A new repository seeded from a template inherits the workflow, not the
-secret and not necessarily the right reference: check both on its first
-PR before reading a green `ci.magic` as a verdict.
+- **Writing or reviewing a rule** -> `references/ci-magic-rules.md`:
+  match on context, never on presence.
+- **Putting ci.magic on a repository** (the action reference, the
+  credential, a repo seeded from a template) ->
+  `references/ci-magic-adoption.md`.
 
 ## Clear the Gate Before You Move It (CRITICAL)
 
