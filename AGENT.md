@@ -89,11 +89,10 @@ step number is cited by other text.
 code.** Flags, exit codes, config-file layering and exclusion reasons
 written into a skill are surface that review cannot converge on: nothing
 executes the prose, so only a reader can catch it drifting from the tool.
-In [Skills PR#77](https://github.com/9atatimer/Skills/pull/77) the
-`self-review` skill's `ocr` adapter section drew new, valid defects in the
-self-review pass and in each of five Copilot rounds; 10 of the 16 fixes
-those rounds forced were `ocr` mechanics (rule-file layering, exclusion
-and failure classes, missing flags, output fields, minimum version). Keep a skill to what
+A skill's `ocr` adapter section once drew new, valid defects in every
+review round, and most of the fixes were `ocr` mechanics (rule-file
+layering, exclusion and failure classes, missing flags, output fields,
+minimum version). Keep a skill to what
 an agent must decide and type; put translation and routing in a tool with
 tests. Standing exceptions, until the tool that replaces each ships: the
 `self-review` skill's `ocr` sections
@@ -103,25 +102,18 @@ tests. Standing exceptions, until the tool that replaces each ships: the
 
 **Concurrent skill PRs merge textually, not semantically.** Git and
 tedium accept two PRs that touch different lines; nothing checks that
-they agree. [Skills PR#83](https://github.com/9atatimer/Skills/pull/83)
-made `docs/ops/<tool>.md` the tooling runbook while [Skills
-PR#84](https://github.com/9atatimer/Skills/pull/84) made
-`docs/runbook.<component>.md` the release runbook; both landed green within
-the hour, contradicting each other. Before landing a skill PR, read what
-merged to `main` since its base for the same nouns (`git log
-<base>..origin/main -- skills/`) and reconcile.
+they agree. Two PRs once landed green within the hour, one making
+`docs/ops/<tool>.md` the tooling runbook and the other making
+`docs/runbook.<component>.md` the release runbook. Before landing a skill
+PR, read what merged to `main` since its base for the same nouns (`git
+log <base>..origin/main -- skills/`) and reconcile.
 
-The same holds for a skill PR and a PR that changes the checks. [Skills
-PR#94](https://github.com/9atatimer/Skills/pull/94) added the skill
-lint's word budget; [Skills
-PR#95](https://github.com/9atatimer/Skills/pull/95), based before it,
-added words to `gates`. Each was green on its own head, and PR#95 was
-merged with GitHub's merge button, which checks `gate` on the PR head
-only. Tedium runs `gate` on the merge with `main` (`tedium/merge`) and
-would have refused it; the button put `main` red until [Skills
-PR#98](https://github.com/9atatimer/Skills/pull/98). Land through tedium;
-a PR merged by hand gets `npm test` run on its merge with current `main`
-first.
+The same holds for a skill PR and a PR that changes the checks: a skill
+edit based before a tighter lint passes `gate` on its own head and fails
+it on the merge. GitHub's merge button checks `gate` on the PR head only;
+tedium runs it on the merge with `main` (`tedium/merge`) and refuses.
+Land through tedium; a PR merged by hand gets `npm test` run on its merge
+with current `main` first.
 
 ## Testing
 
