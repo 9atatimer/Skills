@@ -40,3 +40,9 @@ stay green -- worse than no rule.
 - **Fix the class, not the instance.** When review reports one false
   positive, ask what else the same rule shape catches. Patching only the
   reported term is what turns one round into three.
+- **Name a repo tool when one exists.** A rule may tell the judge to run
+  `ci-magic-toolkit <tool> ...` first and treat its output as the
+  candidate list; the tools are the repo's own
+  `.github/scripts/ci-magic-toolkit` manifest, read from the PR base, so
+  a rule cannot name a tool the base does not list. Say what to do when
+  the command is absent (template-tools `DESIGN.CI-MAGIC-TOOLKIT.md`).
