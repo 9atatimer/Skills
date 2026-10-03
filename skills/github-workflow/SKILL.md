@@ -74,10 +74,14 @@ classify.
 
 **Conventions live in the consuming repo's agent instruction file**
 (`AGENT.md` / `AGENTS.md` / `CLAUDE.md`). Branch prefixes, review-cadence
-limits, required CI check names, extra remotes that are not code upstreams,
-and any other local policy are repo policy, and that file is already the
-canonical, version-controlled, always-loaded home for it. Read it; do not
-expect a data file inside this skill directory.
+limits, extra remotes that are not code upstreams, and any other local
+convention are repo policy, and that file is already the canonical,
+version-controlled, always-loaded home for them. Read it; do not expect a
+data file inside this skill directory. The required CI check names it
+lists are documentation, not the source of truth: the checks a branch
+enforces are declared in the infra repo (see "Repository policy lives in
+the infra repo"), and when the two disagree the infra repo wins and the
+file gets corrected.
 
 > Skills are units of distribution: provisioning refreshes and overwrites
 > this directory. Nothing repo-owned may live inside it. See "The LOCAL.md
