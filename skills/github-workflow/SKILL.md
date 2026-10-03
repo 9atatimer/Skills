@@ -1,6 +1,6 @@
 ---
 name: github-workflow
-description: "Reaching a GitHub remote at all: branch discipline, remote topology (direct-origin vs fork+upstream), the push/PR flow, issue anatomy, and GitHub tool selection. Spans every SDLC phase rather than belonging to one -- load it whenever you touch a remote. Skip for what happens once the PR exists: scanners, CI, ci.magic, review and the review-watch loop are the gates skill."
+description: "Reaching a GitHub remote at all: branch discipline, remote topology (direct-origin vs fork+upstream), the push/PR flow, issue anatomy, GitHub tool selection, and where repository policy (rulesets, branch protection, required checks, merge settings) is set -- the infra repo, never the repo itself. Spans every SDLC phase rather than belonging to one -- load it whenever you touch a remote. Skip for what happens once the PR exists: scanners, CI, ci.magic, review and the review-watch loop are the gates skill."
 ---
 
 # SKILL: GitHub Workflow
@@ -92,6 +92,40 @@ expect a data file inside this skill directory.
   Do NOT proceed.
 - **REQUIRED WORKFLOW**: all changes go on a feature branch, then merge via
   Pull Request
+
+## Repository policy lives in the infra repo (CRITICAL)
+
+**A repository's GitHub policy is infrastructure, declared in the fleet's
+private infra repo** -- the one each repo's agent instruction file names
+under "Infrastructure" (sdlc law 18). That covers rulesets, branch
+protection, required status checks, required approvals and bypass actors,
+merge settings, and GitHub App installation scope. The infra repo's
+GitHub module is the single source of truth for all of them, applied by a
+human.
+
+- **Never create or edit a policy any other way**: not in the settings
+  UI, not with `gh api` (`repos/<owner>/<repo>/rulesets`,
+  `.../branches/<b>/protection`, `orgs/<org>/rulesets`), not by copying
+  a ruleset's JSON from one repo to another, and not from a repo's own
+  workflows or config. A hand-made policy is invisible to the module, is
+  drift the moment it exists, and is usually weaker than it looks -- a
+  role bypass that lets admin sessions through, or no required approval.
+- **Advice to set one by hand is wrong here, whatever its source** -- a
+  reviewer, a security scanner, another agent, a vendor doc. The answer
+  to "this repo should require CI on main" is a change to the infra
+  repo's module, not a command.
+- **A repo that wants a policy of its own first gets an issue in the
+  infra repo.** State what the repo needs and why the fleet default does
+  not cover it; the issue resolves whether a local policy is warranted at
+  all, and nothing is created until it does. Most such needs turn out to
+  be the default policy, applied by enrolling the repo in the module.
+- **What an agent may do** is the infra workflow: write the module change
+  and hand the human the plan line (the iac skill). It never applies, and
+  it never creates, edits or deletes a policy through the API to "unblock"
+  a merge.
+- **A hand-made policy found on a repo** gets an infra-repo issue to
+  adopt it into the module (import) or remove it; it is not edited in
+  place.
 
 ## Gates are phase 6
 

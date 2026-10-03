@@ -207,8 +207,14 @@ skill.
     runs `apply`, `import`, `state mv` or `destroy`, never passes
     `-auto-approve`, never mints or seeds a credential, and never creates
     a resource by hand to unblock a deploy. A move or refactor is proven
-    by an empty plan. -> the iac skill (and infra-credentials,
-    cloudflare-hosting, gcp-ops, aws-ops for the surface in play)
+    by an empty plan. **Repository policy is infrastructure too**:
+    rulesets, branch protection, required checks, merge settings and
+    GitHub App installation scope are declared in the infra repo, never
+    set by hand or from a repo's own files, and a repo that wants a policy
+    of its own first gets an issue in the infra repo that decides whether
+    it needs one. -> the iac skill (and infra-credentials,
+    cloudflare-hosting, gcp-ops, aws-ops for the surface in play); the
+    github-workflow skill for repository policy
 19. **Name the kind: `PR#1234`, `Issue#4321` -- never a bare `#1234`.**
     Humans cannot tell a PR from an Issue by its number; GitHub numbers
     both from one sequence. Every number you write names its kind, in
