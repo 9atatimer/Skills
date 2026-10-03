@@ -5,32 +5,18 @@ description: "Reaching a GitHub remote at all: branch discipline, remote topolog
 
 # SKILL: GitHub Workflow
 
-This skill contains the procedures for interacting with a GitHub remote:
-branch discipline, remote topology, the PR flow, issue anatomy, and tool
-selection. The skill body is pure shared logic -- it contains no
-repo-specific facts.
+How to reach a GitHub remote: branches, pushes, PRs, issues, and which
+tool to use. Shared logic only; repo-specific facts live in the consuming
+repo's agent instruction file. What happens to a PR once it exists is the
+gates skill.
 
-This skill is **not a phase** -- pushes and PRs happen throughout the
-flow. What happens to a PR once it exists (scanners, CI, ci.magic,
-review) is phase 6, the gates skill.
+## Derive repo facts; never declare them
 
-## Where repo facts come from
+Ask the repo. A hand-maintained identity file goes stale silently.
 
-**Identity is derived, never declared.** Ask the repo; do not read a
-hand-maintained file that can silently go stale.
-
-**Always pin `gh` to a remote URL.** A bare `gh repo view` resolves the
-remote named `upstream` ahead of `origin`, so in a fork checkout it reports
-the *canonical* repo -- which makes a fork look like a direct origin and
-sends Stage-1 commands at upstream. Verified:
-
-```zsh
-# origin=9atatimer/tds-utils, upstream=Nine-At-A-Time-Media/template-tools
-$ gh repo view --json nameWithOwner --jq .nameWithOwner
-Nine-At-A-Time-Media/template-tools     # <- upstream, NOT origin
-```
-
-So derive against an explicit URL (a bare remote *name* is not accepted):
+Pin `gh` to a remote URL. A bare `gh repo view` resolves a remote named
+`upstream` ahead of `origin`, so in a fork checkout it reports the parent
+and the fork looks like a direct origin:
 
 ```zsh
 origin_url=$(git remote get-url origin)
@@ -41,531 +27,315 @@ gh repo view "$origin_url" --json isFork,parent \
   --jq 'if .isFork then "fork of \(.parent.nameWithOwner)" else "direct origin" end'
 ```
 
-`isFork` is the **only** source of truth for topology -- never infer it from
-remote names. When `isFork` is true, the two-stage flow additionally needs the
-parent slug and the parent's default branch:
+`isFork` is the only source of truth for topology; remote names are not.
+For a fork, also get the parent slug and its default branch:
 
 ```zsh
 parent=$(gh repo view "$origin_url" --json parent --jq .parent.nameWithOwner)
 gh repo view "$parent" --json defaultBranchRef --jq .defaultBranchRef.name
 ```
 
-**`gh repo clone` auto-adds `upstream` for a fork.** Cloning a fork with
-`gh repo clone <fork>` silently sets a remote named `upstream` pointing at
-the parent. A follow-on `git remote add upstream <url>` then fails with
-"remote upstream already exists" -- confirmed 2026-09-07,
-`9atatimer/Skills` PR#18. Either rely on the auto-added remote (check its
-URL matches what you expect first) or clone with plain `git clone` and add
-`upstream` yourself; do not do both.
+`gh repo clone <fork>` adds an `upstream` remote for the parent by itself;
+check its URL and use it rather than adding a second one.
 
-**Fallback when `gh` is unavailable.** git alone cannot answer `isFork`, so
-topology degrades to a convention: an `upstream` remote is *assumed* to mean
-fork mode. Say so rather than asserting it, and get both sides' defaults:
+Without `gh`, git cannot answer `isFork`: treat an `upstream` remote as a
+fork, say that it is an assumption, and read both defaults:
 
 ```zsh
-git remote get-url origin                      # this repo's slug
-git remote get-url upstream 2>/dev/null        # canonical slug; absent => assume direct
+git remote get-url origin
+git remote get-url upstream 2>/dev/null
 git symbolic-ref refs/remotes/origin/HEAD
 git symbolic-ref refs/remotes/upstream/HEAD 2>/dev/null
 ```
 
-`git remote -v` only lists configured remotes; it inspects, it does not
-classify.
-
-**Conventions live in the consuming repo's agent instruction file**
-(`AGENT.md` / `AGENTS.md` / `CLAUDE.md`). Branch prefixes, review-cadence
-limits, required CI check names, extra remotes that are not code upstreams,
-and any other local policy are repo policy, and that file is already the
-canonical, version-controlled, always-loaded home for it. Read it; do not
-expect a data file inside this skill directory.
-
-> Skills are units of distribution: provisioning refreshes and overwrites
-> this directory. Nothing repo-owned may live inside it. See "The LOCAL.md
-> misstep" in `TODO_PLAN.md`.
+Branch prefixes, required check names, review cadence and every other
+local policy are in the repo's agent instruction file (`AGENT.md` /
+`AGENTS.md` / `CLAUDE.md`). Nothing repo-owned lives in this skill
+directory: provisioning overwrites it every session.
 
 ## Branch Safety (CRITICAL)
 
-- **NEVER WORK ON THE DEFAULT BRANCH**
-- **ALWAYS CHECK CURRENT BRANCH FIRST**: before any git operation, run
-  `git branch --show-current`
-- **IF YOU ARE ON THE DEFAULT BRANCH**: STOP IMMEDIATELY. Warn the human.
-  Do NOT proceed.
-- **REQUIRED WORKFLOW**: all changes go on a feature branch, then merge via
-  Pull Request
+- Never work on the default branch.
+- Run `git branch --show-current` before any git operation.
+- On the default branch: stop, warn the human, do not proceed.
+- Every change goes on a feature branch and merges through a pull request.
 
 ## Gates are phase 6
 
-The laws that used to live here are now the gates skill, because they
-govern every rung of the gate ladder and not just the PR:
-
-- **Clear the gate before you move it.** You must meet or exceed the
-  existing quality gate before you may change that gate. Raising a bar may
-  take effect immediately; lowering one takes effect only once the change
-  has cleared the old bar and merged. A repo owner may force past this;
-  nobody else may, and an agent never may.
-- **Zero unreviewed code.** Never land code no one has reviewed, and never
-  drop a piece of reviewer feedback -- acting on it is optional, recording
-  it is not. A review turn is spent only on a load-bearing fix, and a
-  documentation-only PR gets the self-review pass alone (the gates skill).
-
-Reviewer selection, the review-watch loop, the automated review-response
-procedure, and the CI/ci.magic rungs are all **the gates skill**. What
-stays here is how you reach a remote at all: branches, pushes, PRs,
-issues, and tool selection.
+Clear the gate before you move it, and Zero unreviewed code are the gates
+skill's laws; reviewer selection, the review-watch loop, review-response
+and the CI/ci.magic rungs are the gates skill's procedures. This skill
+stops at the remote.
 
 ## Branch Naming Convention
 
-All branches MUST use the owner prefixes the repo's agent instruction file
-(`AGENT.md` / `AGENTS.md` / `CLAUDE.md`) declares:
-
-- Human-driven branches use the human prefix (e.g. `<user>/feat/description`,
-  `<user>/fix/description`).
-- Agent-driven branches use the agent prefix. The agent prefix is usually
-  set by the harness; humans should not push to agent-prefixed branches.
+Use the owner prefixes the repo's agent instruction file declares:
+humans `<user>/feat/description`, `<user>/fix/description`; agents the
+prefix their harness assigns. Humans do not push to agent-prefixed
+branches.
 
 ## Remote Topology
 
-Derive which of two topologies this repo uses (see "Where repo facts come
-from" above). Every step below keys off it:
+Every step below keys off the derived topology:
 
 | Step | Direct origin | Fork + upstream |
 |------|---------------|-----------------|
 | Branch base | the default branch on `origin` | `upstream/<default>` (sync first: `git fetch upstream`) |
-| Push target | `origin` (the canonical repo) | `origin` (your fork) -- you cannot push to `upstream` |
+| Push target | `origin` (the canonical repo) | `origin` (your fork); you cannot push to `upstream` |
 | PR head / base | `<branch>` -> `<default>`, same repo | `<fork>:<branch>` -> `upstream:<default>` |
-| `--repo` for `gadmin` / `gh` / review-watch | the derived owner/repo slug | Stage-1 (fork PR, Copilot review, review-watch): the derived slug (the fork); Stage-2 (upstream PR): the **parent** slug from `gh repo view "$origin_url" --json parent` |
+| `--repo` for `gadmin` / `gh` / review-watch | the derived slug | Stage 1 (fork PR, AI review): the fork's slug; Stage 2 (upstream PR): the parent slug |
 
-**Why the fork split exists:** Copilot Pro+ review charges are billed to the
-repository owner. Reviewing on a personal fork first keeps AI-review costs on
-the personal account; the upstream PR is for human review and merge. It is
-the *fork* -- not any PR state -- that controls billing.
+The fork split exists because Copilot review is billed to the repository
+owner: review on the personal fork first, then open the production PR
+upstream. The fork, not any PR state, is what controls billing.
 
 ## Push & PR Flow
 
-Pick the flow matching the derived topology.
-
 ### Single PR Workflow (direct-origin)
 
-All AI review cycles happen within a single PR. Do not create multiple PRs
-or close/re-open PRs.
+One PR carries every review cycle. Never open a second "final" PR and
+never close and reopen one.
 
-- **Push** your branch to `origin`.
-- **Before any follow-up push, check the PR is still open.** A human can
-   land the PR between your commits. A push to the branch of a merged PR
-   succeeds silently -- the branch still exists until deletion -- and the
-   commits go nowhere: they are on no open PR and never reach the default
-   branch. Observed 2026-09-27: two follow-up commits pushed to a branch
-   whose PR had merged twenty minutes earlier, recovered only by
-   cherry-picking onto a fresh branch. `gh pr view <NUMBER> --json state`
-   first; if `MERGED`, cut a new branch from the default branch and open a
-   new PR (never force-push, never reopen).
-- **Open a PR** targeting the default branch. **Do NOT open it as a
-   draft** -- Copilot does not review draft PRs, so a draft silently never
-   gets reviewed and the review-watch loop polls forever. Open it
-   ready-for-review (or run `gh pr ready <NUMBER>` immediately). Do not put
-   `[WIP]` in the title.
-- **Title:** use a clean conventional-commit summary
-   (e.g. `feat(scope): short description`).
-- **Iterative AI review:** Copilot reviews the open PR -- unless the PR
-   is documentation-only, which gets the adversarial self-review alone
-   and never Copilot or Codex (design and architecture drafts in phases
-   2 and 3 get designomatic instead). Re-request with
-   `gh pr edit <NUMBER> --add-reviewer @copilot` (Copilot does not
-   auto-re-review on `synchronize`) only after a push that carries a
-   load-bearing fix; a hygiene-only push (wording, typos, comments,
-   documentation accuracy) is replied to with its SHA and never
-   re-reviewed. Repeat: address feedback, push, re-request when earned,
-   wait -- subject to the per-reviewer turn cap. Both rules are the
-   gates skill's Spend Review Turns on Load-Bearing Fixes.
-- **Landing:** once AI review cycles settle, see Landing via tedium below
-   for how the PR merges -- an enrolled repo may land through the gates
-   themselves; any other repo has the human take over for final review and
-   merge. Do NOT create a second "final" PR.
+- Push the branch to `origin`.
+- Before every follow-up push, confirm the PR is still open:
+  `gh pr view <NUMBER> --json state`. A push to the branch of a merged PR
+  succeeds and the commits reach no PR and no default branch. If `MERGED`,
+  cut a new branch from the default branch and open a new PR; never
+  force-push, never reopen.
+- Open the PR ready-for-review, never as a draft and never with `[WIP]`:
+  Copilot does not review drafts, so the review step never fires.
+- Title it as a conventional-commit summary: `feat(scope): short description`.
+- AI review: Copilot reviews the open PR, except a documentation-only PR,
+  which gets the self-review pass alone (a design or architecture draft in
+  phases 2 and 3 gets designomatic instead). Copilot does not re-review on
+  `synchronize`; re-request with `gh pr edit <NUMBER> --add-reviewer @copilot`
+  only after a push that carries a load-bearing fix. A hygiene-only push
+  is answered with its SHA on the thread and no re-request. Address
+  feedback, push, re-request when earned, wait, within the per-reviewer
+  turn cap (the gates skill, Spend Review Turns on Load-Bearing Fixes).
+- Landing: an enrolled repo lands through tedium (below); any other repo
+  is human-merge.
 
 ### Two-Stage PR Workflow (fork + upstream)
 
-To avoid charging Copilot review cycles to the organization:
+Stage 1, the fork PR, is where AI review happens so the charge lands on
+the personal account:
 
-**Stage 1: PR to fork (for AI code review)**
+- Push the branch to `origin` (the fork).
+- Open a normal, non-draft PR against the fork's default branch.
+- Request the Copilot review (`gh pr edit <NUMBER> --add-reviewer @copilot`),
+  unless the PR is documentation-only, which needs no Stage 1 (the gates
+  skill, Documentation-only changes get no agentic reviewer).
+- Address the feedback; re-request only after a load-bearing fix, as above.
 
-- Push branch to `origin` (your fork)
-- Create a **normal (non-draft) PR** targeting the fork's default branch
-- Request a Copilot review: `gh pr edit <NUMBER> --add-reviewer @copilot`
-   -- unless the PR is documentation-only, which gets the self-review pass
-   alone and needs no Stage 1 (gates skill, Documentation-only changes get
-   no agentic reviewer)
-- Copilot reviews happen here -- charged to your personal account
-- Address all Copilot feedback. **Re-request review after a push that
-   carries a load-bearing fix, never after a hygiene-only push** (gates
-   skill, Spend Review Turns on Load-Bearing Fixes) -- Copilot does not
-   auto-re-review on `synchronize`
+Stage 2, the upstream PR, is the production PR:
 
-> **Do not use a Draft PR for Stage 1.** Copilot does not review draft
-> PRs -- a draft sits unreviewed indefinitely, so the AI-review step never
-> fires and any review-watch loop polls forever. It is the *fork* (not the
-> draft state) that keeps billing on the personal account, so a normal PR
-> satisfies the cost-control rationale. There is no `[WIP]` title prefix in
-> this flow; the separate Stage-2 PR is the production signal.
-
-**Stage 2: Final PR to upstream (for review and landing)**
-
-- Once Copilot review is complete, create a new PR from the same branch
-- Target the upstream default branch
-- This is the production PR
-- Landing: see Landing via tedium below -- an enrolled repo may land
-  through the gates themselves; any other repo has the human review and
-  merge
-- Close the Stage 1 PR
+- Open a new PR from the same branch against the upstream default branch.
+- Land it through tedium if the repo is enrolled, otherwise the human
+  reviews and merges.
+- Close the Stage 1 PR.
 
 ### Stacked PRs (GitHub Stacks)
 
-When one change genuinely depends on another -- code then its docs, a
-retrospective then the todos it produced -- do not bundle them into one PR
-and do not pretend they are independent. Chain them: each PR targets the
-head branch of the one below, and the bottom targets the default branch.
-Then **register the chain as a stack**, so GitHub treats it as a unit,
-shows the position in each PR, and rebases the ones above when a lower one
-merges or changes.
-
-Public preview since 2026-07-30; `gh` 2.99 has no `stack` command, so drive
-it with `gh api`:
-
-```
-# list stacks; a PR also carries a "stack" object (number, size, position)
-gh api repos/OWNER/REPO/stacks
-gh api repos/OWNER/REPO/pulls/NUMBER --jq '.stack'
-
-# create from an ordered list, bottom first
-echo '{"pull_requests":[11,12]}' | gh api -X POST repos/OWNER/REPO/stacks --input -
-
-# append to the top of an existing stack
-echo '{"pull_requests":[21]}' | gh api -X POST repos/OWNER/REPO/stacks/STACK/add --input -
-
-# remove unmerged PRs (200 = stack survives, 204 = dissolved)
-gh api -X POST repos/OWNER/REPO/stacks/STACK/unstack --input -
-```
-
-Three traps met in practice (2026-09-18):
-
-- **`-f key=value` sends strings and the API rejects them** --
-  `"11" is not of type "integer"`. Pipe a JSON body through `--input -`.
-- **A merged PR cannot join a stack** (422). Register the stack when you
-  open the chain, not after someone starts merging it.
-- **GitHub may create a stack for you** when PRs already target each other,
-  so check `.stack` before creating one and appending instead.
-
-Merge bottom-up. Each PR still has to stand on its own: one story, its own
-reviewable diff.
+When one change depends on another (code, then its docs; a retrospective,
+then the todos it produced), chain the PRs instead of bundling them or
+pretending they are independent: each PR targets the head branch of the
+one below, the bottom targets the default branch, and the chain is
+registered as a GitHub stack so a merge or change below rebases the ones
+above. Merge bottom-up; each PR still stands on its own as one reviewable
+story. The `gh api` calls and their traps are in
+[references/stacks.md](references/stacks.md).
 
 ### Landing via tedium (merge bot)
 
-Repos with the tedium App installed may land PRs through the merge bot (see
-template-tools' `docs/design/DESIGN.TEDIUM.md`). The rule is: **the gates
-authorize merges; tedium executes them.** A repo is enrolled when its
-default branch carries a `tedium.toml`; its agent instruction file names
-the required checks. A repo WITHOUT a `tedium.toml` is still human-merge:
-there an agent never merges and never comments `tedium land`.
+A repo is enrolled when its default branch carries a `tedium.toml`; its
+agent instruction file names the required checks. The gates authorize a
+merge; tedium executes it (template-tools `docs/design/DESIGN.TEDIUM.md`).
+In a repo without `tedium.toml`, an agent never merges and never comments
+`tedium land`.
 
-On an enrolled repo an agent MAY comment `tedium land` on its own PR, and
-only when all six hold on the current head:
+On an enrolled repo, an agent may comment `tedium land` (or `/land`) on
+its own PR only when all six hold on the current head:
 
-- the repo has tedium enabled (the `tedium.toml` is present on the
-  default branch and the repo's agent instruction file says so);
+- tedium is enabled: `tedium.toml` on the default branch, and the agent
+  instruction file says so;
 - `gate`, the repo's required CI check, is green on the head;
-- `review-settled`, the review status, is green on the head -- every
-  required reviewer's newest review is on this commit and every review
-  thread is resolved (the gates skill's Zero Unreviewed Code, made
-  mechanical);
-- no per-reviewer turn cap has fired on this PR, and no open `pr-todo`
-  issue references it. A cap-fired PR can still show a green
-  `review-settled`: the deferral procedure (file `pr-todo` issues, reject
-  each remaining comment, resolve each thread) satisfies both of that
-  status's conditions without fixing anything and without a new push, so
-  this is checked separately and never assumed from the status alone;
-- every path CODEOWNERS names on this PR's diff has an approving review
-  from its owner on the head commit. tedium enforces this independently
-  of `gate` and `review-settled` (a bors-style CodeOwners port,
-  `packages/naatm-tedium/src/command/codeOwners.ts` in template-tools),
-  so a repo with `use_codeowners = true` blocks landing on it even when
-  the other conditions are green. "This PR's diff" is the file list
-  GitHub shows against the PR's merge base, not the net change: a PR
-  that carries a ported fix already on the base still lists that fix's
-  code-owned paths until the base is merged in. Merge the base before
-  `tedium land` ([Skills PR#97](https://github.com/9atatimer/Skills/pull/97)
-  was rejected for code-owner approval, then landed with no new review once
-  `main` was merged in);
+- `review-settled` is green on the head where the repo requires it: every
+  required reviewer's newest review is on this commit and every thread is
+  resolved (the gates skill's Zero Unreviewed Code, made mechanical). A
+  repo whose instruction file says the status is not required (a reviewer
+  out of quota) lands on `gate` plus the human's `r+`;
+- no per-reviewer turn cap has fired on this PR and no open `pr-todo`
+  issue references it. The deferral procedure can turn `review-settled`
+  green without fixing anything, so check this separately;
+- every CODEOWNERS path on the PR's diff has an approving review from its
+  owner on the head commit. Tedium enforces this itself, independent of
+  `gate` and `review-settled`. The diff is the file list GitHub shows
+  against the merge base, so a PR carrying a fix already on the base still
+  lists that fix's owned paths: merge the base in first. A path whose only
+  owner is the PR's author can never clear this, because GitHub refuses
+  self-approval: that PR is human-merged, and no `land` will change it;
 - no `hold` label is on the PR.
 
-**Designated pipeline exception.** The default stands: outside those six
-conditions an agent never lands on its own initiative. The one exception
-is an automated pipeline that the repo's agent instruction file names
-explicitly as allowed to land (first instance: GammaGo's Monster Handbook
-art pipeline), and only on that pipeline's own PRs. There `review-settled`
-is not required; every other condition still holds, and the pipeline still
-never pushes to the default branch -- it opens a PR, the gates run, tedium
-lands it. The repo's `gate` is the review: that is the repo owner's
-recorded decision, and the owner's standing designation in the instruction
-file is the human authorization the gates skill's Zero Unreviewed Code law
-requires. It holds only while `gate` actually checks that pipeline's
-output; a gate that passes the pipeline's changes unexamined voids it.
+Anything short of all six is not "almost". A red `review-settled` that the
+repo requires means a review is owed on this head: re-request the reviewer
+if the latest push carries a load-bearing fix, resolve every thread, post
+the self-review epilogue, then wait for the status. A head red only from a
+hygiene-only tail, or a documentation-only PR, goes to the human to land.
+A human with write access may comment `tedium land` at any time; that is
+the human merge decision. `tedium dryrun` is unrestricted: it builds on
+`tedium/try` and lands nothing. Never add `tedium/*` to protected-branch
+patterns; the App must be able to force-push and delete its build branches.
 
-Anything short of that is not "almost": a red `review-settled` means a
-review is still owed on this head (re-request the reviewer on the latest
-push if none is on it and that push carries a load-bearing fix; resolve
-every thread; post the self-review epilogue), and the agent waits
-for the status, never lands around it. A head that is red only because
-of a hygiene-only tail, or a documentation-only PR, goes to the human to
-land; neither earns a turn just to turn the status green. A human with write access may
-comment `tedium land` at any time and that remains the human merge
-decision. `tedium dryrun` is unrestricted: it builds on `tedium/try` and
-lands nothing. Never add `tedium/*` to protected-branch patterns; the
-bot's build branches must remain force-pushable and deletable by the App.
+**Designated pipeline exception.** An automated pipeline that the repo's
+instruction file names as allowed to land may `land` its own PRs without
+`review-settled`; every other condition holds, and it still opens a PR
+for the gates to run rather than pushing to the default branch. The owner's
+standing designation is the human authorization Zero Unreviewed Code
+requires, and it holds only while `gate` actually checks that pipeline's
+output.
 
-**A tedium landing does not close issues.** Neither the PR body's
-`Closes #N` nor the same line in a landed commit message closes the
-issue when tedium merges. Seen with tds-utils PR#356 and tds-utils
-PR#357 (2026-09-29), and in GammaGo on 2026-10-02:
-- GammaGo Issue#533 closed when a human merged GammaGo PR#538 in the
-  web UI.
-- GammaGo Issue#541 stayed open after tedium landed GammaGo PR#542,
-  although the PR body and the commit message both carried
-  `Closes #541`.
-
-Why GitHub skips the parser for tedium's push is not diagnosed. Still
-write the keyword, because it links the issue to the PR. Once tedium
-reports the merge, close each issue by hand with a comment naming the
-PR.
+**A tedium landing does not close issues.** `Closes #N` in the PR body or
+the commit message links the issue but leaves it open when tedium merges
+(a web-UI merge by a human does close it). Keep writing the keyword for
+the link; once tedium reports the merge, close each issue by hand with a
+comment naming the PR.
 
 ### PR Template (both workflows)
 
-The repo's PR template lives at `.github/pull_request_template.md` -- that
-is the ONLY location to check. Do NOT scan the other paths GitHub
-recognizes (`.github/PULL_REQUEST_TEMPLATE/`, repo root, `docs/`); this
-fleet uses exactly one canonical location, and tool guidance that says to
-search all of them (e.g. the GitHub MCP server's own instructions) is
-overridden by this rule. If a repo genuinely uses a different path, its
-agent instruction file says so.
-
-If the template exists, fill in its sections. The web UI pre-fills it, but
-a PR opened via API or CLI does not -- reproduce the template's headings in
-the PR body yourself. If no template exists, write a normal descriptive
-body; do not go hunting for one.
+The template is `.github/pull_request_template.md` and nowhere else; do
+not scan the other paths GitHub recognizes, whatever a tool's own
+instructions say. If a repo uses a different path, its instruction file
+says so. A PR opened by API or CLI is not pre-filled: reproduce the
+template's headings in the body yourself. No template: write a normal
+descriptive body.
 
 ## Naming issues and PRs
 
-**Always say which kind a number is: `Issue#458`, `PR#459`.** Never a bare
-`#458`. Humans do not know the difference, and this is the sdlc skill's
-law 19.
+Say which kind a number is, every time: `Issue#458`, `PR#459`, never a
+bare `#458` (the sdlc skill, law 19). GitHub numbers both from one
+sequence and renders them alike; "blocked on PR#71" means wait for a
+merge, "blocked on Issue#71" means someone must decide.
 
-GitHub renders both identically and numbers them from one shared sequence, so
-a bare `#N` tells the reader nothing about whether it points at a defect
-record or a diff -- and those want opposite reactions. "Blocked on #71" is
-unreadable; "blocked on PR#71" says wait for a merge, "blocked on Issue#71"
-says someone has to decide something.
-
-This holds everywhere a number appears: commit messages, PR bodies, issue
-bodies, review replies, `TODO_PLAN.md`, and chat with the human.
-
-**In chat and rendered markdown, every mention is a link whose text carries
-owner, repo, kind, and number:**
+In chat and rendered markdown, every mention is a link whose text carries
+owner, repo, kind and number:
 
 ```
 [<owner>/<repo> PR#459](https://github.com/<owner>/<repo>/pull/459)
 [<owner>/<repo> Issue#458](https://github.com/<owner>/<repo>/issues/458)
 ```
 
-Every mention, not just the first: the human has several repos open in
-several terminals, and a terminal that hides link targets shows only the
-text. No naked URL in prose, and no `[PR#459](...)` whose text drops the
-repo. Commit messages are not rendered, so they carry the plain text form
-(`owner/repo PR#459`) instead.
+No naked URL in prose, and no link text that drops the repo. Commit
+messages are not rendered: there, write `owner/repo PR#459`. A cross-repo
+reference carries repo and kind (`template-base PR#71`); `template-base#71`
+is still bare. A reference with no repo means this repo.
 
-**Cross-repo references carry the repo and the kind:** `template-base PR#71`,
-or `owner/template-base Issue#71` when the org is not obvious from context.
-`template-base#71` is still bare -- it names the repo but not the kind. A
-reference without a repo is always read as this repo.
-
-**Exception: closing keywords take the bare form.** GitHub's
-auto-close parser recognizes only `Closes #N`; `Closes issue #N` is
-inert prose and the issue silently stays open after merge. Write
-closing lines bare (a closing keyword can only target an issue, so no
-ambiguity); the rule holds everywhere else. Missed one? Close the
-issue manually, naming the PR.
+Exception: closing keywords take the bare form. GitHub's parser recognizes
+only `Closes #N`; `Closes issue #N` is inert and the issue stays open. A
+closing keyword can only name an issue, so there is no ambiguity.
 
 ## Issue Anatomy (defect vs. solution)
 
-The body states the defect -- symptom, impact, evidence, done-criteria.
-Fixes, approaches, and spikes go in comments as initial thinking. A
-solution in the body reads as settled spec and rots as the work outruns
-it; the defect statement holds until the defect is fixed. Applies to
-every issue type -- drift, retrospective, pr-todo.
+The body states the defect: symptom, impact, evidence, done-criteria.
+Fixes, approaches and spikes go in comments. A solution in the body reads
+as settled spec and rots as the work outruns it; the defect statement
+holds until the defect is fixed. This applies to every issue kind: drift,
+retrospective, pr-todo.
 
-**Title the defect, not the patch.** `plan reports "Max cycles: 5"
-regardless of config or profile` -- not `Change --max-cycles default to
-None`. The first is still accurate after the code moves; the second was
-already a guess when it was written. One defect per issue; batch only
-trivially related nits.
+Title the defect, not the patch: `plan reports "Max cycles: 5" regardless
+of config or profile`, not `Change --max-cycles default to None`. One
+defect per issue; batch only trivially related nits.
 
-**When you pick an issue up, re-derive the fix from the current design.**
-The issue tells you what is broken and proves it. It does not tell you what
-to build -- even when a comment on it sounds authoritative, and even when
-you are the one who wrote that comment. Findings from using a tool are
-*evidence*; they feel like a spec because they are concrete, and that is
-exactly the trap.
+When you pick an issue up, re-derive the fix from the current design. The
+issue proves what is broken; it does not say what to build, even when a
+comment on it sounds authoritative and even when you wrote that comment.
 
 ## Development Workflow
 
-- **Branch creation:** create a feature branch from the default branch
-   (per topology table above)
-- **Implementation:** make changes locally
-- **Validation:** run linter, type checker, tests
-- **Stage and commit:** stage verified changes, commit with a descriptive
-   message
-- **Push:** push to `origin`
-- **PR:** create a PR with a clear description
-- **Land documentation branches quickly.** A repo-wide format migration
-  (a Markdown-to-HTML move, a reformat) is the likeliest way to orphan an
-  in-flight doc branch; the longer it lives, the more of it is rewritten
-  underneath it.
-- **`git mv` merges cleanly by rename detection -- for the moved file
-  only.** The base branch's edits to the old path follow the move, but a
-  file the base branch ADDED at the old location, or a dependent that
-  still points there, is invisible to the merge. Grep for the old path
-  after merging.
+- Branch from the default branch, per the topology table.
+- Make the change; run the linter, type checker and tests.
+- Stage the verified change and commit with a descriptive message.
+- Push to `origin`; open the PR with a clear description.
+- Land documentation branches quickly: a repo-wide format migration is
+  what orphans an in-flight doc branch.
+- After a `git mv`, grep for the old path: rename detection carries the
+  base branch's edits to the moved file, but not a file the base branch
+  added at the old location or a dependent that still points there.
 
 ### Git Hook Discipline (scalpel, not axe)
 
-The pre-commit/pre-push hooks are the first rung of the gate ladder. A
-failing hook is a diagnosis prompt, not an obstacle, and the sentry-file
-discipline for a genuinely impossible check -- plus the ban on
-blanket-skipping the suite -- is **the gates skill**.
+A failing pre-commit or pre-push hook is a diagnosis prompt. The sentry-file
+discipline for a check that genuinely cannot run, and the ban on
+blanket-skipping the suite, are the gates skill.
 
 ## GitHub Tool Usage
 
-Families of verbs, in **token-frugal preference order**:
+In token-frugal preference order:
 
-- **`gadmin`** -- ships as the `@nine-at-a-time-media/admin` npm package
-   (source: `Nine-At-A-Time-Media/template-tools`, `packages/naatm-admin`;
-   registry: GitHub Packages, `https://npm.pkg.github.com`; install:
-   `npm install -g @nine-at-a-time-media/admin`). A bare global install
-   fails with a confusing 404 until `~/.npmrc` maps the scope
-   (`@nine-at-a-time-media:registry=https://npm.pkg.github.com`) and
-   carries a `read:packages` token -- see the package README for the
-   one-time setup. A repo may override the
-   package or registry in its agent instruction file; otherwise these
-   coordinates are the fleet default. Reachable on `$PATH` via a global install or
-   per-project via `node_modules/.bin/gadmin` / `npx gadmin`. Preferred for
-   reads (comments, CI logs) and writes (replies); output is filtered to
-   the fields you triage on, so it stays small in context. Sub-tiers --
-   fall back in order:
+- `gadmin` (`@nine-at-a-time-media/admin`, from template-tools
+  `packages/naatm-admin`; GitHub Packages, scope mapped in `~/.npmrc` with
+  a `read:packages` token; a repo's instruction file may override the
+  coordinates). Preferred for reads (comments, CI logs) and writes
+  (replies): output is filtered to the fields you triage on. Sub-tiers,
+  fall back in order: `gadmin github` (needs `gh`), `gadmin github-octokit`
+  (node, `octokit`, `$GITHUB_TOKEN`), `gadmin github-gitapi` (node,
+  native `fetch()`, `$GITHUB_TOKEN`, zero deps).
+- GitHub MCP tools (`mcp__github__*`) when `gadmin` lacks the verb.
+  Responses are typed and complete but echo large payloads (a reply
+  echoes the parent's `diff_hunk`), so they cost five to ten times the
+  tokens; avoid them in hot loops over many comments.
+- `gh` CLI as the last resort, except for PR-state checks and the Copilot
+  re-request, which have no `gadmin` wrapper: there prefer `gh` over MCP.
 
-     - `gadmin github` -- bash, requires `gh` CLI on `$PATH`.
-     - `gadmin github-octokit` -- node + `octokit` npm package +
-       `$GITHUB_TOKEN`.
-     - `gadmin github-gitapi` -- node, native `fetch()` + `$GITHUB_TOKEN`,
-       zero deps (the sandbox-friendly tier).
+`gh pr create -R <slug>` takes the HEAD repo from the cwd, not from `-R`.
+From a checkout of another repo it sends `<cwd-owner>:<branch>` and fails
+with "Head sha can't be blank". Use the REST call, which takes head and
+base literally: `gh api -X POST repos/<owner>/<repo>/pulls -f head=<branch>
+-f base=<default> -f title=... -F body=@<file>`.
 
-- **GitHub MCP tools (`mcp__github__*`)** -- use when `gadmin` lacks a
-   verb you need. Responses are typed and complete but include large echoed
-   payloads (e.g. every reply confirms by echoing the parent comment's
-   `diff_hunk`), so they cost ~5--10x more tokens than `gadmin` for the
-   same operation. Avoid them for hot loops over many comments.
+Actions logs: `gadmin github actions list-runs` to find runs,
+`gadmin github actions get-job --run <ID> --job <NAME>` for job output,
+ANSI stripped.
 
-- **`gh pr create -R <slug>` resolves the HEAD repo from the cwd, not
-   from `-R`.** Run from a checkout of a different repo (the shared clone
-   while the branch lives in a worktree), it sends `<cwd-owner>:<branch>`
-   as the head and fails with "Head sha can't be blank ... No commits
-   between ...", which reads like a branch problem and is not. Observed
-   2026-09-27 opening a template-tools PR from the tds-utils clone. Use
-   the REST call, which takes head and base literally:
-   `gh api -X POST repos/<owner>/<repo>/pulls -f head=<branch> -f
-   base=<default> -f title=... -F body=@<file>`.
-- **`gh` CLI** -- last-resort fallback when neither `gadmin` nor MCP cover
-   the operation. (Exception: for the two verbs below that have no `gadmin`
-   wrapper yet -- PR-state checks and Copilot re-request -- prefer `gh`
-   over MCP when it is on `$PATH`; it is cheaper there.)
-
-**GitHub Actions logs:** `gadmin github actions list-runs` to find runs,
-`gadmin github actions get-job --run <ID> --job <NAME>` to retrieve job
-output. ANSI codes are stripped automatically.
-
-**One-line rule:** when an event has already delivered the comment body via
-the subscription stream, **do not re-fetch it.** The webhook payload is the
-source of truth for that thread -- reply directly from the comment ID.
+When an event has already delivered a comment body through the
+subscription stream, do not re-fetch it; reply from the comment ID.
 
 ## Commit Messages
 
-Use conventional commits:
-
-```
-feat: add new feature
-fix: correct bug in component
-refactor: extract shared logic
-test: add unit tests for composable
-docs: update architecture doc
-```
+Conventional commits: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, with
+an optional scope (`feat(scope): ...`).
 
 ## Optional Practices
 
-These sections apply **only when the repo's agent instruction file enables
-them**. Each is self-contained; if the repo does not mention it, skip it.
+Each applies only when the repo's agent instruction file enables it.
 
 ### AI Session Tracking via Issues
 
-For repos that want a paper trail of what AI agents did and when (multiple
-concurrent agents, audit/compliance needs):
-
-- **Start of session:** create an issue assigned to `@me`:
-
-  ```
-  gh issue create --repo <OWNER/REPO> \
-    --title "[AI] Task: <task name>" \
-    --assignee "@me" \
-    --body "### Session Metadata
-  - Agent: <agent name>
-  - Branch: <current branch>
-  - Local Path: <working directory>
-
-  ### Task Description
-  <brief description>"
-  ```
-
-- **End of session:** close the issue:
-  `gh issue close <NUMBER> --repo <OWNER/REPO> --comment "Session completed."`
-
-- Issue titles must start with the `[AI]` prefix for filtering.
+At session start, create an issue assigned to `@me`, title prefixed
+`[AI] Task: <task name>`, body carrying agent, branch, local path and a
+task description; at session end close it with
+`gh issue close <NUMBER> --repo <OWNER/REPO> --comment "Session completed."`.
 
 ### Commit Message Sanitization (Pre-Push Squash)
 
-For repos with external visibility where public history must stay clean: a
-pre-push git hook automatically squashes local commits before pushing,
-opening an editor with previous commit messages as comments for reference
-so a clean message can be written for the remote. Local development stays
-unfiltered; the public history stays clean and linear. When the repo notes
-this hook is installed, expect the squash prompt on push and write the
-consolidated message accordingly.
+A pre-push hook squashes local commits before pushing and opens an editor
+seeded with the previous messages as comments. Expect the prompt and write
+the consolidated message; local history stays unfiltered, public history
+stays clean and linear.
 
 ### Restricted Agent Permissions (Stage-Only Mode)
 
-For high-trust codebases or regulated environments where the human curates
-every commit. When the repo declares stage-only mode:
-
-- The AI agent **MUST NOT** use `git commit` or `git push`
-- After implementing and validating changes, the agent stages them with
-  `git add` and informs the user
-- The user reviews staged changes, commits, pushes, and creates the PR
-
-This overrides the Development Workflow steps 4-6 above.
+The agent never runs `git commit` or `git push`. It stages verified
+changes with `git add` and tells the user; the user commits, pushes and
+opens the PR. This overrides the Development Workflow's commit, push and
+PR steps.
 
 ## After a merge: markers before the commit
 
-- A merge that reports a conflict in one file has usually left markers
-  in others too. Before `git add`, grep the WHOLE tree, not the file
-  you resolved: `git grep -n '^<<<<<<< \|^>>>>>>> ' -- . ':!node_modules'`
-  (or `git diff --check`). A `git add -A` after resolving one file
-  commits the markers in the rest, and the push carries them to the PR.
-- `git checkout --ours <file>` after a merge only takes effect on a file
-  git marked as conflicted; on an auto-merged file it prints "Updated 0
-  paths" and leaves both sides' additions in place. Read the merged file
-  for a duplicated section before assuming yours won.
-
+A merge that reports a conflict in one file usually leaves markers in
+others. Before `git add`, grep the whole tree:
+`git grep -n '^<<<<<<< \|^>>>>>>> ' -- . ':!node_modules'` (or
+`git diff --check`). `git checkout --ours <file>` acts only on a file git
+marked conflicted; on an auto-merged file it prints "Updated 0 paths" and
+leaves both sides' additions in place, so read the merged file for a
+duplicated section before assuming yours won.
