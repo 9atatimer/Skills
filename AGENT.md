@@ -111,6 +111,18 @@ the hour, contradicting each other. Before landing a skill PR, read what
 merged to `main` since its base for the same nouns (`git log
 <base>..origin/main -- skills/`) and reconcile.
 
+The same holds for a skill PR and a PR that changes the checks. [Skills
+PR#94](https://github.com/9atatimer/Skills/pull/94) added the skill
+lint's word budget; [Skills
+PR#95](https://github.com/9atatimer/Skills/pull/95), based before it,
+added words to `gates`. Each was green on its own head, and PR#95 was
+merged with GitHub's merge button, which checks `gate` on the PR head
+only. Tedium runs `gate` on the merge with `main` (`tedium/merge`) and
+would have refused it; the button put `main` red until [Skills
+PR#98](https://github.com/9atatimer/Skills/pull/98). Land through tedium;
+a PR merged by hand gets `npm test` run on its merge with current `main`
+first.
+
 ## Testing
 
 `npm test` runs `test/*.test.mjs` under `node --test` (zero dependencies).
