@@ -100,6 +100,11 @@ triage.
 config and starts OAuth flows" beats "X was noisy." The symptom tells the
 next agent they will suffer; the mechanism tells them how to avoid it.
 
+**A durable lesson never cites the PR that taught it.** A PR is history:
+the reader cannot act on it, and the lesson must stand on its mechanism.
+An issue link is allowed only to route open work, such as a standing
+exception until its fix ships.
+
 Good lessons share a shape: *what you expected, what actually happened, and
 the causal reason for the gap.* If you cannot state the third part, you
 have not finished diagnosing -- say so honestly rather than writing a
