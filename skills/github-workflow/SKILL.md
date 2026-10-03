@@ -293,7 +293,10 @@ only when all six hold on the current head:
   code-owned paths until the base is merged in. Merge the base before
   `tedium land` ([Skills PR#97](https://github.com/9atatimer/Skills/pull/97)
   was rejected for code-owner approval, then landed with no new review once
-  `main` was merged in);
+  `main` was merged in). A PR whose author is the only owner of a path it
+  touches can never satisfy this: GitHub refuses self-approval, so tedium
+  answers `Rejected because of missing code owner approval` on every
+  `land`, and the owner merges by hand (GammaGo PR#645, 2026-10-03);
 - no `hold` label is on the PR.
 
 **Designated pipeline exception.** The default stands: outside those six
