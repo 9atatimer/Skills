@@ -287,7 +287,13 @@ only when all six hold on the current head:
   of `gate` and `review-settled` (a bors-style CodeOwners port,
   `packages/naatm-tedium/src/command/codeOwners.ts` in template-tools),
   so a repo with `use_codeowners = true` blocks landing on it even when
-  the other conditions are green;
+  the other conditions are green. "This PR's diff" is the file list
+  GitHub shows against the PR's merge base, not the net change: a PR
+  that carries a ported fix already on the base still lists that fix's
+  code-owned paths until the base is merged in. Merge the base before
+  `tedium land` ([Skills PR#97](https://github.com/9atatimer/Skills/pull/97)
+  was rejected for code-owner approval, then landed with no new review once
+  `main` was merged in);
 - no `hold` label is on the PR.
 
 **Designated pipeline exception.** The default stands: outside those six
