@@ -30,7 +30,8 @@ themselves**, as provisioned on the machine, chosen by the document's kind:
 
 The tool detects the kind by path and today knows three kinds, not four:
 an `ARCHITECTURE.*.md` under `docs/design/` is judged as a design until
-the tool learns the fourth (template-tools, the designomatic package).
+the tool learns the fourth ([template-tools
+issue#865](https://github.com/Nine-At-A-Time-Media/template-tools/issues/865)).
 Until then, review an architecture record with `--panel seam-review`,
 whose question is the architecture skill's, and read any "missing goals"
 or "no numbers" finding on it as the wrong standard, not a defect.
