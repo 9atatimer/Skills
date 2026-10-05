@@ -245,6 +245,10 @@ Content, in the order a new reader needs it:
 - **The seams.** Each port/policy/parameter that is actually in the code,
    and what implementations sit behind it today. This is the section that
    makes the Swap test answerable without reading the source.
+- **The tuned values.** What every parameter is set to, per stage: the
+   retention windows, the thresholds, the limits, the labels. The design
+   names that each exists and its bound; this is the only record that
+   holds the number, so a retune is an as-built edit and never drift.
 - **The use-case surface.** The application-layer functions that exist,
    each with the behavior it carries and the ports it takes, and where the
    composition root for each runtime lives. This is what makes the Trace

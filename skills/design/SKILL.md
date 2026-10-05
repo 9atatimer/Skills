@@ -37,6 +37,25 @@ product.
   `TODO_PLAN.md` (via the planning skill) answer **how** and **in what
   order**; the code (via the coding skill) is the result.
 
+### What each record may hold
+
+Three records, three kinds of fact, and each constrains the next step:
+
+| Record | Holds | Does not hold |
+|---|---|---|
+| Design (`docs/design/`) | what the system can and cannot do: capabilities, constraints, scope in and out | numbers, labels, thresholds |
+| Architecture (in the design doc, phase 3) | how it intends to do that: the seams and the mechanism behind each | tuned values |
+| As-built (`docs/arch/`) | what runs: the components, the seams as coded, and **every tuned value** | intentions |
+
+A policy value ("how long is it kept"), an appearance ("what is the tier
+called"), or a tuning ("who is shown first") is neither a design decision
+nor an architecture decision. The design says the value exists, is bounded,
+and is a parameter, and names the bound in the problem's language ("sightings
+are kept strictly shorter than mutuals"); architecture says which seam
+carries it; the as-built records what it is set to. A number written into a
+design record freezes a tuning as if it were a capability, and every retune
+then reads as drift.
+
 ### `docs/design/` is not `docs/arch/`
 
 **The as-built lives in `docs/arch/` and is not a design doc.** The two
@@ -241,8 +260,8 @@ This skill is the standard. A repo's `docs/design/STYLE-GUIDE.md`, where one
 exists, is a local copy for human readers; where it differs from this skill,
 this skill wins and the copy is stale. The rules that matter most:
 
-- **Be explicit** -- No "handle errors gracefully"; specify retry counts, timeouts, fallback behavior
-- **Be testable** -- No "fast response times"; specify P95 latency targets
+- **Be explicit** -- No "handle errors gracefully"; state the bound and the failure posture ("retries are bounded; on exhaustion it fails closed") and name the parameter that carries the count. The count itself is a tuned value and lives in the as-built
+- **Be testable** -- No "fast response times"; name the observable and the bound ("resolve latency is measured at P95 and has a ceiling") so a test can read the ceiling from configuration. The target is tuned, not designed
 - **Be unambiguous** -- No "the system"; name the specific component
 - **Prefer tables over prose** -- State machines, decisions, responsibilities all belong in tables
 - **Use ASCII diagrams** -- They work everywhere, including in AI agent prompts
@@ -275,7 +294,7 @@ Run through these checks:
 **Content quality:**
 
 - [ ] Overview is 2-3 sentences, explains the "why"
-- [ ] Goals are testable and measurable
+- [ ] Goals are testable and measurable, and no goal, rule or decision carries a tuned value that belongs in the as-built
 - [ ] Non-goals explicitly exclude likely scope creep
 - [ ] Architecture has a diagram (ASCII preferred)
 - [ ] State machines have both diagram AND transition table
@@ -343,7 +362,7 @@ When asked to improve an existing doc:
 | Problem | Fix |
 |---------|-----|
 | Missing non-goals | Ask: "what will users request that's out of scope?" |
-| Vague goals | Add numbers: latency targets, error rates, coverage |
+| Vague goals | Name the observable and its bound (a latency ceiling, an error-rate ceiling, a coverage floor); the number is tuned and lives in the as-built |
 | No state machine | Look for lifecycle states in the design section and extract them |
 | Prose-heavy design | Convert responsibilities and transitions to tables |
 | Missing key decisions | Look for implicit choices and make them explicit with rationale |
