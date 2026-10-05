@@ -52,7 +52,7 @@ export const CASES = [
     "Make this markdown file ASCII-only.", // markdown
     "CI failed on my PR with a lint error.", // gates
     "Should we adopt this new library? Check the radar.", // tech-radar
-    "Record the as-built for the component we just shipped.", // architecture
+    "Record the as-built for the component we just shipped.", // as-built
     "Run the retrospective for the feature that landed.", // retrospective
     "Turn the approved design into a task plan.", // planning
   ]),

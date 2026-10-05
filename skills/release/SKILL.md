@@ -16,7 +16,7 @@ unattended paths included), **reversible** (the rollback is known), and
 ## What counts as a release
 
 Deploy, publish, or tag: the moment the change becomes shared. Phase 7a
-fires with it (`docs/arch/` updated) -> the architecture skill. A change
+fires with it (`docs/arch/` updated) -> the as-built skill. A change
 that ships nowhere elides 7 and 7a (sdlc, Elision).
 
 ## Size the release
@@ -237,6 +237,6 @@ retrospective files the check that would have caught it.
 
 ## Related
 
-- architecture (7a), design (Operability), gates (hooks, the gate law),
+- as-built (7a), architecture (Operability), gates (hooks, the gate law),
   iac and cloudflare-hosting / gcp-ops / aws-ops (stages' resources),
   infra-credentials, lmde-dashboards (Grafana), retrospective, tech-radar

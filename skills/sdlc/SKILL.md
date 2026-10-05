@@ -48,8 +48,9 @@ skill.
    design doc rewritten to match the code is a lie; an as-built containing
    intentions is worthless. The law governs design *records*, not the
    process artifacts beside them (`STYLE-GUIDE.md`, `TEMPLATE.md`), which
-   have no approval lifecycle and evolve freely. -> the concept skill (the
-   disposable end) and the architecture skill
+   have no approval lifecycle and evolve freely. The architecture record
+   beside the design freezes the same way. -> the concept skill (the
+   disposable end), the architecture skill and the as-built skill
 4. **Implementation ends with the retrospective, not with green tests.**
    Cut drift issues, append Key Decisions, reconcile the as-built, record
    lessons learned at their layer (law 15), file what you discovered, and
@@ -235,13 +236,13 @@ skill.
 ```
 1 CONCEPT                    docs/concepts/  intent, unfunded, disposable
 2 DESIGN                     docs/design/    aspirational, FROZEN at APPROVED
-3 ARCHITECTURE (intended)    reads docs/arch/, names the seams
+3 ARCHITECTURE               docs/design/    how it intends to; FROZEN at APPROVED
   3b PLANNING                the route from as-built to design; tasks/
 4 BEHAVIORS            <-+   tests, RED
 5 CODE                   |   the iterative core
 6 GATES                <-+   scanners, CI, ci.magic, review/approval
 7 RELEASE                    deploy / publish / tag
-  7a ARCHITECTURE (as-built) docs/arch/ updated;  living, FACTUAL
+  7a AS-BUILT                docs/arch/ updated;  living, FACTUAL
 8 RETROSPECTIVE              drift issues, lessons, next plan
 ```
 
@@ -258,19 +259,22 @@ one-pass the tests. Do not.
 |---|---|---|---|
 | 1 Concept | `docs/concepts/<idea>/` -- statement of work + user stories | a human funds it | the concept skill |
 | 2 Design | `docs/design/DESIGN.<name>.md` | a human marks it APPROVED | the design skill; run the panel before the human -> the designomatic skill |
-| 3 Architecture | the seam list and the module map, inside the design doc | seams named, behaviors traced to use cases, radar rows proposed | the architecture skill |
+| 3 Architecture | `docs/design/ARCHITECTURE.<name>.md` -- seams, module map, use-case surface, bounds placed, operability | a human marks it APPROVED | the architecture skill; run the seam-review panel before the human -> the designomatic skill |
 | 3b Planning | `tasks/`, ordered in `TODO_PLAN.md` | a phased, test-first route | the planning skill |
 | 4 Behaviors | the next behavior, RED | it fails because the code does not exist | the testing skill + the stack-specific one |
 | 5 Code | source | GREEN | the coding skill + the language style skill |
 | 6 Gates | scanners, CI, review | green and approved | the gates skill; review your own diff before the PR -> the self-review skill |
 | 7 Release | deploy / publish / tag; what its class owes | shipped, proven, reversible, debuggable | the release skill |
-| 7a Architecture | `docs/arch/` + diagrams | as-built matches reality | the architecture skill |
+| 7a As-built | `docs/arch/` + diagrams, every tuned value per stage | as-built matches reality | the as-built skill |
 | 8 Retrospective | drift issues, lessons, next plan | the loop is closed | the retrospective skill |
 
-The architecture skill has **two entry points**, not two skills: phase 3
-names the seams a change will add (forward-looking, writes nothing to
-`docs/arch/`), and phase 7a records what actually shipped (backward-looking,
-the only thing that may write to `docs/arch/`).
+Three records, three skills, three kinds of fact. The design record holds
+what the system can and cannot do; the architecture record holds how it
+intends to; the as-built holds what runs, including every tuned value. A
+number, a label or a threshold is never a design or architecture fact: the
+design says the bound exists, the architecture says which seam carries it,
+the as-built says what it is set to. Phase 3 reads `docs/arch/` and writes
+only its own record; phase 7a is the only thing that writes `docs/arch/`.
 
 The github-workflow skill is not a phase. Branch, push, and PR mechanics
 span the whole flow; load it whenever you touch a remote.
@@ -367,7 +371,7 @@ you are going. It needs both endpoints: the design supplies the target, the
 as-built supplies the start. That is also why planning is where scope gets
 cut -- it is the first phase that meets real code.
 
-**7a Architecture fires with Release, not with the merge.** The as-built
+**7a As-built fires with Release, not with the merge.** The as-built
 describes the *deployed* system that other developers must code against.
 CD is not universal, and merged is not shipped. Read "release" broadly:
 deploy, publish, or tag. Work that ships nowhere changes no shared

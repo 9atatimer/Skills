@@ -50,9 +50,9 @@ dependency arrives already load-bearing.
 
 | Phase | What happens |
 |---|---|
-| 3 Architecture | **Propose** the row in the design doc: the candidate, the ring, one line of rationale. Reviewable before it is load-bearing |
+| 3 Architecture | **Propose** the row in the architecture record: the candidate, the ring, one line of rationale. Reviewable before it is load-bearing |
 | 5 Code | **Consult** the radar before reaching for anything off-the-shelf. The row **lands with the code that uses it**, so the radar never drifts ahead of or behind reality |
-| 7a Architecture | **Audit.** Everything the release actually uses is on the radar, on the ring it was proposed at |
+| 7a As-built | **Audit.** Everything the release actually uses is on the radar, on the ring it was proposed at |
 | 8 Retrospective | A dependency that reached production with no row is a **filed finding**, not something to backfill quietly |
 
 Proposing at phase 3 and landing at phase 5 are not in tension: the

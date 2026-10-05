@@ -23,7 +23,7 @@ These gates are non-negotiable. Do not skip them because the change "looks small
    - Every product component has a `DESIGN.<name>.md` under `docs/design/`.
    - If it does not exist or is ambiguous, stop and use the design skill to write/fix it first.
    - Developer tooling (self-contained dev QoL, invisible to the product -- the sdlc skill's "Product or tooling" test) has no design doc and needs none. Its gate is an issue framing the change; its record is `docs/ops/<tool>.md`, updated in the same PR. The architecture and plan gates below do not apply to it either. The test and tech gates do.
-- **Architecture gate.** Every volatile axis this change introduces is named and mapped to one seam, against the as-built in `docs/arch/`. A seam first discovered while coding was never reviewed. -> the architecture skill
+- **Architecture gate.** There is an approved architecture record beside the design: every volatile axis this change introduces is named and mapped to one seam, every behavior has its use-case signature, against the as-built in `docs/arch/`. A seam first discovered while coding was never reviewed. -> the architecture skill
 - **Plan gate.** For any multi-step feature, build the phased, test-first plan with the planning skill and record it per the todo-plan skill.
 - **Test gate.** Write the failing test first (see Section 3). No production code without a failing test demanding it.
 - **Tech gate.** Any off-the-shelf dependency must be on the **Adopt** or **Trial** ring of the tech-radar skill. Never introduce a `Hold`/`Verboten` technology, and never silently add a dependency that is not on the radar -- propose adding it first.
@@ -71,7 +71,7 @@ Run these against any change. They are checks, not opinions, and **a change pass
 
 | Test | Question | Fail means |
 |---|---|---|
-| **Trace test** | Does every row in the design's Behaviors and Interfaces table map to exactly one application function, with the signature the table gives it? Several rows may share one function -- a happy path and its error paths are scenarios of the same use case | A row with no home (logic in a handler or a helper), or one row's behavior split across two functions |
+| **Trace test** | Does every row in the design's Behaviors table map, through the architecture record's use-case surface, to exactly one application function, with the signature that surface gives it? Several rows may share one function -- a happy path and its error paths are scenarios of the same use case | A row with no home (logic in a handler or a helper), or one row's behavior split across two functions |
 | **Purity test** | Does any domain function take a port, a callback that does I/O, or a clock? | Workflow leaked into the rules -- lift the orchestration to the application layer and pass the domain a value |
 | **Wiring test** | Is there exactly one place per runtime (CLI, worker, server) that names concrete adapters, and can it be built with every adapter faked? | Wiring scattered into use cases or handlers; or a use case that constructs its own dependencies |
 
@@ -145,7 +145,7 @@ Every function is exactly one of these, and **the layer decides which kinds a fi
 * **Predicates** -- pure boolean tests; answer a yes/no question. No side effects, deterministic. Named as a question: `is_*`, `has_*`, `should_*`, `can_*`. Domain.
 * **Pure helpers** -- one computation; values in, values out; deterministic. **Never injected into.** If a helper needs a port, it is not a domain helper -- either the port is really a value (pass the result in) or the function is really a flow function. Domain.
 * **Effectful helpers** -- one action against the world: a query, a write, a call. Live only in adapters, behind a port. Tested by integration test, or not at all in the unit tier.
-* **Flow (orchestration) functions** -- the use cases. One per behavior in the design's Behaviors and Interfaces table, carrying that table's signature: domain values in, ports as keyword-only dependencies, a domain value or result out. Contain control flow; compose predicates, pure helpers, other flow functions, and ports. Tested via fakes. Application.
+* **Flow (orchestration) functions** -- the use cases. One per behavior in the design's Behaviors table, carrying the signature the architecture record's use-case surface gives it: domain values in, ports as keyword-only dependencies, a domain value or result out. Contain control flow; compose predicates, pure helpers, other flow functions, and ports. Tested via fakes. Application.
 * **Entry points** -- the public surface (CLI handler, HTTP route, action `main`); thin (parse/validate input, call one flow function, shape the result). The composition root lives here (wire adapters to ports). Never contain a rule or a workflow step.
 
 **Dependency injection starts at the flow function and never goes below it.** A pure helper that "readily accepts DI" is the leak that dissolves the domain: inject one port there and every test of that rule now needs a fake. Predicates and pure helpers take values. Flow functions take ports. Entry points build them.
