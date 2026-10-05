@@ -107,6 +107,14 @@ interpretable against it. If the kind is wrong, the whole review is.
 **A run that reports failure usually has its output on disk.** Check the run
 directory before concluding the work is lost.
 
+**A `cf@gw:` seat spends the Cloudflare AI Gateway's prepaid credits, not
+subscription quota.** The seat is chosen per agent, so one panel mixes it
+with `@cli` seats (template-tools `design-review-gateway`). A Failed run
+whose first line says 429 hit the gateway's spend-limit rule for the
+window; 402 means the account's credit balance is at zero. Neither is the
+agent's to lift: report it. Provisioning and the model-id grammar are the
+tool's runbook (template-tools `docs/ops/designomatic.md`).
+
 **The panel's output is a proposal, not an approval.** designomatic cannot
 mark a document APPROVED and neither can you -- only a human moves that
 status. What a green run buys is that a human's first read is not spent on
