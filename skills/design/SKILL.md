@@ -223,6 +223,7 @@ after this one is approved; see the architecture skill.)
 
 - **Header block** -- Status starts as DRAFT, fill date and authors
 - **Overview** -- 2-3 sentences. If you can't explain it briefly, you don't understand it yet
+- **Problem and approach** -- three short parts, before any goal: the problem (what the existing answers get wrong and what this one must solve), the approach (the handful of moves that solve it, each one sentence), and a tradeoffs table (what is given up, why it is worth it). A reader needs the shape before the rules
 - **Goals** -- capabilities and constraints, each testable, each with a stable id (`G1`...) so a Behaviors row and the architecture record can cite it
 - **Non-Goals** -- explicit scope boundaries. Think: "what will someone ask for that we should say no to?"
 - **Design** -- the rules and capabilities, one subsection per concern, in the problem's language; what each part is responsible for, never how it is built
@@ -242,13 +243,34 @@ after this one is approved; see the architecture skill.)
 
 This skill is the standard. A repo's `docs/design/STYLE-GUIDE.md`, where one
 exists, is a local copy for human readers; where it differs from this skill,
-this skill wins and the copy is stale. The rules that matter most:
+this skill wins and the copy is stale.
 
+The prose rules. A record is read by people deciding whether to approve
+it and by agents building from it; both need plain, specific text.
+
+- **One sentence, one job.** No stacked clauses. No parenthetical carrying
+  a second idea. No trailing "which is what makes..." justification: if the
+  reason matters, it is its own sentence or its own column.
+- **Short.** A goal is one or two sentences. A definition is noun, meaning,
+  invariant. A rationale is a sentence, not a paragraph.
+- **Plain words.** "Random tag", not "opaque identifier". No metaphor in
+  the technical body; the Overview may have one line of it.
+- **Shape before rules.** Problem, approach and tradeoffs come before the
+  goals, so the reader knows why each rule exists when they reach it.
+- **Tradeoffs are a table:** what is given up, why it is worth it. A
+  tradeoff hidden in a rationale cell is a tradeoff nobody reviewed.
+- **Origin is a column, not a clause.** In Key Decisions, the "why" is a
+  plain sentence and where it was decided sits beside it.
 - **Be explicit** -- No "handle errors gracefully"; state the bound and the failure posture ("retries are bounded; on exhaustion it fails closed") and name the parameter that carries the count. The count itself is a tuned value and lives in the as-built
 - **Be testable** -- No "fast response times"; name the observable and the bound ("resolve latency is measured at P95 and has a ceiling") so a test can read the ceiling from configuration. The target is tuned, not designed
 - **Be unambiguous** -- No "the system"; name the specific component
 - **Prefer tables over prose** -- State machines, decisions, responsibilities all belong in tables
 - **Use ASCII diagrams** -- They work everywhere, including in AI agent prompts
+
+The test for a draft: read the Overview and the Problem and approach
+aloud. If a sentence needs a second pass, split it. A record that reads
+as generated -- long sentences, every clause hedged, every rule followed by
+its reason in the same breath -- is sent back before a human reads it.
 
 ---
 
@@ -288,6 +310,8 @@ Run through these checks:
 **Style:**
 
 - [ ] No vague language ("gracefully", "efficiently", "properly")
+- [ ] Problem and approach precede the goals, with a tradeoffs table
+- [ ] Sentences do one job each; no stacked clauses, no trailing justifications
 - [ ] No walls of text -- uses tables, lists, diagrams
 - [ ] ASCII-only in diagrams and prose (no smart quotes, no Unicode arrows)
 - [ ] Consistent heading levels (no skipping H2 -> H4)
