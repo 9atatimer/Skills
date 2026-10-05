@@ -24,8 +24,17 @@ themselves**, as provisioned on the machine, chosen by the document's kind:
 | Kind | Where it lives | Judged as | Skills |
 |---|---|---|---|
 | Concept | `docs/concepts/` | unrestricted -- never asked for goals, seams, or feasibility, never converged | sdlc, concept, markdown |
-| Design | `docs/design/` (and anything unplaced) | aspirational what-and-why, with load-bearing architecture | sdlc, design, architecture, markdown |
-| As-built | `docs/arch/` | pure pragmatism -- only what is deployed | sdlc, architecture, markdown |
+| Design | `docs/design/DESIGN.*.md` (and anything unplaced) | aspirational what-and-why: capabilities and constraints, no mechanism, no numbers | sdlc, design, markdown |
+| Architecture | `docs/design/ARCHITECTURE.*.md` | how it intends to: seams, module map, use-case surface, bounds placed, operability; no capability the design did not grant | sdlc, architecture, markdown |
+| As-built | `docs/arch/` | pure pragmatism -- only what is deployed, every tuned value | sdlc, as-built, markdown |
+
+The tool detects the kind by path and today knows three kinds, not four:
+an `ARCHITECTURE.*.md` under `docs/design/` is judged as a design until
+the tool learns the fourth ([template-tools
+issue#865](https://github.com/Nine-At-A-Time-Media/template-tools/issues/865)).
+Until then, review an architecture record with `--panel seam-review`,
+whose question is the architecture skill's, and read any "missing goals"
+or "no numbers" finding on it as the wrong standard, not a defect.
 
 Each lens may add skills of its own (the architect applies architecture,
 the operator release). **There is no fallback standard: a required skill
@@ -68,8 +77,8 @@ Do **not** reach for it when:
   cut a drift issue instead. -> the design skill
 - You want code reviewed. That is the gates skill.
 - You want to know what a document must contain. That is the concept,
-  design, and architecture skills -- which are also exactly what the panel
-  judges against, so reading them is never wasted.
+  design, architecture and as-built skills -- which are also exactly what
+  the panel judges against, so reading them is never wasted.
 
 ---
 

@@ -17,13 +17,13 @@ and is the one to load first when unsure:
 |---|---|
 | 1 Concept | `concept` |
 | 2 Design | `design` |
-| 3 Architecture (intended) | `architecture` |
+| 3 Architecture | `architecture` |
 | 3b Planning | `planning` (+ `todo-plan`) |
 | 4 Behaviors | `testing` + `testing-{node,nuxt,python}` |
 | 5 Code | `coding` + `style-{bash,python,typescript}` |
 | 6 Gates | `gates` |
 | 7 Release | `release` |
-| 7a Architecture (as-built) | `architecture` |
+| 7a As-built | `as-built` |
 | 8 Retrospective | `retrospective` |
 
 `github-workflow`, `markdown`, `tech-radar`, `wrapup` (the session

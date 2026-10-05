@@ -1,322 +1,259 @@
 ---
 name: architecture
-description: "Phase 3 and 7a of the SDLC: naming the seams and drawing the module map (domain / application / composition root) a change will add (before code) and recording the as-built of the deployed system in docs/arch/ (at release). Covers the docs/design vs docs/arch folder law, as-built content and HTML diagrams, and tech-radar row ownership. Load before planning any change that adds a component, seam, or dependency, and again when a change ships. Skip for a change that adds none of those and ships nowhere, and for developer tooling, which has no as-built: its record is a docs/ops/ runbook (sdlc, Product or tooling)."
+description: "Phase 3 of the SDLC: writing the architecture record, docs/design/ARCHITECTURE.<name>.md -- how the system intends to deliver what its approved design says it can do. Names every axis of change and maps each to one seam (port, policy, parameter), draws the module map (domain / application / ports / adapters / composition root), gives each design behavior its use-case signature, places every design-named bound in the seam that carries it, states operability, and proposes tech-radar rows. Written after the design is APPROVED and against the as-built; frozen at its own APPROVED. Load before planning any change that adds a component, seam, or dependency. Skip for a change that adds none of those (it elides with planning), for the as-built (the as-built skill), and for developer tooling (sdlc, Product or tooling)."
 ---
 
-# SKILL: Architecture (Phases 3 and 7a)
+# SKILL: Architecture (Phase 3)
 
-> **Purpose:** know what the system actually is, and name what a change
-> will add to it.
-> **Two entry points, one skill:** phase 3 looks forward, phase 7a records
-> what shipped.
-
----
-
-## The Folder Law (read first)
-
-| | `docs/design/` | `docs/arch/` |
-|---|---|---|
-| Describes | what we intend to build | what is deployed right now |
-| Truth kind | aspirational | factual |
-| Lifecycle | **body frozen at APPROVED** | **living, never frozen** |
-| Written by | the design author, before code | the releaser, after shipping |
-| Wrong when | rewritten to match the code | contains anything not yet shipped |
-
-**That opposition is why they are separate trees.** They fail in opposite
-directions, so one document cannot be both. A design doc edited to match
-the code destroys the only artifact that could show drift. An as-built
-containing intentions is worse than no as-built, because a reader cannot
-tell which parts are real.
-
-**The law governs design records, not the process artifacts beside them.**
-`DESIGN.<name>.md` and `INTEGRATION.md` are design records: they describe a
-specific intended system, they carry a status, and they freeze.
-`STYLE-GUIDE.md`, `TEMPLATE.md`, and any other reusable process guidance in
-`docs/design/` are not -- they have no approval lifecycle and evolve freely.
-Improving them is continuous improvement, not drift.
-
-**What freezes is the design record's body.** Its lifecycle metadata still
-moves: the status advances APPROVED -> IMPLEMENTED -> SUPERSEDED, and the
-Key Decisions log is append-only. Freezing the body is what makes drift
-visible; freezing the status would make the ladder unusable.
-
-These rules follow, and they are absolute:
-
-- **Phase 3 reads `docs/arch/` and writes nothing to it.** The forward
-  half of this skill produces a seam list that lands *in the design doc*.
-- **A `docs/arch/` edit with no corresponding shipped change is a smell.**
-  Architecture trails reality; it never leads it.
+> **Purpose:** say how the system intends to do what the design says it
+> can do, in a record of its own that constrains the plan and the code.
+> **Input:** an APPROVED design record and the as-built.
+> **Output:** `docs/design/ARCHITECTURE.<name>.md`, frozen at APPROVED.
+> **Exit gate:** a human marks the architecture record APPROVED.
 
 ---
 
-## Phase 3: Architecture (intended)
+## The three records (read first)
 
-Runs **before the approval gate**, not after it. Answers: *given what we
-actually have, what does this change add to it?*
+| Record | Holds | Does not hold | Lifecycle |
+|---|---|---|---|
+| Design, `docs/design/DESIGN.<name>.md` | what the system can and cannot do: capabilities, constraints, scope in and out, the domain language, the bounds that exist | seams, signatures, vendors, stores, numbers | frozen at APPROVED (the design skill) |
+| Architecture, `docs/design/ARCHITECTURE.<name>.md` | how it intends to do that: the seams, the module map, the use-case surface, the mechanism behind each capability, which seam carries each bound, operability | capabilities the design did not grant; tuned values | frozen at its own APPROVED (this skill) |
+| As-built, `docs/arch/` | what runs: components, seams as coded, flows, deployment facts, **every tuned value** | intentions | living, never frozen (the as-built skill) |
 
-This ordering is forced by the freeze. Everything this phase produces lands
-inside the design record (see Output below), and an APPROVED record is
-frozen -- so seam-naming has to finish while the doc can still be edited. A
-design record with no named seams is not finished and must not be approved;
-approval covers the design *and* its seams as one reviewed artifact. If you
-find a missing seam after approval, that is drift: cut an issue, do not
-quietly edit the record. -> the retrospective skill
+Each record constrains the next step. A design that names a port has
+decided mechanism before anyone reviewed the capability; an architecture
+that grants a capability has designed without approval; an as-built that
+describes intent is worthless to the next designer. A number, a label, a
+threshold or a "who first" is never a design or architecture fact: the
+design says the value exists and is bounded, this record says which seam
+carries it, the as-built says what it is set to.
 
-### Read the as-built first
+**Phase 3 reads `docs/arch/` and writes nothing to it.** Everything this
+phase produces lands in the architecture record.
 
-Start in `docs/arch/`. You are placing a change into a system that already
-exists, and the as-built is the only document that claims to describe it
-truthfully. If `docs/arch/` is missing or visibly stale, say so -- a stale
-as-built makes every downstream estimate fiction, and fixing it is cheaper
-now than after you have planned against a fantasy.
+---
 
-### Name the axes of change (the seams)
+## Before you write
 
-This is the core work of the phase. Separate what is **stable** (the
-meaning -- decisions and rules in the problem's language) from what is
-**volatile** (the mechanisms -- vendors, wire formats, storage, model ids),
-and give each volatile axis exactly one explicit seam: a port, a policy, or
-a parameter.
+- **The design is APPROVED and frozen.** This record is written against
+  it, not alongside it. A capability the design does not grant is not
+  yours to add: cut an issue against the design and stop. A capability the
+  design grants that no mechanism can deliver is the same issue in the
+  other direction, and the honest outcome is a design amendment, never a
+  quiet narrowing here.
+- **Read the as-built.** Start in `docs/arch/`. You are placing a change
+  into a system that exists, and the as-built is the only document that
+  claims to describe it truthfully. If it is missing or visibly stale, say
+  so: a stale as-built makes every seam and every estimate fiction.
+- **Keep the design's language.** Every noun in a signature here is a term
+  the design's Domain Language defines, under one spelling. Two names for
+  one concept here become two modules for one concept in phase 5.
+
+---
+
+## Name the axes of change (the seams)
+
+The core work of the phase. Separate what is **stable** (the meaning:
+rules and decisions in the problem's language, which the design already
+fixed) from what is **volatile** (the mechanisms: vendors, wire formats,
+storage, model ids, platforms), and give each volatile axis exactly one
+explicit seam: a port, a policy, or a parameter.
 
 The idea itself, its mechanical tests (Grep / Swap / Decision / Arrow /
-Change), and its smells are the coding skill, Section 1 -- that is the
-authority, and this phase does not restate it. What this phase adds is
-*when* the work happens: **before the plan, not during the code.** A seam
-discovered while coding is a seam that was never reviewed.
+Change) and its smells are the coding skill, Section 1; that is the
+authority and this phase does not restate it. What this phase adds is
+*when*: before the plan, not during the code. A seam discovered while
+coding was never reviewed.
 
 Two failure modes, equally real:
 
 - **Missing seam.** If "we now also use `<new vendor>`" would force an
   edit to the core, an axis is unnamed.
 - **Ceremony.** A port with one forever-implementation is cost with no
-  benefit. Seam only at real axes of change (YAGNI); if you considered a
-  seam and rejected it, that belongs in the design doc's Rejections.
+  benefit. Seam only at real axes of change; a seam considered and
+  rejected goes in this record's Rejections with its reason. The bar: a
+  fake and a real implementation on day one, or a second mechanism that is
+  plausibly coming.
 
 A judgement with a bounded answer -- classify, gate, route, triage, judge
--- is an axis of its own: rules, a small encoder, a decision model, and an
-LLM can all make it. The decision-models skill names its port and says
-which to reach for.
+-- is an axis of its own: rules, a small encoder, a decision model and an
+LLM can all make it. The decision-models skill names its port.
 
-### Draw the module map (the layers)
+**Policies are values, not ports.** A pure function that the design names
+as a rule (a scoring policy, a matching policy, an exposure policy) is a
+domain value passed into a use case, so a test can drive the use case with
+any policy and no adapter. It is a seam because it will be retuned; it is
+not a port because nothing behind it does I/O.
 
-Seams answer where the core meets the world. They say nothing about the
+---
+
+## Draw the module map (the layers)
+
+Seams say where the core meets the world. They say nothing about the
 inside of the core, and a change whose only architectural output is a seam
-list gets a hexagon: a domain, some ports, and the workflow smeared across
-whatever calls them. The second output of this phase is the **module
-map**: each unit of the change -- core and edge alike -- assigned to one
-layer, and each row in the design's Behaviors and Interfaces table traced
-to its use case.
+list gets a hexagon with the workflow smeared across whatever calls it. The
+second output is the **module map**: each unit of the change, core and edge
+alike, assigned to one layer, with one composition root per runtime.
 
 | Layer | Holds | Rule |
 |---|---|---|
 | domain | rules, values, invariants, named policies | pure; no port reaches it |
-| application | the use cases, one per behavior in the design's table | ports as keyword dependencies; domain values in and out |
+| application | the use cases, one per behavior in the design's Behaviors table | ports as keyword dependencies; domain values in and out |
 | ports | one interface per seam in the seam list | owned by the core; imports only domain types |
 | adapters | one implementation per port per mechanism | the edge: the only layer that imports a vendor, `fs`, `fetch`, or `process.env` |
-| composition root | the container: one per runtime (CLI, server, worker) | the only code that names a concrete adapter |
+| composition root | the container: one per runtime (CLI, server, worker, each app) | the only code that names a concrete adapter |
 
-The first two rows and the last are the layers *inside* the core that the
-seam list does not describe; ports and adapters are the seam list itself,
-placed. A unit that fits no row is a unit whose job is unclear.
+The map is small -- a table of unit, layer, runtime -- and it is judged by
+the coding skill's Trace, Purity and Wiring tests before a line is
+written. Layers are not directories; a one-file tool keeps them as three
+regions of one file.
 
-The map is small -- a table or a tree of module names with a layer beside
-each -- and it is judged by the coding skill's Trace, Purity, and Wiring
-tests before a line is written: does every behavior have exactly one use
-case; does any domain module need a port; is there one composition root
-per runtime. Layers are not directories; a one-file tool keeps them as
-three regions of the file. What matters is that the assignment is made
-here, reviewed with the seams, and frozen with the record.
+---
 
-Check the language while you are here: every noun in a use-case signature
-is a term the Data Model defines, under one spelling. Two names for one
-concept at this stage become two modules for one concept in phase 5.
+## Give each behavior its use case (the use-case surface)
 
-### Propose tech-radar rows
+The design's Behaviors table says what a person does and observes, as
+Given/When/Then, with no signature. This record gives each of those rows
+its home: one application-layer function, with its signature, so the
+boundary between what a caller calls and what the domain decides is drawn
+here, reviewed, and frozen, rather than improvised in a handler at phase 5.
+
+```
+| Design behavior | Use case (signature) | Ports |
+|---|---|---|
+| A person flags interest | `declare_interest(from: Account, to: Account, *, interests: InterestStore, notifier: NotifierPort, clock: Clock, policies: Policies) -> InterestOutcome` | InterestStore, NotifierPort, Clock |
+| Interest across a block is inert | (same use case; a scenario) | InterestStore |
+```
+
+The rules the table must satisfy:
+
+- **Every design row appears exactly once**, by its name, and resolves to
+  one function. Several rows may share a function: a happy path and its
+  error paths are scenarios of one use case.
+- **Inputs and outputs are the design's domain values**, never a wire
+  format, an SDK type or an adapter handle. That is what makes use cases
+  composable and testable with no handler in front.
+- **Ports arrive as keyword dependencies**, after the values, and the
+  Ports column names only seams from this record's seam list. A port that
+  appears here and nowhere else is an axis nobody named.
+- **Every return is a named outcome value** the design's Domain Language
+  defines, and an outcome never carries more than the design allows it to
+  reveal.
+- **Phase 4 writes the RED test against exactly this signature**, with
+  fakes behind exactly these ports (the testing skill), and asserts the
+  design row's Then.
+
+---
+
+## Place every bound (the parameters)
+
+The design names each bound that exists and the constraint on it, with no
+value. This record says which seam carries each one: a parameter set the
+composition root supplies, a policy value, or a store's configuration. A
+bound the design names that this record does not place is a tuned value
+nobody will know where to set; a value written here is drift the moment
+it is retuned. The as-built holds the numbers.
+
+---
+
+## State the mechanism, then operability
+
+For each capability the design grants, one short subsection: the
+components that deliver it, the seams they cross, and the flow. Tables
+over prose. The design's Security Considerations become mitigations here;
+its threats are already stated.
+
+Operability is this record's, because it is how the thing is run:
+
+| Question | Answer |
+|---|---|
+| Release class | one of the release classes R0 to R3 the release skill defines, with the triggers that set it |
+| Stages and platforms | where it runs; version floors are tuned values in the as-built |
+| Likeliest failures | one row each: how it is seen, how it is debugged, which parameter or seam is involved |
+| Rollout and rollback | flags, staged rollout, what cannot be rolled back |
+| Data warehouse | what this system writes, or "nothing is ledgered" with the reason |
+
+---
+
+## Propose tech-radar rows
 
 **The radar is owned by this phase and consulted in phase 5.** Anything
-off-the-shelf that this change introduces gets proposed here, in the design
-doc, with the ring you are placing it in and a one-line rationale.
+off-the-shelf this change introduces is proposed here with the ring and a
+one-line rationale. The row itself lands with the code that uses it (the
+tech-radar skill) and is audited by the as-built skill.
 
-The row itself lands with the code that uses it (the tech-radar skill's
-existing rule -- the radar must never drift ahead of or behind the code),
-and it is audited at 7a. Proposing in phase 3 is what makes the choice
-reviewable *before* it is load-bearing.
+---
 
-### Output
+## The record
 
-Everything from this phase lands **inside the design doc**, not in
-`docs/arch/`:
+`docs/design/ARCHITECTURE.<name>.md`, from `references/TEMPLATE.md` in
+this skill. Sections, in order: header (status, date, authors, the design
+record it implements and its status), Overview, Component diagram (ASCII),
+Seams, Module map, Use-case surface, Mechanism (one subsection per
+capability), Parameters placed, Operability, Radar proposals, Key
+Decisions, Open Questions, Rejections, Related Documents.
 
 | Work | Lands in |
 |---|---|
-| The seam list, each axis mapped to one port/policy/parameter | Architecture Overview + Design |
-| The module map: each unit in one layer; each behavior traced to one use case | Architecture Overview + Behaviors and Interfaces |
-| Each seam choice with its rationale | Key Decisions |
-| Seams considered and rejected as ceremony | Rejections |
-| Proposed radar rows | Key Decisions (and the radar, with the code) |
+| The seam list, each axis mapped to one port/policy/parameter | Seams |
+| Each unit in one layer; one composition root per runtime | Module map |
+| Each design behavior traced to one signature | Use-case surface |
+| Which seam carries each design-named bound | Parameters placed |
+| Each mechanism choice with its rationale | Key Decisions |
+| Seams considered and rejected as ceremony; mechanisms dismissed | Rejections |
+| Proposed radar rows | Radar proposals (and the radar, with the code) |
 | Components this change touches that the as-built already describes | Related Documents |
 
-### Check the seams before the human does
+What does not land here: a capability, a scope boundary, a threat, a
+state machine, a domain noun. Those are the design's; cite them, never
+restate them.
 
-Once the axes are named, run `designomatic run <draft> --panel seam-review`.
-It is a one-cycle panel asking exactly this phase's question: is each axis
-named, does each map to exactly one seam, and is anything seamed that has one
-implementation and always will. Ask the layer question in the same pass,
-whether or not the repo's panel names it: is every behavior traced to one
-application function, is any domain module handed a port, and is there one
+---
+
+## Check the seams before the human does
+
+Run `designomatic run <draft> --panel seam-review`: a one-cycle panel
+asking exactly this phase's question -- is each axis named, does each map
+to one seam, is anything seamed that has one implementation forever. Ask
+the layer question in the same pass: is every behavior traced to one
+application function, is any domain module handed a port, is there one
 composition root per runtime. -> the designomatic skill
 
-This is the cheapest point to catch a missing seam. One discovered later,
-while coding, was never reviewed -- and the record's freeze at APPROVED makes
-it unwritable by then, so it becomes drift rather than design.
+---
 
-### Exit gate
+## Exit gate
 
-Every volatile axis this change introduces is named and mapped to exactly
-one seam; every behavior in the design's table is traced to one use case in
-the application layer, with a pure domain beneath it and one composition
-root per runtime; every new dependency has a proposed ring. The design record is now
-complete and approvable -- **a human approves, and the record freezes.**
-Then phase 3b (planning) can compute the route.
+Every volatile axis is named and mapped to exactly one seam; every design
+behavior is traced to one use case with a pure domain beneath it and one
+composition root per runtime; every design-named bound is placed; every
+new dependency has a proposed ring; operability is stated. **A human
+approves, and the record freezes.** Then phase 3b (planning) computes the
+route.
+
+**Drift.** From APPROVED onward this record changes only by human
+amendment. A seam found while coding is drift: cut an issue, do not edit
+the record. The retrospective walks the code against both frozen records.
 
 ---
 
 ## Phase 3b: Planning is this phase's epilogue
 
-Planning belongs here, immediately after, because **a plan is the delta
-between two endpoints and needs both**: the design supplies the target, the
-as-built supplies the start. A route computed without the as-built is
-fiction -- it plans against an imagined codebase.
-
-This is also why planning is where scope gets cut. It is the first phase
-that meets real code, so it is the first phase where cost is real.
-
-Architecture and planning elide *together* or not at all. -> the planning
-skill
-
----
-
-## Phase 7a: Architecture (as-built)
-
-Runs with Release, before the retrospective.
-
-### The as-built tracks what is DEPLOYED
-
-Not what is merged. The as-built describes the shared system other
-developers must code against, and CD is not universal -- merged is not
-shipped.
-
-Read "release" broadly: **deploy, publish, or tag.** A monorepo of npm
-packages releases by publishing; a Worker releases by deploying; a library
-releases by tagging. Whichever it is, that is the moment the change becomes
-shared, and that is when the as-built moves.
-
-Work that ships nowhere changes no shared architecture. That is a correct
-no-op, not an exception to be worked around.
-
-**The merged-but-unreleased gap is carried by the design doc's status**, so
-it does not need a "pending" marker in `docs/arch/` (which would put
-intentions back into the as-built):
-
-- **APPROVED** -- designed, possibly merged, not yet in the shared
-  architecture.
-- **IMPLEMENTED** -- shipped, as-built updated, drift closed. Human-only.
-
-### What the as-built contains
-
-One topic directory per system or bounded context, plus a root index:
-
-```
-docs/arch/
-  ARCHITECTURE.md            the INDEX: inventory (rows link to topics),
-                             cross-cutting friction, radar reality
-  <whole-repo>.html          whole-repo topology diagrams
-  <topic>/ARCHITECTURE.md    the topic's as-built: components, seams, flows
-  <topic>/<topic>.html       the topic's at-a-glance page
-```
-
-The markdown carries the parseable detail for agents; the html carries
-the at-a-glance view for humans; both must agree.
-
-Content, in the order a new reader needs it:
-
-- **Component inventory.** What exists, what each one is responsible for,
-   and where its source lives.
-- **The seams.** Each port/policy/parameter that is actually in the code,
-   and what implementations sit behind it today. This is the section that
-   makes the Swap test answerable without reading the source.
-- **The use-case surface.** The application-layer functions that exist,
-   each with the behavior it carries and the ports it takes, and where the
-   composition root for each runtime lives. This is what makes the Trace
-   and Wiring tests answerable, and it is the API the next design composes
-   against.
-- **Flows.** How a request, an event, or a deploy actually moves through
-   the components.
-- **Deployment facts.** Where each component runs, what it is triggered
-   by, what it depends on at runtime.
-- **Radar reality.** Which off-the-shelf tech is genuinely in use, and on
-   which ring. Reconcile against the tech-radar skill.
-- **Lessons the shape taught us.** Where the current structure fights us.
-   This is the input the next design phase reads.
-
-### Diagrams are HTML
-
-Architecture diagrams live in `docs/arch/` as HTML. They render in a
-browser without a toolchain, they diff as text, and they carry more than
-ASCII can (color, layering, labelled edges) for a document whose whole job
-is to be looked at.
-
-- Self-contained: inline the CSS and any SVG. No external fetches, so the
-  file works from a clone with no network.
-- The ASCII-only rule governs `.md` prose; it does not forbid an `.html`
-  diagram file. Design docs keep their ASCII diagrams (the markdown skill).
-- A diagram that disagrees with the prose is a defect -- update both or
-  neither.
-
-### The 7a checklist
-
-- **Update the component inventory** for anything added, removed, or
-   renamed by this release.
-- **Update the seams** -- new ports, new implementations behind existing
-   ports, seams that turned out to be ceremony and were inlined.
-- **Regenerate or hand-edit the diagrams** so they match the prose.
-- **Audit the radar.** Every dependency this release actually uses is on
-   the radar, on the ring it was proposed at. A dependency that landed
-   without a row is a finding for the retrospective, not something to
-   quietly add.
-- **Record what the shape taught you**, if anything.
-- **Record built-but-not-designed facts.** See below -- this is the half
-   of drift that belongs here rather than in an issue.
-
-### Drift: this phase records, the issue accuses
-
-When the code does something the design never specified, **both of these
-happen, and they are not alternatives**:
-
-- **`docs/arch/` records it as fact.** That is the as-built's whole job. An
-  as-built that omits what exists because it was never designed is broken.
-- **An issue still raises whether it should have been designed.** Recording
-  a thing is not approving it.
-
-Architecture absorbs the *recording*; the design process keeps the
-*accusation*. The freeze on `docs/design/` is unchanged -- nothing here
-licenses editing a design doc to match the code. The drift walk itself is
-the retrospective skill.
-
-### Exit gate
-
-`docs/arch/` describes the deployed system, diagrams agree with the prose,
-and the radar matches reality. Then the retrospective can diff the frozen
-design against a true as-built.
+A plan is the delta between two endpoints: the design and this record
+supply the target, the as-built supplies the start. Architecture and
+planning elide *together* or not at all: when a change adds no seam, no
+component and no dependency, there is nothing to architect and the route
+is one obvious step. -> the planning skill
 
 ---
 
 ## Related
 
-- the design skill -- phase 2, and the frozen half of the folder law
+- the design skill -- phase 2, the record this one implements
+- the as-built skill -- phase 7a, the record this one reads first
 - the coding skill, Section 1 -- the stable-core/volatile-edges idea and
   its mechanical tests
 - the planning skill -- phase 3b, this phase's epilogue
 - the tech-radar skill -- the rings; owned here, consulted in phase 5
 - the decision-models skill -- the seam for a bounded judgement
-- the retrospective skill -- phase 8, which reads the fresh as-built
+- the retrospective skill -- phase 8, which walks both frozen records

@@ -80,9 +80,9 @@ tests:
       task: "Draft docs/design/DESIGN.RATE-LIMITER.md: a per-tenant request rate limiter for our HTTP API, with limits read from a config store and counters kept in Redis. Full design doc, please."
     assert:
       - type: icontains
-        value: Behaviors and Interfaces
+        value: Behaviors
       - type: llm-rubric
-        value: The design doc contains a Behaviors and Interfaces table (or equivalent section) with at least one row that gives a use-case function signature whose inputs and outputs are domain terms (tenant, limit, decision, window -- not an HTTP request object, a Redis client, or a wire format) and whose ports are named seams (a limit-config port, a counter port) passed as dependencies. It names the axes of change and maps each to one seam, and it places the pieces in layers -- the over-the-limit rule as a pure domain function, the use case in the application layer, Redis and the config store behind adapters -- without writing code, task files, or a plan. A doc that gives no use-case signatures fails; a doc that names ports and adapters but no use-case signatures fails; a doc that contains implementation code or a phased plan fails.
+        value: The design doc contains a Behaviors table (or equivalent section) with at least one Given/When/Then row stated in domain terms (tenant, limit, decision, window -- not an HTTP request object, a Redis client, or a wire format), a Domain Language that defines those nouns, and a Parameters section that names the limit and the window as bounds without giving them values. It holds capabilities and constraints only: it names no port, no use-case signature, no store, no Redis, no config-store adapter, no module map, and no number for a limit or a window -- those belong to the architecture record written after approval, and the doc may say so. A doc that gives use-case signatures or names Redis or a counter port in the design fails; a doc that writes a limit value into the design fails; a doc that contains implementation code or a phased plan fails.
 
   # ---- security-architect: boundaries, not code ---------------------------
   - description: security-architect hands a code-level finding to the engineer

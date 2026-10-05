@@ -1,15 +1,16 @@
 ---
 name: design
-description: "Phase 2 of the SDLC: writing, reviewing, or improving a design doc; use before starting any feature that lacks one. Covers the required sections incl. Behaviors and Interfaces (the use-case table that is the BDD surface) and Rejections, the freeze at APPROVED, and the status ladder. Product only: skip for developer tooling (self-contained dev QoL, invisible to the product), which gets a docs/ops/ runbook instead (sdlc, Product or tooling). Skip also when naming seams or updating the as-built (architecture), building the phased plan (planning), or implementing against an approved design (coding)."
+description: "Phase 2 of the SDLC: writing, reviewing, or improving a design doc; use before starting any feature that lacks one. Covers the required sections incl. Behaviors (the Given/When/Then surface) and Rejections, what a design record may not hold (seams, signatures, vendors, numbers -- the architecture and as-built records own those), the freeze at APPROVED, and the status ladder. Product only: skip for developer tooling (self-contained dev QoL, invisible to the product), which gets a docs/ops/ runbook instead (sdlc, Product or tooling). Skip also when naming seams or updating the as-built (architecture), building the phased plan (planning), or implementing against an approved design (coding)."
 ---
 
 # SKILL: Design Document Authoring & Review (Phase 2)
 
 > **Purpose:** Author, review, and improve design documents that are useful to both AI agents and human engineers.
 > **When to use:** Before implementing a new system, major feature, or architectural change.
-> **Exit gate:** the record is complete -- *including its seams, which are
-> phase 3* -- and a human marks it APPROVED. From then on its body is frozen;
-> only the status and the append-only Key Decisions log move.
+> **Exit gate:** the record is complete and a human marks it APPROVED.
+> From then on its body is frozen; only the status and the append-only Key
+> Decisions log move. APPROVED is what opens phase 3: the architecture
+> record is written against this one, never alongside it.
 > **References:** `docs/design/TEMPLATE.md`; a repo's `docs/design/STYLE-GUIDE.md`, where
 > present, is a local copy for humans and yields to this skill where they differ
 
@@ -25,7 +26,7 @@ product.
 
 | You are designing... | Write | Where |
 |---|---|---|
-| A single tool / package / component | `DESIGN.<name>.md` | `docs/design/` |
+| A single tool / package / component | `DESIGN.<name>.md`, then `ARCHITECTURE.<name>.md` once it is approved | `docs/design/` |
 | How two specific components connect | `INTEGRATION.md` | `docs/design/` |
 
 * **Every product component gets its own `DESIGN.<name>.md`.** One
@@ -36,6 +37,25 @@ product.
 * The design doc answers **what** and **why**; `tasks/` and the root
   `TODO_PLAN.md` (via the planning skill) answer **how** and **in what
   order**; the code (via the coding skill) is the result.
+
+### What each record may hold
+
+Three records, three kinds of fact, and each constrains the next step:
+
+| Record | Holds | Does not hold |
+|---|---|---|
+| Design (`docs/design/`) | what the system can and cannot do: capabilities, constraints, scope in and out | numbers, labels, thresholds |
+| Architecture (`docs/design/ARCHITECTURE.<name>.md`, phase 3) | how it intends to do that: the seams, the module map, the use-case signatures, the mechanism behind each capability, which seam carries each bound | capabilities the design did not grant; tuned values |
+| As-built (`docs/arch/`) | what runs: the components, the seams as coded, and **every tuned value** | intentions |
+
+A policy value ("how long is it kept"), an appearance ("what is the tier
+called"), or a tuning ("who is shown first") is neither a design decision
+nor an architecture decision. The design says the value exists, is bounded,
+and is a parameter, and names the bound in the problem's language ("sightings
+are kept strictly shorter than mutuals"); architecture says which seam
+carries it; the as-built records what it is set to. A number written into a
+design record freezes a tuning as if it were a capability, and every retune
+then reads as drift.
 
 ### `docs/design/` is not `docs/arch/`
 
@@ -49,10 +69,10 @@ trees fail in opposite directions, which is why they are separate:
 | Wrong when | rewritten to match the code | contains anything not yet shipped |
 
 Never place an as-built document in `docs/design/`, and never describe
-unshipped intentions in `docs/arch/`. -> the architecture skill
+unshipped intentions in `docs/arch/`. -> the as-built skill
 
-**The freeze covers a design record's body, and only design records.** The
-status still advances (APPROVED -> IMPLEMENTED -> SUPERSEDED) and Key
+**The freeze covers a record's body, and only design and architecture
+records.** The status still advances (APPROVED -> IMPLEMENTED -> SUPERSEDED) and Key
 Decisions is still append-only -- see Status Transitions. And
 `STYLE-GUIDE.md` / `TEMPLATE.md`, which live in `docs/design/` as reusable
 process guidance rather than descriptions of an intended system, have no
@@ -60,89 +80,71 @@ approval lifecycle and evolve freely.
 
 ---
 
-## Name the Axes of Change (the seams)
+## What stays out of a design record
 
-A design doc's most useful architectural work is to separate what is **stable**
-(the meaning -- decisions and rules in the problem's language) from what is
-**volatile** (the mechanisms -- vendors, wire formats, storage, model ids), and
-to name each volatile axis as one explicit seam.
+A design record is the capability contract. It holds what the system can
+and cannot do, for whom, within what bounds, and what is out of scope. It
+does not hold how:
 
-**That work is phase 3 and its authority is the architecture skill** -- but
-its output lands *here*, in this doc's Architecture Overview, Design, Key
-Decisions, and Rejections sections, and it lands **before approval.** A
-design doc with no named seams is not finished and must not be approved; the
-freeze would make the seams unwritable. A seam first discovered while coding
-was never reviewed, and is drift.
+| Belongs to | Not here |
+|---|---|
+| the architecture record (the architecture skill) | a seam, a port, a policy object, a module, a layer, a use-case signature, a store, a wire format, a vendor, an SDK, a release class, a failure mode and how it is debugged |
+| the as-built (the as-built skill) | a number, a threshold, a window, a limit, a label, a version floor, a "who is shown first" |
 
-The short form, so a doc can be judged without loading phase 3:
+The test for a sentence: if a different mechanism could satisfy it
+unchanged, it is design. "A blocked person is absent by every path" is
+design; "the exposure gate filters after scoring" is architecture; "the
+anonymity bound is six" is the as-built. A design that names a mechanism
+has decided it before anyone reviewed the capability, and the freeze then
+makes the mechanism unreviewable; one that names a number freezes a tuning
+as if it were a capability, and every retune reads as drift.
 
-- **List what is likely to change** (the Change test). Each axis maps to exactly
-  one seam -- a port, a policy, or a parameter -- not a hardcoded value.
-- **Keep vendor/mechanism names out of the core.** A model id, an SDK, or an env
-  var belongs at an edge; say so explicitly.
-- **State each decision once, in the problem's language** (a named policy), not
-  as scattered conditionals.
-- **Do not over-seam (YAGNI).** Introduce a port only where there are, or
-  plausibly will be, two implementations, or it crosses a vendor/process
-  boundary. A single-implementation-forever port is ceremony; call that out in
-  Rejections if it was considered.
-
-A good Key Decisions table row often *is* an axis of change plus the seam chosen
-for it (e.g. "LLM vendor -> CompletionPort, model id supplied at the edge").
+What the design does say about mechanism is nothing, and what it says
+about bounds is that each exists and what constrains it: "sightings are
+kept strictly shorter than mutuals", "the anonymity bound is at least the
+scanner and one other". The architecture record places each bound in a
+seam; the as-built records the value.
 
 ---
 
-## Behaviors and Interfaces (the BDD surface)
+## Behaviors (the BDD surface)
 
-Goals say what success looks like. They do not say what a caller calls.
-Between a goal and a function signature there is a design step, and if the
-doc does not take it, the implementer takes it alone, unreviewed, in phase
-5 -- which is how a repo ends up with a domain, some ports, and every
-workflow living in a CLI handler. **This section is required**, and it is
-the section phases 3, 4, and 5 all read.
-
-One row per behavior. A behavior is something a human (or a calling
-component) does and then observes; its home is one **application-layer
-function** -- a use case -- whose signature the row gives:
+Goals say what success looks like. They do not say what a person does and
+then observes. **This section is required**: one row per behavior, as the
+Given/When/Then that phase 4 will keep as a test, and it is the section
+phases 3, 4 and 5 all read. The architecture record gives each row its
+use-case signature and ports; this record gives each row its meaning.
 
 ```
-| Behavior | Use case (signature) | Ports it needs | Given / When / Then |
-|---|---|---|---|
-| An assertion is judged | `judge_assertion(assertion: Assertion, *, completion: CompletionPort) -> Verdict` | CompletionPort | Given a PR and an assertion, When the judge runs, Then a Verdict names pass/fail and the evidence |
-| An unreadable verdict never fails a clean PR | (same use case; an error path) | CompletionPort | Given a completion that cannot be parsed, When the judge runs, Then the Verdict is `inconclusive`, not `fail` |
+| Behavior | Given / When / Then |
+|---|---|
+| An assertion is judged | Given a PR and an assertion, When the judge runs, Then a Verdict names pass/fail and the evidence |
+| An unreadable verdict never fails a clean PR | Given a judgement that cannot be read, When the judge runs, Then the Verdict is inconclusive, not fail |
 ```
 
 The rules the table must satisfy:
 
-- **Inputs and outputs are domain values** -- the nouns this document
-  defines, never a wire format, an SDK type, or an adapter handle. That is
-  what makes the use cases composable: one can call another, a test can
-  drive one with no handler in front, and the CLI, the HTTP route, and the
-  worker are three thin entry points over the same surface.
-- **Several rows may share one use case.** A happy path and its error
-  paths are scenarios of the same function, as the example shows; they
-  get separate rows because each is a separate kept test. A row whose
-  inputs or outputs differ is a different use case.
-- **Ports arrive as keyword dependencies**, after the values. In phase 2
-  the ports column names the *axis of change* the behavior depends on
-  ("the completion vendor", "the counter store"); phase 3 replaces each
-  with the seam it chose, and the column must then name only seams from
-  this document's seam list. A port that appears here and nowhere else is
-  an axis of change nobody named.
-- **Every noun is in the ubiquitous language.** If the signature says
-  `Verdict`, the Data Model section defines `Verdict` and the code spells
-  it `Verdict`. One concept, one name, everywhere.
-- **The Given/When/Then is the test that will be kept.** Phase 4 writes it
-  as a RED test against exactly this signature, with fakes behind exactly
-  these ports (the testing skill). A row that cannot be written as a
-  failing test is not a behavior; move it to Goals or delete it.
+- **Every noun is in the Domain Language.** If the row says `Verdict`,
+  the Domain Language defines `Verdict`, and the architecture record and
+  the code spell it the same way. One concept, one name, everywhere.
+- **A behavior is observable from outside.** Something a person or a
+  calling component does, and what they then see. What they do not see
+  is a behavior too ("B is told nothing"), and is often the one that
+  matters.
+- **Error paths are rows.** A happy path and what happens when a
+  precondition fails are separate kept tests, so they are separate rows,
+  named so the architecture record can trace each to one use case.
+- **The Given/When/Then is the test that will be kept.** A row that
+  cannot be written as a failing test is not a behavior; move it to Goals
+  or delete it.
 - **Rules are not rows.** "The tax rate for digital goods is zero" is a
-  domain rule the use case calls; it is tested as a pure function and
-  belongs in Design or Data Model, not here. This table is the workflow
-  surface, not the rulebook.
+  domain rule a behavior calls; it belongs in Design, stated once, in the
+  problem's language.
+- **No signature, no port, no store.** Those are the architecture
+  record's use-case surface, which cites these rows by name.
 
-A design doc without this table describes a system nobody can call. It is
-not complete, and it must not be approved.
+A design record without this table describes a system nobody can observe.
+It is not complete, and it must not be approved.
 
 ---
 
@@ -212,28 +214,29 @@ Copy `docs/design/TEMPLATE.md` to a new file following naming conventions:
 | `INTEGRATION.md` | How components connect |
 
 (As-built system documentation is not a design doc -- it belongs in
-`docs/arch/`. See the architecture skill.)
+`docs/arch/`. See the as-built skill. The architecture record is written
+after this one is approved; see the architecture skill.)
 
 ### Fill Sections in Order
 
 **Do not skip sections.** Write them in this order:
 
 - **Header block** -- Status starts as DRAFT, fill date and authors
-- **Overview** -- 2-3 sentences max. If you can't explain it briefly, you don't understand it yet
-- **Goals** -- Testable success criteria. Each goal should be verifiable
-- **Non-Goals** -- Explicit scope boundaries. Think: "what will someone ask for that we should say no to?"
-- **Architecture Overview** -- ASCII diagram of major components and data flow
-- **Design** -- The meat. Break into subsystems, each with responsibilities and interfaces
-- **Behaviors and Interfaces** -- the BDD surface: one row per behavior, naming the use-case function that carries it. See "Behaviors and Interfaces" below. This is where the API is designed; without it the agent designs it while coding, and nobody reviews that
-- **State Machine** -- If the system has lifecycle states (most do), document transitions
-- **Data Model** -- Tables, fields, relationships, constraints
-- **Security Considerations** -- Auth, secrets, attack vectors, mitigations
-- **Operability** -- for anything that will ship to a stage or be published: its release class (the release skill), stages and supported platforms, the likeliest failure modes and how each is debugged, the rollout and the rollback, and what data cannot be rolled back. Phase 7 reads this section; a design that ships nowhere says so in one line
-- **Key Decisions** -- Table of choices with rationale. This is the most valuable section for future readers
-- **Open Questions** -- Be honest about unknowns. This builds trust
-- **Rejections** -- Alternatives considered and explicitly dismissed, each with a one-line reason. Prevents future maintainers from relitigating settled decisions. Distinct from Non-Goals (which is scope) and Key Decisions (which is what was chosen) -- this captures what was *not* chosen and why
-- **Future Considerations** -- Explicitly deferred work
-- **Related Documents** -- Links to other design docs
+- **Overview** -- 2-3 sentences. If you can't explain it briefly, you don't understand it yet
+- **Goals** -- capabilities and constraints, each testable, each with a stable id (`G1`...) so a Behaviors row and the architecture record can cite it
+- **Non-Goals** -- explicit scope boundaries. Think: "what will someone ask for that we should say no to?"
+- **Design** -- the rules and capabilities, one subsection per concern, in the problem's language; what each part is responsible for, never how it is built
+- **Behaviors** -- the BDD surface: one row per behavior, Given/When/Then. See "Behaviors" above
+- **State Machine** -- if the system has lifecycle states (most do), document transitions
+- **Domain Language** -- every noun the Goals, Behaviors and State Machine use, defined once, with its invariants; no tables, no fields, no storage
+- **Parameters** -- every bound the design names, and the constraint on it; no values, no owner (the architecture record places each)
+- **Security Considerations** -- the threats and the constraint each imposes on the system; the mitigation's mechanism is the architecture record's
+- **Ships where** -- one line: the stages and platforms it is for, or "ships nowhere"
+- **Key Decisions** -- table of choices with rationale. This is the most valuable section for future readers
+- **Open Questions** -- be honest about unknowns. This builds trust
+- **Rejections** -- alternatives considered and explicitly dismissed, each with a one-line reason. Distinct from Non-Goals (which is scope) and Key Decisions (which is what was chosen)
+- **Future Considerations** -- explicitly deferred work
+- **Related Documents** -- links to other design and architecture records
 
 ### Apply the Style Guide
 
@@ -241,8 +244,8 @@ This skill is the standard. A repo's `docs/design/STYLE-GUIDE.md`, where one
 exists, is a local copy for human readers; where it differs from this skill,
 this skill wins and the copy is stale. The rules that matter most:
 
-- **Be explicit** -- No "handle errors gracefully"; specify retry counts, timeouts, fallback behavior
-- **Be testable** -- No "fast response times"; specify P95 latency targets
+- **Be explicit** -- No "handle errors gracefully"; state the bound and the failure posture ("retries are bounded; on exhaustion it fails closed") and name the parameter that carries the count. The count itself is a tuned value and lives in the as-built
+- **Be testable** -- No "fast response times"; name the observable and the bound ("resolve latency is measured at P95 and has a ceiling") so a test can read the ceiling from configuration. The target is tuned, not designed
 - **Be unambiguous** -- No "the system"; name the specific component
 - **Prefer tables over prose** -- State machines, decisions, responsibilities all belong in tables
 - **Use ASCII diagrams** -- They work everywhere, including in AI agent prompts
@@ -268,16 +271,15 @@ Run through these checks:
 
 **Structure:**
 
-- [ ] Has all required sections (header, overview, goals, non-goals, design, behaviors and interfaces, key decisions, open questions, rejections)
+- [ ] Has all required sections (header, overview, goals, non-goals, design, behaviors, domain language, parameters, key decisions, open questions, rejections)
 - [ ] Header has status, date, authors
 - [ ] Status uses standard vocabulary (DRAFT / REVIEW / APPROVED / IMPLEMENTED / SUPERSEDED)
 
 **Content quality:**
 
 - [ ] Overview is 2-3 sentences, explains the "why"
-- [ ] Goals are testable and measurable
+- [ ] Goals are testable and measurable, and no goal, rule or decision carries a tuned value that belongs in the as-built
 - [ ] Non-goals explicitly exclude likely scope creep
-- [ ] Architecture has a diagram (ASCII preferred)
 - [ ] State machines have both diagram AND transition table
 - [ ] Key decisions have rationale (not just the choice)
 - [ ] Open questions are honest about unknowns
@@ -296,11 +298,10 @@ Run through these checks:
 - [ ] Could an AI agent implement this without asking clarifying questions?
 - [ ] Could a new team member understand the "why" behind each decision?
 - [ ] Are error cases and edge cases documented?
-- [ ] Are the axes of change named, each mapped to one seam, with vendor/mechanism names kept out of the core? (no single-impl-forever ports)
-- [ ] Does every behavior have a row in Behaviors and Interfaces, with a use-case signature whose inputs and outputs are domain values and whose ports are all in the seam list?
-- [ ] Does every noun in those signatures appear in the Data Model or a glossary, under exactly one name?
-- [ ] Is there a module map (phase 3) that puts each use case in the application layer, each rule in the domain, and names the composition root per runtime?
-- [ ] If it ships, does Operability name the release class, the stages and supported platforms, the failure modes and how each is debugged, the rollout and rollback, and the data that cannot be rolled back?
+- [ ] Does every behavior have a Given/When/Then row, including the error paths and the "is told nothing" paths?
+- [ ] Does every noun in Goals, Behaviors and State Machine appear in the Domain Language under exactly one name?
+- [ ] Is every bound the record names in the Parameters table with its constraint, and does no bound carry a value?
+- [ ] Is the record free of mechanism: no seam, port, signature, store, vendor, release class or failure mode? (those are the architecture record's; see "What stays out of a design record")
 
 ### Review Output Format
 
@@ -343,7 +344,7 @@ When asked to improve an existing doc:
 | Problem | Fix |
 |---------|-----|
 | Missing non-goals | Ask: "what will users request that's out of scope?" |
-| Vague goals | Add numbers: latency targets, error rates, coverage |
+| Vague goals | Name the observable and its bound (a latency ceiling, an error-rate ceiling, a coverage floor); the number is tuned and lives in the as-built |
 | No state machine | Look for lifecycle states in the design section and extract them |
 | Prose-heavy design | Convert responsibilities and transitions to tables |
 | Missing key decisions | Look for implicit choices and make them explicit with rationale |
@@ -356,16 +357,19 @@ When asked to improve an existing doc:
 
 A design doc's value is realized when it drives implementation:
 
-- **Architecture (phase 3):** name the seams the change adds, against the
-   as-built in `docs/arch/`. The output lands in this doc. -> the
-   architecture skill
+- **Architecture (phase 3):** once this record is APPROVED, write
+   `ARCHITECTURE.<name>.md` beside it: the seams, the module map, each
+   Behaviors row's use-case signature, where each bound is carried, and
+   operability, against the as-built in `docs/arch/`. It freezes at its own
+   APPROVED. -> the architecture skill
 - **Planning (phase 3b):** break the design into test-first phases,
    recorded as task files under `tasks/` and ordered in the repo's root
    `TODO_PLAN.md`. -> the planning skill
 - **Behaviors and Code (phases 4-5):** implement RED -> GREEN -> COMMIT
-   against the design doc -- each RED test drives the use case its
-   Behaviors and Interfaces row names, by that signature. **The doc is frozen from APPROVED onward** --
-   see Drift below
+   against both records -- each RED test asserts a Behaviors row's Then,
+   calling the use case the architecture record gives that row, by that
+   signature. **Both records are frozen from APPROVED onward** -- see Drift
+   below
 - **Retrospective (phase 8):** walk the doc against the code and file
    every divergence. Do **not** silently "update the doc to match". -> the
    retrospective skill
@@ -373,13 +377,13 @@ A design doc's value is realized when it drives implementation:
 ### Where this doc sits
 
 ```
-docs/design/DESIGN.feature.md    (what to build and why -- FROZEN at APPROVED)
+docs/design/DESIGN.feature.md         (what it can and cannot do -- FROZEN at APPROVED)
          |
          v
-docs/arch/                       (what already exists -- read, not written, at phase 3)
-         |
+docs/design/ARCHITECTURE.feature.md   (how it intends to -- written against docs/arch/,
+         |                             FROZEN at its own APPROVED)
          v
-tasks/ + TODO_PLAN.md            (how to build it, and in what order)
+tasks/ + TODO_PLAN.md                 (how to build it, and in what order)
          |
          v
 Implementation                    (the code)
@@ -388,8 +392,9 @@ Implementation                    (the code)
 docs/arch/                       (updated at 7a with what actually shipped)
 ```
 
-The design doc answers **what** and **why**. The as-built answers **what is
-actually there**. The tasks answer **how**, and the plan answers **in what
+The design record answers **what** and **why**. The architecture record
+answers **how it intends to**. The as-built answers **what is actually
+there**. The tasks answer **how to get there**, and the plan **in what
 order**.
 
 ---
@@ -447,9 +452,10 @@ decisions made during implementation belong there -- but:
   in a large code diff do not get read. That is exactly how the failure above
   shipped.
 
-Every other section -- Overview, Goals, Non-Goals, Design/Subsystems, Data
-Model, State Machine, Security, Open Questions -- is frozen until a human
-amends it.
+Every other section -- Overview, Goals, Non-Goals, Design, Behaviors,
+State Machine, Domain Language, Parameters, Security, Open Questions -- is
+frozen until a human amends it. The architecture record freezes the same
+way at its own APPROVED.
 
 ---
 
@@ -498,4 +504,6 @@ factual instead of needing a "pending" marker.
 
 **APPROVED is a freeze.** From APPROVED onward the doc changes only by human
 amendment through the design process -- never as a side effect of someone
-implementing it. See Drift above.
+implementing it. See Drift above. **APPROVED is also the gate to phase 3:**
+the architecture record is written against a frozen design, so a design
+still in DRAFT or REVIEW has no architecture record yet.
