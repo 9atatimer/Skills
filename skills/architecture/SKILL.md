@@ -209,6 +209,11 @@ What does not land here: a capability, a scope boundary, a threat, a
 state machine, a domain noun. Those are the design's; cite them, never
 restate them.
 
+The prose rules are the design skill's "Apply the Style Guide": one
+sentence, one job; short; plain words; tables for tradeoffs and decisions;
+origin as a column. An architecture record is read by the people who will
+build it, and it is judged by the same test.
+
 ---
 
 ## Check the seams before the human does
