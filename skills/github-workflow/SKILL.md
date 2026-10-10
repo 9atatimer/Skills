@@ -210,6 +210,29 @@ says so. A PR opened by API or CLI is not pre-filled: reproduce the
 template's headings in the body yourself. No template: write a normal
 descriptive body.
 
+### PR Body: Written for a Human Skimming It
+
+The owner reads the body to decide whether to merge, often on a phone.
+Write for that reader, not as a log of what the session did.
+
+- Open with one or two plain sentences: what the PR does and why.
+- Then short headed sections, typically "What changed", "Not done yet"
+  (anything still pending or unproven), and "Checks". Use only the ones
+  that have content.
+- One fact per bullet, in plain words. A bullet that needs a semicolon
+  or a parenthetical to finish is two bullets.
+- Name files and identifiers only where the reader needs them to act.
+  Never paste the commands that were run, token-handling details, or
+  vault ids into the body; the commits and the issue hold those.
+- Say plainly what is not working or not yet proven. Do not bury it in
+  a "Proof" paragraph at the end.
+
+Observed 2026-10-10, on a private infra repo: a body that opened with
+the credential-mint command line and a one-line-per-file change list
+was unreadable to the owner, and rewriting it cost a round trip. The
+rewrite -- one summary line, then "What changed", "Not done yet",
+"Checks" -- was what it should have been the first time.
+
 ## Naming issues and PRs
 
 Say which kind a number is, every time: `Issue#458`, `PR#459`, never a
