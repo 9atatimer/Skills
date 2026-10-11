@@ -227,12 +227,6 @@ Write for that reader, not as a log of what the session did.
 - Say plainly what is not working or not yet proven. Do not bury it in
   a "Proof" paragraph at the end.
 
-Observed 2026-10-10, on a private infra repo: a body that opened with
-the credential-mint command line and a one-line-per-file change list
-was unreadable to the owner, and rewriting it cost a round trip. The
-rewrite -- one summary line, then "What changed", "Not done yet",
-"Checks" -- was what it should have been the first time.
-
 ## Naming issues and PRs
 
 Say which kind a number is, every time: `Issue#458`, `PR#459`, never a
