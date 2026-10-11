@@ -161,10 +161,10 @@ skill.
     | global agent instructions | `global` | how the human wants agents to behave | every session, everywhere -- the most expensive layer of all |
 
     The cost is per line, not per lesson. In `AGENT.md` and global
-    instructions an entry is the rule in one line, plus a pointer (an
-    issue, a file, a skill) if the reader needs more. History, PR numbers,
-    mechanism and rationale belong in the commit, the issue or the
-    layer below.
+    instructions an entry is the rule in a line or two, plus a pointer (a
+    file, a doc, a skill) if the reader needs more. Keep the one clause of
+    why only when the rule is unsafe to follow without it. History and PR
+    numbers belong in the commit; the rest in the layer below.
 16. **A self-review leaves its epilogue on the PR.** When you run the
     adversarial pass over your own diff (fresh-context finders by defect
     class, a verifier that assumes each finding is wrong, one round), the
