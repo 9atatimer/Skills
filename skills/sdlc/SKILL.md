@@ -159,6 +159,12 @@ skill.
     | the repo's `AGENT.md` | `repo` | that repo -- what an agent must know before it can work safely | every session in the repo; the most expensive repo-local layer |
     | a shared skill | `skill:<name>` | the topic, universally, fleet-wide | any session whose task enters the topic |
     | global agent instructions | `global` | how the human wants agents to behave | every session, everywhere -- the most expensive layer of all |
+
+    The cost is per line, not per lesson. In `AGENT.md` and global
+    instructions an entry is the rule in one line, plus a pointer (an
+    issue, a file, a skill) if the reader needs more. History, PR numbers,
+    mechanism and rationale belong in the commit, the issue or the
+    layer below.
 16. **A self-review leaves its epilogue on the PR.** When you run the
     adversarial pass over your own diff (fresh-context finders by defect
     class, a verifier that assumes each finding is wrong, one round), the
