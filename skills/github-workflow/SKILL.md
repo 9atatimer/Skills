@@ -272,6 +272,10 @@ comment on it sounds authoritative and even when you wrote that comment.
 - Branch from the default branch, per the topology table.
 - Make the change; run the linter, type checker and tests.
 - Stage the verified change and commit with a descriptive message.
+  Stage it by path (`git add <path>...`), never `git commit -a`: in a
+  fresh worktree of a repo that tracks `.husky/`, `npm ci`'s `prepare`
+  step rewrites those hooks, and `-a` sweeps them into an unrelated
+  commit.
 - Push to `origin`; open the PR with a clear description.
 - Land documentation branches quickly: a repo-wide format migration is
   what orphans an in-flight doc branch.
