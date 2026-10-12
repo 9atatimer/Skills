@@ -32,9 +32,12 @@ The tool detects the kind by path and today knows three kinds, not four:
 an `ARCHITECTURE.*.md` under `docs/design/` is judged as a design until
 the tool learns the fourth ([template-tools
 issue#865](https://github.com/Nine-At-A-Time-Media/template-tools/issues/865)).
-Until then, review an architecture record with `--panel seam-review`,
-whose question is the architecture skill's, and read any "missing goals"
-or "no numbers" finding on it as the wrong standard, not a defect.
+Until then, review an architecture record with a `--rubric` supplement
+that says what the document is and what not to ask of it (goals,
+non-goals, a state machine, a domain language, tuned values), and read
+any "missing goals" or "no numbers" finding that gets through as the
+wrong standard, not a defect. The supplement is the same text the
+architecture skill's exit gate states.
 
 Each lens may add skills of its own (the architect applies architecture,
 the operator release). **There is no fallback standard: a required skill
@@ -94,12 +97,24 @@ Read the run banner. It prints the document kind, the skills, and their
 digest -- that is what the panel judged against, and a finding is only
 interpretable against it. If the kind is wrong, the whole review is.
 
+The skills it reads are the repo's provisioned mirror
+(`.claude/skills/<name>/SKILL.md`), which lags a Skills merge until the
+next session start. To judge against a standard merged this session,
+copy that skill's `SKILL.md` from the Skills checkout over the mirror
+before the run; the mirror is gitignored and regenerated, so nothing is
+committed. The banner's digest confirms which text was used.
+
+`--panel` names are repo-defined (`.designomatic.yml`). A repo with no
+panels block has no `design-review` or `seam-review` to name: run
+without `--panel`, which uses the bundled personas, and carry the
+panel's narrowing in a `--rubric` supplement.
+
 | Flag | Use |
 |---|---|
 | `--panel <name>` | Exact. An unknown name fails preflight; panels are never guessed |
 | `--kind concept\|design\|as-built` | Only when the path does not say what the document is |
 | `--rubric PATH` | A repo-local supplement read after the skills: it may narrow them, never override them |
-| `--guidance "..."` | Constrain the editor: "KISS, this is a prototype" |
+| `--rubric PATH` is also the only way to steer the editor in 0.3.0 | There is no `--guidance` flag in designomatic 0.3.0; a run that passes one fails before the first reviewer. Put editor constraints ("KISS, this is a prototype") in the rubric supplement |
 | `--allow-frozen` | Amend an APPROVED record. **Human decision only** -- an agent never passes this |
 
 ---
