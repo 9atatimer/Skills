@@ -226,6 +226,9 @@ Write for that reader, not as a log of what the session did.
   vault ids into the body.
 - Say plainly what is not working or not yet proven. Do not bury it in
   a "Proof" paragraph at the end.
+- A body template handed to other agents carries headings, never results.
+  A pre-written "CI ran on X" was false in nine PRs whose workflows never
+  ran on a pull request.
 
 ## Naming issues and PRs
 
