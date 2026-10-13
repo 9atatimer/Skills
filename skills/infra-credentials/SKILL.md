@@ -149,5 +149,7 @@ set. A consumer absent from the registry is a finding, not a formality.
 - the iac skill -- the authority ladder and where the registry lives
 - the cloudflare-hosting and gcp-ops skills -- what each provider's token or
   service account must be scoped to
+- the lmde-daemons skill -- a laptop daemon's runtime copy of a vault
+  credential in the login Keychain, seeded by a human, never minted there
 - the gates skill -- the scanners and the terraform artifact check that
   keep values out of git

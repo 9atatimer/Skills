@@ -22,7 +22,9 @@ iac
 infra-credentials
 infra-handoff
 knowledge-base
+lmde-daemons
 lmde-dashboards
+lmde-tunnels
 markdown
 planning
 plannotator
