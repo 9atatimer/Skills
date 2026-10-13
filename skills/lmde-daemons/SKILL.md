@@ -36,11 +36,14 @@ A new component copies the closest of these and changes what differs.
 
 ## Component layout
 
-- One component, one tree: code and config under
-  `~/.local/share/<component>`, mutable state under
-  `~/.local/state/<component>`, logs under `~/Library/Logs/<component>`.
-  Nothing else in the home directory, and nothing read from a repo
-  checkout at run time.
+- One component, one tree: code, config and each daemon's own `HOME`
+  under `~/.local/share/<component>`; logs under
+  `~/Library/Logs/<component>`; state that must outlive a reinstall (a
+  probe's canaries) under `~/.local/state/<component>-<part>`. Nothing
+  else in the home directory except a shared store the component reads
+  and never writes, named in its design (the gateway reads the everyday
+  `~/.ollama/models`), and nothing read from a repo checkout at run
+  time.
 - One LaunchAgent per daemon, labelled `com.tds.lmde.<component>` or
   `com.tds.lmde.<component>.<part>`, in the user's `gui/<uid>` domain.
   Never a LaunchDaemon: nothing here runs as root.
