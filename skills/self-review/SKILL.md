@@ -226,6 +226,13 @@ other.
 session's, which is the expensive one. Finders run on a cheaper model, the
 verifier on the strongest available. Probe sub-agent tooling before fanning
 out: dispatch one agent doing one trivial write and confirm it landed.
+Every finder and verifier report is appended to the spawning session's
+context when it hands back: a pass of seven finders and eight verifiers
+delivered fifteen reports to the author at once, and the session hit its
+context ceiling mid-triage (tds-utils PR#467, Skills PR#122). When a pass
+fans out to more than a few agents, run the fan-out under one orchestrator
+(a forked agent, or a workflow script where the harness has one) that
+collates and returns only the ledger table.
 
 ---
 
