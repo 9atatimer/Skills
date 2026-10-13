@@ -44,6 +44,15 @@ whoever is coding the assistant (phase 5). Three more hang under `iac`:
 `/infra-handoff` command that ends an infra change with the block the
 human applies from.
 
+The laptop has two platform skills of its own. `lmde-daemons` carries a
+long-lived LMDE service under launchd: supervision, the Keychain as a
+daemon's runtime copy of a vault credential, never raising a dialog
+unattended, and Seatbelt confinement gated by a probe. `lmde-tunnels`
+carries exposing one off the laptop through a Cloudflare tunnel and
+Access; its edge is terraform under `iac` and `infra-credentials`, and
+its connector is an `lmde-daemons` daemon. Both name the tested
+mechanics in tds-utils `lmde/components/` rather than restating them.
+
 ## How it is consumed
 
 Two components split the job, and the boundary between them matters:
