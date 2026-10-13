@@ -486,7 +486,7 @@ way at its own APPROVED.
 Future Considerations item into scope with a Scope row alone leaves the
 body describing the old behavior: one APPROVED record then carries two
 policies, and some other file becomes the spec of record (tds-utils Issue#410,
-#424). Amend every section the item touches, before the freeze or by
+Issue#424). Amend every section the item touches, before the freeze or by
 human amendment after it.
 
 ---
