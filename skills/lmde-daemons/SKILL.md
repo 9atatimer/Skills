@@ -200,9 +200,12 @@ webhooks) runs under the macOS Seatbelt sandbox (`sandbox-exec`).
   literal or the narrowest subpath, with a comment saying which step
   wanted it; leave the rest denied; iterate until the workload passes
   with a trace of only unneeded denials. Re-run it after a vendor or
-  macOS upgrade. Prior art for the shape is Chromium's seatbelt profiles;
-  Apple's bundled `system.sb` is importable but a private interface that
-  admits more than a daemon needs.
+  macOS upgrade. A trace justifies an allow; it does not authorize one:
+  every addition lands through a reviewed PR that quotes the denial, and
+  one that widens what the design named needs the owner's ruling. Prior
+  art for the shape is Chromium's seatbelt profiles; Apple's bundled
+  `system.sb` is a private interface that admits more than a daemon
+  needs, so a profile never imports it (ruled 2026-10-13).
 - A grant to the daemon's binary covers its own tree (a Homebrew keg),
   never the prefix around it: a shared `bin/` means the launcher refuses
   to start rather than hand the engine a user-writable prefix.
