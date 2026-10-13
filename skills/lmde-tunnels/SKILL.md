@@ -169,8 +169,11 @@ All four, with the date, on the PR. The consumer credential goes to
 | credentialed, a path off the list | 404 from the catch-all |
 | credentialed, an allow-listed path plus a suffix | 404: the regex is anchored |
 
-Then `terraform plan` reports no changes, and the laptop's healthcheck
-reports the drift check OK.
+Then `terraform plan` reports no changes, the laptop's healthcheck
+reports the drift check OK, and the sandboxed service's probe passes in
+probe-only mode on the live laptop (the lmde-daemons skill, Confining
+untrusted input), so the edge is verified over a service that is
+confined, not only reachable.
 
 ## What an agent may and may not do
 
