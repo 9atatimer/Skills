@@ -166,8 +166,9 @@ skill.
     why only when the rule is unsafe to follow without it. History and PR
     numbers belong in the commit; the rest in the layer below.
 16. **A self-review leaves its epilogue on the PR.** When you run the
-    adversarial pass over your own diff (fresh-context finders by defect
-    class, a verifier that assumes each finding is wrong, one round), the
+    adversarial pass over your own diff (a fresh-context lens panel that
+    decides together, one verifier that assumes each finding is wrong, one
+    round), the
     ledger -- scope, adapter and models, each finding with its verdict and
     disposition, rebuttals awaiting the human's judgement, `upheld k of n`
     -- is posted as ONE comment on the PR alongside the fix, or the review
