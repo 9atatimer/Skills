@@ -511,7 +511,7 @@ magnitudes are soft, and vendor numbers are marked as such.
   Multiagent Debate" (2023), https://arxiv.org/abs/2305.14325 . A blind
   first round, as in the Delphi method, keeps the first view from
   anchoring the rest.
-- **Silos lose the shared view:** on 9atatimer/tds-internal PR#235
+- **Silos lose the shared view:** on a private infrastructure PR
   (2026-10-14) two single-class finders wrote up the same sentence apart,
   a third reported nothing about it, and the verifier saw one row alone;
   the panel had no decision to hand on. Skills issue#124.
