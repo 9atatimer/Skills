@@ -323,12 +323,13 @@ The author builds one table from every round-1 report, clerically:
   never filled by the author's own review.
 
 Round 2, once: each panelist gets the table and the round-2 brief, and
-returns a stance on every row. A row's status counts the panelists who
-did not raise it and disagree:
+returns a stance on every row. A row's status weighs every panelist that
+took a stance -- `ocr` takes none, so it is not counted. Its holders are
+the panelists who raised it, agree or refine; the rest disagree:
 
-- **consensus** -- none disagree. Refinements travel with the row.
-- **minority** -- all of them disagree.
-- **contested** -- some, not all, disagree.
+- **consensus** -- no panelist disagrees. Refinements travel with the row.
+- **minority** -- those who disagree outnumber its holders.
+- **contested** -- someone disagrees, but no more than hold it.
 
 Every row reaches the verifier whatever its status; the status, the
 refinements and the dissent travel with it.
