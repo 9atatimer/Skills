@@ -43,5 +43,7 @@ export function setup(dir) {
     base,
     head,
     finding: `calc.js:2 | high | add() subtracts its arguments | evidence: "return a - b;"`,
+    // The panel-model brief (Skills issue#124) takes the whole decision table.
+    findings: `calc.js:2 | correctness | high | add() subtracts its arguments | evidence: "return a - b;" | consensus (2 of 2 agree)`,
   };
 }
