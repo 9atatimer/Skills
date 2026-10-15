@@ -127,17 +127,19 @@ domain code is a leak.
 
 - **Read the distribution, not a vendor's summary field.** A decision
   model may return a "confidence" beside its probabilities whose meaning
-  is undocumented (Clef's is not the top probability). The core derives
-  its own confidence from the per-option probabilities and thresholds
-  that; the vendor field is logged, never compared.
+  is undocumented. The core derives its own confidence from the
+  per-option probabilities and thresholds that; the vendor field is never
+  compared.
 - **A rubric score is an expectation.** The expected level of a score
   question can fall between two levels. A band test asks how much
   probability mass lies inside the band, not only where the expectation
   lands.
-- **Ask every question of one state in one call.** Cost follows the
-  state's tokens, not the number of questions, so a schema that asks all
-  of a node's judgements at once costs about what one does. Splitting
-  them across calls multiplies the bill for nothing.
+- **Ask the questions of one state together.** Every call pays to read
+  the state again, so splitting one state's judgements across calls
+  multiplies its cost. Questions are not free -- they are input tokens,
+  they share the context window with the state, and the provider caps how
+  many one call may carry -- so a schema too large for one call is split
+  by the client against the provider's tested limits, never by guesswork.
 - **Wording is a parameter under test.** A vague question gets answers
   near the middle of its range. Instructions and option descriptions are
   variants measured against the eval set, the way adapters are -- never
@@ -230,7 +232,7 @@ domain code is a leak.
 | One blended accuracy number | Hides the rare class that matters | Per question, per class |
 | A decision model asked to extract text | It scores options; it does not write | Split the job: decision here, extraction elsewhere |
 | Thresholding a vendor's "confidence" field | Its meaning is undocumented and can move with a model revision | Confidence derived in the core from the probabilities |
-| One call per question about the same state | Pays to read the state once per question | Every question of that state in one schema |
+| One call per question about the same state | Pays to read the state once per question | The state's questions together, split only at the provider's tested limits |
 
 ## Radar
 
