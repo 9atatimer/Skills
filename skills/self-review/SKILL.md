@@ -1,13 +1,16 @@
 ---
 name: self-review
-description: "Reviewing your own diff before a human or a gate reviewer reads it: a fresh-context panel that reviews holistically through distinct lenses, a blind first round and a shared decision, evidence tiers, one verifier over the panel's decision, one round, triage without sycophancy, and the ledger posted on the PR. Defines the ReviewEngine port and its three adapters (Open Code Review bound to whatever endpoint the machine provides, Open Code Review delegate mode, fresh-context sub-agents) so the engine is a binding, not a decision. Load before opening any PR a human or gate reviewer will read, and whenever asked to review your own work. Skip for triaging an external reviewer's comments (gates) and for design records (designomatic)."
+description: "Reviewing your own diff before a human or a gate reviewer reads it: a fresh-context panel that reviews holistically through distinct lenses, a blind first round and a shared decision, evidence tiers, one verifier over the panel's decision, one round, triage without sycophancy, and the ledger posted on the PR. Defines the ReviewEngine port and its three adapters (Open Code Review bound to whatever endpoint the machine provides, Open Code Review delegate mode, fresh-context sub-agents) so the engine is a binding, not a decision. Runs on the branch before the PR is opened; once a PR is open the pass never runs on it again unless the human explicitly asks. Load before opening any PR a human or gate reviewer will read, and when the human asks you to review your own work. Skip for triaging an external reviewer's comments (gates) and for design records (designomatic)."
 ---
 
 # SKILL: self-review -- the adversarial pass on your own diff
 
 > **Purpose:** catch what the author cannot see before anyone else spends
 > attention on it, at a cost that does not depend on Copilot or Codex quota.
-> **When:** before every PR a human or gate reviewer is asked to read. The
+> **When:** before every PR a human or gate reviewer is asked to read, and
+> before that PR exists: the pass, its fixes and its one re-review finish
+> on the branch, and the PR opens on the reviewed head. Once a PR is open
+> this pass never runs on it again unless the human explicitly asks. The
 > gates skill makes the pass mandatory; this skill says how to run it.
 > **Companion skills:** gates (Zero Unreviewed Code, triaging external
 > reviewers, the PR loop), designomatic (the same idea over a design
@@ -22,6 +25,12 @@ description: "Reviewing your own diff before a human or a gate reviewer reads it
   the change, the intent and the SHAs, and reads the files itself. It never
   sees your reasoning. A reviewer handed the author's context reviews no
   better than the author does.
+- **Before the PR, never on it.** The whole pass runs on the branch
+  before `gh pr create`; the epilogue is posted the moment the PR opens.
+  A push to an open PR -- answering Copilot, a human reviewer, CI -- gets
+  no self-review: the PR's reviewers are its review (the gates skill).
+  The human saying "self-review this PR" is the only thing that runs the
+  pass on an open PR.
 - **Precision is the failure, not recall.** Most comments LLM reviewers
   write are noise. A finding without a location and evidence is not a
   finding.
@@ -63,6 +72,11 @@ description: "Reviewing your own diff before a human or a gate reviewer reads it
 
 ## Invariants
 
+- **The pass completes before the PR opens.** Base, head, fixes and the
+  one re-review are all on the branch when `gh pr create` runs, so the
+  head the PR opens on is the head the ledger names. After that the pass
+  is spent: a later push to that PR is reviewed by the PR's reviewers,
+  never by this pass, unless the human explicitly asks for one.
 - **The brief carries intent and SHAs, never reasoning.** Nothing from your
   session goes into a brief beyond the template below.
 - **Round 1 is blind; round 2 is shared, once.** No panelist sees
@@ -395,12 +409,16 @@ command output.
 
 ## Re-review
 
-Only when at least one fix is load-bearing, in the gates skill's sense
-(Spend Review Turns on Load-Bearing Fixes): it changes runtime behavior, a
-contract, a security property, a test's verdict, or what a rule an agent
-or gate executes says. Wording, typos, comments, naming, formatting and the
-accuracy of human-read documentation are hygiene: fix them, record them in
-the ledger as fixed (SHA), and run no re-review for them.
+Only before the PR is opened, and only when at least one fix is
+load-bearing, in the gates skill's sense (Spend Review Turns on
+Load-Bearing Fixes): it changes runtime behavior, a contract, a security
+property, a test's verdict, or what a rule an agent or gate executes says.
+Wording, typos, comments, naming, formatting and the accuracy of
+human-read documentation are hygiene: fix them, record them in the ledger
+as fixed (SHA), and run no re-review for them. A fix pushed to an open PR
+-- for Copilot, a human reviewer or CI -- never earns a self-review
+re-review; the external reviewer's re-review covers it, when the fix is
+load-bearing (the gates skill).
 
 At most one, over `<last reviewed head>..<new head>`, reporting high and
 critical only. The re-review is a panel of one: the panelist brief over
@@ -434,8 +452,9 @@ agentic reviewer).
 
 ## The epilogue
 
-One PR comment, posted after triage, with the fixes already pushed. Never a
-running narration, never a promise of fixes not yet pushed.
+One PR comment, posted when the PR opens: triage is done and the fixes
+are already on the branch the PR was opened from. Never a running
+narration, never a promise of fixes not yet pushed.
 
 - The change reviewed (base and head SHAs).
 - The adapter for each file class, and the model for each role
@@ -468,6 +487,10 @@ confirm it finds it.
   brief, you ran the pass, and you triaged the results. Everywhere else
   the agentic and human review rungs run unchanged, and the epilogue is partly for them: they see
   what was caught and fixed.
+- **It is not a response to review feedback.** Comments from Copilot,
+  Codex or a human on an open PR are triaged by the gates skill
+  (Automated Review Response), never by running this pass again. Running
+  it on an open PR takes an explicit instruction from the human.
 - **It is not the gate reviewer.** An engine the repo runs in CI, outside
   any author's session, is a different thing; whether one may stand in for
   Copilot is the gates skill's call, not this one's.

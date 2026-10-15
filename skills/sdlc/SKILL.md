@@ -172,7 +172,9 @@ skill.
     ledger -- scope, adapter and models, each finding with its verdict and
     disposition, rebuttals awaiting the human's judgement, `upheld k of n`
     -- is posted as ONE comment on the PR alongside the fix, or the review
-    is invisible to every later reader. A self-review never satisfies Zero
+    is invisible to every later reader. The pass runs on the branch BEFORE
+    the PR is opened; an open PR is never self-reviewed again unless the
+    human asks -- its reviewers review it. A self-review never satisfies Zero
     Unreviewed Code, except on a documentation-only PR, where it is the
     whole review: no Copilot, no Codex (design and architecture drafts in
     phases 2 and 3 get designomatic instead). A review turn of any kind is
@@ -270,7 +272,7 @@ one-pass the tests. Do not.
 | 3b Planning | `tasks/`, ordered in `TODO_PLAN.md` | a phased, test-first route | the planning skill |
 | 4 Behaviors | the next behavior, RED | it fails because the code does not exist | the testing skill + the stack-specific one |
 | 5 Code | source | GREEN | the coding skill + the language style skill |
-| 6 Gates | scanners, CI, review | green and approved | the gates skill; review your own diff before the PR -> the self-review skill |
+| 6 Gates | scanners, CI, review | green and approved | the gates skill; review your own diff before opening the PR, never on an open one -> the self-review skill |
 | 7 Release | deploy / publish / tag; what its class owes | shipped, proven, reversible, debuggable | the release skill |
 | 7a As-built | `docs/arch/` + diagrams, every tuned value per stage | as-built matches reality | the as-built skill |
 | 8 Retrospective | drift issues, lessons, next plan | the loop is closed | the retrospective skill |

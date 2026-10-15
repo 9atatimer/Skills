@@ -158,7 +158,9 @@ An author cannot review their own diff: you re-read your intent rather
 than the code. **Run the self-review pass before every PR a human or gate
 reviewer is asked to read**, not when you feel like a second opinion: an
 author who decides case by case decides "not this one" on the diffs that
-most need it. How to run it -- the fresh-context lens panel, its blind
+most need it. The pass, its fixes and its one re-review complete on the
+branch BEFORE the PR is opened; the epilogue is posted when the PR opens,
+as its record. How to run it -- the fresh-context lens panel, its blind
 round and shared decision, evidence tiers, the one verifier, one round,
 triage and the epilogue on the PR -- is the self-review skill.
 
@@ -174,11 +176,17 @@ through it, not the first pair of eyes.
   reviewer. Everywhere else the agentic and human review rungs run
   unchanged, and the epilogue exists partly so those
   reviewers can see what was already caught and fixed.
+- **Once a PR is open, never run the self-review pass on it** -- not on
+  a follow-up push, not in answer to a reviewer's comment, not to turn
+  `review-settled` green. The open PR's review is the agentic and human
+  rungs, and feedback on it is triaged by Automated Review Response
+  below. The one exception is the human explicitly asking for a
+  self-review of the open PR.
 
 ## Spend Review Turns on Load-Bearing Fixes (CRITICAL)
 
 Every review turn -- a Copilot pass, a Codex pass a human summons, a
-self-review re-review -- costs quota and wall-clock time. Ask for the next
+self-review re-review before the PR opens -- costs quota and wall-clock time. Ask for the next
 one only when the push since the last one changed what the change does.
 "I pushed" is not a reason to ask; "I pushed a fix a second look could
 find a new defect in" is.
@@ -864,7 +872,8 @@ include it in the next commit; if not, skip.
 ## Related
 
 - the self-review skill -- the adversarial pass on your own diff that
-  runs before every PR
+  runs before every PR is opened, and never on one already open unless
+  the human asks
 - the github-workflow skill -- branch, push, and PR mechanics; the remote
   topology table this skill's `--repo` targets refer to; issue anatomy for
   the `pr-todo` issues you file

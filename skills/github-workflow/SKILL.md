@@ -102,6 +102,10 @@ never close and reopen one.
   succeeds and the commits reach no PR and no default branch. If `MERGED`,
   cut a new branch from the default branch and open a new PR; never
   force-push, never reopen.
+- Self-review before `gh pr create`, never after: the adversarial pass
+  over your own diff (the self-review skill) runs on the branch, the PR
+  opens on the head it reviewed, and its epilogue is the first comment.
+  Nothing pushed to an open PR gets a self-review unless the human asks.
 - Open the PR ready-for-review, never as a draft and never with `[WIP]`:
   Copilot does not review drafts, so the review step never fires.
 - Title it as a conventional-commit summary: `feat(scope): short description`.
@@ -180,7 +184,9 @@ its own PR only when all six hold on the current head:
 Anything short of all six is not "almost". A red `review-settled` that the
 repo requires means a review is owed on this head: re-request the reviewer
 if the latest push carries a load-bearing fix, resolve every thread, post
-the self-review epilogue, then wait for the status. A head red only from a
+the self-review epilogue if the PR still lacks one (the pass itself ran
+before the PR opened; never re-run it on an open PR), then wait for the
+status. A head red only from a
 hygiene-only tail, or a documentation-only PR, goes to the human to land.
 A human with write access may comment `tedium land` at any time; that is
 the human merge decision. `tedium dryrun` is unrestricted: it builds on
