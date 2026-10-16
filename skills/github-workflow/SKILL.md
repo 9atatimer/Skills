@@ -266,6 +266,13 @@ Title the defect, not the patch: `plan reports "Max cycles: 5" regardless
 of config or profile`, not `Change --max-cycles default to None`. One
 defect per issue; batch only trivially related nits.
 
+Evidence about current code names the commit it was read at (`at
+origin/main 448af82`). Other sessions merge while you write: on
+2026-10-16 a PR merged midway through cutting 115 UI issues and made
+the "today" line of ten of them false. Before handing a batch off,
+fetch the default branch again and re-check the claims that its new
+commits touched.
+
 When you pick an issue up, re-derive the fix from the current design. The
 issue proves what is broken; it does not say what to build, even when a
 comment on it sounds authoritative and even when you wrote that comment.
@@ -323,6 +330,18 @@ ANSI stripped.
 
 When an event has already delivered a comment body through the
 subscription stream, do not re-fetch it; reply from the comment ID.
+
+Creating issues in bulk through the MCP tools:
+
+- A tool timeout is not a failure. The create can land after the
+  timeout, and a blind retry files a duplicate. List the newest issues
+  before retrying.
+- Issue numbers interleave with other sessions' issues and PRs, so a
+  batch is not sequential. Record the number each call returns; never
+  predict it.
+- A create that sets a parent fails with "failed to resolve label" when
+  a label does not exist yet. A create without a parent makes the label.
+  File the first issue of a new label without a parent, then attach it.
 
 ## Commit Messages
 
