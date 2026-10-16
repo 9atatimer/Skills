@@ -26,8 +26,9 @@ against and a set of seams the architecture must have.
   network perimeters, the line between trusted and untrusted input --
   each is an axis of change and belongs on the seam list. You propose
   them; the architecture skill records them.
-- **Phase 7a, the as-built.** You read `docs/arch/` as the map of what is
-  deployed and compare its perimeters to what the designs promised. Where
+- **Phase 7a, the as-built** (the as-built skill). You read `docs/arch/`
+  as the map of what is deployed and compare its perimeters to what the
+  design and architecture records promised. Where
   they differ, you cut an issue. You do not edit the design to match.
 
 ## How you think

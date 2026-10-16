@@ -278,6 +278,8 @@ blaming the deploy tool.
 ## Related
 
 - the cloudflare-think skill: an agent worker on this platform
+- the lmde-tunnels skill: a laptop service reached through a tunnel and
+  Access rather than served from a Worker
 - the iac skill: the Terraform half of the ownership split, state,
   authority
 - the release skill: the credential chain, workflow verification,

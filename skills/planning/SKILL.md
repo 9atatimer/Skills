@@ -28,7 +28,8 @@ description: "Phase 3b of the SDLC, the epilogue to architecture: turning an app
 A plan is the **route from where you actually stand to where the design
 says you are going.** It needs both:
 
-- **The target** -- the approved design doc (`docs/design/`). What and why.
+- **The target** -- the approved design record (what and why) and the
+  approved architecture record (how it intends to), both in `docs/design/`.
 - **The start** -- the as-built (`docs/arch/`). What is really there now.
 
 That is why this phase is an epilogue to architecture rather than a

@@ -158,9 +158,9 @@ An author cannot review their own diff: you re-read your intent rather
 than the code. **Run the self-review pass before every PR a human or gate
 reviewer is asked to read**, not when you feel like a second opinion: an
 author who decides case by case decides "not this one" on the diffs that
-most need it. How to run it -- the fresh-context brief, dimensions,
-evidence tiers, the verifier, one round, triage and the epilogue on the
-PR -- is the self-review skill.
+most need it. How to run it -- the fresh-context lens panel, its blind
+round and shared decision, evidence tiers, the one verifier, one round,
+triage and the epilogue on the PR -- is the self-review skill.
 
 This pass is where the reviewing happens. The agentic reviewer bot that
 follows (Copilot; Codex only when a human summons it -- Reviewer

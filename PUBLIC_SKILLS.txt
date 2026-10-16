@@ -4,6 +4,7 @@
 # conscious decision to publish it. Add the directory name (one per line,
 # # comments ignored) in the same commit that adds the skill.
 architecture
+as-built
 aws-ops
 cdp-browser
 chrome-mcp
@@ -21,7 +22,9 @@ iac
 infra-credentials
 infra-handoff
 knowledge-base
+lmde-daemons
 lmde-dashboards
+lmde-tunnels
 markdown
 planning
 plannotator

@@ -184,6 +184,7 @@ Shipping code is not the same as shipping what was designed.
 ## Related
 
 - the design skill -- the frozen doc this phase walks against
-- the architecture skill -- phase 7a, which records what this phase accuses
+- the as-built skill -- phase 7a, which records what this phase accuses
+- the architecture skill -- phase 3, the second frozen record this phase walks
 - the todo-plan skill -- where lessons and open drift live
 - the github-workflow skill -- issue anatomy for the drift issues you cut

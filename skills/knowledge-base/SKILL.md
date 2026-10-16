@@ -173,7 +173,7 @@ optional; the ones teams skip are deletion and eval, and both hurt later.
 | Phase | What lands |
 |---|---|
 | Design | The corpus model and its tenancy rule; the citation promise; the hobby-or-commercial answer with the extractor it implies; retention and deletion; what happens when the answer is not in the corpus |
-| Architecture | The four ports named in `docs/arch/`; the process boundary for extraction; the reindex key (extractor version plus embedding model); radar rows proposed |
+| Architecture | The four ports named in the architecture record; the process boundary for extraction; the reindex key (extractor version plus embedding model); radar rows proposed |
 | Behaviors | The contract suite both extraction adapters must pass; the labeled question set that defines retrieval quality; fixtures for born-digital text, a scan, and a table-heavy page |
 | Code | Domain, then the chosen extraction adapter, then embedding, index, and the query use case. The other extractor is written only when needed, and costs one file |
 | Gates | Recall and MRR floors in CI; contract suite green against every adapter; ingest-time secret and PII scanning |

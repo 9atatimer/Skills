@@ -52,7 +52,7 @@ export const CASES = [
     "Make this markdown file ASCII-only.", // markdown
     "CI failed on my PR with a lint error.", // gates
     "Should we adopt this new library? Check the radar.", // tech-radar
-    "Record the as-built for the component we just shipped.", // architecture
+    "Record the as-built for the component we just shipped.", // as-built
     "Run the retrospective for the feature that landed.", // retrospective
     "Turn the approved design into a task plan.", // planning
   ]),
@@ -103,5 +103,53 @@ export const CASES = [
     "Break the approved design into phases.", // planning
     "Turn my rough idea into a statement of work.", // concept
     "Walk the frozen design against what shipped.", // retrospective
+  ]),
+  ...yes("lmde-daemons", [
+    "Add a LaunchAgent so my local webhook listener starts at login and restarts if it crashes.",
+    "My launchd service pops up Keychain password dialogs every time it restarts. How do I stop that?",
+    "Where should a laptop daemon keep the API token it needs at login, when 1Password is still locked?",
+    "Write the setup.sh install and uninstall for a new LMDE component.",
+    "HAProxy under launchd tops out at about 100 connections. Why?",
+    "Run the local model server under sandbox-exec so it cannot read ~/.ssh.",
+    "My launcher script retries in a loop when its config file is missing. What should it do instead?",
+    "cloudflared started a tunnel I did not expect when its token was empty. How should its launcher prevent that?",
+    "I'm adding a second ollama instance on the laptop. How do I prove the everyday one is left alone?",
+    "The sandbox profile looks right to me. Can the launcher skip the probe and just start the service?",
+  ]),
+  ...no("lmde-daemons", [
+    "Add the Access application and service token for the laptop tunnel's hostname.", // lmde-tunnels
+    "Build a Grafana dashboard for the gateway's request counts.", // lmde-dashboards
+    "Mint a new Cloudflare API token for the deploy workflow.", // infra-credentials
+    "Write the GitHub Actions workflow that deploys the worker to nonprod.", // release
+    "Set up a Cloudflare Worker with a KV binding.", // cloudflare-hosting
+    "Restructure this bash script into header, helpers and a main function.", // style-bash
+    "Should we add Redis as a dependency? Check the radar first.", // tech-radar
+    "Plan the terraform for a new R2 bucket.", // iac
+    "Rotate the service-account token the CI workflow reads from 1Password.", // infra-credentials
+    "Make the tunnel's ingress admit only /v1/models.", // lmde-tunnels
+  ]),
+  ...yes("lmde-tunnels", [
+    "Expose my laptop's local API to GitHub Actions through a Cloudflare tunnel.",
+    "Write the cloudflared ingress rules so only /v1/chat/completions gets through.",
+    "Add a second consumer with its own service token to the laptop gateway's Access policy.",
+    "Revoke the CI caller's access to the endpoint served from my laptop.",
+    "Callers of my laptop endpoint get a 524 after 100 seconds on a cold model load. What should the route do?",
+    "Which 1Password vault should the tunnel's run token go in?",
+    "Can the Access policy in front of my laptop tunnel just use any_valid_service_token?",
+    "What hostname should the new laptop webhook endpoint get, and does it need a nonprod tier?",
+    "How do I check that the tunnel's origin port still reaches the proxy layer and not some other listener?",
+    "The human just applied the new tunnel module. What do I verify, and how?",
+  ]),
+  ...no("lmde-tunnels", [
+    "Give the cloudflared LaunchAgent a throttled restart on crash.", // lmde-daemons
+    "Deploy the Nuxt app to Cloudflare Workers on a custom domain.", // cloudflare-hosting
+    "Gate the preview Worker's hostname with Cloudflare Access.", // cloudflare-hosting
+    "Move this terraform root to a new directory with an empty plan.", // iac
+    "Keep the daemon's runtime credential in the Keychain without ever raising a dialog.", // lmde-daemons
+    "Add a GitHub secret for the 1Password service account.", // infra-credentials
+    "Diagnose why the deploy workflow's op:// reference resolves empty.", // release
+    "Add an R2 bucket for the archive in terraform.", // iac
+    "Sandbox the local inference server so it cannot read my home directory.", // lmde-daemons
+    "Wire a Think chat assistant into the product's worker.", // cloudflare-think
   ]),
 ];

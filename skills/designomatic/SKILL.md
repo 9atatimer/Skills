@@ -24,8 +24,20 @@ themselves**, as provisioned on the machine, chosen by the document's kind:
 | Kind | Where it lives | Judged as | Skills |
 |---|---|---|---|
 | Concept | `docs/concepts/` | unrestricted -- never asked for goals, seams, or feasibility, never converged | sdlc, concept, markdown |
-| Design | `docs/design/` (and anything unplaced) | aspirational what-and-why, with load-bearing architecture | sdlc, design, architecture, markdown |
-| As-built | `docs/arch/` | pure pragmatism -- only what is deployed | sdlc, architecture, markdown |
+| Design | `docs/design/DESIGN.*.md` (and anything unplaced) | aspirational what-and-why: capabilities and constraints, no mechanism, no numbers | sdlc, design, markdown |
+| Architecture | `docs/design/ARCHITECTURE.*.md` | how it intends to: seams, module map, use-case surface, bounds placed, operability; no capability the design did not grant | sdlc, architecture, markdown |
+| As-built | `docs/arch/` | pure pragmatism -- only what is deployed, every tuned value | sdlc, as-built, markdown |
+
+The tool detects the kind by path and today knows three kinds, not four:
+an `ARCHITECTURE.*.md` under `docs/design/` is judged as a design until
+the tool learns the fourth ([template-tools
+issue#865](https://github.com/Nine-At-A-Time-Media/template-tools/issues/865)).
+Until then, review an architecture record with a `--rubric` supplement
+that says what the document is and what not to ask of it (goals,
+non-goals, a state machine, a domain language, tuned values), and read
+any "missing goals" or "no numbers" finding that gets through as the
+wrong standard, not a defect. The supplement is the same text the
+architecture skill's exit gate states.
 
 Each lens may add skills of its own (the architect applies architecture,
 the operator release). **There is no fallback standard: a required skill
@@ -68,8 +80,8 @@ Do **not** reach for it when:
   cut a drift issue instead. -> the design skill
 - You want code reviewed. That is the gates skill.
 - You want to know what a document must contain. That is the concept,
-  design, and architecture skills -- which are also exactly what the panel
-  judges against, so reading them is never wasted.
+  design, architecture and as-built skills -- which are also exactly what
+  the panel judges against, so reading them is never wasted.
 
 ---
 
@@ -85,12 +97,24 @@ Read the run banner. It prints the document kind, the skills, and their
 digest -- that is what the panel judged against, and a finding is only
 interpretable against it. If the kind is wrong, the whole review is.
 
+The skills it reads are the repo's provisioned mirror
+(`.claude/skills/<name>/SKILL.md`), which lags a Skills merge until the
+next session start. To judge against a standard merged this session,
+copy that skill's `SKILL.md` from the Skills checkout over the mirror
+before the run; the mirror is gitignored and regenerated, so nothing is
+committed. The banner's digest confirms which text was used.
+
+`--panel` names are repo-defined (`.designomatic.yml`). A repo with no
+panels block has no `design-review` or `seam-review` to name: run
+without `--panel`, which uses the bundled personas, and carry the
+panel's narrowing in a `--rubric` supplement.
+
 | Flag | Use |
 |---|---|
 | `--panel <name>` | Exact. An unknown name fails preflight; panels are never guessed |
 | `--kind concept\|design\|as-built` | Only when the path does not say what the document is |
 | `--rubric PATH` | A repo-local supplement read after the skills: it may narrow them, never override them |
-| `--guidance "..."` | Constrain the editor: "KISS, this is a prototype" |
+| `--rubric PATH` is also the only way to steer the editor in 0.3.0 | There is no `--guidance` flag in designomatic 0.3.0; a run that passes one fails before the first reviewer. Put editor constraints ("KISS, this is a prototype") in the rubric supplement |
 | `--allow-frozen` | Amend an APPROVED record. **Human decision only** -- an agent never passes this |
 
 ---
@@ -106,6 +130,14 @@ interpretable against it. If the kind is wrong, the whole review is.
 
 **A run that reports failure usually has its output on disk.** Check the run
 directory before concluding the work is lost.
+
+**A `cf@gw:` seat spends the Cloudflare AI Gateway's prepaid credits, not
+subscription quota.** The seat is chosen per agent, so one panel mixes it
+with `@cli` seats (template-tools `design-review-gateway`). A Failed run
+whose first line says 429 hit the gateway's spend-limit rule for the
+window; 402 means the account's credit balance is at zero. Neither is the
+agent's to lift: report it. Provisioning and the model-id grammar are the
+tool's runbook (template-tools `docs/ops/designomatic.md`).
 
 **The panel's output is a proposal, not an approval.** designomatic cannot
 mark a document APPROVED and neither can you -- only a human moves that

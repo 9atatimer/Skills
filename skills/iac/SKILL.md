@@ -291,8 +291,10 @@ Rules that hold across all three:
   produces the block that ends a change
 - the cloudflare-hosting skill: what wrangler owns and what Terraform
   owns on that platform, token scopes, Access
+- the lmde-tunnels skill: the edge in front of a laptop service (tunnel,
+  ingress allow-list, Access, connector and caller vaults)
 - the release skill: the vault credential chain and deploy workflows
   that consume what these modules create
-- the architecture skill: the as-built that records what is deployed
+- the as-built skill: the as-built that records what is deployed
 - the gates skill: the law governing any change to a gate, including a
   protected environment or a plan check

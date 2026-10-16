@@ -17,13 +17,13 @@ and is the one to load first when unsure:
 |---|---|
 | 1 Concept | `concept` |
 | 2 Design | `design` |
-| 3 Architecture (intended) | `architecture` |
+| 3 Architecture | `architecture` |
 | 3b Planning | `planning` (+ `todo-plan`) |
 | 4 Behaviors | `testing` + `testing-{node,nuxt,python}` |
 | 5 Code | `coding` + `style-{bash,python,typescript}` |
 | 6 Gates | `gates` |
 | 7 Release | `release` |
-| 7a Architecture (as-built) | `architecture` |
+| 7a As-built | `as-built` |
 | 8 Retrospective | `retrospective` |
 
 `github-workflow`, `markdown`, `tech-radar`, `wrapup` (the session
@@ -43,6 +43,15 @@ whoever is coding the assistant (phase 5). Three more hang under `iac`:
 `release` skill carries consuming them). `infra-handoff` is the
 `/infra-handoff` command that ends an infra change with the block the
 human applies from.
+
+The laptop has two platform skills of its own. `lmde-daemons` carries a
+long-lived LMDE service under launchd: supervision, the Keychain as a
+daemon's runtime copy of a vault credential, never raising a dialog
+unattended, and Seatbelt confinement gated by a probe. `lmde-tunnels`
+carries exposing one off the laptop through a Cloudflare tunnel and
+Access; its edge is terraform under `iac` and `infra-credentials`, and
+its connector is an `lmde-daemons` daemon. Both name the tested
+mechanics in tds-utils `lmde/components/` rather than restating them.
 
 ## How it is consumed
 

@@ -15,10 +15,10 @@ approved artifacts into executable claims, and there are **three distinct
 sources**. A suite drawn from only some of them has a predictable blind
 spot.
 
-**Use-case behaviors** come from the design doc's Behaviors and Interfaces
-table, and they are the tests that are kept. Each row names a behavior,
-the application-layer function that carries it, the ports it takes, and a
-Given/When/Then. The RED test calls **that function by that signature**,
+**Use-case behaviors** come from the design record's Behaviors table (the
+Given/When/Then) joined to the architecture record's use-case surface (the
+application-layer function that carries each row and the ports it takes),
+and they are the tests that are kept. The RED test calls **that function by that signature**,
 with an in-memory fake behind each port the row lists, and asserts on the
 domain value it returns or the fake it wrote to. It does not go through
 the CLI or the HTTP route in front of the use case (that is an entry-point
@@ -52,7 +52,7 @@ test cases rather than left as review-time opinions:
 | Grep | the core names no vendor, SDK, `fetch`, `process.env`, `fs`, or model string |
 | Swap | a second implementation registers behind the seam with zero core edits |
 | Arrow | every import crosses inward |
-| Trace | every row of Behaviors and Interfaces resolves to one exported application function with that signature |
+| Trace | every row of the design's Behaviors table resolves, through the architecture record's use-case surface, to one exported application function with that signature |
 | Purity | no domain module imports a port or takes a callable that does I/O |
 | Wiring | the composition root builds with every port faked |
 | Decision | each named decision resolves in one place, in the problem's language |
@@ -92,7 +92,7 @@ of the three).
 
 - Test visible behavior: state transitions, emitted events/actions, side effects, output
 - **Strictly forbidden:** Testing internal variables, private methods, or implementation details
-- **The public API is the use-case surface** -- the application-layer functions the design's Behaviors and Interfaces table names -- plus the pure domain functions beneath them. A handler in front of a use case is an entry point, not the API
+- **The public API is the use-case surface** -- the application-layer functions the architecture record names, one per design behavior -- plus the pure domain functions beneath them. A handler in front of a use case is an entry point, not the API
 - Test exclusively via:
   - Public API boundaries
   - Observable state changes

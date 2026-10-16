@@ -77,6 +77,17 @@ Structure every script in clear sections, in this order:
   still runs: `{ produce | grep -v -E '^#' || true; } | consume`. This
   shipped in a fleet pre-commit hook and blocked ordinary commits
   (template-tools#714).
+- **A producer that fails inside `if producer | grep -q x` never aborts
+  the script.** `set -e` is off in an `if` condition. With `pipefail` the
+  failure makes the condition false; without it the failure is ignored
+  and only grep's verdict counts. Either way a fetch that failed reads as
+  an answer -- "does not contain `x`", or whatever partial output it
+  printed -- and the script goes on as if it knew. Capture the
+  producer first, fail on it, then test:
+  `body=$(fetch "${name}") || return 1` and then
+  `if printf '%s\n' "${body}" | grep -q x`. A fleet tool's guard read a
+  rate-limited fetch as "not applicable" this way, and was caught in
+  review before it merged (tds-utils PR#434).
 
 ## Testing and Verification
 - Document in commit messages whether scripts were executed or only statically inspected
