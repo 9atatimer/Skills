@@ -278,8 +278,12 @@ and its agent instruction file names them (that file's "Landing via
 tedium" section): `gate`, the one always-present CI check that needs every suite
 in that repo, and `review-settled`. A new CI job goes into `gate`'s
 `needs`; a job outside it cannot block a landing, and a per-workflow
-`paths:` filter that makes a required check absent hangs the bot. PRs
-cannot merge until all required checks pass. If a check fails:
+`paths:` filter that makes a required check absent hangs the bot. The
+required set itself is declared in the infra repo's GitHub module, not in
+the repo: adding, removing or renaming a required check is a change there
+(the github-workflow skill, "Repository policy lives in the infra repo"),
+and moving that gate is governed by "Clear the gate before you move it"
+above. PRs cannot merge until all required checks pass. If a check fails:
 
 - Read the job output:
    `gadmin github actions get-job --run <ID> --job <NAME>`
