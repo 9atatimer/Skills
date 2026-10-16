@@ -195,6 +195,17 @@ standing designation is the human authorization Zero Unreviewed Code
 requires, and it holds only while `gate` actually checks that pipeline's
 output.
 
+**A workflow change lands in two builds.** When a batch changes
+`.github/workflows/`, tedium first builds the merged code with the base's
+workflows grafted in, and runs the PR's own workflows only once that
+passes (template-tools `docs/design/DESIGN.TEDIUM.md`, the double-bar
+extension). A test in the same PR that asserts the new workflow -- a scan
+of the workflow file, or a CI-only check that the new step took effect --
+fails that first build by design. Land the workflow change first and its
+guard tests in a PR after it, and `tedium dryrun` any PR that changes
+workflows before you `land` it: iae PR#338 failed its staging `gate` this
+way on 2026-10-16.
+
 **A tedium landing does not close issues.** `Closes #N` in the PR body or
 the commit message links the issue but leaves it open when tedium merges
 (a web-UI merge by a human does close it). Keep writing the keyword for
