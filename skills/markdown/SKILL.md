@@ -123,6 +123,18 @@ Section IDs regenerate after each edit, so re-run `list_sections` if you need to
 - **Empty sections**: Tool sometimes creates empty duplicate headings; clean up with `delete_section`
 - **No frontmatter access**: markdown-editor cannot edit YAML frontmatter; use your file-editing tool (e.g. the Filesystem MCP server's `edit_file`) for that
 
+### AST editors rewrite what you did not touch
+
+An AST editor (ast-mcp's `update_node`, and any tool that parses the
+file and writes it back) may re-serialize the whole document, not splice
+the one node. Untouched nodes then change in ways only a serializer
+would make: one `update_node` on a single list in a `TODO_PLAN.md`
+(2026-10-16) turned every `-` bullet in the file into `*` and escaped a
+line-leading `#76` as `\#76`. After every AST-tool edit, run
+`git diff` on the file. If anything outside the node you meant changed,
+restore the file and make the edit with a text-replacement tool, so the
+diff carries only your change.
+
 ## Pre-edit checklist
 
 Before editing a Markdown file:
