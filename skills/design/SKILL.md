@@ -73,7 +73,10 @@ unshipped intentions in `docs/arch/`. -> the as-built skill
 
 **The freeze covers a record's body, and only design and architecture
 records.** The status still advances (APPROVED -> IMPLEMENTED -> SUPERSEDED) and Key
-Decisions is still append-only -- see Status Transitions. And
+Decisions is still append-only -- see Status Transitions. Commit the
+status move alone: a last pre-approval body edit in the same commit
+reads as a frozen body that moved (ci.magic flagged it on 9atatimer/iae
+PR#342). And
 `STYLE-GUIDE.md` / `TEMPLATE.md`, which live in `docs/design/` as reusable
 process guidance rather than descriptions of an intended system, have no
 approval lifecycle and evolve freely.
