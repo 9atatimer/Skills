@@ -201,6 +201,17 @@ standing designation is the human authorization Zero Unreviewed Code
 requires, and it holds only while `gate` actually checks that pipeline's
 output.
 
+**A workflow change lands in two builds.** When a batch changes
+`.github/workflows/`, tedium first builds the merged code with the base's
+workflows grafted in, and runs the PR's own workflows only once that
+passes (template-tools `docs/design/DESIGN.TEDIUM.md`, the double-bar
+extension). A test in the same PR that asserts the new workflow -- a scan
+of the workflow file, or a CI-only check that the new step took effect --
+fails that first build by design. Land the workflow change first and its
+guard tests in a PR after it, and `tedium dryrun` any PR that changes
+workflows before you `land` it: iae PR#338 failed its staging `gate` this
+way on 2026-10-16.
+
 **A tedium landing does not close issues.** `Closes #N` in the PR body or
 the commit message links the issue but leaves it open when tedium merges
 (a web-UI merge by a human does close it). Keep writing the keyword for
@@ -272,6 +283,13 @@ Title the defect, not the patch: `plan reports "Max cycles: 5" regardless
 of config or profile`, not `Change --max-cycles default to None`. One
 defect per issue; batch only trivially related nits.
 
+Evidence about current code names the commit it was read at (`at
+origin/main 448af82`). Other sessions merge while you write: on
+2026-10-16 a PR merged midway through cutting 115 UI issues and made
+the "today" line of ten of them false. Before handing a batch off,
+fetch the default branch again and re-check the claims that its new
+commits touched.
+
 When you pick an issue up, re-derive the fix from the current design. The
 issue proves what is broken; it does not say what to build, even when a
 comment on it sounds authoritative and even when you wrote that comment.
@@ -329,6 +347,18 @@ ANSI stripped.
 
 When an event has already delivered a comment body through the
 subscription stream, do not re-fetch it; reply from the comment ID.
+
+Creating issues in bulk through the MCP tools:
+
+- A tool timeout is not a failure. The create can land after the
+  timeout, and a blind retry files a duplicate. List the newest issues
+  before retrying.
+- Issue numbers interleave with other sessions' issues and PRs, so a
+  batch is not sequential. Record the number each call returns; never
+  predict it.
+- A create that sets a parent fails with "failed to resolve label" when
+  a label does not exist yet. A create without a parent makes the label.
+  File the first issue of a new label without a parent, then attach it.
 
 ## Commit Messages
 

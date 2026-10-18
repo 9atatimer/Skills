@@ -279,6 +279,15 @@ enough: template-base generates that shim from its `prepare` script
 the commit again ran no checks (template-base PR #89). Otherwise run the
 checks the hook would have run by hand and say so.
 
+**A suppression is unverified until the scanner runs.** A `nosemgrep:`
+comment names the registry rule id in full
+(`javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp`);
+a truncated id suppresses nothing. 9atatimer/iae PR#338 shipped fifteen
+such comments from a sandbox with no Semgrep, and every finding stayed
+blocking (PR#341). Run the hook's own command first: `uv tool install
+semgrep`, then `semgrep --config=p/default --config=p/security-audit
+--error` over the files.
+
 ## Branch Protection and Required Checks
 
 Every enrolled repo's default branch requires two checks on the PR head,

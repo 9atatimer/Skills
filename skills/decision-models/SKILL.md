@@ -123,19 +123,52 @@ domain code is a leak.
   will stay a rule needs no port (YAGNI; record the rejection in the design
   doc).
 
+## Asking well
+
+- **Read the distribution, not a vendor's summary field.** A decision
+  model may return a "confidence" beside its probabilities whose meaning
+  is undocumented. The core derives its own confidence from the
+  per-option probabilities and thresholds that; the vendor field is never
+  compared.
+- **A rubric score is an expectation.** The expected level of a score
+  question can fall between two levels. A band test asks how much
+  probability mass lies inside the band, not only where the expectation
+  lands.
+- **Ask the questions of one state together.** Every call pays to read
+  the state again, so splitting one state's judgements across calls
+  multiplies its cost. Questions are not free -- they are input tokens,
+  they share the context window with the state, and the provider caps how
+  many one call may carry -- so a schema too large for one call is split
+  by the client against the provider's tested limits, never by guesswork.
+- **Wording is a parameter under test.** A vague question gets answers
+  near the middle of its range. Instructions and option descriptions are
+  variants measured against the eval set, the way adapters are -- never
+  tuned by eye on a handful of cases.
+- **Decide cheaply; explain on demand.** A decision model gives no
+  reasoning. When a product must show why, the explanation is a separate,
+  on-demand LLM call, labelled as such, and it can disagree with the
+  grade. The grade stays the decision model's. Accepting that
+  disagreement for the saving is a design decision: record it, with what
+  the screen shows when the two disagree.
+
 ## Choosing where it runs
 
 - **Hosted** -- fastest to try. Per-call cost, and the state leaves your
   machine: a scan, a document, or user data goes to the vendor. Decide
   that in the design doc, not by default.
 - **Local** -- no per-call cost and nothing leaves the machine, so it suits
-  large overnight batches. It needs the weights to fit the GPU's memory
-  with headroom; check that before designing around a model, not after.
+  large overnight batches. It needs the model to fit the GPU's memory at
+  the context length you will use, not just the weights: a 9B model whose
+  weights are 19 GB has been quoted at 41 GB with a full 64k context.
+  Check that before designing around a model, not after.
   In the LMDE the place for local decision models is the **decision
   arena** (tds-utils), behind the LMDE proxy layer -- not a model loaded
   inside each consumer.
 - **Either way, behind the port.** Moving from hosted to local, or from one
-  model to a better one, changes the composition root only.
+  model to a better one, changes the composition root only. In the LMDE
+  the client is tds-utils `bin/decide`, which speaks the protocol Jev and
+  Clef share to hosted Clef or a local server; an adapter that calls it
+  inherits that move for free.
 
 ## Evaluation before adoption
 
@@ -198,6 +231,8 @@ domain code is a leak.
 | Adopting on the vendor's benchmark | Their tasks are not yours | Your eval set, against the incumbent |
 | One blended accuracy number | Hides the rare class that matters | Per question, per class |
 | A decision model asked to extract text | It scores options; it does not write | Split the job: decision here, extraction elsewhere |
+| Thresholding a vendor's "confidence" field | Its meaning is undocumented and can move with a model revision | Confidence derived in the core from the probabilities |
+| One call per question about the same state | Pays to read the state once per question | The state's questions together, split only at the provider's tested limits |
 
 ## Radar
 
