@@ -230,6 +230,10 @@ and the agent never summons a reviewer to turn it green.
   "docs-only" discount for operating rules.
 - **A PR that mixes documentation with anything else is not
   documentation-only.**
+- **A pin bump gets no agentic reviewer either.** A PR whose only change
+  is a pinned commit SHA (a caller's `uses:` and `tools_ref`, an action
+  pin) has nothing for a reviewer to read; the human lands it, red
+  `review-settled` and all (owner ruling, 9atatimer/iae PR#355).
 
 ## Git Hook Discipline (scalpel, not axe)
 
