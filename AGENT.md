@@ -36,27 +36,19 @@ PRs land through the tedium merge bot; the rules are in `tedium.toml` on
 
 - **Required checks.** `gate` (the `ci.yml` job that needs every other
   job) must be green on the PR head AND on the staging commit tedium
-  builds on `tedium/merge` (`status` in `tedium.toml`). `review-settled`
-  (the commit status from `.github/workflows/review-settled.yml`:
-  the gate reviewer's newest review is on the head and every thread is
-  resolved) still posts on the PR head, but since 2026-09-26 neither
-  `pr_status` nor the `main` ruleset requires it: Copilot has no quota,
-  and until the quota fail-open it could never go green. The ruleset requires `gate` and a PR; only
-  the tedium App may bypass it. Tedium therefore lands a green PR on a
-  reviewer's `r+` with no review at all; restore `review-settled` in
-  `pr_status` when Copilot reviews again. A PR from a fork runs with a
+  builds on `tedium/merge` (`status` in `tedium.toml`). The ruleset
+  requires `gate` and a PR; only the tedium App may bypass it. Tedium
+  lands a green PR on a reviewer's `r+`. A PR from a fork runs with a
   read-only token and is human-merge.
-- **Copilot is the gate reviewer; Codex is human-summoned only.**
-  `.github/workflows/review-settled.yml` lists `copilot-pull-request-reviewer`
-  as the reviewer whose newest review must sit on the head. The reusable
-  checker requires every listed login, so it cannot express "Copilot or
-  Codex"; when Copilot answers with its quota notice the status fails
-  open (`FAIL-OPEN: ... is out of quota`, threads still required; the
-  gates skill), and it no longer blocks anything either way. An agent
-  never posts `@codex review` (the gates skill, Reviewer Selection);
-  Copilot is the only reviewer an agent may summon.
-  The checker is pinned by commit (`uses:` and `tools_ref:` carry the
-  same tds-utils sha); bump both together.
+- **`review-settled` is off: always green (owner ruling, 2026-10-18).**
+  `.github/workflows/review-settled.yml` still posts the status on every
+  non-fork head, but the pinned tds-utils checker (7643b92, tds-utils
+  PR#571) no longer judges reviews or threads and never waits. Neither
+  `pr_status` nor the ruleset requires it. An agent never posts
+  `@codex review` (the gates skill, Reviewer Selection); Copilot is the
+  only reviewer an agent may summon. The checker is
+  pinned by commit (`uses:` and `tools_ref:` carry the same tds-utils
+  sha); bump both together.
 - **Prose is scanned for ASCII at commit time.** The publicity guard
   refuses any byte over 0x7F in markdown under `skills/`, `agents/`, and
   the repo root. Law 12 says it up front; the guard is what makes it
