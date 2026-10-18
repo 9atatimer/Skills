@@ -160,28 +160,28 @@ its own PR only when all six hold on the current head:
 - tedium is enabled: `tedium.toml` on the default branch, and the agent
   instruction file says so;
 - `gate`, the repo's required CI check, is green on the head;
-- `review-settled` is green on the head where the repo requires it: every
-  required reviewer's newest review is on this commit and every thread is
-  resolved (the gates skill's Zero Unreviewed Code, made mechanical). A
-  repo whose instruction file says the status is not required (a reviewer
-  out of quota) lands on `gate` plus the human's `r+`;
+- every required reviewer's newest review is on this commit and every
+  thread is resolved (the gates skill's Zero Unreviewed Code). Check it by
+  hand: `review-settled` is off fleet-wide and always green, so it proves
+  nothing. A repo whose instruction file names no required reviewer (a
+  reviewer out of quota) lands on `gate` plus the human's `r+`;
 - no per-reviewer turn cap has fired on this PR and no open `pr-todo`
-  issue references it. The deferral procedure can turn `review-settled`
-  green without fixing anything, so check this separately;
+  issue references it. The deferral procedure resolves every thread
+  without fixing anything, so check this separately;
 - every CODEOWNERS path on the PR's diff has an approving review from its
   owner on the head commit. Tedium enforces this itself, independent of
-  `gate` and `review-settled`. The diff is the file list GitHub shows
+  `gate`. The diff is the file list GitHub shows
   against the merge base, so a PR carrying a fix already on the base still
   lists that fix's owned paths: merge the base in first. A path whose only
   owner is the PR's author can never clear this, because GitHub refuses
   self-approval: that PR is human-merged, and no `land` will change it;
 - no `hold` label is on the PR.
 
-Anything short of all six is not "almost". A red `review-settled` that the
-repo requires means a review is owed on this head: re-request the reviewer
-if the latest push carries a load-bearing fix, resolve every thread, post
-the self-review epilogue, then wait for the status. A head red only from a
-hygiene-only tail, or a documentation-only PR, goes to the human to land.
+Anything short of all six is not "almost". A review owed on this head
+means: re-request the reviewer if the latest push carries a load-bearing
+fix, resolve every thread, post the self-review epilogue, then wait for
+the review. A head owing review only for a hygiene-only tail, or a
+documentation-only PR, goes to the human to land.
 A human with write access may comment `tedium land` at any time; that is
 the human merge decision. `tedium dryrun` is unrestricted: it builds on
 `tedium/try` and lands nothing. Never add `tedium/*` to protected-branch
@@ -189,7 +189,7 @@ patterns; the App must be able to force-push and delete its build branches.
 
 **Designated pipeline exception.** An automated pipeline that the repo's
 instruction file names as allowed to land may `land` its own PRs without
-`review-settled`; every other condition holds, and it still opens a PR
+the review condition; every other condition holds, and it still opens a PR
 for the gates to run rather than pushing to the default branch. The owner's
 standing designation is the human authorization Zero Unreviewed Code
 requires, and it holds only while `gate` actually checks that pipeline's

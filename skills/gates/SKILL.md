@@ -9,10 +9,10 @@ description: "Phase 6 of the SDLC: everything that stands between a pushed commi
 > bar to do it.
 > **Exit gate:** every check green, every piece of feedback in a recorded
 > state, and the gates authorize the merge -- on an enrolled repo (a
-> `tedium.toml` on the default branch), that means `review-settled` green
-> on the head with no turn cap fired and no open `pr-todo` issue against
-> the PR, and tedium executes it; on any other repo, where no
-> `review-settled` status exists, a human authorizes and merges.
+> `tedium.toml` on the default branch), that means `gate` green and every
+> required review on the head with no turn cap fired and no open
+> `pr-todo` issue against the PR, and tedium executes it; on any other
+> repo a human authorizes and merges.
 
 A gate is anything that can say no. They run in a ladder, cheapest and
 earliest first, and each one exists because the later ones are more
@@ -24,7 +24,7 @@ expensive:
 | 2 | CI status checks | the PR | read the job log, fix, push |
 | 3 | ci.magic assertions | the PR | the assertion names the file and the violation |
 | 4 | Agentic review (Copilot by default; never on a documentation-only PR) | the PR | the review-watch loop, below; Spend Review Turns on Load-Bearing Fixes says when a turn is owed |
-| 5 | Review settled (Copilot; Codex where the repo requires it) and merge authorization by the gates: the repo's required check `gate` plus the `review-settled` status, both green on the head | the PR | address or defer; never merge around it. On a repo without `tedium.toml`, a human reviews and merges |
+| 5 | Review settled (Copilot; Codex where the repo requires it) and merge authorization by the gates: the repo's required check `gate` green and every required review on the head (`review-settled` is off and proves nothing) | the PR | address or defer; never merge around it. On a repo without `tedium.toml`, a human reviews and merges |
 
 **A red gate is a diagnosis prompt, not an obstacle.** The laws below
 govern every rung, and neither has an agent-accessible exception.
@@ -109,36 +109,23 @@ blocked by a gate is not authorization to move it.
   below: a documentation-only PR, which the self-review pass alone
   reviews, and a hygiene-only tail after the last agentic review, which
   the handoff names for the human.
-- **`review-settled` is this law as a commit status.** On an enrolled
-  repo the status is green on a head iff every required reviewer's newest
-  review is on that head AND every review thread is resolved; the ruleset
-  requires it and tedium checks it before batching. A push after the
-  latest review turns it red on the new head: those tail commits are
-  unreviewed until an agentic re-review runs (within the per-reviewer
-  turn cap) or a human explicitly looks at them. Never merge a PR whose
-  tail commits nobody has seen; when the cap has fired, the remaining
-  feedback becomes `pr-todo` issues and the PR is handed to a human --
-  say so in the handoff so the human knows the tail is theirs to review.
-  There is no workflow trigger for a thread being resolved: the epilogue
-  comment (law 16) is what re-evaluates the status after the last thread
-  closes.
-- **`review-settled` fails open on a quota notice, and only on one.**
-  When a required reviewer's newest post on the PR is its "unable to
-  review ... reached their quota limit" notice, it will never review (the
-  owner's ruling, 2026-09-26): the PR does not wait for it, every review
-  thread must still be resolved, and the status reads `FAIL-OPEN:
-  <reviewer> is out of quota` -- never "reviewed". Any other "unable to
-  review" notice is not a go: re-request the reviewer. Silence is not a
-  go either. Never report a FAIL-OPEN green as reviewed, and never
-  re-request a reviewer that answered with a quota notice. A FAIL-OPEN
-  head is unreviewed by that agent: a recorded exception to Zero
-  Unreviewed Code, not a review.
-- **A cap-fired `review-settled` is not a self-land license.** The
-  deferral procedure just above -- file `pr-todo` issues, reject each
-  remaining comment, resolve each thread -- satisfies both of
-  `review-settled`'s conditions without fixing anything and without a new
-  push, so the status can read green on a head whose reviewer feedback
-  was explicitly deferred to a human. The agent-initiated `tedium land`
+- **`review-settled` is off fleet-wide (owner ruling 2026-10-18,
+  tds-utils PR#571).** The status still posts and is always green; it
+  judges nothing, so its green is never evidence of review. The law
+  holds by hand: a push after the latest review leaves those tail
+  commits unreviewed until an agentic re-review runs (within the
+  per-reviewer turn cap) or a human explicitly looks at them. Never merge
+  a PR whose tail commits nobody has seen; when the cap has fired, the
+  remaining feedback becomes `pr-todo` issues and the PR is handed to a
+  human -- say so in the handoff so the human knows the tail is theirs.
+  A reviewer's quota notice is not a review: never report it as one, and
+  never re-request a reviewer that answered with one. Any other "unable
+  to review" notice, or silence, is not a review either: re-request.
+- **A fired turn cap is not a self-land license.** The deferral
+  procedure just above -- file `pr-todo` issues, reject each remaining
+  comment, resolve each thread -- leaves no open thread without fixing
+  anything and without a new push, on a head whose reviewer feedback was
+  explicitly deferred to a human. The agent-initiated `tedium land`
   preconditions (github-workflow skill, Landing via tedium) exclude this
   case by name: no turn cap fired, no open `pr-todo` issue against the
   PR.
@@ -203,9 +190,8 @@ find a new defect in" is.
   Code.** Commits after the last agentic review that carry only hygiene
   are not re-reviewed by that bot. Name their SHAs in the epilogue or
   handoff comment so the human who lands the PR knows the tail is theirs
-  to read. Where the repo requires `review-settled`, the status stays red
-  on that head: say so in the handoff and let the human decide whether a
-  turn is worth spending. Never spend one just to turn a status green.
+  to read. Let the human decide whether a re-review turn is worth
+  spending.
 
 ### Documentation-only changes get no agentic reviewer
 
@@ -215,9 +201,7 @@ files, a changelog, a comment-only edit to source. Such a PR never
 requests Copilot and never asks a human to summon Codex. The adversarial
 self-review (the self-review skill) is the whole review: it satisfies
 Zero Unreviewed Code for that PR, its ledger on the PR is the record,
-and there is no review-watch loop. Where the repo requires
-`review-settled`, the status stays red on such a PR: a human lands it,
-and the agent never summons a reviewer to turn it green.
+and there is no review-watch loop. A human lands it.
 
 - **Except a design or architecture draft in phases 2 and 3.** A design
   record under review (`docs/design/`) or a phase-3 seam map gets the
@@ -232,8 +216,8 @@ and the agent never summons a reviewer to turn it green.
   documentation-only.**
 - **A pin bump gets no agentic reviewer either.** A PR whose only change
   is a pinned commit SHA (a caller's `uses:` and `tools_ref`, an action
-  pin) has nothing for a reviewer to read; the human lands it, red
-  `review-settled` and all (owner ruling, 9atatimer/iae PR#355).
+  pin) has nothing for a reviewer to read; the human lands it (owner
+  ruling, 9atatimer/iae PR#355).
 
 ## Git Hook Discipline (scalpel, not axe)
 
@@ -289,7 +273,7 @@ semgrep`, then `semgrep --config=p/default --config=p/security-audit
 Every enrolled repo's default branch requires two checks on the PR head,
 and its agent instruction file names them (that file's "Landing via
 tedium" section): `gate`, the one always-present CI check that needs every suite
-in that repo, and `review-settled`. A new CI job goes into `gate`'s
+in that repo, and `review-settled` (always green while off). A new CI job goes into `gate`'s
 `needs`; a job outside it cannot block a landing, and a per-workflow
 `paths:` filter that makes a required check absent hangs the bot. PRs
 cannot merge until all required checks pass. If a check fails:
@@ -346,8 +330,8 @@ Which bot reviews a PR is policy, not agent judgment:
   the bot filed it.
 - **Zero open threads is not zero findings.** Copilot files findings in
   code unchanged since its previous review under a `Previously missed`
-  block in the review body, with no thread. `review-settled` counts
-  threads only, so it goes green with such a finding open. On
+  block in the review body, with no thread, so a PR with no open thread
+  can still carry such a finding. On
   [Skills PR#77](https://github.com/9atatimer/Skills/pull/77) the fifth
   review's only finding was body-only. The PR merged with it unanswered,
   and a later state check that read just the threads still reported no
