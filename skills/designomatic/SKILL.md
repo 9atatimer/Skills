@@ -117,6 +117,20 @@ panel's narrowing in a `--rubric` supplement.
 | `--rubric PATH` is also the only way to steer the editor in 0.3.0 | There is no `--guidance` flag in designomatic 0.3.0; a run that passes one fails before the first reviewer. Put editor constraints ("KISS, this is a prototype") in the rubric supplement |
 | `--allow-frozen` | Amend an APPROVED record. **Human decision only** -- an agent never passes this |
 
+**Tell the panel the scope, or it grows the record.** Every reviewer
+judges against the skills for completeness, so each edge case the owner
+deferred reads to it as a defect. DESIGN.QUALITIES.md (9atatimer/iae)
+went in at 25 behaviors and came out of two cycles at 76; the owner cut
+it back to an MVP. A `--rubric` supplement saying the record is an MVP,
+that Future Considerations is deferred rather than missing, and that
+cutting beats adding, kept the next run to four real additions.
+
+**When a panel seat's CLI is missing** (a cloud sandbox has no `codex`),
+`--panel` still plans that seat; `--config` and `--max-cycles` do not
+override a named panel (template-tools issue#996). Run without
+`--panel` and name each seat as `-r <model>:<persona>`, for example
+`-r claude@cli:sonnet:security`, with `-e` and `--critic-model`.
+
 ---
 
 ## Reading the outcome

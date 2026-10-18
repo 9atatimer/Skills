@@ -771,6 +771,12 @@ whatever delayed-prompt or sleep mechanism that environment offers.
 - **On exit:** which stop condition fired, the result of Step 7
   (documentation follow-ups from the settled state of all PRs in the
   cycle), and whether the PRs are mergeable from your perspective.
+- **Before saying "every thread is resolved":** list the PR's
+  unresolved threads from the API on its current head, and confirm no
+  review you requested is still outstanding. A requested re-review posts
+  new findings after you asked, and a review a bot posts when the PR
+  opens arrives unasked; both were missed on 9atatimer/iae PR#380, and
+  the owner was told "clean" twice while findings were open.
 
 ## Automated Review Response
 
