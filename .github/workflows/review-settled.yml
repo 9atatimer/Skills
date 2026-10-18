@@ -3,6 +3,10 @@
 # head and every review thread is resolved. The main ruleset requires it;
 # tedium checks it in `pr_status` (tedium.toml) before batching a PR.
 #
+# OFF since tds-utils PR#571 (2026-10-18): the pinned checker posts
+# `success` on every non-fork head without judging reviews or waiting.
+# The paragraph above describes it when it was on.
+#
 # The gate reviewer is Copilot (`reviewers:` below). The checker requires
 # EVERY listed login to have reviewed the head, so the list names one; it
 # cannot express "any of". When Copilot's newest post is its quota notice
@@ -60,12 +64,12 @@ jobs:
     if: >-
       (github.event_name != 'issue_comment' || github.event.issue.pull_request != null)
       && (github.event.pull_request == null || github.event.pull_request.head.repo.full_name == github.repository)
-    uses: 9atatimer/tds-utils/.github/workflows/review-settled.yml@ea20985d334580a80bb18cf9b586b6dbebdf539c
+    uses: 9atatimer/tds-utils/.github/workflows/review-settled.yml@7643b92adc42e8a0f40d5da1470a2aebe3d91796
     permissions:
       statuses: write
       pull-requests: read
       contents: read
     with:
       reviewers: copilot-pull-request-reviewer
-      tools_ref: ea20985d334580a80bb18cf9b586b6dbebdf539c
+      tools_ref: 7643b92adc42e8a0f40d5da1470a2aebe3d91796
       pr: ${{ github.event.pull_request.number || github.event.issue.number || inputs.pr }}
