@@ -354,6 +354,11 @@ migration is one docs-only commit, separate from any feature work.
   with no authority and no defect behind it is worth questioning.
 - Discovered work gets its own file immediately, not a note at the bottom
   of the task you are on.
+- Before cutting a task from an open issue, grep the default branch for
+  its number (`git log origin/<default> -E --grep '#<n>([^0-9]|$)'`). An open issue
+  says nothing was closed, not that nothing was fixed: a fix commit with
+  no closing keyword leaves it open, and two tasks were cut for bugs their
+  own PR had already fixed and tested (tds-utils Issue#296, Issue#297).
 
 ### Closing
 
