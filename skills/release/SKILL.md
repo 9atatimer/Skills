@@ -67,6 +67,8 @@ reader; keep it legible to a human.
 - **Terse, imperative, specific.** Symptom -> cause -> action. No
   narrative, no restating the code, no history unless it prevents a
   repeat.
+- **A runbook or playbook for a human operator** follows the technical-writing
+  skill instead: connected prose with reasons and conditions.
 - **Narrowest layer** (sdlc, law 15): code comment, runbook Gotchas,
   `docs/arch/`, the repo's `AGENT.md`, a repo-owned skill (only for a
   repeated, agent-run procedure specific to that repo), a shared skill.
