@@ -41,6 +41,7 @@ style-bash
 style-python
 style-typescript
 tech-radar
+technical-writing
 testing
 testing-node
 testing-nuxt
