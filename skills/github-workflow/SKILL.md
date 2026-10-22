@@ -101,7 +101,9 @@ never close and reopen one.
   `gh pr view <NUMBER> --json state`. A push to the branch of a merged PR
   succeeds and the commits reach no PR and no default branch. If `MERGED`,
   cut a new branch from the default branch and open a new PR; never
-  force-push, never reopen.
+  force-push, never reopen. "Landed" means the PR reads `MERGED`, never
+  that the push succeeded: a squash or rebase gives the commits new SHAs,
+  so ancestry of your own SHA proves nothing.
 - Open the PR ready-for-review, never as a draft and never with `[WIP]`:
   Copilot does not review drafts, so the review step never fires.
 - Title it as a conventional-commit summary: `feat(scope): short description`.
@@ -154,7 +156,13 @@ merge; tedium executes it (template-tools `docs/design/DESIGN.TEDIUM.md`).
 In a repo without `tedium.toml`, an agent never merges and never comments
 `tedium land`.
 
-On an enrolled repo, an agent may comment `tedium land` (or `/land`) on
+The commands tedium parses are `/land` (alias `/approve`), `/try`,
+`/cancel` and the rest of its registry (`/help` lists them), and the bors
+forms behind the trigger: `tedium land`, `tedium r+`, `tedium try`. A bare
+`r+` or `R+` with no trigger is prose and does nothing; the bors forms are
+case-sensitive. Write `/land`.
+
+On an enrolled repo, an agent may comment `/land` (or `tedium land`) on
 its own PR only when all six hold on the current head:
 
 - tedium is enabled: `tedium.toml` on the default branch, and the agent
@@ -164,7 +172,12 @@ its own PR only when all six hold on the current head:
   required reviewer's newest review is on this commit and every thread is
   resolved (the gates skill's Zero Unreviewed Code, made mechanical). A
   repo whose instruction file says the status is not required (a reviewer
-  out of quota) lands on `gate` plus the human's `r+`;
+  out of quota) does not waive the review: the head still needs a review
+  that is not your own self-review, resolved on this head (the repo's
+  named reviewer, or a human), before you `/land`. A documentation-only
+  PR is the gates skill's recorded exception: its self-review is the
+  whole review. Agents post as the
+  owner, so your own `/land` is never the review;
 - no per-reviewer turn cap has fired on this PR and no open `pr-todo`
   issue references it. The deferral procedure can turn `review-settled`
   green without fixing anything, so check this separately;
@@ -187,9 +200,10 @@ the human merge decision. `tedium dryrun` is unrestricted: it builds on
 `tedium/try` and lands nothing. Never add `tedium/*` to protected-branch
 patterns; the App must be able to force-push and delete its build branches.
 
-**Designated pipeline exception.** An automated pipeline that the repo's
-instruction file names as allowed to land may `land` its own PRs without
-`review-settled`; every other condition holds, and it still opens a PR
+**Designated pipeline exception.** An automated pipeline that a
+CODEOWNERS-protected file names as allowed to land may `land` its own PRs
+without `review-settled`; a designation in a file the PR itself can edit
+is no designation. Every other condition holds, and it still opens a PR
 for the gates to run rather than pushing to the default branch. The owner's
 standing designation is the human authorization Zero Unreviewed Code
 requires, and it holds only while `gate` actually checks that pipeline's
