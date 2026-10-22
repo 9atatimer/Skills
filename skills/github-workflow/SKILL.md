@@ -101,9 +101,9 @@ never close and reopen one.
   `gh pr view <NUMBER> --json state`. A push to the branch of a merged PR
   succeeds and the commits reach no PR and no default branch. If `MERGED`,
   cut a new branch from the default branch and open a new PR; never
-  force-push, never reopen. "Landed" means the commit is on the default
-  branch (`git merge-base --is-ancestor <sha> origin/<default>`, or the
-  PR's `MERGED` state for a squash), never that the push succeeded.
+  force-push, never reopen. "Landed" means the PR reads `MERGED`, never
+  that the push succeeded: a squash or rebase gives the commits new SHAs,
+  so ancestry of your own SHA proves nothing.
 - Open the PR ready-for-review, never as a draft and never with `[WIP]`:
   Copilot does not review drafts, so the review step never fires.
 - Title it as a conventional-commit summary: `feat(scope): short description`.
@@ -174,7 +174,9 @@ its own PR only when all six hold on the current head:
   repo whose instruction file says the status is not required (a reviewer
   out of quota) does not waive the review: the head still needs a review
   that is not your own self-review, resolved on this head (the repo's
-  named reviewer, or a human), before you `/land`. Agents post as the
+  named reviewer, or a human), before you `/land`. A documentation-only
+  PR is the gates skill's recorded exception: its self-review is the
+  whole review. Agents post as the
   owner, so your own `/land` is never the review;
 - no per-reviewer turn cap has fired on this PR and no open `pr-todo`
   issue references it. The deferral procedure can turn `review-settled`
