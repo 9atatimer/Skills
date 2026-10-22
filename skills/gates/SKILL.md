@@ -10,7 +10,8 @@ description: "Phase 6 of the SDLC: everything that stands between a pushed commi
 > **Exit gate:** every check green, every piece of feedback in a recorded
 > state, and the gates authorize the merge -- on an enrolled repo (a
 > `tedium.toml` on the default branch), that means `review-settled` green
-> on the head with no turn cap fired and no open `pr-todo` issue against
+> on the head (where the repo still requires it; see Branch Protection and
+> Required Checks) with no turn cap fired and no open `pr-todo` issue against
 > the PR, and tedium executes it; on any other repo, where no
 > `review-settled` status exists, a human authorizes and merges.
 
@@ -286,10 +287,14 @@ semgrep`, then `semgrep --config=p/default --config=p/security-audit
 
 ## Branch Protection and Required Checks
 
-Every enrolled repo's default branch requires two checks on the PR head,
-and its agent instruction file names them (that file's "Landing via
-tedium" section): `gate`, the one always-present CI check that needs every suite
-in that repo, and `review-settled`. A new CI job goes into `gate`'s
+Every enrolled repo's default branch requires `gate` on the PR head, the
+one always-present CI check that needs every suite in that repo; its
+agent instruction file names the required checks (that file's "Landing
+via tedium" section). `review-settled` was required everywhere until
+2026-09-26 and is not now: a repo's file records whether it is. That is a
+recorded lowered gate, not a repeal of Zero Unreviewed Code; the
+restore condition is the repo's reviewer being back in quota, and until
+then the review is owed from the named reviewer or a human. A new CI job goes into `gate`'s
 `needs`; a job outside it cannot block a landing, and a per-workflow
 `paths:` filter that makes a required check absent hangs the bot. PRs
 cannot merge until all required checks pass. If a check fails:

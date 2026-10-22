@@ -38,7 +38,7 @@ PRs land through the tedium merge bot; the rules are in `tedium.toml` on
   job) must be green on the PR head AND on the staging commit tedium
   builds on `tedium/merge` (`status` in `tedium.toml`). The ruleset
   requires `gate` and a PR; only the tedium App may bypass it. Tedium
-  lands a green PR on a reviewer's `r+`. A PR from a fork runs with a
+  lands a green PR on a reviewer's `/land`. A PR from a fork runs with a
   read-only token and is human-merge.
 - **`review-settled` is off: always green (owner ruling, 2026-10-18).**
   `.github/workflows/review-settled.yml` still posts the status on every
