@@ -1,6 +1,6 @@
 ---
 name: technical-writing
-description: "Writing prose a reader can act on: answers, explanations, reports, PR and issue text, and documentation. Plain, literal wording in the style of ASD-STE100 (precise meaning, familiar words, clear references, explicit relationships), with technical terms kept. Load when writing or revising any prose meant for a reader with limited attention. Skip for Markdown formatting rules (markdown) and for design-record content (design)."
+description: "Writing release-phase documents that humans read and follow: runbooks, playbooks, and operator procedures. Plain, literal wording in the style of ASD-STE100 (precise meaning, familiar words, clear references, explicit relationships), with technical terms kept. Load when writing or revising a runbook or playbook for a human operator. Skip for docs written for agents (release, Docs; markdown), Markdown formatting rules (markdown), and design records (design)."
 ---
 
 # Technical Writing
@@ -10,6 +10,10 @@ limited. The style is inspired by ASD-STE100 but does not follow it
 rigidly: precise meaning, familiar words, clear references, and explicit
 relationships. Keep necessary technical terms. Apply these principles in
 the language the user is using.
+
+Scope: documents a human reads under pressure, such as a runbook or
+playbook (release phase). Docs written for agents follow the release
+skill's Docs section (terse, imperative) instead.
 
 These are writing preferences, not a change to the task. Follow the
 requested format and tone. Keep deliberate warmth, humour, and creativity
