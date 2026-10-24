@@ -163,7 +163,7 @@ forms behind the trigger: `tedium land`, `tedium r+`, `tedium try`. A bare
 case-sensitive. Write `/land`.
 
 On an enrolled repo, an agent may comment `/land` (or `tedium land`) on
-its own PR only when all six hold on the current head:
+its own PR only when all seven hold on the current head:
 
 - tedium is enabled: `tedium.toml` on the default branch, and the agent
   instruction file says so;
@@ -188,9 +188,13 @@ its own PR only when all six hold on the current head:
   lists that fix's owned paths: merge the base in first. A path whose only
   owner is the PR's author can never clear this, because GitHub refuses
   self-approval: that PR is human-merged, and no `land` will change it;
-- no `hold` label is on the PR.
+- no `hold` label is on the PR;
+- the PR adds or changes no design or architecture record
+  (`docs/design/DESIGN.*.md`, `docs/design/ARCHITECTURE.*.md`). Merging
+  one is its approval (the design skill, Status Transitions), so a human
+  lands it.
 
-Anything short of all six is not "almost". A red `review-settled` that the
+Anything short of all seven is not "almost". A red `review-settled` that the
 repo requires means a review is owed on this head: re-request the reviewer
 if the latest push carries a load-bearing fix, resolve every thread, post
 the self-review epilogue, then wait for the status. A head red only from a

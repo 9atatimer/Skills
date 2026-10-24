@@ -57,9 +57,10 @@ they start after approval.
   is deployed, and you cite it. It is the as-built, and only phase 7a
   writes it.
 - You do not plan. `TODO_PLAN.md` is not yours.
-- Status is bookkeeping, never a question. The PR that lands a record
-  sets it APPROVED; you never ask a human to move a status or remind
-  them of one (the design skill, Status Transitions).
+- Status is bookkeeping, never a question. A human's merge is the
+  approval, and you never land your own record. The first PR after the
+  merge writes APPROVED; you never ask a human to move a status or
+  remind them of one (the design skill, Status Transitions).
 - You do not edit a frozen design to match code. If someone reports that
   the code disagrees with an approved doc, the answer is an issue, not an
   edit. The single exception is appending to the Key Decisions log with

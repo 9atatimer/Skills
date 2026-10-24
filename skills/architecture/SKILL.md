@@ -9,8 +9,9 @@ description: "Phase 3 of the SDLC: writing the architecture record, docs/design/
 > can do, in a record of its own that constrains the plan and the code.
 > **Input:** an APPROVED design record and the as-built.
 > **Output:** `docs/design/ARCHITECTURE.<name>.md`, frozen at APPROVED.
-> **Exit gate:** the architecture record is merged; merged is APPROVED,
-> and the agent sets the status (the design skill, Status Transitions).
+> **Exit gate:** a human merges the architecture record; merged is
+> APPROVED, and the agent sets the status (the design skill,
+> Status Transitions).
 
 ---
 

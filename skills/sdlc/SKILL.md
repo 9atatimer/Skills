@@ -35,7 +35,7 @@ skill.
    turns an unreviewed decision into apparent spec. The single exception
    is *appending* to the Key Decisions log, each row citing its
    authorizing issue, in a docs-only PR. Status is bookkeeping, never a
-   question: merged is APPROVED, and the agent sets every status line
+   question: a human's merge is APPROVED, and the agent sets every status line
    itself and never raises one with a human. -> the design skill
 3. **The folder law: concept disposable, design frozen, arch living.**
    The concept tree -- `docs/concepts/`, or wherever the repo's `AGENT.md`
@@ -266,8 +266,8 @@ one-pass the tests. Do not.
 | Phase | Artifact | Exit gate | Load |
 |---|---|---|---|
 | 1 Concept | `docs/concepts/<idea>/` -- statement of work + user stories | a human funds it | the concept skill |
-| 2 Design | `docs/design/DESIGN.<name>.md` | merged (merged is APPROVED) | the design skill; run the panel before the PR -> the designomatic skill |
-| 3 Architecture | `docs/design/ARCHITECTURE.<name>.md` -- seams, module map, use-case surface, bounds placed, operability | merged (merged is APPROVED) | the architecture skill; run the seam-review panel before the PR -> the designomatic skill |
+| 2 Design | `docs/design/DESIGN.<name>.md` | a human merges it (merged is APPROVED) | the design skill; run the panel before the PR -> the designomatic skill |
+| 3 Architecture | `docs/design/ARCHITECTURE.<name>.md` -- seams, module map, use-case surface, bounds placed, operability | a human merges it (merged is APPROVED) | the architecture skill; run the seam-review panel before the PR -> the designomatic skill |
 | 3b Planning | `tasks/`, ordered in `TODO_PLAN.md` | a phased, test-first route | the planning skill |
 | 4 Behaviors | the next behavior, RED | it fails because the code does not exist | the testing skill + the stack-specific one |
 | 5 Code | source | GREEN | the coding skill + the language style skill |

@@ -7,7 +7,7 @@ description: "Phase 2 of the SDLC: writing, reviewing, or improving a design doc
 
 > **Purpose:** Author, review, and improve design documents that are useful to both AI agents and human engineers.
 > **When to use:** Before implementing a new system, major feature, or architectural change.
-> **Exit gate:** the record is complete and merged to the default branch.
+> **Exit gate:** the record is complete and a human merges it.
 > Merged is APPROVED (Status Transitions). From then on its body is
 > frozen; only the status and the append-only Key Decisions log move.
 > APPROVED is what opens phase 3: the architecture record is written
@@ -522,11 +522,11 @@ and the next phase has begun, the work moves on.
   the PR (-> the designomatic skill)
 - **APPROVED:** merging to the default branch is the approval, when a
   human lands it: a human merges the PR or posts its `/land`. An agent
-  never merges or lands its own design or architecture record. The PR
-  that lands the record sets `Status: APPROVED` in a commit of its own. A
-  merged record still reading DRAFT or REVIEW is APPROVED: the next PR
-  that touches it, or that opens the next phase, corrects the line, in a
-  commit of its own
+  never merges or lands its own design or architecture record (the
+  github-workflow skill). The record lands with its DRAFT or REVIEW line,
+  so nothing freezes before the merge, and is APPROVED from that moment.
+  The first PR after the merge that touches it, or that opens the next
+  phase, writes `Status: APPROVED`, in a commit of its own
 - **IMPLEMENTED:** **shipped, as-built updated, drift closed.** The
   retrospective PR sets it once all three hold, not merely the merge:
   code that is merged but not released is not in the shared
