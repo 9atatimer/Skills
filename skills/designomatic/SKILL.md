@@ -153,10 +153,10 @@ window; 402 means the account's credit balance is at zero. Neither is the
 agent's to lift: report it. Provisioning and the model-id grammar are the
 tool's runbook (template-tools `docs/ops/designomatic.md`).
 
-**The panel's output is a proposal, not an approval.** designomatic cannot
-mark a document APPROVED and neither can you -- only a human moves that
-status. What a green run buys is that a human's first read is not spent on
-what a panel would have caught.
+**The panel's output is a proposal, not an approval.** The merge is the
+approval, and the PR that lands the record sets its status (the design
+skill, Status Transitions). What a green run buys is that a human's first
+read is not spent on what a panel would have caught.
 
 ---
 
