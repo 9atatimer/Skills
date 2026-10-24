@@ -520,7 +520,9 @@ and the next phase has begun, the work moves on.
 - **DRAFT, or REVIEW:** the record on its branch, before it lands. REVIEW
   is an optional label for the same state; run the reviewer panel before
   the PR (-> the designomatic skill)
-- **APPROVED:** merging to the default branch is the approval. The PR
+- **APPROVED:** merging to the default branch is the approval, when a
+  human lands it: a human merges the PR or posts its `/land`. An agent
+  never merges or lands its own design or architecture record. The PR
   that lands the record sets `Status: APPROVED` in a commit of its own. A
   merged record still reading DRAFT or REVIEW is APPROVED: the next PR
   that touches it, or that opens the next phase, corrects the line, in a

@@ -77,7 +77,9 @@ those phases, a documentation-only change gets the self-review pass alone
 Do **not** reach for it when:
 
 - The document is APPROVED. It is frozen, and designomatic refuses it --
-  cut a drift issue instead. -> the design skill
+  cut a drift issue instead. A merged record is APPROVED whatever its
+  status line says, and the tool reads only the line: correct a stale
+  DRAFT or REVIEW line first, in a commit of its own. -> the design skill
 - You want code reviewed. That is the gates skill.
 - You want to know what a document must contain. That is the concept,
   design, architecture and as-built skills -- which are also exactly what

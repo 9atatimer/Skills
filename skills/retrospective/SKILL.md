@@ -16,7 +16,7 @@ not "if there is time," and it does not elide.
 
 **Developer tooling runs a short retrospective.** A tool has no design
 doc and no as-built (sdlc, "Product or tooling"), so there is nothing to
-walk for drift, no Key Decisions to append and no status to hand off. Do
+walk for drift, no Key Decisions to append and no status to set. Do
 the lessons and discovered-issues sections, confirm `docs/ops/<tool>.md`
 matches what shipped, and stop.
 
