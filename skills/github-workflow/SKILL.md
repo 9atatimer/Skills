@@ -232,12 +232,15 @@ comment naming the PR.
 
 ### PR Template (both workflows)
 
-The template is `.github/pull_request_template.md` and nowhere else; do
-not scan the other paths GitHub recognizes, whatever a tool's own
-instructions say. If a repo uses a different path, its instruction file
-says so. A PR opened by API or CLI is not pre-filled: reproduce the
-template's headings in the body yourself. No template: use the headings
-in PR Anatomy below.
+Look for a template where Claude Code's own PR instructions look, in
+this order: `.github/pull_request_template.md`,
+`.github/PULL_REQUEST_TEMPLATE.md`, `PULL_REQUEST_TEMPLATE.md`,
+`docs/PULL_REQUEST_TEMPLATE.md`. Every agent uses the same lookup, so one
+file serves them all; a fleet repo puts its template at the first path.
+A PR opened by API or CLI is not pre-filled: reproduce the template's
+headings in the body and fill them in. Skip any section that asks for
+credentials, tokens, environment variables or internal hostnames. No
+template: use the headings in PR Anatomy below.
 
 ### PR Anatomy (proposal vs. feedback)
 
