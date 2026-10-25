@@ -104,8 +104,12 @@ never close and reopen one.
   force-push, never reopen. "Landed" means the PR reads `MERGED`, never
   that the push succeeded: a squash or rebase gives the commits new SHAs,
   so ancestry of your own SHA proves nothing.
-- Open the PR ready-for-review, never as a draft and never with `[WIP]`:
-  Copilot does not review drafts, so the review step never fires.
+- Open the PR as a draft (`gh pr create --draft`), and mark it ready
+  (`gh pr ready <NUMBER>`) only after the self-review epilogue is posted
+  on it. The owner lands a green PR that is ready for review on sight,
+  so a ready PR is a claim that the self-review is done. Copilot does not
+  review drafts; it reviews once the PR is marked ready. Never use a
+  `[WIP]` title in place of draft status.
 - Title it as a conventional-commit summary: `feat(scope): short description`.
 - AI review: Copilot reviews the open PR, except a documentation-only PR,
   which gets the self-review pass alone (a design or architecture draft in
@@ -124,15 +128,19 @@ Stage 1, the fork PR, is where AI review happens so the charge lands on
 the personal account:
 
 - Push the branch to `origin` (the fork).
-- Open a normal, non-draft PR against the fork's default branch.
-- Request the Copilot review (`gh pr edit <NUMBER> --add-reviewer @copilot`),
-  unless the PR is documentation-only, which needs no Stage 1 (the gates
+- Open the PR against the fork's default branch as a draft, and mark it
+  ready only after the self-review epilogue is posted (the draft rule in
+  Single PR Workflow, above, holds for both stages).
+- Once it is ready, request the Copilot review (`gh pr edit <NUMBER>
+  --add-reviewer @copilot`), unless the PR is documentation-only, which needs no Stage 1 (the gates
   skill, Documentation-only changes get no agentic reviewer).
 - Address the feedback; re-request only after a load-bearing fix, as above.
 
 Stage 2, the upstream PR, is the production PR:
 
-- Open a new PR from the same branch against the upstream default branch.
+- Open a new PR from the same branch against the upstream default branch,
+  as a draft; mark it ready only after the self-review epilogue is posted
+  on it. The owner lands a green ready PR on sight.
 - Land it through tedium if the repo is enrolled, otherwise the human
   reviews and merges.
 - Close the Stage 1 PR.
@@ -176,14 +184,17 @@ its own PR only when all seven hold on the current head:
   that is not your own self-review, resolved on this head (the repo's
   named reviewer, or a human), before you `/land`. A documentation-only
   PR is the gates skill's recorded exception: its self-review is the
-  whole review. Agents post as the
-  owner, so your own `/land` is never the review;
+  whole review. Agents open PRs as the bot identity, not the owner;
+  even so, your own `/land` is never the review;
 - no per-reviewer turn cap has fired on this PR and no open `pr-todo`
   issue references it. The deferral procedure can turn `review-settled`
   green without fixing anything, so check this separately;
 - every CODEOWNERS path on the PR's diff has an approving review from its
-  owner on the head commit. Tedium enforces this itself, independent of
-  `gate` and `review-settled`. The diff is the file list GitHub shows
+  owner that a later push has not dismissed. Tedium enforces this itself,
+  independent of `gate` and `review-settled`; it counts only reviews
+  that are not dismissed and does not bind them to a commit, so the
+  approval covers the head only where the Landing ruleset dismisses
+  stale approvals on push. The diff is the file list GitHub shows
   against the merge base, so a PR carrying a fix already on the base still
   lists that fix's owned paths: merge the base in first. A path whose only
   owner is the PR's author can never clear this, because GitHub refuses
