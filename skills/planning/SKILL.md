@@ -690,7 +690,7 @@ Use this checklist before creating TODO_PLAN:
 - [ ] Identify the axes of change (what is likely to change); each maps to one seam -- a port, policy, or parameter -- and the seam gets its own test-first step. Do not plan single-impl-forever ports (YAGNI). See the coding skill, Section 1.
 - [ ] Break each feature into testable behaviors
 - [ ] Walk each task's use cases against the use-case surface (the architecture skill, Give each behavior its use case (the use-case surface)): every port, parameter and value a signature takes is built in that task or in one on its `blocked_by` chain, and the task's acceptance runs only through what that chain has built. Most defects three plan reviews found on one route (tds-utils PR#606) were a use case, an adapter binding or an acceptance command one task ahead of what builds it
-- [ ] The CI job that runs the new component's tests lands in the task that writes its first test, before that test goes GREEN; a job planned for the dogfood task leaves every earlier PR green by assertion alone (tds-utils PR#608: twelve tasks sat between the first test and the job)
+- [ ] The task that writes the component's first test also names the CI job, or the existing job's scope, that runs it under `gate` (the gates skill), and lands it before that task's first GREEN commit; otherwise `gate` stays green while nothing runs the tests, until a later integration task adds the job (tds-utils PR#608)
 - [ ] Estimate: 1 behavior = 1 test = 1 commit
 - [ ] Group behaviors into phases (2-5 commits per phase)
 - [ ] Add learning checkpoints every 2-3 commits
