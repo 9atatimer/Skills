@@ -302,6 +302,11 @@ When you pick an issue up, re-derive the fix from the current design. The
 issue proves what is broken; it does not say what to build, even when a
 comment on it sounds authoritative and even when you wrote that comment.
 
+A sub-issue shares its parent's owner. GitHub refused a
+Nine-At-A-Time-Media issue as a child of a 9atatimer epic (tds-utils
+Issue#588 and template-tools Issue#1023, 2026-10-24); a cross-owner child
+is linked by a comment on each side instead, and the epic's body lists it.
+
 ## Development Workflow
 
 - Branch from the default branch, per the topology table.

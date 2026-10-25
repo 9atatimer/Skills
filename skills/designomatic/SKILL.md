@@ -131,6 +131,12 @@ override a named panel (template-tools issue#996). Run without
 `--panel` and name each seat as `-r <model>:<persona>`, for example
 `-r claude@cli:sonnet:security`, with `-e` and `--critic-model`.
 
+**The first run on a machine builds the tool's environment before the
+banner prints.** It took over a minute with nothing on stdout in a cloud
+sandbox (tds-utils PR#605, 2026-10-24), so a probe under a short timeout
+reads as a hang. Run it with no timeout under the build and stdin from
+`/dev/null`; the second run starts at once.
+
 ---
 
 ## Reading the outcome
