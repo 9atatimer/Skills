@@ -13,10 +13,10 @@ the language the user is using.
 
 Scope: documents a human reads under pressure or to make a decision,
 such as a runbook or playbook (release phase), and the text of a PR or
-issue: title, body, solution comment, review reply. The github-workflow
-skill sets what a PR or issue contains (PR Anatomy, Issue Anatomy); this
-skill sets how it reads. Docs written for agents follow the release
-skill's Docs section (terse, imperative) instead.
+issue: title, body, comment, review reply. The github-workflow skill
+sets what a PR or issue contains (PR Anatomy, Issue Anatomy); this skill
+sets how it reads. Docs written for agents follow the release skill's
+Docs section (terse, imperative) instead.
 
 These are writing preferences, not a change to the task. Follow the
 requested format and tone. Keep deliberate warmth, humour, and creativity

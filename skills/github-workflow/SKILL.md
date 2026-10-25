@@ -239,23 +239,21 @@ says so. A PR opened by API or CLI is not pre-filled: reproduce the
 template's headings in the body yourself. No template: use the headings
 in PR Anatomy below.
 
-### PR Anatomy (problem vs. solution)
+### PR Anatomy (proposal vs. feedback)
 
-A PR follows Issue Anatomy. The body states the problem and the evidence
-for it; the solution goes in a comment. The diff already shows what
-changed, and each review round changes it again, so a body that
-describes the solution is stale after the first fix push and reads as
-settled when it is not. The problem statement stays true until the PR
-merges. The reader is the owner deciding whether to merge, often on a
-phone; the technical-writing skill governs the wording of the title, the
-body, and every comment.
+The body is the whole proposal: the problem, the evidence for it, and
+the solution. The comments are review feedback and the replies to it.
+The reader is the owner deciding whether to merge, often on a phone, and
+the merge commit keeps the body, so the body must stand alone. The
+technical-writing skill governs the wording of the title, the body, and
+every comment.
 
 **Title.** State the effect a reader sees once the PR lands, not the
 edit: `plan reports the configured max cycles`, not `Change --max-cycles
 default to None`. Keep it under 70 characters.
 
-**Body.** These headings, in this order. Problem and Evidence are never
-empty; omit the others only when there is nothing to say.
+**Body.** These headings, in this order. Problem, Evidence and Solution
+are never empty; omit the others only when there is nothing to say.
 
 - **Problem.** One or two sentences: what is wrong or missing, who hits
   it, and what it costs them. Link the issue (`Closes #N`) where one
@@ -264,27 +262,22 @@ empty; omit the others only when there is nothing to say.
 - **Evidence.** What shows the problem is real: a failing run, an
   observed output, a reproduction, the rule it breaks. Evidence about
   code names the commit it was read at (`at origin/main 48ab1cb`).
-- **Done when.** The observable conditions that show the problem is
-  gone, stated so a reviewer can check them against the diff.
+- **Solution.** The approach in a few sentences, and why it beat the
+  alternatives you rejected. Then what changed, grouped by intent rather
+  than file by file; name a file only where the reviewer needs it to
+  act.
+- **Checks.** The checks you ran, their results, and the commit they ran
+  on. Say which checks you did not run.
 - **Not proven.** What the PR does not yet show to work, and the risk it
   carries.
 
-**Solution comment.** Post it as the first comment, right after opening:
+When review changes the solution, edit the body so it describes the
+head commit; a body that describes an earlier approach misleads the
+merge decision and the history.
 
-- The approach in a few sentences, and why it beat the alternatives you
-  rejected.
-- What changed, grouped by intent rather than file by file. Name a file
-  only where the reviewer needs it to act.
-- The checks you ran and their results. Say which checks you did not
-  run.
-
-When review changes the approach, post a new solution comment that names
-the commit; do not edit the old one, and do not move the solution into
-the body. Edit the body only when the problem statement or its evidence
-was wrong.
-
-**Review replies.** One reply per thread, one or two sentences: what
-changed and the commit, or why nothing changed.
+**Comments.** Feedback goes in review threads and PR comments, not in
+the body. Reply once per thread, in one or two sentences: what changed
+and the commit, or why nothing changed.
 
 Everywhere: one fact per bullet; a bullet that needs a semicolon or a
 parenthetical to finish is two bullets. Never paste the commands that

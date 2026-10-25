@@ -1,6 +1,6 @@
 <!--
-Body = the problem and its evidence. The solution goes in the first
-comment, not here. Rules: the github-workflow skill, PR Anatomy.
+Body = the whole proposal: problem, evidence, solution. Review feedback
+goes in comments. Rules: the github-workflow skill, PR Anatomy.
 Title: the effect once this lands, not the edit. Under 70 characters.
 -->
 
@@ -13,9 +13,14 @@ Title: the effect once this lands, not the edit. Under 70 characters.
 <!-- Failing run, observed output, reproduction, or the rule it breaks.
 Evidence about code names the commit it was read at. -->
 
-## Done when
+## Solution
 
-<!-- Observable conditions a reviewer can check against the diff. -->
+<!-- The approach and why it beat the alternatives. Then what changed,
+grouped by intent. Keep this current with the head commit. -->
+
+## Checks
+
+<!-- Checks run, results, and the commit they ran on. Name any not run. -->
 
 ## Not proven
 
