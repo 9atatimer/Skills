@@ -1,6 +1,6 @@
 ---
 name: retrospective
-description: "Phase 8 of the SDLC, and the only thing that closes the loop: walking the frozen design against the shipped code, cutting drift issues, appending Key Decisions, recording lessons in TODO_PLAN.md, and handing the status transition to a human. Load whenever an implementation lands -- green tests and a clean review are not the end of the work. This phase never elides, including when the change shipped nowhere; for developer tooling (no design to walk) it shrinks to lessons and discovered issues."
+description: "Phase 8 of the SDLC, and the only thing that closes the loop: walking the frozen design against the shipped code, cutting drift issues, appending Key Decisions, recording lessons in TODO_PLAN.md, and setting the design record's status. Load whenever an implementation lands -- green tests and a clean review are not the end of the work. This phase never elides, including when the change shipped nowhere; for developer tooling (no design to walk) it shrinks to lessons and discovered issues."
 ---
 
 # SKILL: Retrospective (Phase 8)
@@ -16,7 +16,7 @@ not "if there is time," and it does not elide.
 
 **Developer tooling runs a short retrospective.** A tool has no design
 doc and no as-built (sdlc, "Product or tooling"), so there is nothing to
-walk for drift, no Key Decisions to append and no status to hand off. Do
+walk for drift, no Key Decisions to append and no status to set. Do
 the lessons and discovered-issues sections, confirm `docs/ops/<tool>.md`
 matches what shipped, and stop.
 
@@ -127,15 +127,17 @@ stays **visibly incomplete** until they are settled. Then prune
 `tasks/done/`: delete every entry whose work has shipped and whose lessons
 have graduated. -> the todo-plan skill
 
-### Hand off the status transition
+### Set the status
 
-**Only a human moves a design doc to IMPLEMENTED**, and only once the drift
-issues are closed. IMPLEMENTED means shipped, as-built updated, drift
-closed -- so the status is a lie while drift is open, and an implementer
-never marks its own work implemented.
+**The retrospective PR sets the status itself.** IMPLEMENTED means
+shipped, as-built updated, drift closed: set it, in a commit of its own,
+once all three hold. While drift is open the status stays APPROVED. This
+is bookkeeping, never a question: do not ask a human to move a status,
+remind them of one, or report one as pending (the design skill, Status
+Transitions).
 
-State plainly in the handoff: what shipped, what drifted, what is still
-open, and that the transition is the human's call.
+State plainly in the PR: what shipped, what drifted, and what is still
+open.
 
 ---
 
@@ -176,8 +178,8 @@ missing, not that agents keep being careless. Propose the change.
 
 The loop is closed when: every divergence is filed, Key Decisions cites its
 authorizations, every lesson sits at its layer (unsettled ones in
-`TODO_PLAN.md` alongside the open drift), and a human has what they need
-to rule on the status transition.
+`TODO_PLAN.md` alongside the open drift), and the status line says what
+is true.
 
 Shipping code is not the same as shipping what was designed.
 

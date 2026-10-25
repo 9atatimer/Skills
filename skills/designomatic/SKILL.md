@@ -77,7 +77,9 @@ those phases, a documentation-only change gets the self-review pass alone
 Do **not** reach for it when:
 
 - The document is APPROVED. It is frozen, and designomatic refuses it --
-  cut a drift issue instead. -> the design skill
+  cut a drift issue instead. A merged record is APPROVED whatever its
+  status line says, and the tool reads only the line: correct a stale
+  DRAFT or REVIEW line first, in a commit of its own. -> the design skill
 - You want code reviewed. That is the gates skill.
 - You want to know what a document must contain. That is the concept,
   design, architecture and as-built skills -- which are also exactly what
@@ -153,10 +155,10 @@ window; 402 means the account's credit balance is at zero. Neither is the
 agent's to lift: report it. Provisioning and the model-id grammar are the
 tool's runbook (template-tools `docs/ops/designomatic.md`).
 
-**The panel's output is a proposal, not an approval.** designomatic cannot
-mark a document APPROVED and neither can you -- only a human moves that
-status. What a green run buys is that a human's first read is not spent on
-what a panel would have caught.
+**The panel's output is a proposal, not an approval.** A human's merge is
+the approval, and the first PR after it writes the status line (the
+design skill, Status Transitions). What a green run buys is that a human's first
+read is not spent on what a panel would have caught.
 
 ---
 

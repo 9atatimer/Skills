@@ -9,7 +9,9 @@ description: "Phase 3 of the SDLC: writing the architecture record, docs/design/
 > can do, in a record of its own that constrains the plan and the code.
 > **Input:** an APPROVED design record and the as-built.
 > **Output:** `docs/design/ARCHITECTURE.<name>.md`, frozen at APPROVED.
-> **Exit gate:** a human marks the architecture record APPROVED.
+> **Exit gate:** a human merges the architecture record; merged is
+> APPROVED, and the agent sets the status (the design skill,
+> Status Transitions).
 
 ---
 
@@ -232,8 +234,8 @@ composition root per runtime. -> the designomatic skill
 Every volatile axis is named and mapped to exactly one seam; every design
 behavior is traced to one use case with a pure domain beneath it and one
 composition root per runtime; every design-named bound is placed; every
-new dependency has a proposed ring; operability is stated. **A human
-approves, and the record freezes.** Then phase 3b (planning) computes the
+new dependency has a proposed ring; operability is stated. **It merges,
+and the record freezes.** Then phase 3b (planning) computes the
 route.
 
 **Drift.** From APPROVED onward this record changes only by human

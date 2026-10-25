@@ -7,10 +7,11 @@ description: "Phase 2 of the SDLC: writing, reviewing, or improving a design doc
 
 > **Purpose:** Author, review, and improve design documents that are useful to both AI agents and human engineers.
 > **When to use:** Before implementing a new system, major feature, or architectural change.
-> **Exit gate:** the record is complete and a human marks it APPROVED.
-> From then on its body is frozen; only the status and the append-only Key
-> Decisions log move. APPROVED is what opens phase 3: the architecture
-> record is written against this one, never alongside it.
+> **Exit gate:** the record is complete and a human merges it.
+> Merged is APPROVED (Status Transitions). From then on its body is
+> frozen; only the status and the append-only Key Decisions log move.
+> APPROVED is what opens phase 3: the architecture record is written
+> against this one, never alongside it.
 > **References:** `docs/design/TEMPLATE.md`; a repo's `docs/design/STYLE-GUIDE.md`, where
 > present, is a local copy for humans and yields to this skill where they differ
 
@@ -288,7 +289,7 @@ re-reads your intent rather than the text, and a panel is the cheapest
 correction for that. -> the designomatic skill
 
 The checklist stays yours to apply. The panel is a first pass, not an
-approval, and only a human marks a record APPROVED.
+approval; the merge is the approval.
 
 ### Quality Checklist
 
@@ -490,7 +491,7 @@ way at its own APPROVED.
 
 Implementation is not done when the tests pass. The closing checklist --
 cut drift issues, append Key Decisions, record lessons, file what you
-discovered, update `TODO_PLAN.md`, hand off the status transition -- is
+discovered, update `TODO_PLAN.md`, set the status -- is
 **the retrospective skill (phase 8)**, run in a docs-only PR separate from
 the feature PR.
 
@@ -506,26 +507,36 @@ closes the loop was hidden behind the rule that kept them out of it.
 ## Status Transitions
 
 ```
-DRAFT  -->  REVIEW  -->  APPROVED  -->  IMPLEMENTED
-                |                            |
-                v                            v
-            (revise)                    SUPERSEDED
+DRAFT (or REVIEW)  -->  APPROVED  -->  IMPLEMENTED  -->  SUPERSEDED
+   on its branch         merged        shipped, drift      replaced
 ```
 
-- **DRAFT -> REVIEW:** Author believes doc is complete enough for feedback,
-  and the reviewer panel has run over it (-> the designomatic skill). A
-  human's first read should not be spent on what a panel would have caught
-- **REVIEW -> APPROVED:** Reviewers agree on the approach
-- **APPROVED -> IMPLEMENTED:** **shipped, as-built updated, drift closed.**
-  Human-only. All of the conditions, not merely the merge: code that is merged
-  but not released is not in the shared architecture, and the status is a
-  lie while drift is open. An implementer never marks its own work
-  IMPLEMENTED
-- **IMPLEMENTED -> SUPERSEDED:** A newer design replaces this one (link to it)
-- **REVIEW -> DRAFT:** Significant revisions needed (back to drafting)
+**Status is bookkeeping, never a question (owner ruling, 2026-10-24).**
+The agent sets the status line itself, by the rules below. It never asks
+a human to move a status, reminds them of one, offers to, or reports one
+as pending, in chat, in a PR or anywhere else. Once a record is merged
+and the next phase has begun, the work moves on.
+
+- **DRAFT, or REVIEW:** the record on its branch, before it lands. REVIEW
+  is an optional label for the same state; run the reviewer panel before
+  the PR (-> the designomatic skill)
+- **APPROVED:** merging to the default branch is the approval, when a
+  human lands it: a human merges the PR or posts its `/land`. An agent
+  never merges or lands its own design or architecture record (the
+  github-workflow skill). The record lands with its DRAFT or REVIEW line,
+  so nothing freezes before the merge, and is APPROVED from that moment.
+  The first PR after the merge that touches it, or that opens the next
+  phase, writes `Status: APPROVED`, in a commit of its own
+- **IMPLEMENTED:** **shipped, as-built updated, drift closed.** The
+  retrospective PR sets it once all three hold, not merely the merge:
+  code that is merged but not released is not in the shared
+  architecture, and the status is a lie while drift is open. While drift
+  is open the status stays APPROVED, silently
+- **SUPERSEDED:** the PR that lands a replacing record sets it here and
+  links the replacement
 
 **APPROVED and IMPLEMENTED carry the merged-but-unreleased gap.** APPROVED
-means designed, and possibly merged, but not yet in the shared architecture
+means designed and merged, but not yet in the shared architecture
 described by `docs/arch/`. That is what lets the as-built stay strictly
 factual instead of needing a "pending" marker.
 
@@ -533,4 +544,4 @@ factual instead of needing a "pending" marker.
 amendment through the design process -- never as a side effect of someone
 implementing it. See Drift above. **APPROVED is also the gate to phase 3:**
 the architecture record is written against a frozen design, so a design
-still in DRAFT or REVIEW has no architecture record yet.
+that has not merged has no architecture record yet.

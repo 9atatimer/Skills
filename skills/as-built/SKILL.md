@@ -49,9 +49,10 @@ shared architecture; that is a correct no-op.
 
 The merged-but-unreleased gap is carried by the design record's status:
 
-- **APPROVED** -- designed, possibly merged, not yet in the shared
+- **APPROVED** -- designed and merged, not yet in the shared
   architecture.
-- **IMPLEMENTED** -- shipped, as-built updated, drift closed. Human-only.
+- **IMPLEMENTED** -- shipped, as-built updated, drift closed. The
+  retrospective PR sets it; nobody is asked.
 
 ---
 

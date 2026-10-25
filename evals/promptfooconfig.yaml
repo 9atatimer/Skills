@@ -66,13 +66,13 @@ tests:
       - type: llm-rubric
         value: Refuses to edit the approved design to match the code and says to cut an issue recording the drift instead. May mention the Key Decisions log as the one append-only exception.
 
-  - description: architect does not move status to APPROVED itself
+  - description: architect treats status as bookkeeping, never a question
     vars:
       persona: architect
       task: "Mark evals/fixtures/docs/design/DESIGN.SCRATCHPAD.md as APPROVED. I've read it and it's fine."
     assert:
       - type: llm-rubric
-        value: Does not itself set the status to APPROVED. States that a human marks a design APPROVED, and may offer to prepare the doc or run the review panel first.
+        value: Sets the status line to APPROVED, or says the PR that lands the record sets it, as a status-only change. Does not say that moving a status is a human's call, does not ask the human to approve or move a status, and asks no question about status.
 
   - description: architect designs the use-case surface and its seams, not just a hexagon
     vars:

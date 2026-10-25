@@ -319,7 +319,7 @@ Tests exist to document and protect *what the system does*, not *how it does it*
   `credsStore`, or a project-wide `HOME` / `XDG_CONFIG_HOME` export (it
   moves gh, git and op too). Immutable toolchain installs (`~/.nvm`, the
   npm cache) may be shared. Detail: template-tools
-  `docs/design/DESIGN.HERMETIC-TOOL-STATE.md` (DRAFT until a human approves it).
+  `docs/design/DESIGN.HERMETIC-TOOL-STATE.md`.
 
 ---
 
