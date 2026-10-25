@@ -329,6 +329,7 @@ Run through these checks:
 - [ ] Does every behavior have a Given/When/Then row, including the error paths and the "is told nothing" paths?
 - [ ] Does every noun in Goals, Behaviors and State Machine appear in the Domain Language under exactly one name?
 - [ ] Is every bound the record names in the Parameters table with its constraint, and does no bound carry a value?
+- [ ] Does every quantity the record derives from other things (a score, an index, a ratio) name the one decision it changes, over units of one kind? A composite over files and design behaviors weighs incommensurable things and nets a fixed flaw against an introduced one; the list it summarises is usually the capability, and the number is a Rejections row (tds-utils PR#610: a per-quality score survived two panel passes and fell to the owner's first question)
 - [ ] Is the record free of mechanism: no seam, port, signature, store, vendor, release class or failure mode? (those are the architecture record's; see "What stays out of a design record")
 
 ### Review Output Format
