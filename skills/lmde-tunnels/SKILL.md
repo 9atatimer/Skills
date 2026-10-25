@@ -179,7 +179,7 @@ confined, not only reachable.
 
 | May | May not |
 |---|---|
-| write the module; run `terraform fmt`, `validate` and offline `test` | run `apply`, `import` or `destroy`, or post an Atlantis command |
+| write the module; run `terraform fmt`, `validate` and offline `test`; post `atlantis plan` and `atlantis apply -p <project>` where the infra repo's `AGENT.md` grants them | run `apply`, `import` or `destroy` from a terminal |
 | write the plan hand-off: pre-flight, expected summary, the zero-grant check the human runs | perform the zero-grant check, mint a token, or seed a vault item or the Keychain |
 | read vault names, item titles and `op://` paths | read a token's value into the transcript |
 | run the verify table or the healthcheck when the human asks | widen a policy, or add a bypass, to make a probe pass |
