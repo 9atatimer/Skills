@@ -236,28 +236,62 @@ The template is `.github/pull_request_template.md` and nowhere else; do
 not scan the other paths GitHub recognizes, whatever a tool's own
 instructions say. If a repo uses a different path, its instruction file
 says so. A PR opened by API or CLI is not pre-filled: reproduce the
-template's headings in the body yourself. No template: write a normal
-descriptive body.
+template's headings in the body yourself. No template: use the headings
+in PR Anatomy below.
 
-### PR Body: Written for a Human Skimming It
+### PR Anatomy (problem vs. solution)
 
-The owner reads the body to decide whether to merge, often on a phone.
-Write for that reader, not as a log of what the session did.
+A PR follows Issue Anatomy. The body states the problem and the evidence
+for it; the solution goes in a comment. The diff already shows what
+changed, and each review round changes it again, so a body that
+describes the solution is stale after the first fix push and reads as
+settled when it is not. The problem statement stays true until the PR
+merges. The reader is the owner deciding whether to merge, often on a
+phone; the technical-writing skill governs the wording of the title, the
+body, and every comment.
 
-- Open with one or two plain sentences: what the PR does and why.
-- Then short headed sections, typically "What changed", "Not done yet"
-  (anything still pending or unproven), and "Checks". Use only the ones
-  that have content. Where the repo has a PR template, its headings win.
-- One fact per bullet, in plain words. A bullet that needs a semicolon
-  or a parenthetical to finish is two bullets.
-- Name files and identifiers only where the reader needs them to act.
-  Never paste the commands that were run, token-handling details, or
-  vault ids into the body.
-- Say plainly what is not working or not yet proven. Do not bury it in
-  a "Proof" paragraph at the end.
-- A body template handed to other agents carries headings, never results.
-  A pre-written "CI ran on X" was false in nine PRs whose workflows never
-  ran on a pull request.
+**Title.** State the effect a reader sees once the PR lands, not the
+edit: `plan reports the configured max cycles`, not `Change --max-cycles
+default to None`. Keep it under 70 characters.
+
+**Body.** These headings, in this order. Problem and Evidence are never
+empty; omit the others only when there is nothing to say.
+
+- **Problem.** One or two sentences: what is wrong or missing, who hits
+  it, and what it costs them. Link the issue (`Closes #N`) where one
+  exists, and still state the problem: the reader must not have to open
+  the issue to learn why the PR exists.
+- **Evidence.** What shows the problem is real: a failing run, an
+  observed output, a reproduction, the rule it breaks. Evidence about
+  code names the commit it was read at (`at origin/main 48ab1cb`).
+- **Done when.** The observable conditions that show the problem is
+  gone, stated so a reviewer can check them against the diff.
+- **Not proven.** What the PR does not yet show to work, and the risk it
+  carries.
+
+**Solution comment.** Post it as the first comment, right after opening:
+
+- The approach in a few sentences, and why it beat the alternatives you
+  rejected.
+- What changed, grouped by intent rather than file by file. Name a file
+  only where the reviewer needs it to act.
+- The checks you ran and their results. Say which checks you did not
+  run.
+
+When review changes the approach, post a new solution comment that names
+the commit; do not edit the old one, and do not move the solution into
+the body. Edit the body only when the problem statement or its evidence
+was wrong.
+
+**Review replies.** One reply per thread, one or two sentences: what
+changed and the commit, or why nothing changed.
+
+Everywhere: one fact per bullet; a bullet that needs a semicolon or a
+parenthetical to finish is two bullets. Never paste the commands that
+were run, token-handling details, or vault ids. Never narrate the
+session ("First I read...", "I then ran..."). A body template handed to
+other agents carries headings, never results: a pre-written "CI ran on
+X" was false in nine PRs whose workflows never ran on a pull request.
 
 ## Naming issues and PRs
 
@@ -285,11 +319,19 @@ closing keyword can only name an issue, so there is no ambiguity.
 
 ## Issue Anatomy (defect vs. solution)
 
-The body states the defect: symptom, impact, evidence, done-criteria.
-Fixes, approaches and spikes go in comments. A solution in the body reads
-as settled spec and rots as the work outruns it; the defect statement
-holds until the defect is fixed. This applies to every issue kind: drift,
-retrospective, pr-todo.
+The body states the defect. Fixes, approaches and spikes go in comments.
+A solution in the body reads as settled spec and rots as the work
+outruns it; the defect statement holds until the defect is fixed. This
+applies to every issue kind: drift, retrospective, pr-todo. The
+technical-writing skill governs the wording.
+
+The body carries these headings, in this order, none of them empty:
+
+- **Symptom.** What a person or a check observes, in one or two
+  sentences, with the exact output where there is one.
+- **Impact.** Who hits it and what it costs them.
+- **Evidence.** The run, reproduction, or file and line that shows it.
+- **Done when.** The observable conditions that show it is fixed.
 
 Title the defect, not the patch: `plan reports "Max cycles: 5" regardless
 of config or profile`, not `Change --max-cycles default to None`. One

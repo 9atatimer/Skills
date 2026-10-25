@@ -1,6 +1,6 @@
 ---
 name: technical-writing
-description: "Writing release-phase documents that humans read and follow: runbooks, playbooks, and operator procedures. Plain, literal wording in the style of ASD-STE100 (precise meaning, familiar words, clear references, explicit relationships), with technical terms kept. Load when writing or revising a runbook or playbook for a human operator. Skip for docs written for agents (release, Docs; markdown), Markdown formatting rules (markdown), and design records (design)."
+description: "Writing text that humans read and act on: runbooks, playbooks, operator procedures, and every PR or issue title, body, and comment. Plain, literal wording in the style of ASD-STE100 (precise meaning, familiar words, clear references, explicit relationships), with technical terms kept. Load when writing or revising a runbook or playbook for a human operator, and before opening a PR, filing an issue, or posting a PR or issue comment. Skip for docs written for agents (release, Docs; markdown), what a PR or issue body must contain (github-workflow), Markdown formatting rules (markdown), and design records (design)."
 ---
 
 # Technical Writing
@@ -11,8 +11,11 @@ rigidly: precise meaning, familiar words, clear references, and explicit
 relationships. Keep necessary technical terms. Apply these principles in
 the language the user is using.
 
-Scope: documents a human reads under pressure, such as a runbook or
-playbook (release phase). Docs written for agents follow the release
+Scope: documents a human reads under pressure or to make a decision,
+such as a runbook or playbook (release phase), and the text of a PR or
+issue: title, body, solution comment, review reply. The github-workflow
+skill sets what a PR or issue contains (PR Anatomy, Issue Anatomy); this
+skill sets how it reads. Docs written for agents follow the release
 skill's Docs section (terse, imperative) instead.
 
 These are writing preferences, not a change to the task. Follow the
@@ -50,6 +53,16 @@ Distinguish facts, assumptions, estimates, and recommendations. State
 uncertainty and limits plainly. Do not invent evidence, personal
 experience, consensus, or certainty. Correct errors when you can
 establish them; do not turn a guess into a fact without saying so.
+
+## PR and issue text
+
+The reader decides whether to merge, fix, or close, and has not seen the
+session. Name the thing: "the `plan` command prints 5", not "this
+change" or "the issue". Lead with the problem, not with what was done
+about it. Do not narrate the work ("I first read...", "after
+investigating..."), grade it ("comprehensive", "robust", "carefully"),
+or restate the diff line by line. A claim that a check passed names the
+check and the commit it ran on.
 
 ## Before sending
 
