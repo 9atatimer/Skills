@@ -371,6 +371,12 @@ Creating issues in bulk through the MCP tools:
 - A create that sets a parent fails with "failed to resolve label" when
   a label does not exist yet. A create without a parent makes the label.
   File the first issue of a new label without a parent, then attach it.
+- A parent in another owner was refused: the sub-issue tool would not
+  attach
+  [template-tools Issue#1023](https://github.com/Nine-At-A-Time-Media/template-tools/issues/1023)
+  under [tds-utils Issue#588](https://github.com/9atatimer/tds-utils/issues/588)
+  (2026-10-24). Link a cross-owner child by a comment on each side and
+  list it in the epic's body.
 
 ## Commit Messages
 
