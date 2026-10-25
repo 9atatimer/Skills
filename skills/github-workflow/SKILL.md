@@ -128,15 +128,19 @@ Stage 1, the fork PR, is where AI review happens so the charge lands on
 the personal account:
 
 - Push the branch to `origin` (the fork).
-- Open a normal, non-draft PR against the fork's default branch.
-- Request the Copilot review (`gh pr edit <NUMBER> --add-reviewer @copilot`),
-  unless the PR is documentation-only, which needs no Stage 1 (the gates
+- Open the PR against the fork's default branch as a draft, and mark it
+  ready only after the self-review epilogue is posted (the draft rule in
+  Single PR Workflow, above, holds for both stages).
+- Once it is ready, request the Copilot review (`gh pr edit <NUMBER>
+  --add-reviewer @copilot`), unless the PR is documentation-only, which needs no Stage 1 (the gates
   skill, Documentation-only changes get no agentic reviewer).
 - Address the feedback; re-request only after a load-bearing fix, as above.
 
 Stage 2, the upstream PR, is the production PR:
 
-- Open a new PR from the same branch against the upstream default branch.
+- Open a new PR from the same branch against the upstream default branch,
+  as a draft; mark it ready only after the self-review epilogue is posted
+  on it. The owner lands a green ready PR on sight.
 - Land it through tedium if the repo is enrolled, otherwise the human
   reviews and merges.
 - Close the Stage 1 PR.
