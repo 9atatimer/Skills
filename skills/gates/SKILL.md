@@ -328,12 +328,11 @@ Which bot reviews a PR is policy, not agent judgment:
   the human's trigger misfires (wrong handle, no bot reaction), say so
   and let the human re-post. **Copilot is the only reviewer an agent
   may summon or re-summon.** Absent a working human trigger, surface
-  the state and stop. Why: codex quota is shared with workloads
-  outside the PR, so every codex invocation is a human budget
+  the state and stop. Why: codex quota is shared with workloads the
+  agent cannot see, so every codex invocation is a human budget
   decision; Copilot's turn cap bounds its spend. Only who summons
-  differs: once a codex
-  review exists, triage it with exactly the same machinery and
-  seriousness as Copilot's.
+  differs: once a codex review exists, triage it with exactly the
+  same machinery and seriousness as Copilot's.
 - **Greptile is by-human-invite only.** Never request, trigger, or
   re-request a greptile review under any circumstances; if the human
   invites it onto a PR, triage its feedback like any other reviewer's.
@@ -493,16 +492,16 @@ carve-out, not an ordered list.
 
    (or the MCP `pull_request_read` `get_comments` method, which
    returns reaction counts). `eyes` -> in flight; `+1` with no review
-   -> done, no suggestions. **`eyes` proves nothing after 15
-   minutes.** Codex posts its `codex-review-state` summary comment at
-   start and edits it only at completion; a dead job leaves
-   `status: running` and `eyes` on forever (tds-internal PR#279,
-   2026-10-25: 2 h; its sibling took 53 s). `running` with that
-   comment's `updated_at` older than 15 min is a stall: report the sha
-   and timestamp, stop waiting, leave the re-trigger to the human.
-   `@codex` text other than `review` is a cloud task, which runs only
-   where the repo has a legacy Codex Cloud environment; without one
-   the bot answers "To use Codex here, create an environment".
+   -> done, no suggestions; neither -> not picked up: say so (Reviewer
+   Selection). Codex posts a `codex-review-state` summary comment
+   (find it in the PR's issue comments) at start and edits it only at
+   completion; a dead job leaves `status: running` and `eyes` on
+   forever (observed: 2 h, 2026-10-25). `running` with that comment's
+   `updated_at` older than 15 min is a stall: report the sha and
+   timestamp, stop (no quiet wait), leave the re-trigger to the human.
+   `@codex` text not starting with `review` is a cloud task, run only
+   where the repo has a Codex Cloud environment the bot's refusal
+   links to.
 
    **Greptile** is never awaited -- it reviews only when the human
    invites it, so treat its reviews as events to triage, not a queue
@@ -594,7 +593,7 @@ Stop when any of these fires:
   reviewers (other reviewers may remain -- use the same Copilot-bot
   check as step 2, not an empty-list check); for codex, a posted
   review or thumbs-up on the trigger comment with no eyes reaction
-  outstanding, or a step 2 stall. Plus no new review from it across **3 consecutive
+  outstanding. Plus no new review from it across **3 consecutive
   wakes** (~6 min quiescent). Stop fast -- reviewers rarely return
   late once the response window has passed. For greptile there is no
   done-and-quiet wait at all: it cannot be re-requested, so the loop
@@ -622,7 +621,7 @@ Stop when any of these fires:
   loop alive indefinitely. If a requested agentic reviewer produces no
   review across ~30 minutes of waiting (in polling mode, ~10
   consecutive quiet wakes), treat it as stalled: report state, surface
-  to the user, and stop.
+  to the user, and stop. Codex: the 15-minute rule in step 2.
 - A comment is architecturally ambiguous -- ask the human inline in the
   session as plain text (never a question-picker widget -- they break on
   mobile) and stop. Do not guess at design calls.
