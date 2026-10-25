@@ -59,11 +59,10 @@ PRs land through the tedium merge bot; the rules are in `tedium.toml` on
 - **One PR per batch** (`max_batch_size = 1`): each landing is a publish.
 - **`hold` label** keeps a PR out of the queue. `tedium dryrun` builds it
   on `tedium/try` without publishing anything.
-- **CODEOWNERS** covers the merge rules themselves (`tedium.toml`,
-  `CODEOWNERS`, `.github/workflows/`) and the executable payload every
-  agent in the fleet loads and runs (`skills/`, `agents/`, `mcp/`,
-  `scripts/publicity-guard.mjs`); a PR touching any of it needs a human
-  owner's approval before tedium lands it.
+- **CODEOWNERS** covers every path (`*`): every
+  landing needs a human owner's approval before tedium lands it. Agents
+  open PRs as `9atatimer-bot` so the owner can approve; a PR the owner
+  authored can never clear the check and is merged by hand.
 - **`tedium/merge` and `tedium/try` are the bot's build branches**: never
   protect them, never commit to them, never base work on them.
 - Second repo in the go-live rollout, after tds-utils.
