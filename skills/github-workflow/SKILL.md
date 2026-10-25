@@ -278,6 +278,9 @@ When review changes the solution, edit the body so it describes the
 head commit; a body that describes an earlier approach misleads the
 merge decision and the history.
 
+A block another skill adds to the body, such as the infra-handoff skill's
+handoff block, goes after Not proven, under its own headings.
+
 **Comments.** Feedback goes in review threads and PR comments, not in
 the body. Reply once per thread, in one or two sentences: what changed
 and the commit, or why nothing changed.
