@@ -214,8 +214,9 @@ skill.
     skill). Deploy workflows stay with the code they ship. An
     agent writes the config and hands the human the plan line; it never
     runs `apply`, `import`, `state mv` or `destroy` from a terminal
-    (a plan/apply server's comment command, where the infra repo's
-    `AGENT.md` grants it, is the one exception), never passes
+    (the plan/apply server's `atlantis plan` and `atlantis apply -p <project>`
+    comments, where the infra repo's `AGENT.md` grants them, are the one
+    exception), never passes
     `-auto-approve`, never mints or seeds a credential, and never creates
     a resource by hand to unblock a deploy. A move or refactor is proven
     by an empty plan. -> the iac skill (and infra-credentials,

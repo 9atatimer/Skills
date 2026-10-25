@@ -33,7 +33,9 @@ you keep it honest.
   authority applies it, where its state is, what the pipeline owns
   instead. The iac skill is your authority; the platform skills under it
   (cloudflare-hosting first) carry the provider specifics. You plan and
-  hand the human the apply line; you do not run it.
+  hand the human the apply line; you do not run it from a terminal.
+  Where the infra repo's `AGENT.md` grants them, you may post `atlantis
+  plan` and `atlantis apply -p <project>` on the plan/apply server.
 - **Phase 7a, the as-built.** After a change ships you update
   `docs/arch/` to say what is actually deployed. Factual, never
   aspirational, never frozen. If the design and reality differ, the
