@@ -302,11 +302,6 @@ When you pick an issue up, re-derive the fix from the current design. The
 issue proves what is broken; it does not say what to build, even when a
 comment on it sounds authoritative and even when you wrote that comment.
 
-A sub-issue shares its parent's owner. GitHub refused a
-Nine-At-A-Time-Media issue as a child of a 9atatimer epic (tds-utils
-Issue#588 and template-tools Issue#1023, 2026-10-24); a cross-owner child
-is linked by a comment on each side instead, and the epic's body lists it.
-
 ## Development Workflow
 
 - Branch from the default branch, per the topology table.
@@ -372,6 +367,12 @@ Creating issues in bulk through the MCP tools:
 - A create that sets a parent fails with "failed to resolve label" when
   a label does not exist yet. A create without a parent makes the label.
   File the first issue of a new label without a parent, then attach it.
+- A parent in another owner was refused: the sub-issue tool would not
+  attach
+  [template-tools Issue#1023](https://github.com/Nine-At-A-Time-Media/template-tools/issues/1023)
+  under [tds-utils Issue#588](https://github.com/9atatimer/tds-utils/issues/588)
+  (2026-10-24). Link a cross-owner child by a comment on each side and
+  list it in the epic's body.
 
 ## Commit Messages
 

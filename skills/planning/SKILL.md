@@ -689,7 +689,7 @@ Use this checklist before creating TODO_PLAN:
 - [ ] Identify all major components/features
 - [ ] Identify the axes of change (what is likely to change); each maps to one seam -- a port, policy, or parameter -- and the seam gets its own test-first step. Do not plan single-impl-forever ports (YAGNI). See the coding skill, Section 1.
 - [ ] Break each feature into testable behaviors
-- [ ] For every use case a task names, walk its architecture signature: each port, parameter and value it takes is built in that task or in one on its `blocked_by` chain, and its done condition runs only through what that chain has built (a CLI command needs its presenter and its container bindings, and the container binds no fake). Three review rounds over one route (tds-utils PR#606) found eight of nineteen defects here: use cases planned a task ahead of a port they take, an adapter bound a task before the task that builds it, a done check on a command a later task adds
+- [ ] Walk each task's use cases against the use-case surface (the architecture skill, Give each behavior its use case (the use-case surface)): every port, parameter and value a signature takes is built in that task or in one on its `blocked_by` chain, and the task's acceptance runs only through what that chain has built. Most defects three plan reviews found on one route (tds-utils PR#606) were a use case, an adapter binding or an acceptance command one task ahead of what builds it
 - [ ] Estimate: 1 behavior = 1 test = 1 commit
 - [ ] Group behaviors into phases (2-5 commits per phase)
 - [ ] Add learning checkpoints every 2-3 commits
