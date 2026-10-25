@@ -127,6 +127,10 @@ Rules that hold across all three:
   the human the exact `apply` line. `terraform apply` from an agent
   session is the canonical thing the sre persona refuses, and a cloud
   session has neither the laptop credentials nor the standing to do it.
+  The one apply route an agent may have is a plan/apply server's comment
+  command (`atlantis apply -p <project>`), and only where the infra
+  repo's `AGENT.md` grants it; for every other root, hand the human the
+  line.
 - Production naming follows the repo's deploy authority: "apply it"
   never means production; a request that does not name the tier is a
   request for nonprod.
