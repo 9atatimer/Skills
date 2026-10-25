@@ -329,6 +329,7 @@ Run through these checks:
 - [ ] Does every behavior have a Given/When/Then row, including the error paths and the "is told nothing" paths?
 - [ ] Does every noun in Goals, Behaviors and State Machine appear in the Domain Language under exactly one name?
 - [ ] Is every bound the record names in the Parameters table with its constraint, and does no bound carry a value?
+- [ ] Does every quantity the record derives from other things (a score, an index, a ratio) name the one decision it changes? One that names none is dropped and logged under Rejections as a dismissed alternative; the list it summarised is usually the capability (tds-utils PR#610)
 - [ ] Is the record free of mechanism: no seam, port, signature, store, vendor, release class or failure mode? (those are the architecture record's; see "What stays out of a design record")
 
 ### Review Output Format
