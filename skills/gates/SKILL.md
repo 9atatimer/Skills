@@ -675,8 +675,8 @@ When the turn cap fires for a reviewer:
 
    ```bash
    gh issue create --repo <TARGET/REPO> --label pr-todo \
-     --title "<short imperative summary>" \
-     --body "<the defect: what the reviewer flagged, why it is deferred, links to the PR and the originating comment thread -- per Issue Anatomy in the github-workflow skill, keep any suggested fix to a follow-up comment>"
+     --title "<the defect, not the fix>" \
+     --body "<Issue Anatomy's headings -- Symptom (what the reviewer flagged), Impact, Evidence (links to the PR and the originating comment thread), Done when -- plus one line on why it is deferred; any suggested fix goes in a follow-up comment>"
    ```
 
    **`<TARGET/REPO>` is the canonical repo, per the remote topology table
