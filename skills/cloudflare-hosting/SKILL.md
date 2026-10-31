@@ -271,6 +271,7 @@ zonal.
 | API error `9106` under Terraform | no Authorization header reached the API: the token variable is empty, terraform ran bare instead of under `op run` |
 | API error `10000` on an account endpoint | the token authenticated and lacks that permission: scope, not plumbing |
 | `1010` `auth.forbidden` on an account resource | a zone-scoped token; the resource is not zonal (see the iac skill's minting posture) |
+| an OIDC client behind Access reports `state` missing | usually Access rejected the request (`invalid_scope` and kin) with an error redirect that carries no `state`; reproduce the hop with `curl`, since a browser discards that redirect |
 
 Verify a suspect token read-only (`GET /user/tokens/verify`) before
 blaming the deploy tool.

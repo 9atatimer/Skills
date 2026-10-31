@@ -305,6 +305,40 @@ binary -- with its side-effect edges faked (here, fake `docker-credential-*`
 helpers first on PATH) -- and is skipped, never faked, when the tool is
 absent.
 
+### Pin an outside constant as a literal
+
+A test whose expectation comes from the code under test re-runs that
+code and compares it with itself, so it cannot fail. It reads as
+coverage and hides exactly the bug it was written for. Pin any constant
+that comes from outside the codebase (a vendor's path, a wire format, a
+magic byte) as a literal, checked against the vendor's shipped source,
+not your own copy of it. To probe a suspect test, change the value under
+test to something absurd and re-run: a test that still passes was
+testing nothing. A fixture phrased as "the first X the policy names" is
+the usual suspect.
+
+### Know what runs each test
+
+A test file no runner invokes looks exactly like a passing one. The
+change that adds a test file also wires it into something that runs
+without you: the unit suite, a CI job, a deploy check. The converse
+holds too: "I could not run it here" is not "it has not been run".
+State what you could not verify here, and check what the pipeline
+verifies on push, before reporting a gap.
+
+### A flow that leaves the app needs a round-trip test
+
+Contract tests over fakes prove each unit keeps its interface, not that
+the units are wired together. A flow that leaves the app and comes back
+(an OAuth redirect, a webhook, a payment return) needs round-trip
+coverage, or a live walkthrough, before it is done.
+
+### A green result proves only what its setup allowed
+
+Before recording a result as the answer to a question, check that the
+test's preconditions match the question's. A sign-in tested with signup
+open says nothing about signup closed.
+
 ---
 
 # Test Development Workflow
