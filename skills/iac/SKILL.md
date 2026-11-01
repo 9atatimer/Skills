@@ -179,7 +179,10 @@ Rules that hold across all three:
   backend config and `terraform.tfvars` live once, in the shared clone.
   A worktree points at them by absolute path (`op run --env-file=...`,
   `init -backend-config=...`) and symlinks `terraform.tfvars` into the
-  root directory. A copy drifts the moment the original is edited.
+  root module's directory (`ln -s <target> <link>`, both paths given),
+  then checks the link resolves before `plan`: a dangling
+  `terraform.tfvars` is skipped without a warning and the plan runs on
+  defaults. A copy drifts the moment the original is edited.
 - **Never pass `terraform.tfvars` as `-var-file`.** Terraform loads an
   implicit `terraform.tfvars` first and `*.auto.tfvars` after it, so a
   committed `*.auto.tfvars` overrides it. An explicit `-var-file` loads
