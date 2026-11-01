@@ -139,6 +139,13 @@ preview deploy.
 - One vault item per stage; a shared secret between two workers is one
   field both workflows read. Sharing a secret across stages would make a
   nonprod leak a production capability.
+- A value several workers or containers share, or a provider key AI
+  Gateway reads, may live in the Cloudflare Secrets Store instead (the
+  tech-radar skill, Trial). A secret's scopes name services, not
+  scripts: any worker or container in the account can bind it, so the
+  stage goes in the secret's name and a secret only one worker may see
+  stays a `wrangler secret`. The value still comes from the vault,
+  never from Terraform state.
 - Locally: `.dev.vars` (gitignored) for the worker, the app's local env
   for the other half of any pair. If the pair disagrees the write path
   fails closed by design.
