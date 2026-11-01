@@ -171,6 +171,22 @@ Rules that hold across all three:
   config must parse under the pinned toolchain, not the newest one.
 - The lock file (`.terraform.lock.hcl`) IS committed; it pins provider
   hashes. `.terraform/` is not.
+- **Which checkout runs a root follows its state.** A root on a remote
+  backend runs from any checkout, a worktree included: the state is in
+  the bucket. A root with local state runs only in the checkout that
+  holds its state file, on the default branch of the shared clone.
+- **Gitignored inputs are referenced, never copied.** The env file, the
+  backend config and `terraform.tfvars` live once, in the shared clone.
+  A worktree points at them by absolute path (`op run --env-file=...`,
+  `init -backend-config=...`) and symlinks `terraform.tfvars` into the
+  root directory. A copy drifts the moment the original is edited.
+- **Never pass `terraform.tfvars` as `-var-file`.** Terraform loads an
+  implicit `terraform.tfvars` first and `*.auto.tfvars` after it, so a
+  committed `*.auto.tfvars` overrides it. An explicit `-var-file` loads
+  last and wins. A stale kill-switch list in a local `terraform.tfvars`,
+  passed that way, once planned a merge bot's bypass off sixteen
+  rulesets. A local `terraform.tfvars` sets no variable a committed
+  `*.auto.tfvars` owns.
 
 ## Secrets and references
 
