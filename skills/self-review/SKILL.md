@@ -389,6 +389,9 @@ command output.
 - **Do not fold.** A finding is evidence, not authority. Folding on every
   finding to make the ledger clean is the failure this skill exists to
   prevent; so is waving them all away.
+- **A refutation is evidence, not a verdict.** A finding refuted by
+  argument but cheap to test gets the test: "X cannot do Y", where nobody
+  has tried X, is a test to run, not an argument to settle.
 - **Promote repeated catches into a gate.** Anything a pass catches twice is
   a candidate for a real check (a ci.magic assertion, a script, a test), or
   the next pass relearns it.

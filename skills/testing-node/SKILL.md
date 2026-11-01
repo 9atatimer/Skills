@@ -231,6 +231,12 @@ If the fake passes contract tests but the real adapter does not (or
 vice versa), the fake has lied to your unit tests. Contract tests
 make that impossible to ship.
 
+A port leaves some rules implicit: what a collision does, the order
+results come back in, how a malformed id fails, who the caller is. Each
+adapter then decides them alone, and no suite sees the two disagree.
+Before an adapter family is called done, write a contract case for each
+implicit rule; unstated rules are where adapters disagree.
+
 ### HTTP boundaries: MSW, not nock
 
 For HTTP adapters to third-party services, use `msw` to drive contract

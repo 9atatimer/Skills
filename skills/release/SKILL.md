@@ -56,6 +56,12 @@ release edits only the sections it changed. Skeleton:
 - **Gotchas** -- the traps an agent will otherwise hit.
 - **Known gaps** -- each with its issue.
 
+A runbook step records the cause, not only the symptom. "The issuer reads the
+identity claim" lets a later reader test whether the step still
+applies; "expect a confirmation round trip" does not. A release that
+retires a mechanism greps `docs/` for the runbook steps that relied on
+it.
+
 ## Docs
 
 Docs are read far more often by LLMs than by humans. Write for that
@@ -194,6 +200,10 @@ cloudflare-hosting skill, Deploy workflows.
 
 - Never install from a piped script. Signed package managers only.
 - Pin actions by SHA, images by digest; commit the lockfile.
+- Prove each pinned SHA resolves to the commit its tag names, and record
+  the tag beside it. An invented or mistyped SHA fails only when the
+  workflow runs. Dereference an annotated tag to its commit; a
+  major-version pointer may be a branch, not a tag.
 - Ship the artifact you verified -- or, for a build-time-configured
   stage, the same commit; prove it where the format allows (npm tarball
   sha256).

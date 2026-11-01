@@ -156,6 +156,11 @@ above. Merge bottom-up; each PR still stands on its own as one reviewable
 story. The `gh api` calls and their traps are in
 [references/stacks.md](references/stacks.md).
 
+A PR higher in the stack measures "pre-existing" against the default
+branch, never against its parent. It inherits the parent's red gate as
+its starting state, and calling that pre-existing turns a break into
+background noise: the parent's failures are its own.
+
 ### Landing via tedium (merge bot)
 
 A repo is enrolled when its default branch carries a `tedium.toml`; its
@@ -373,6 +378,10 @@ comment on it sounds authoritative and even when you wrote that comment.
 - After a `git mv`, grep for the old path: rename detection carries the
   base branch's edits to the moved file, but not a file the base branch
   added at the old location or a dependent that still points there.
+  While a move is in flight, a parallel branch that adds files under the
+  old path merges without conflict and its files land where no tooling
+  reads them: before merging either side, re-run the listing the tooling
+  depends on.
 
 ### Git Hook Discipline (scalpel, not axe)
 

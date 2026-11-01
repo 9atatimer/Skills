@@ -440,8 +440,9 @@ wrapup whose sweep touches this file, walk the whole list; each entry gets
 exactly one of:
 
 - **Promote**: `about:` is anything other than `wip` -- move the lesson to
-  that layer and delete it here. The field already decided; triage only
-  executes it.
+  that layer and delete it here. Until the change that moves it lands,
+  the entry keeps its full text here: a number or a title alone cannot
+  be promoted. The field already decided; triage only executes it.
 - **Keep**: still `wip`, still tied to the work in progress.
 - **Delete**: superseded, or its root cause is fixed. Delete outright --
   never annotate an entry as "Historical"; git history holds the past.

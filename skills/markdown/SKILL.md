@@ -154,6 +154,8 @@ For project design docs:
 - Use `(decision)` suffix on headings that record architectural decisions
 - Keep a Review Log section at the bottom with dated entries
 - Reference other design docs by relative path
+- Cite `AGENT.md`, not `CLAUDE.md`: `CLAUDE.md` is a symlink, and review
+  bots that do not resolve symlinks flag the reference as broken
 
 ## Future enhancements (TODO)
 

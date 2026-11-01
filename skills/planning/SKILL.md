@@ -759,6 +759,11 @@ Use this checklist before creating TODO_PLAN:
 **Problem:** Too large, no recovery points
 **Solution:** Split into Phase 1A, 1B, 1C (4 steps each)
 
+### "This unknown blocks the work"
+
+**Problem:** An open question gates building when its answer changes only whether the built thing succeeds at run time
+**Solution:** An unknown blocks a step only when its answer changes what gets built; otherwise build, then test the answer
+
 ---
 
 ## Examples

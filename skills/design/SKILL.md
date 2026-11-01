@@ -326,6 +326,9 @@ Run through these checks:
 - [ ] Could an AI agent implement this without asking clarifying questions?
 - [ ] Could a new team member understand the "why" behind each decision?
 - [ ] Are error cases and edge cases documented?
+- [ ] Does every change that hides or demotes content name the path that brings it back (else it is a soft delete)?
+- [ ] Where the record says an existing surface already handles a case, has the author opened that surface and read the condition that decides it?
+- [ ] Does every Non-Goal chosen to avoid a cost name the cost it defers?
 - [ ] Does every behavior have a Given/When/Then row, including the error paths and the "is told nothing" paths?
 - [ ] Does every noun in Goals, Behaviors and State Machine appear in the Domain Language under exactly one name?
 - [ ] Is every bound the record names in the Parameters table with its constraint, and does no bound carry a value?
