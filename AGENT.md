@@ -44,9 +44,9 @@ PRs land through the tedium merge bot; the rules are in `tedium.toml` on
   `.github/workflows/review-settled.yml` still posts the status on every
   non-fork head, but the pinned tds-utils checker (7643b92, tds-utils
   PR#571) no longer judges reviews or threads and never waits. Neither
-  `pr_status` nor the ruleset requires it. An agent never posts
-  `@codex review` (the gates skill, Reviewer Selection); Copilot is the
-  only reviewer an agent may summon. The checker is
+  `pr_status` nor the ruleset requires it. An agent summons only OCR on
+  Demand (`/ocr`); Copilot and Codex review only when the human fires
+  the trigger (the gates skill, Reviewer Selection). The checker is
   pinned by commit (`uses:` and `tools_ref:` carry the same tds-utils
   sha); bump both together.
 - **Prose is scanned for ASCII at commit time.** The publicity guard

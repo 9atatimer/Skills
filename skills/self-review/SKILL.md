@@ -36,8 +36,8 @@ description: "Reviewing your own diff before a human or a gate reviewer reads it
   ReviewEngine port does the finding; every rule below holds the same for
   every adapter.
 - **It never satisfies Zero Unreviewed Code, except on a
-  documentation-only PR, where it is the whole review** -- no Copilot,
-  no Codex (Documentation-only changes, below).
+  documentation-only PR, where it is the whole review** -- no agentic
+  reviewer (Documentation-only changes, below).
 
 ---
 
@@ -420,15 +420,15 @@ surface; a loop of rounds grows findings instead of converging.
 
 When every changed file is human-read prose -- a README, a `docs/`
 runbook or as-built, `TODO_PLAN.md`, task files, a changelog, a
-comment-only edit to source -- this pass is the whole review. Request no
-Copilot review, ask no human to summon Codex, and run no review-watch
+comment-only edit to source -- this pass is the whole review. Summon no
+OCR, ask no human to summon Copilot or Codex, and run no review-watch
 loop; the epilogue on the PR is the record that satisfies Zero
 Unreviewed Code (the gates skill, Documentation-only changes get no
 agentic reviewer).
 
 - **Phases 2 and 3 are the exception.** A design record under review or a
   phase-3 seam map gets the designomatic panel, not this pass and not
-  Copilot or Codex -> the designomatic skill.
+  an agentic reviewer -> the designomatic skill.
 - **Operating rules are not documentation.** Skills, personas,
   `AGENT.md`, prompts, CI and gate configuration take the full ladder
   (Sizing, above: no "docs-only" discount).
@@ -472,8 +472,8 @@ confirm it finds it.
   the agentic and human review rungs run unchanged, and the epilogue is partly for them: they see
   what was caught and fixed.
 - **It is not the gate reviewer.** An engine the repo runs in CI, outside
-  any author's session, is a different thing; whether one may stand in for
-  Copilot is the gates skill's call, not this one's.
+  any author's session, is a different thing: OCR on Demand is the gates
+  skill's default reviewer, and that selection is its call, not this one's.
 
 ---
 

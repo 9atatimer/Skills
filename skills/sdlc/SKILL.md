@@ -175,7 +175,7 @@ skill.
     -- is posted as ONE comment on the PR alongside the fix, or the review
     is invisible to every later reader. A self-review never satisfies Zero
     Unreviewed Code, except on a documentation-only PR, where it is the
-    whole review: no Copilot, no Codex (design and architecture drafts in
+    whole review: no agentic reviewer (design and architecture drafts in
     phases 2 and 3 get designomatic instead). A review turn of any kind is
     spent only on a load-bearing fix, never on hygiene. -> the self-review
     skill, and the gates skill (Spend Review Turns on Load-Bearing Fixes)

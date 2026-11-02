@@ -85,8 +85,9 @@ Every step below keys off the derived topology:
 | PR head / base | `<branch>` -> `<default>`, same repo | `<fork>:<branch>` -> `upstream:<default>` |
 | `--repo` for `gadmin` / `gh` / review-watch | the derived slug | Stage 1 (fork PR, AI review): the fork's slug; Stage 2 (upstream PR): the parent slug |
 
-The fork split exists because Copilot review is billed to the repository
-owner: review on the personal fork first, then open the production PR
+The fork split exists because a Copilot review, when the human summons
+one, is billed to the repository owner (OCR on Demand runs only in the
+owners' own repos, never on a personal fork): review on the personal fork first, then open the production PR
 upstream. The fork, not any PR state, is what controls billing.
 
 ## Push & PR Flow
@@ -107,18 +108,20 @@ never close and reopen one.
 - Open the PR as a draft (`gh pr create --draft`), and mark it ready
   (`gh pr ready <NUMBER>`) only after the self-review epilogue is posted
   on it. The owner lands a green PR that is ready for review on sight,
-  so a ready PR is a claim that the self-review is done. Copilot does not
-  review drafts; it reviews once the PR is marked ready. Never use a
+  so a ready PR is a claim that the self-review is done. The agentic
+  reviewer is summoned only once the PR is ready. Never use a
   `[WIP]` title in place of draft status.
 - Title it as a conventional-commit summary: `feat(scope): short description`.
-- AI review: Copilot reviews the open PR, except a documentation-only PR,
-  which gets the self-review pass alone (a design or architecture draft in
-  phases 2 and 3 gets designomatic instead). Copilot does not re-review on
-  `synchronize`; re-request with `gh pr edit <NUMBER> --add-reviewer @copilot`
-  only after a push that carries a load-bearing fix. A hygiene-only push
-  is answered with its SHA on the thread and no re-request. Address
-  feedback, push, re-request when earned, wait, within the per-reviewer
-  turn cap (the gates skill, Spend Review Turns on Load-Bearing Fixes).
+- AI review: summon OCR on Demand with a `/ocr` PR comment on the ready
+  PR, except a documentation-only PR, which gets the self-review pass
+  alone (a design or architecture draft in phases 2 and 3 gets
+  designomatic instead). Copilot and Codex review only when the human
+  summons them (the gates skill, Reviewer Selection). Re-summon OCR with
+  a fresh `/ocr` only after a push that carries a load-bearing fix. A
+  hygiene-only push is answered with its SHA on the thread and no
+  re-summon. Address feedback, push, re-summon when earned, wait, within
+  the per-reviewer turn cap (the gates skill, Spend Review Turns on
+  Load-Bearing Fixes).
 - Landing: an enrolled repo lands through tedium (below); any other repo
   is human-merge.
 
@@ -131,10 +134,12 @@ the personal account:
 - Open the PR against the fork's default branch as a draft, and mark it
   ready only after the self-review epilogue is posted (the draft rule in
   Single PR Workflow, above, holds for both stages).
-- Once it is ready, request the Copilot review (`gh pr edit <NUMBER>
-  --add-reviewer @copilot`), unless the PR is documentation-only, which needs no Stage 1 (the gates
-  skill, Documentation-only changes get no agentic reviewer).
-- Address the feedback; re-request only after a load-bearing fix, as above.
+- Once it is ready, say so in the handoff: a fork carries no OCR caller,
+  so summon nothing there (the gates skill, Reviewer Selection); Stage 1
+  is where a human-summoned Copilot review bills the personal account. A
+  documentation-only PR needs no Stage 1 (the gates skill,
+  Documentation-only changes get no agentic reviewer).
+- Address the feedback; a re-review there is the human's to re-summon.
 
 Stage 2, the upstream PR, is the production PR:
 
@@ -405,8 +410,8 @@ In token-frugal preference order:
   Responses are typed and complete but echo large payloads (a reply
   echoes the parent's `diff_hunk`), so they cost five to ten times the
   tokens; avoid them in hot loops over many comments.
-- `gh` CLI as the last resort, except for PR-state checks and the Copilot
-  re-request, which have no `gadmin` wrapper: there prefer `gh` over MCP.
+- `gh` CLI as the last resort, except for PR-state checks, which have
+  no `gadmin` wrapper: there prefer `gh` over MCP.
 
 `gh pr create -R <slug>` takes the HEAD repo from the cwd, not from `-R`.
 From a checkout of another repo it sends `<cwd-owner>:<branch>` and fails

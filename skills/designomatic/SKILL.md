@@ -69,7 +69,7 @@ subscription it costs quota rather than dollars.
 
 **In phases 2 and 3 it replaces the code reviewers, not just precedes
 them.** A design record or seam map under review gets this panel, and
-never a Copilot review or a human-summoned Codex pass: those review code,
+never an OCR, Copilot or Codex pass: those review code,
 and spend quota on prose they cannot judge against the rubric. Outside
 those phases, a documentation-only change gets the self-review pass alone
 (the gates skill, Documentation-only changes get no agentic reviewer).
