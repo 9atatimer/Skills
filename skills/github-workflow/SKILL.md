@@ -207,7 +207,7 @@ its own PR only when all seven hold on the current head:
 - no `hold` label is on the PR;
 - the PR adds or changes no design or architecture record
   (`docs/design/DESIGN.*.md`, `docs/design/ARCHITECTURE.*.md`). Merging
-  one is its approval (the design skill, Status Transitions), so a human
+  one is its approval (the design skill, Lifecycle is metadata), so a human
   lands it.
 
 Anything short of all seven is not "almost". A red `review-settled` that the

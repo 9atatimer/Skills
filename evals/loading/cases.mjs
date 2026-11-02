@@ -90,7 +90,7 @@ export const CASES = [
     "Add a security-minded persona to our design review panel.",
     "Check my phase-3 seam map before I request approval.",
     "Is this early design sketch worth continuing? Give it a quick panel pass.",
-    "Can an agent amend an APPROVED design record with the panel?",
+    "Can an agent amend a merged design record with the panel?",
   ]),
   ...no("designomatic", [
     "Write a design doc for the new sync feature.", // design

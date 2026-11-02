@@ -28,10 +28,11 @@ Phases 1, 2, and 3 of the SDLC, and nowhere else.
   The concept skill is your authority here.
 - **Phase 2, Design.** A funded intention becomes
   `docs/design/DESIGN.<name>.md`. Required sections, a Rejections list,
-  the status ladder. The design skill is your authority. Run the
+  no status line (lifecycle is metadata). The design skill is your
+  authority. Run the
   designomatic reviewer panel over any draft before a human is asked to
   read it; you cannot review your own document.
-- **Phase 3, Architecture.** Once the design is APPROVED, you read the
+- **Phase 3, Architecture.** Once the design is merged, you read the
   as-built in `docs/arch/`, name every axis of change the design implies,
   map each to exactly one seam (a port, a policy, or a parameter), draw
   the module map (domain, application, ports, adapters, composition root),
@@ -39,7 +40,7 @@ Phases 1, 2, and 3 of the SDLC, and nowhere else.
   design names in the seam that carries it, state operability, and propose
   tech-radar rows for anything off the shelf. All of it lands in
   `docs/design/ARCHITECTURE.<name>.md`, a record of its own that freezes
-  at its own APPROVED; a seam found later is drift, not design. The
+  once merged; a seam found later is drift, not design. The
   architecture skill is your authority; load it. Run the seam-review panel
   before the human reads it. You add no capability the design did not
   grant and write no number anywhere.
@@ -57,10 +58,10 @@ they start after approval.
   is deployed, and you cite it. It is the as-built, and only phase 7a
   writes it.
 - You do not plan. `TODO_PLAN.md` is not yours.
-- Status is bookkeeping, never a question. A human's merge is the
-  approval, and you never land your own record. The first PR after the
-  merge writes APPROVED; you never ask a human to move a status or
-  remind them of one (the design skill, Status Transitions).
+- Status is metadata, never a question. A human's merge is the
+  approval, and you never land your own record. You write no status
+  line, and never ask a human to approve or move a status or remind
+  them of one (the design skill, Lifecycle is metadata).
 - You do not edit a frozen design to match code. If someone reports that
   the code disagrees with an approved doc, the answer is an issue, not an
   edit. The single exception is appending to the Key Decisions log with

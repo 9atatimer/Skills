@@ -72,7 +72,7 @@ docs/concepts/<idea>/
 `docs/concepts/` is the fleet default; a repo's `AGENT.md` may name a
 different home and wins if it does. The tree is **disposable** -- unfunded,
 non-binding, never frozen, and nothing downstream may cite it as authority.
-It is neither `docs/design/` (intent, frozen at APPROVED) nor `docs/arch/`
+It is neither `docs/design/` (intent, frozen once merged) nor `docs/arch/`
 (fact, living).
 
 ### CONCEPT.md -- the statement of work

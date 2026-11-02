@@ -63,7 +63,6 @@ If using YAML frontmatter:
 ```yaml
 ---
 title: "Document Title"
-status: draft
 date: 2025-12-22
 related:
 
@@ -149,7 +148,7 @@ Before editing a Markdown file:
 
 For project design docs:
 
-- Use YAML frontmatter for metadata (title, status, date, related)
+- Use YAML frontmatter for metadata (title, date, related; never a status -- the design skill, Lifecycle is metadata)
 - Start content at H2 (title is in frontmatter)
 - Use `(decision)` suffix on headings that record architectural decisions
 - Keep a Review Log section at the bottom with dated entries

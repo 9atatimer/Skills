@@ -140,7 +140,7 @@ architecture skill
 > content is **distributed**: each phase's steps become task files under
 > `tasks/`, sequenced with `blocked_by`; the philosophy and recovery
 > sections belong in `TODO_PLAN.md`'s "How to Use This File"; the ordering
-> becomes its "Now" list. The `# Title` / `> Status:` / `> Branch:`
+> becomes its "Now" list. The `# Title` / `> Branch:`
 > front-matter shown is illustrative of what a plan should capture -- it is
 > **not** the header of a new standalone file. See the todo-plan skill.
 
@@ -149,7 +149,6 @@ architecture skill
 ```markdown
 # [Component] Implementation TODO Plan
 
-> **Status:** [Not Started | In Progress | Complete]
 > **Created:** YYYY-MM-DD
 > **Design:** Link to architecture doc
 > **Branch:** branch-name
@@ -184,12 +183,6 @@ architecture skill
 ## Testing Philosophy (CRITICAL)
 
 [Include test separation, timeout requirements, mocking strategy]
-
----
-
-## Current Status Summary
-
-[Visual table of what's complete vs in-progress vs not started]
 
 ---
 
@@ -877,7 +870,6 @@ Before publishing TODO_PLAN, verify:
 - [ ] BDD/TDD philosophy section present
 - [ ] Testing philosophy section present (with timeouts, no-sleep)
 - [ ] Amnesia recovery protocol present
-- [ ] Current status summary table present
 - [ ] Each phase has 2-5 steps maximum
 - [ ] Each step = 1-2 commits (not 7)
 - [ ] All steps have explicit commit messages pre-written

@@ -18,7 +18,7 @@ description: "Phase 7a of the SDLC: recording the as-built of the deployed syste
 |---|---|---|
 | Describes | what we intend to build, and how | what is deployed right now |
 | Truth kind | aspirational | factual |
-| Lifecycle | **body frozen at APPROVED** | **living, never frozen** |
+| Lifecycle | **body frozen once merged** | **living, never frozen** |
 | Written by | the designer and the architect, before code | the releaser, after shipping |
 | Wrong when | rewritten to match the code | contains anything not yet shipped |
 
@@ -31,9 +31,9 @@ which parts are real.
 Two rules follow, and they are absolute:
 
 - **Nothing enters `docs/arch/` until it ships.** Deployed, published or
-  tagged. Merged is not shipped; the design record's status (APPROVED vs
-  IMPLEMENTED) carries that gap, so this tree never needs a "pending"
-  marker.
+  tagged. Merged is not shipped; the tracking issue, open until the
+  retrospective lands, carries that gap, so this tree never needs a
+  "pending" marker.
 - **An edit here with no corresponding shipped change is a smell.** The
   as-built trails reality; it never leads it.
 
@@ -47,12 +47,10 @@ tagging. Whichever it is, that is the moment the change becomes shared,
 and that is when the as-built moves. Work that ships nowhere changes no
 shared architecture; that is a correct no-op.
 
-The merged-but-unreleased gap is carried by the design record's status:
-
-- **APPROVED** -- designed and merged, not yet in the shared
-  architecture.
-- **IMPLEMENTED** -- shipped, as-built updated, drift closed. The
-  retrospective PR sets it; nobody is asked.
+The merged-but-unreleased gap is carried by the tracking issue, not by
+any line in a record: it stays open while the design is merged but not
+yet in the shared architecture, and closes when the retrospective lands
+(the design skill, Lifecycle is metadata).
 
 ---
 

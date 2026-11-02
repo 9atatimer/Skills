@@ -1,17 +1,17 @@
 ---
 name: architecture
-description: "Phase 3 of the SDLC: writing the architecture record, docs/design/ARCHITECTURE.<name>.md -- how the system intends to deliver what its approved design says it can do. Names every axis of change and maps each to one seam (port, policy, parameter), draws the module map (domain / application / ports / adapters / composition root), gives each design behavior its use-case signature, places every design-named bound in the seam that carries it, states operability, and proposes tech-radar rows. Written after the design is APPROVED and against the as-built; frozen at its own APPROVED. Load before planning any change that adds a component, seam, or dependency. Skip for a change that adds none of those (it elides with planning), for the as-built (the as-built skill), and for developer tooling (sdlc, Product or tooling)."
+description: "Phase 3 of the SDLC: writing the architecture record, docs/design/ARCHITECTURE.<name>.md -- how the system intends to deliver what its approved design says it can do. Names every axis of change and maps each to one seam (port, policy, parameter), draws the module map (domain / application / ports / adapters / composition root), gives each design behavior its use-case signature, places every design-named bound in the seam that carries it, states operability, and proposes tech-radar rows. Written after the design is merged and against the as-built; frozen once it is merged. Load before planning any change that adds a component, seam, or dependency. Skip for a change that adds none of those (it elides with planning), for the as-built (the as-built skill), and for developer tooling (sdlc, Product or tooling)."
 ---
 
 # SKILL: Architecture (Phase 3)
 
 > **Purpose:** say how the system intends to do what the design says it
 > can do, in a record of its own that constrains the plan and the code.
-> **Input:** an APPROVED design record and the as-built.
-> **Output:** `docs/design/ARCHITECTURE.<name>.md`, frozen at APPROVED.
-> **Exit gate:** a human merges the architecture record; merged is
-> APPROVED, and the agent sets the status (the design skill,
-> Status Transitions).
+> **Input:** a merged design record and the as-built.
+> **Output:** `docs/design/ARCHITECTURE.<name>.md`, frozen once merged.
+> **Exit gate:** a human merges the architecture record; the merge is
+> the approval, and the record carries no status line (the design
+> skill, Lifecycle is metadata).
 
 ---
 
@@ -19,8 +19,8 @@ description: "Phase 3 of the SDLC: writing the architecture record, docs/design/
 
 | Record | Holds | Does not hold | Lifecycle |
 |---|---|---|---|
-| Design, `docs/design/DESIGN.<name>.md` | what the system can and cannot do: capabilities, constraints, scope in and out, the domain language, the bounds that exist | seams, signatures, vendors, stores, numbers | frozen at APPROVED (the design skill) |
-| Architecture, `docs/design/ARCHITECTURE.<name>.md` | how it intends to do that: the seams, the module map, the use-case surface, the mechanism behind each capability, which seam carries each bound, operability | capabilities the design did not grant; tuned values | frozen at its own APPROVED (this skill) |
+| Design, `docs/design/DESIGN.<name>.md` | what the system can and cannot do: capabilities, constraints, scope in and out, the domain language, the bounds that exist | seams, signatures, vendors, stores, numbers | frozen once merged (the design skill) |
+| Architecture, `docs/design/ARCHITECTURE.<name>.md` | how it intends to do that: the seams, the module map, the use-case surface, the mechanism behind each capability, which seam carries each bound, operability | capabilities the design did not grant; tuned values | frozen once merged (this skill) |
 | As-built, `docs/arch/` | what runs: components, seams as coded, flows, deployment facts, **every tuned value** | intentions | living, never frozen (the as-built skill) |
 
 Each record constrains the next step. A design that names a port has
@@ -38,7 +38,7 @@ phase produces lands in the architecture record.
 
 ## Before you write
 
-- **The design is APPROVED and frozen.** This record is written against
+- **The design is merged and frozen.** This record is written against
   it, not alongside it. A capability the design does not grant is not
   yours to add: cut an issue against the design and stop. A capability the
   design grants that no mechanism can deliver is the same issue in the
@@ -190,8 +190,8 @@ tech-radar skill) and is audited by the as-built skill.
 ## The record
 
 `docs/design/ARCHITECTURE.<name>.md`, from `references/TEMPLATE.md` in
-this skill. Sections, in order: header (status, date, authors, the design
-record it implements and its status), Overview, Component diagram (ASCII),
+this skill. Sections, in order: header (date, authors, the design
+record it implements; no status line), Overview, Component diagram (ASCII),
 Seams, Module map, Use-case surface, Mechanism (one subsection per
 capability), Parameters placed, Operability, Radar proposals, Key
 Decisions, Open Questions, Rejections, Related Documents.
@@ -238,7 +238,7 @@ new dependency has a proposed ring; operability is stated. **It merges,
 and the record freezes.** Then phase 3b (planning) computes the
 route.
 
-**Drift.** From APPROVED onward this record changes only by human
+**Drift.** From the merge onward this record changes only by human
 amendment. A seam found while coding is drift: cut an issue, do not edit
 the record. The retrospective walks the code against both frozen records.
 
