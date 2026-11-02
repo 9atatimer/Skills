@@ -227,8 +227,8 @@ skill.
     both from one sequence. Every number you write names its kind, in
     chat, commits, PR and issue bodies, review replies, and plan files.
     Another repo's number also names the repo: `quillmap PR#392`. The
-    one exception is a closing keyword (`Closes #N`), which GitHub only
-    parses bare. -> the github-workflow skill
+    one exception is a linking keyword (`Closes #N`, `Refs #N`), which
+    GitHub only parses bare. -> the github-workflow skill
 20. **A permission-classifier refusal is final for that outcome.** When
     the harness's auto-mode classifier denies a call, do not reach the
     same outcome another way: not with another tool, a script, a
