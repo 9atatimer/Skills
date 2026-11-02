@@ -135,6 +135,14 @@ line-leading `#76` as `\#76`. After every AST-tool edit, run
 restore the file and make the edit with a text-replacement tool, so the
 diff carries only your change.
 
+### AST editor node IDs die with your own edits
+
+ast-mcp node IDs are content hashes, and one edit can retire IDs well
+outside the node you addressed, including in sections you never touched.
+After any mutation, treat every ID from an earlier outline as unverified:
+use the IDs the mutation returned (`ids.current`), or re-run `get_outline`
+when the response carries none.
+
 ## Pre-edit checklist
 
 Before editing a Markdown file:
