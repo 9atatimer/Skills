@@ -137,12 +137,11 @@ diff carries only your change.
 
 ### AST editor node IDs die with your own edits
 
-ast-mcp node IDs are content hashes. Your edit retires the edited node's
-ID, every ID under a heading whose text you changed, and the IDs of
-identical sibling blocks. Never reuse an ID from an outline fetched before
-an edit of that region: take the replacement from the mutation's
-`ids.current`, or re-run `get_outline` where the response carries no
-`ids`.
+ast-mcp node IDs are content hashes, and one edit can retire IDs well
+outside the node you addressed, including in sections you never touched.
+After any mutation, treat every ID from an earlier outline as unverified:
+use the IDs the mutation returned (`ids.current`), or re-run `get_outline`
+when the response carries none.
 
 ## Pre-edit checklist
 
