@@ -13,11 +13,13 @@ The default reviewer, and the one an agent may summon. Runbook: tds-utils
 `docs/ops/ocr-review.md`; design: `docs/design/OCR-ON-DEMAND.DESIGN.md`.
 
 - **Summon.** A PR comment whose body starts with `/ocr`, from an OWNER,
-  MEMBER or COLLABORATOR of the repo (the human's token qualifies, design
-  Key Decisions Q3), or a dispatch:
-  `gh workflow run ocr-review-caller.yml -R <owner>/<repo> -f pr=<N>`.
-  The comment path uses the configured model and backend; a dispatch may
-  override either. The repo must carry
+  MEMBER or COLLABORATOR of the repo (the human's token and
+  `9atatimer-bot`, a direct collaborator, both qualify; design Key
+  Decisions Q3). The comment path uses the configured model and backend.
+  The dispatch form,
+  `gh workflow run ocr-review-caller.yml -R <owner>/<repo> -f pr=<N>`,
+  may override either and is the human's (SKILL.md, Reviewer Selection).
+  The repo must carry
   `.github/workflows/ocr-review-caller.yml` and be seeded; tds-utils
   `bin/seed-ocr-review status` says. A fork PR fails with cause `fork`
   and nothing reads the secret. The default backend is the laptop's
@@ -27,11 +29,20 @@ The default reviewer, and the one an agent may summon. Runbook: tds-utils
   (or the MCP `pull_request_read` `get_comments`, which carries reaction
   counts). A dispatch gets no reaction: watch the run with
   `gh run list -R <owner>/<repo> -w ocr-review-caller.yml`.
+- **Not picked up.** A comment the authorize job skips (body not starting
+  with `/ocr`, or an author outside the three associations) gets no
+  reaction, no comment and no record. No `eyes` within ~2 minutes of
+  posting, and no run in `gh run list`: say so, check the body and the
+  posting identity, and leave the retry to the human. Do not wait out the
+  stall backstop on it.
 - **Done.** A review by `github-actions[bot]` on the head whose body
   opens with `<!-- ocr-review-mark sha=<head> -->`: the run's summary,
   with the reviewed-file counts and every reviewable file ocr did not
   review. The `eyes` is replaced by `+1`. Findings are inline review
   comments by `github-actions[bot]`; triage them like any thread.
+- **Done, but no mark.** `+1` on the comment and the summary posted as an
+  issue comment saying it "settles no review": a finding failed to post.
+  The run is over; triage what did post, then re-run `/ocr` once.
 - **Body-only findings.** Upstream's sticky summary comment (updated in
   place each run) holds the findings that could not be anchored inline
   and any that failed to post; the mark review links it. Read it on

@@ -327,10 +327,13 @@ findings outside threads, when it is stalled -- are
   carries `.github/workflows/ocr-review-caller.yml` and is seeded
   (tds-utils `docs/ops/ocr-review.md`); on a repo without it, summon
   nothing and say in the handoff that the agentic rung is unserved. It
-  never selects Markdown: a PR whose reviewable files are all `.md` (a
-  skill, a persona, an `AGENT.md`) comes back `reviewed-nothing`, which
-  is the same unserved rung for the handoff, never a reason to reach for
-  another bot.
+  never selects Markdown: on a PR whose reviewable files are all `.md`
+  (a skill, a persona, an `AGENT.md`) a run can only fail
+  `reviewed-nothing`, so do not summon it there either; record the same
+  unserved rung in the handoff, never a reason to reach for another bot.
+  An agent summons by the `/ocr` comment alone, on the repo's configured
+  backend. A dispatch that overrides the backend or model (`cf-ai-gateway`
+  and `anthropic` are billed per run) is the human's to fire.
 - **Copilot and Codex are human-summoned ONLY -- and "human-summoned"
   means the human fires the trigger themselves** (a Copilot review
   request; a PR comment containing `@codex review`). An agent NEVER
@@ -355,6 +358,20 @@ findings outside threads, when it is stalled -- are
   before calling a PR ready, read the newest review body on the head and
   give each body-only finding a recorded disposition in one PR comment,
   exactly as a thread would get.
+- **A bot finding is a bug report, not a verdict.** Verify it against the
+  code before acting: confirm the failure it describes actually occurs.
+  Where it is right, fix and say so; where its reasoning is wrong but it
+  pointed at something real, fix the real thing and correct the diagnosis
+  on the thread, so the wrong explanation does not outlive it. Where it is
+  simply wrong, say why, on the thread, with the evidence.
+- **Turn budgets: be thrifty.** The cap is **3 turns per reviewer by
+  default**. It rises to **5 only when the human makes an audible call
+  for a "turbo PR"** on that PR -- an explicit ask, never inferred. Do
+  not probe quota yourself; the human's declarations are the only input.
+
+Whoever reviews, the same machinery applies unchanged: the review-watch
+loop, the per-reviewer turn cap, pr-todo deferral, and Zero Unreviewed
+Code.
 
 ## Review-watch loop
 

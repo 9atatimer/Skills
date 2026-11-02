@@ -86,7 +86,8 @@ Every step below keys off the derived topology:
 | `--repo` for `gadmin` / `gh` / review-watch | the derived slug | Stage 1 (fork PR, AI review): the fork's slug; Stage 2 (upstream PR): the parent slug |
 
 The fork split exists because a Copilot review, when the human summons
-one, is billed to the repository owner: review on the personal fork first, then open the production PR
+one, is billed to the repository owner (OCR on Demand runs only in the
+owners' own repos, never on a personal fork): review on the personal fork first, then open the production PR
 upstream. The fork, not any PR state, is what controls billing.
 
 ## Push & PR Flow
@@ -133,10 +134,12 @@ the personal account:
 - Open the PR against the fork's default branch as a draft, and mark it
   ready only after the self-review epilogue is posted (the draft rule in
   Single PR Workflow, above, holds for both stages).
-- Once it is ready, summon OCR (`/ocr`), unless the PR is
-  documentation-only, which needs no Stage 1 (the gates skill,
+- Once it is ready, say so in the handoff: a fork carries no OCR caller,
+  so summon nothing there (the gates skill, Reviewer Selection); Stage 1
+  is where a human-summoned Copilot review bills the personal account. A
+  documentation-only PR needs no Stage 1 (the gates skill,
   Documentation-only changes get no agentic reviewer).
-- Address the feedback; re-summon only after a load-bearing fix, as above.
+- Address the feedback; a re-review there is the human's to re-summon.
 
 Stage 2, the upstream PR, is the production PR:
 
