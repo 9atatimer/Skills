@@ -102,6 +102,24 @@ the hour, contradicting each other. Before landing a skill PR, read what
 merged to `main` since its base for the same nouns (`git log
 <base>..origin/main -- skills/`) and reconcile.
 
+**A section rewrite is audited by its deletions, not its additions.**
+Replacing a skill section heading-to-heading drops every rule in it that
+the new text does not restate, and nothing mechanical notices: the lint
+checks citations, not content. In
+[Skills PR#165](https://github.com/9atatimer/Skills/pull/165) the Reviewer
+Selection rewrite lost "a bot finding is a bug report, not a verdict" and
+the turn-budget rule, and only the self-review verifier caught it. Before
+committing a rewrite, read `git diff -U0 | grep '^-'` for the old section
+and name where each removed rule now lives.
+
+**A fleet rule has copies outside this repo.** The reviewer policy is
+restated in each repo's `AGENT.md`, in tds-utils `clai.d/AGENT.global.md`
+(the machine-global file every agent on a laptop loads) and in tds-utils
+`docs/ops/ocr-review.md`. The 2026-11-02 change swept the four `AGENT.md`
+files and missed the global file, which still told every agent to request
+Copilot once quota returned. Changing a rule here is done when
+`git grep -i <noun>` across the consumer repos and `clai.d/` is clean.
+
 ## Testing
 
 `npm test` runs `test/*.test.mjs` under `node --test` (zero dependencies).
