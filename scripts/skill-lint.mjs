@@ -34,7 +34,7 @@ const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 // is not a measure. Today's largest SKILL.md is gates, at 7,624 words. A
 // ratchet: lower it as skills move detail into reference files; never raise
 // it to fit a file.
-export const WORD_BUDGET = 7624;
+export const WORD_BUDGET = 7137;
 
 export function countWords(text) {
   return text.split(/\s+/).filter(Boolean).length;

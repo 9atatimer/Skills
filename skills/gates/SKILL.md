@@ -24,8 +24,8 @@ expensive:
 | 1 | Pre-commit hooks -- lint, build, test, gitleaks, trivy, semgrep | your machine | Git Hook Discipline, below |
 | 2 | CI status checks | the PR | read the job log, fix, push |
 | 3 | ci.magic assertions | the PR | the assertion names the file and the violation |
-| 4 | Agentic review (Copilot by default; never on a documentation-only PR) | the PR | the review-watch loop, below; Spend Review Turns on Load-Bearing Fixes says when a turn is owed |
-| 5 | Review settled (Copilot; Codex where the repo requires it) and merge authorization by the gates: the repo's required check `gate` plus the `review-settled` status, both green on the head | the PR | address or defer; never merge around it. On a repo without `tedium.toml`, a human reviews and merges |
+| 4 | Agentic review (OCR by default; Copilot or Codex only when the human summons one; never on a documentation-only PR) | the PR | the review-watch loop, below; Spend Review Turns on Load-Bearing Fixes says when a turn is owed |
+| 5 | Review settled and merge authorization by the gates: the repo's required check `gate` plus the `review-settled` status, both green on the head | the PR | address or defer; never merge around it. On a repo without `tedium.toml`, a human reviews and merges |
 
 **A red gate is a diagnosis prompt, not an obstacle.** The laws below
 govern every rung, and neither has an agent-accessible exception.
@@ -105,7 +105,7 @@ blocked by a gate is not authorization to move it.
 
 - **NEVER land code no one has reviewed. The target is 0% unreviewed
   code.** Every pushed commit must be looked at by a reviewer --
-  agentic (Copilot, Codex) or human -- before the PR merges. Two
+  agentic (OCR, Copilot, Codex) or human -- before the PR merges. Two
   recorded exceptions, both in Spend Review Turns on Load-Bearing Fixes
   below: a documentation-only PR, which the self-review pass alone
   reviews, and a hygiene-only tail after the last agentic review, which
@@ -164,7 +164,7 @@ round and shared decision, evidence tiers, the one verifier, one round,
 triage and the epilogue on the PR -- is the self-review skill.
 
 This pass is where the reviewing happens. The agentic reviewer bot that
-follows (Copilot; Codex only when a human summons it -- Reviewer
+follows (OCR; Copilot or Codex only when a human summons one -- Reviewer
 Selection below) is the mechanical gate over a diff that has already been
 through it, not the first pair of eyes.
 
@@ -178,8 +178,8 @@ through it, not the first pair of eyes.
 
 ## Spend Review Turns on Load-Bearing Fixes (CRITICAL)
 
-Every review turn -- a Copilot pass, a Codex pass a human summons, a
-self-review re-review -- costs quota and wall-clock time. Ask for the next
+Every review turn -- an OCR pass, a Copilot or Codex pass a human
+summons, a self-review re-review -- costs quota and wall-clock time. Ask for the next
 one only when the push since the last one changed what the change does.
 "I pushed" is not a reason to ask; "I pushed a fix a second look could
 find a new defect in" is.
@@ -213,7 +213,7 @@ find a new defect in" is.
 A PR is **documentation-only** when every changed file is human-read
 prose: a README, a `docs/` runbook or as-built, `TODO_PLAN.md`, task
 files, a changelog, a comment-only edit to source. Such a PR never
-requests Copilot and never asks a human to summon Codex. The adversarial
+summons OCR and never asks a human to summon Copilot or Codex. The adversarial
 self-review (the self-review skill) is the whole review: it satisfies
 Zero Unreviewed Code for that PR, its ledger on the PR is the record,
 and there is no review-watch loop. Where the repo requires
@@ -222,8 +222,8 @@ and the agent never summons a reviewer to turn it green.
 
 - **Except a design or architecture draft in phases 2 and 3.** A design
   record under review (`docs/design/`) or a phase-3 seam map gets the
-  designomatic panel instead of the self-review pass, and never Copilot
-  or Codex -> the designomatic skill.
+  designomatic panel instead of the self-review pass, and never an
+  agentic reviewer -> the designomatic skill.
 - **Operating rules are not documentation.** Skills, personas,
   `AGENT.md`/`CLAUDE.md`, prompts, CI workflows and gate configuration
   are executed by an agent or a gate; a PR touching any of them takes the
@@ -312,69 +312,49 @@ first.
 
 ## Reviewer Selection (agentic reviewers)
 
-Which bot reviews a PR is policy, not agent judgment:
+Which bot reviews a PR is policy, not agent judgment. Per-reviewer
+mechanics -- how each is summoned, how its queue reads, where it files
+findings outside threads, when it is stalled -- are
+`references/reviewer-mechanics.md`; this section is who may summon whom.
 
-- **Copilot is the default agentic reviewer.** Every PR's AI review
-  cycles run on Copilot unless the human directs otherwise -- except a
-  documentation-only PR, which gets none (Spend Review Turns on
-  Load-Bearing Fixes).
-  Re-request trigger: `gh pr edit <NUMBER> --add-reviewer @copilot`
-  (or the MCP `request_copilot_review`).
-- **Codex is a quota-relief fallback, human-invoked ONLY -- and
-  "human-invoked" means the human posts the trigger themselves.** The
-  trigger is a PR comment containing `@codex review`, and an agent
-  NEVER posts it: not to select codex, not to relay or fix a typo'd
-  human request, and not to nudge a re-review after pushing fixes. If
-  the human's trigger misfires (wrong handle, no bot reaction), say so
-  and let the human re-post. **Copilot is the only reviewer an agent
-  may summon or re-summon.** Absent a working human trigger, surface
-  the state and stop. Why: codex quota is shared with workloads the
-  agent cannot see, so every codex invocation is a human budget
-  decision; Copilot's turn cap bounds its spend. Only who summons
-  differs: once a codex review exists, triage it with exactly the
-  same machinery and seriousness as Copilot's.
+- **OCR on Demand (Open Code Review) is the default agentic reviewer,
+  and the only one an agent may summon or re-summon.** Every PR's AI
+  review cycles run on it unless the human directs otherwise -- except
+  a documentation-only PR, which gets none (Spend Review Turns on
+  Load-Bearing Fixes). Summon it with a PR comment whose body is `/ocr`,
+  from an owner's or collaborator's identity (the human's token
+  qualifies; the OCR design's Q3 ruling). It runs only where the repo
+  carries `.github/workflows/ocr-review-caller.yml` and is seeded
+  (tds-utils `docs/ops/ocr-review.md`); on a repo without it, summon
+  nothing and say in the handoff that the agentic rung is unserved. It
+  never selects Markdown: a PR whose reviewable files are all `.md` (a
+  skill, a persona, an `AGENT.md`) comes back `reviewed-nothing`, which
+  is the same unserved rung for the handoff, never a reason to reach for
+  another bot.
+- **Copilot and Codex are human-summoned ONLY -- and "human-summoned"
+  means the human fires the trigger themselves** (a Copilot review
+  request; a PR comment containing `@codex review`). An agent NEVER
+  fires either: not to select one, not to relay or fix a typo'd human
+  request, and not to nudge a re-review after pushing fixes. If the
+  human's trigger misfires (wrong handle, no bot reaction), say so and
+  let the human re-post. Why: Copilot's quota is monthly, and a single
+  day of default reviews spent half of it (owner ruling, 2026-11-02);
+  codex quota is shared with workloads the agent cannot see. Every
+  Copilot or Codex invocation is a human budget decision. Only who
+  summons differs: once such a review exists, triage it with exactly the
+  same machinery and seriousness as OCR's.
 - **Greptile is by-human-invite only.** Never request, trigger, or
   re-request a greptile review under any circumstances; if the human
   invites it onto a PR, triage its feedback like any other reviewer's.
-- **Read Copilot's suppressed comments.** A Copilot review body carries a
-  collapsed `Suppressed comments` block alongside the surfaced finding.
-  Observed repeatedly on template-tools PR #485: across three rounds, the
-  suppressed entries were the more serious findings every time -- a
-  silently ignored config field, a validation that ran mid-run instead of
-  at preflight -- while one surfaced finding was a misdiagnosis (an
-  indentation complaint claiming a `SyntaxError` in code that imported
-  fine and whose suite was green). Triage the whole review body, not the
-  inline thread, and weigh each finding on the code rather than on where
-  the bot filed it.
-- **Zero open threads is not zero findings.** Copilot files findings in
-  code unchanged since its previous review under a `Previously missed`
-  block in the review body, with no thread. `review-settled` counts
-  threads only, so it goes green with such a finding open. On
-  [Skills PR#77](https://github.com/9atatimer/Skills/pull/77) the fifth
-  review's only finding was body-only. The PR merged with it unanswered,
-  and a later state check that read just the threads still reported no
-  findings.
-  On every wake, and before calling a PR ready, read the newest review
-  body on the head. Give each body-only finding a recorded disposition in
-  one PR comment, exactly as a thread would get.
-
-**A bot finding is a bug report, not a verdict.** Verify it against the
-code before acting: confirm the failure it describes actually occurs.
-Where it is right, fix and say so; where its reasoning is wrong but it
-pointed at something real, fix the real thing and correct the diagnosis
-on the thread, so the wrong explanation does not outlive it. Where it is
-simply wrong, say why, on the thread, with the evidence.
-- **Turn budgets: be thrifty.** The cap is **3 turns per reviewer by
-  default**. It rises to **5 only when the human makes an audible call
-  for a "turbo PR"** on that PR -- an explicit ask, never inferred.
-  Do not probe quota yourself; the human's declarations are the only
-  input. (Automated quota awareness is tracked as an enhancement --
-  the billing usage API's premium-request SKU needs a `Plan: read`
-  token and lags real usage.)
-
-Whoever reviews, the same machinery applies unchanged: the
-review-watch loop, the per-reviewer turn cap, pr-todo deferral, and
-Zero Unreviewed Code.
+- **Zero open threads is not zero findings.** Every reviewer files some
+  findings with no thread: OCR's unanchored ones in upstream's sticky
+  summary comment, Copilot's in the `Suppressed comments` and
+  `Previously missed` blocks of its review body (the mechanics file has
+  the record of what each has hidden). `review-settled` counts threads
+  only, so it goes green with such a finding open. On every wake, and
+  before calling a PR ready, read the newest review body on the head and
+  give each body-only finding a recorded disposition in one PR comment,
+  exactly as a thread would get.
 
 ## Review-watch loop
 
@@ -385,12 +365,12 @@ Review Turns on Load-Bearing Fixes). Push fixes,
 nudge re-review, repeat until quiescent. Applies to human-prefixed and
 agent-prefixed PRs alike.
 
-The loop runs against the **active reviewer**: Copilot by default, or
-whichever reviewer the human selected (see Reviewer Selection). Queue
-detection (step 2), re-requests (step 5), and the termination
-conditions all key off the active reviewer -- never fire a Copilot
-request while codex is the active reviewer, and never re-request
-greptile at all.
+The loop runs against the **active reviewer**: OCR by default, or
+whichever reviewer the human summoned (see Reviewer Selection). Queue
+detection (step 2), re-summons (step 5), and the termination
+conditions all key off the active reviewer -- never summon OCR while a
+human-summoned reviewer is active, and never re-request greptile at
+all.
 
 ### Transport
 
@@ -428,13 +408,14 @@ applies:
    instructions, wins over these -- e.g. a global maximum wake
    interval):
 
-   - First wake after opening the PR: ~3 min (Copilot needs a beat to
-     queue)
+   - First wake after summoning the reviewer: ~3 min (it needs a beat
+     to queue)
    - First wake after a push: ~2 min
    - Subsequent quiet wakes: ~2 min
 
-   Copilot's observed response window is ~4-6 min, so a 2-min cadence
-   catches a posted review within 2 min worst case and ~1 min on average.
+   OCR's review job runs up to 9 min and Copilot's observed window is
+   ~4-6 min, so a 2-min cadence catches a posted review within 2 min
+   worst case and ~1 min on average.
    Pass the loop's continuation prompt verbatim to the scheduling
    primitive (in Claude Code, `ScheduleWakeup`) so the next wake
    re-enters this flow.
@@ -451,57 +432,25 @@ carve-out, not an ordered list.
    on any branch between turns; the loop is responsible for landing on the
    right one first.
 
-2. **Check PR state and Copilot queue** with a single cheap call. There is
-   no `gadmin` wrapper for this yet (tracked in the backlog), so the order
-   is `gh` (if available) -> MCP:
+2. **Check PR state and the active reviewer's queue** with a single
+   cheap call. There is no `gadmin` wrapper for this yet (tracked in the
+   backlog), so the order is `gh` (if available) -> MCP:
 
    ```bash
    gh pr view <NUMBER> --json state,reviewRequests,reviews
    ```
 
-   When `gh` is not on PATH, fall back to the environment's GitHub tool.
-   The Claude Code / GitHub MCP binding of this step (e.g. Claude Code on
-   the web) is:
-
-   ```
-   mcp__github__pull_request_read  method=get  -> .state + .requestedReviewers
-   ```
-
-   Interpret either result the same way -- base the decision on the Copilot
-   bot specifically, not on whether the list is empty (a human reviewer
-   request keeps the list non-empty even after Copilot is done):
-
-   - `state` is `MERGED` or `CLOSED` -- stop the loop immediately.
-   - the reviewer list contains `copilot-pull-request-reviewer[bot]` --
-     Copilot is still in flight; reschedule the next wake and wait.
-   - the reviewer list does **not** contain
-     `copilot-pull-request-reviewer[bot]` (other reviewers may remain) --
-     Copilot has finished or is not queued; proceed to step 3.
-
-   The commands above detect **Copilot's** queue. When **codex** is
-   the active reviewer there is no requested-reviewers entry to check:
-   in-flight is the eyes reaction codex leaves on the triggering
-   `@codex review` comment, and completion is its posted review (or a
-   thumbs-up reaction on that comment, meaning no suggestions). The
-   PR-state commands above do not return those reactions -- fetch them
-   explicitly:
-
-   ```bash
-   gh api /repos/<OWNER>/<REPO>/issues/comments/<TRIGGER_COMMENT_ID>/reactions
-   ```
-
-   (or the MCP `pull_request_read` `get_comments` method, which
-   returns reaction counts). `eyes` -> in flight; `+1` with no review
-   -> done, no suggestions; neither -> not picked up: say so (Reviewer
-   Selection). Codex posts a `codex-review-state` summary comment
-   (find it in the PR's issue comments) at start and edits it only at
-   completion; a dead job leaves `status: running` and `eyes` on
-   forever (observed: 2 h, 2026-10-25). `running` with that comment's
-   `updated_at` older than 15 min is a stall: report the sha and
-   timestamp, stop (no quiet wait), leave the re-trigger to the human.
-   `@codex` text not starting with `review` is a cloud task, run only
-   where the repo has a Codex Cloud environment the bot's refusal
-   links to.
+   When `gh` is not on PATH, fall back to the environment's GitHub tool
+   (`mcp__github__pull_request_read method=get` -> `.state` +
+   `.requestedReviewers`). `state` `MERGED` or `CLOSED` stops the loop
+   immediately. Otherwise each reviewer signals in-flight and done
+   differently -- OCR by reactions on its `/ocr` comment and a summary
+   review on the head, Copilot by its bot in the requested reviewers,
+   codex by reactions and a state comment -- and
+   `references/reviewer-mechanics.md` gives the signal, the fetch and
+   the stall rule for each. In flight: reschedule the next wake and
+   wait. Done, or never queued: proceed to step 3. Stalled: report the
+   sha and timestamp, stop, leave the re-summon to the human.
 
    **Greptile** is never awaited -- it reviews only when the human
    invites it, so treat its reviews as events to triage, not a queue
@@ -529,7 +478,7 @@ carve-out, not an ordered list.
      acting, inline in the session as plain text (never a question-picker
      widget -- they break on mobile) so the question is in-band.
    - **Disagree** -- reject with a one-line concrete reason. Never just
-     "disagree." Do not be a yes-man to Copilot -- reviewer pushback is the
+     "disagree." Do not be a yes-man to the reviewer -- pushback is the
      point of the loop.
    - **No action needed** -- echoes of your own posts get nothing;
      genuine informational or duplicate comments get a brief
@@ -538,35 +487,13 @@ carve-out, not an ordered list.
      reply convention below so the thread is marked addressed.
 
 5. **After a push that carries a load-bearing fix** (Spend Review Turns
-   on Load-Bearing Fixes), nudge the re-review -- but only for
-   Copilot, the one reviewer an agent may summon. When codex is
-   active, do NOT post `@codex review` (human-only trigger, see
-   Reviewer Selection) and do not touch the Copilot request either:
-   reply on the threads with the fix SHAs, state that the branch is
-   ready for another codex pass, and let the human decide whether to
-   re-summon it. Greptile is never re-requested (by-human-invite
-   only). For Copilot (the default; it
-   does not auto-re-review on `synchronize`) there is no `gadmin`
-   wrapper yet (tracked in the backlog), so the order is `gh` (if
-   available) -> MCP:
-
-   ```bash
-   gh pr edit <NUMBER> --add-reviewer @copilot
-   ```
-
-   The `gh` CLI special-cases `@copilot` (shipped 2026-03) to trigger the
-   Copilot review bot; the plain `requested_reviewers` REST API rejects it
-   as "not a collaborator." Works with user PATs (the standard `gh auth`
-   flow); reportedly fails with GitHub Actions bot tokens and some org
-   custom apps. `gh pr view --json reviewRequests` will often show empty
-   right after firing -- Copilot consumes the request near-instantly. When
-   `gh` is not on PATH, fall back to the environment's GitHub tool for
-   requesting the review; the Claude Code / GitHub MCP binding, which
-   queues the re-review correctly, is:
-
-   ```
-   mcp__github__request_copilot_review
-   ```
+   on Load-Bearing Fixes), re-summon the review -- but only OCR, the one
+   reviewer an agent may summon: post a fresh `/ocr` comment on the PR
+   (the mechanics file has the dispatch form and the identity rule).
+   When Copilot, codex or greptile is the active reviewer, fire nothing
+   -- no Copilot request, no `@codex review` -- reply on the threads with
+   the fix SHAs, state that the branch is ready for another pass, and
+   let the human decide whether to re-summon.
 
    Skip this step entirely if nothing load-bearing was pushed this cycle
    -- a hygiene-only push gets its SHA in the thread replies and no
@@ -576,8 +503,8 @@ carve-out, not an ordered list.
    remaining feedback becomes `pr-todo` issues, not another cycle.
 
 6. **In polling mode**, also sweep every other open PR you authored before
-   scheduling the next wake -- Copilot can leave delayed comments on PRs
-   you did not push to.
+   scheduling the next wake -- a reviewer can leave delayed comments on
+   PRs you did not push to.
 
 **Step 7 ("Consider documentation follow-ups") of Automated Review
 Response runs once when the loop exits, not every iteration** -- updates
@@ -588,12 +515,9 @@ should reflect the settled state, not mid-cycle churn.
 Stop when any of these fires:
 
 - PR merged or closed.
-- The active reviewer is done and quiet: for Copilot,
-  `copilot-pull-request-reviewer[bot]` absent from the requested
-  reviewers (other reviewers may remain -- use the same Copilot-bot
-  check as step 2, not an empty-list check); for codex, a posted
-  review or thumbs-up on the trigger comment with no eyes reaction
-  outstanding. Plus no new review from it across **3 consecutive
+- The active reviewer is done and quiet: its done signal
+  (`references/reviewer-mechanics.md`) is on the head, plus no new
+  review from it across **3 consecutive
   wakes** (~6 min quiescent). Stop fast -- reviewers rarely return
   late once the response window has passed. For greptile there is no
   done-and-quiet wait at all: it cannot be re-requested, so the loop
@@ -621,19 +545,20 @@ Stop when any of these fires:
   loop alive indefinitely. If a requested agentic reviewer produces no
   review across ~30 minutes of waiting (in polling mode, ~10
   consecutive quiet wakes), treat it as stalled: report state, surface
-  to the user, and stop. Codex: the 15-minute rule in step 2.
+  to the user, and stop. OCR and codex: the 15-minute rules in the
+  mechanics file.
 - A comment is architecturally ambiguous -- ask the human inline in the
   session as plain text (never a question-picker widget -- they break on
   mobile) and stop. Do not guess at design calls.
 - **All-rejected pass = stop.** If an iteration's actions for a PR are
-  100% rejections (zero `accept`, zero pushes, zero re-requests), mark
+  100% rejections (zero `accept`, zero pushes, zero re-summons), mark
   that PR settled and stop polling it immediately -- do not enter the
   quiescent empty-poll count. Once you have said "no" to everything
-  Copilot raised, the PR is in a "Copilot said its piece, you declined"
+  the reviewer raised, the PR is in a "it said its piece, you declined"
   state, which is a *land* signal, not a *wait* signal; another pass
   produces a guaranteed empty-or-rejection that adds no information. This
   is distinct from the quality-drop rule below: that one fires on
-  Copilot's *next* pass re-asserting a nit; this one fires *immediately*
+  the reviewer's *next* pass re-asserting a nit; this one fires *immediately*
   on the all-rejected pass, no second pass needed.
 - **Hygiene-only pass = stop.** If an iteration's accepted fixes are all
   hygiene, push them, reply with the SHA, resolve the threads, and stop:
@@ -642,11 +567,11 @@ Stop when any of these fires:
 - **Quality drop (anti-bikeshedding).** When remaining unaddressed
   comments are nitpicks (style trivia, "consider renaming X to Y" with no
   concrete reason, alternative phrasings of working code), push back --
-  reject each with a one-line reason. If Copilot re-asserts the same nit
+  reject each with a one-line reason. If the reviewer re-asserts the same nit
   on the next pass, post one summary reply ("remaining suggestions are
   stylistic; not addressing in this PR") and stop. Do not loop on
   bikeshedding.
-- Push fails / network failure / Copilot service unavailable -- report
+- Push fails / network failure / reviewer service unavailable -- report
   and surface to user.
 - Human says to stop. Do not argue.
 
@@ -732,8 +657,8 @@ When the turn cap fires for a reviewer:
    mode: the fork). A native `defer` reply type and a thread-resolve
    verb (exposing thread node ids) are tracked gadmin enhancements.
 
-- **Do not re-request review** from that reviewer on this PR again --
-   no `--add-reviewer @copilot`, no `request_copilot_review`. The cap
+- **Do not re-summon** that reviewer on this PR again -- no `/ocr`,
+   and never a Copilot or Codex trigger in any case. The cap
    is a stop on the trigger, not just on your responses.
 
 In subscription mode, ignore any subsequent `<github-webhook-activity>`
@@ -746,7 +671,7 @@ scheduled wake (in Claude Code, the next `ScheduleWakeup`).
 
 | Event | Action |
 |-------|--------|
-| Copilot review overview (with inline comments behind it) | Fetch the full batch once via `gadmin`; triage together, not per event. |
+| Review overview -- OCR's summary review, a Copilot overview -- (with inline comments behind it) | Fetch the full batch once via `gadmin`; triage together, not per event. |
 | Single inline comment (human reply, no review overview) | Triage and act on that one thread. |
 | `check_run` failure | Get the job log via `gadmin github actions get-job`; classify (flake / config / real bug); fix or report. |
 | PR merged or closed | Acknowledge and stop. |
@@ -757,8 +682,8 @@ scheduled wake (in Claude Code, the next `ScheduleWakeup`).
 Self-pacing mode is the right primitive:
 
 ```
-/loop check my open PRs for Copilot feedback, triage and respond per the
-github-workflow skill, push fixes, re-request and wait (~2 min) only
+/loop check my open PRs for reviewer feedback, triage and respond per the
+github-workflow skill, push fixes, re-summon OCR and wait (~2 min) only
 when a push was load-bearing, repeat until settled or capped.
 ```
 
