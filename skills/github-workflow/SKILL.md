@@ -276,7 +276,8 @@ are never empty; omit the others only when there is nothing to say.
 
 - **Problem.** One or two sentences: what is wrong or missing, who hits
   it, and what it costs them. Link the issue (`Closes #N`) where one
-  exists, and still state the problem: the reader must not have to open
+  exists (a design's tracking issue is cited `Refs #N`; only its
+  retrospective PR closes it), and still state the problem: the reader must not have to open
   the issue to learn why the PR exists.
 - **Evidence.** What shows the problem is real: a failing run, an
   observed output, a reproduction, the rule it breaks. Evidence about

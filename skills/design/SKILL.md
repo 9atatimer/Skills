@@ -518,10 +518,15 @@ it:
   own design or architecture record (the github-workflow skill)
 - **Implemented:** shipped, and its retrospective landed -- the
   retrospective's PR merged and the tracking issue closed (the
-  retrospective skill)
+  retrospective skill). The retrospective does not land, and does not
+  close the tracking issue, while drift cut from it is open
 - **Superseded:** the PR that lands the replacing record deletes the old
   one. The replacement cites it in Related Documents, by path and the
   commit that removed it; git history keeps it
+
+**The design PR opens or names the tracking issue.** Implementation PRs
+cite it with `Refs #N`, never `Closes`; only the retrospective PR closes
+it.
 
 **The open tracking issue carries the merged-but-unshipped gap.** A
 merged record whose code is not yet released is not in the shared

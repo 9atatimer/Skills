@@ -133,7 +133,8 @@ have graduated. -> the todo-plan skill
 merging, and the tracking issue closing with it, is what says the design
 shipped; no line in the design record says so (the design skill,
 Lifecycle is metadata). Write no status line, and never ask a human to
-approve or move one.
+approve or move one. The retrospective does not land, and does not close
+the tracking issue, while drift cut from it is open.
 
 State plainly in the PR: what shipped, what drifted, and what is still
 open.
