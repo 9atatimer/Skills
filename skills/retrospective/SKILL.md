@@ -7,8 +7,9 @@ description: "Phase 8 of the SDLC, and the only thing that closes the loop: walk
 
 > **Purpose:** find out whether you built what was designed, and turn what
 > you learned into something the next agent will actually read.
-> **Runs:** after Release (and 7a), in a **docs-only PR separate from the
-> feature PR**.
+> **Runs:** after Release (and 7a): on the task's PR while it is open,
+> else in **one follow-up PR**.
+> -> the github-workflow skill, One PR per repo per task
 
 **A green test suite and a clean bot review say nothing about whether you
 built what was designed.** Only this phase does. It is not optional, it is
@@ -28,9 +29,9 @@ that closes the loop was hidden behind the rule that kept you out of it.
 
 ## The checklist
 
-Work through the whole checklist. A docs-only PR, never bundled into the feature PR --
-doc changes buried in a large code diff do not get read, and that is
-exactly how unreviewed decisions ship.
+Work through the whole checklist. Its doc changes go in their own commit,
+never folded into a code commit -- doc changes buried in a code diff do
+not get read, and that is exactly how unreviewed decisions ship.
 
 ### Cut drift issues
 

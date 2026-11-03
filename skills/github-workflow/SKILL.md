@@ -150,21 +150,16 @@ Stage 2, the upstream PR, is the production PR:
   reviews and merges.
 - Close the Stage 1 PR.
 
-### Stacked PRs (GitHub Stacks)
+### One PR per repo per task
 
-When one change depends on another (code, then its docs; a retrospective,
-then the todos it produced), chain the PRs instead of bundling them or
-pretending they are independent: each PR targets the head branch of the
-one below, the bottom targets the default branch, and the chain is
-registered as a GitHub stack so a merge or change below rebases the ones
-above. Merge bottom-up; each PR still stands on its own as one reviewable
-story. The `gh api` calls and their traps are in
-[references/stacks.md](references/stacks.md).
-
-A PR higher in the stack measures "pre-existing" against the default
-branch, never against its parent. It inherits the parent's red gate as
-its starting state, and calling that pre-existing turns a break into
-background noise: the parent's failures are its own.
+A task gets exactly one PR in each repo it touches. Its code, its Key
+Decisions rows, its review fixes and its docs go onto that PR's branch,
+each kind in its own commit so a reviewer can read it alone. Never stack
+PRs, and never split off a docs-only or design-record companion: a stack
+lands only in order, a split leaves each PR citing text another has not
+landed, and every extra PR is another approval and another `gate` run.
+Once the task's PR has merged, follow-up work (the retrospective) is one
+new PR.
 
 ### Landing via tedium (merge bot)
 
