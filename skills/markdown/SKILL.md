@@ -160,7 +160,9 @@ For project design docs:
 - Start content at H2 (title is in frontmatter)
 - Use `(decision)` suffix on headings that record architectural decisions
 - Keep a Review Log section at the bottom with dated entries
-- Reference other design docs by relative path
+- Reference other design docs by relative path, and point into one by
+  section name or anchor, never by line number: a line reference drifts
+  as soon as the target is edited
 - Cite `AGENT.md`, not `CLAUDE.md`: `CLAUDE.md` is a symlink, and review
   bots that do not resolve symlinks flag the reference as broken
 

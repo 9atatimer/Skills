@@ -287,6 +287,14 @@ correction for that. -> the designomatic skill
 The checklist stays yours to apply. The panel is a first pass, not an
 approval; the merge is the approval.
 
+**Run one worked example through it before it freezes.** A record that
+specifies a protocol, a workflow or a state machine hides bugs prose review
+does not see. A concrete instance makes every rule run, and so does
+adversarial review of that instance. Porting g1n1's Panel to a runnable
+workflow file and reviewing it found two contract bugs that prose review and
+a six-lens audit missed. Attribute propagation through fork and join was
+unstated. An enabling rule deadlocked work gates over input attributes.
+
 ### Quality Checklist
 
 Run through these checks:
