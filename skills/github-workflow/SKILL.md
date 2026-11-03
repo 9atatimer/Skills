@@ -159,7 +159,8 @@ PRs, and never split off a docs-only or design-record companion: a stack
 lands only in order, a split leaves each PR citing text another has not
 landed, and every extra PR is another approval and another `gate` run.
 Once the task's PR has merged, follow-up work (the retrospective) is one
-new PR.
+new PR. The fork flow above is one PR too: its Stage 1 PR closes
+when Stage 2 opens.
 
 ### Landing via tedium (merge bot)
 
@@ -276,9 +277,9 @@ are never empty; omit the others only when there is nothing to say.
 
 - **Problem.** One or two sentences: what is wrong or missing, who hits
   it, and what it costs them. Link the issue (`Closes #N`) where one
-  exists (a design's tracking issue is cited `Refs #N`; only its
-  retrospective PR closes it), and still state the problem: the reader must not have to open
-  the issue to learn why the PR exists.
+  exists (a design's tracking issue is cited `Refs #N`; only the PR
+  carrying its retrospective closes it), and still state the problem:
+  the reader must not have to open the issue to learn why the PR exists.
 - **Evidence.** What shows the problem is real: a failing run, an
   observed output, a reproduction, the rule it breaks. Evidence about
   code names the commit it was read at (`at origin/main 48ab1cb`).

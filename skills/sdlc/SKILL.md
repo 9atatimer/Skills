@@ -34,10 +34,10 @@ skill.
    you built destroys the only artifact that can show you drifted, and
    turns an unreviewed decision into apparent spec. The single exception
    is *appending* to the Key Decisions log, each row citing its
-   authorizing issue, in its own commit on the task's one PR. Status is metadata, never document
-   content and never a question: a human's merge is the approval, no
-   record carries a status line, and the agent never raises one with a
-   human. -> the design skill
+   authorizing issue, in its own commit on the task's one PR. Status is
+   metadata, never document content and never a question: a human's
+   merge is the approval, no record carries a status line, and the agent
+   never raises one with a human. -> the design skill
 3. **The folder law: concept disposable, design frozen, arch living.**
    The concept tree -- `docs/concepts/`, or wherever the repo's `AGENT.md`
    says -- is unfunded, non-binding, never frozen, and **nothing
