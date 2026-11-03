@@ -123,6 +123,14 @@ preview deploy.
   enrichment binding (a read-only corpus) degrades the turn when absent;
   the binding on the write path fails closed.
 
+- **Every method of a `WorkerEntrypoint` is callable over RPC.**
+  TypeScript `private` is erased at compile time, so a "private" helper
+  on the class is a public RPC method for any Worker that holds a binding
+  to it. Keep every step past an authorization check in a module
+  function, not on the class. A test calls that function by name through
+  the stub and expects `does not implement`. In g1n1 a `private issue()`
+  let any bound Worker mint an Identity for a Component it named itself.
+
 ## Secrets
 
 - `wrangler secret put <NAME> --env <stage>` from a value read out of
