@@ -35,6 +35,16 @@ and end with a precise handoff -- repo, branch, diff stat, and what
 remains -- so the human can decide before the container is reclaimed.
 Only then run the sweep.
 
+**A pushed branch with no PR is lost too.** Nothing tracks it. No review
+sees it, no gate runs on it, and the next session finds it only by
+accident. For each repository, check the session's remote branch for
+commits the default branch lacks (`git log origin/main..origin/<branch>`)
+that no PR carries (the pulls API, `head=<owner>:<branch>`, state all).
+Either open a PR for them, or name the branch and its commits in the
+handoff for the human to decide. Two pushed Skills commits sat this way from
+2026-11-01 until a retrospective two days later found them
+([Skills PR#171](https://github.com/9atatimer/Skills/pull/171)).
+
 ## The sweep
 
 Walk the session once and route each artifact to the one place the
