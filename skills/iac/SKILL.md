@@ -276,9 +276,9 @@ Rules that hold across all three:
 - **Verify against the live system, not against the state.** An
   unauthenticated probe that returns the gate's own refusal, a
   `terraform plan` that reports no unexplained drift, an `op read` of
-  every reference the module wrote. A status line in a plan document
-  written an hour BEFORE the apply reads as current for days; record the
-  verification and its date.
+  every reference the module wrote. A plan document that says what is
+  live, written an hour BEFORE the apply, reads as current for days;
+  record the verification and its date, never a status line.
 - **Scaffolding is not intent.** A commented-out backend block, an
   example file, a sibling module inherited from a template and never
   applied are not evidence of a decision. When scaffolding and the

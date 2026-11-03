@@ -1,6 +1,6 @@
 ---
 name: design
-description: "Phase 2 of the SDLC: writing, reviewing, or improving a design doc; use before starting any feature that lacks one. Covers the required sections incl. Behaviors (the Given/When/Then surface) and Rejections, what a design record may not hold (seams, signatures, vendors, numbers -- the architecture and as-built records own those), the freeze at APPROVED, and the status ladder. Product only: skip for developer tooling (self-contained dev QoL, invisible to the product), which gets a docs/ops/ runbook instead (sdlc, Product or tooling). Skip also when naming seams or updating the as-built (architecture), building the phased plan (planning), or implementing against an approved design (coding)."
+description: "Phase 2 of the SDLC: writing, reviewing, or improving a design doc; use before starting any feature that lacks one. Covers the required sections incl. Behaviors (the Given/When/Then surface) and Rejections, what a design record may not hold (seams, signatures, vendors, numbers -- the architecture and as-built records own those), the freeze once merged, and where lifecycle lives (git and GitHub, never the document). Product only: skip for developer tooling (self-contained dev QoL, invisible to the product), which gets a docs/ops/ runbook instead (sdlc, Product or tooling). Skip also when naming seams or updating the as-built (architecture), building the phased plan (planning), or implementing against an approved design (coding)."
 ---
 
 # SKILL: Design Document Authoring & Review (Phase 2)
@@ -8,9 +8,9 @@ description: "Phase 2 of the SDLC: writing, reviewing, or improving a design doc
 > **Purpose:** Author, review, and improve design documents that are useful to both AI agents and human engineers.
 > **When to use:** Before implementing a new system, major feature, or architectural change.
 > **Exit gate:** the record is complete and a human merges it.
-> Merged is APPROVED (Status Transitions). From then on its body is
-> frozen; only the status and the append-only Key Decisions log move.
-> APPROVED is what opens phase 3: the architecture record is written
+> Merged is the approval (Lifecycle is metadata). From then on its body
+> is frozen; only the append-only Key Decisions log moves.
+> The merge is what opens phase 3: the architecture record is written
 > against this one, never alongside it.
 > **References:** `docs/design/TEMPLATE.md`; a repo's `docs/design/STYLE-GUIDE.md`, where
 > present, is a local copy for humans and yields to this skill where they differ
@@ -66,19 +66,15 @@ trees fail in opposite directions, which is why they are separate:
 | | `docs/design/` | `docs/arch/` |
 |---|---|---|
 | Describes | what we intend to build | what is deployed right now |
-| Lifecycle | **body frozen at APPROVED** | **living, never frozen** |
+| Lifecycle | **body frozen once merged** | **living, never frozen** |
 | Wrong when | rewritten to match the code | contains anything not yet shipped |
 
 Never place an as-built document in `docs/design/`, and never describe
 unshipped intentions in `docs/arch/`. -> the as-built skill
 
 **The freeze covers a record's body, and only design and architecture
-records.** The status still advances (APPROVED -> IMPLEMENTED -> SUPERSEDED) and Key
-Decisions is still append-only -- see Status Transitions. Commit the
-status move alone: a last pre-approval body edit in the same commit
-reads as a frozen body that moved (ci.magic flagged it on 9atatimer/iae
-PR#342). And
-`STYLE-GUIDE.md` / `TEMPLATE.md`, which live in `docs/design/` as reusable
+records.** Key Decisions is still append-only (Lifecycle is metadata).
+And `STYLE-GUIDE.md` / `TEMPLATE.md`, which live in `docs/design/` as reusable
 process guidance rather than descriptions of an intended system, have no
 approval lifecycle and evolve freely.
 
@@ -225,7 +221,7 @@ after this one is approved; see the architecture skill.)
 
 **Do not skip sections.** Write them in this order:
 
-- **Header block** -- Status starts as DRAFT, fill date and authors
+- **Header block** -- date and authors; no status line (Lifecycle is metadata)
 - **Overview** -- 2-3 sentences. If you can't explain it briefly, you don't understand it yet
 - **Problem and approach** -- three short parts, before any goal: the problem (what the existing answers get wrong and what this one must solve), the approach (the handful of moves that solve it, each one sentence), and a tradeoffs table (what is given up, why it is worth it). A reader needs the shape before the rules
 - **Goals** -- capabilities and constraints, each testable, each with a stable id (`G1`...) so a Behaviors row and the architecture record can cite it
@@ -298,8 +294,7 @@ Run through these checks:
 **Structure:**
 
 - [ ] Has all required sections (header, overview, goals, non-goals, design, behaviors, domain language, parameters, key decisions, open questions, rejections)
-- [ ] Header has status, date, authors
-- [ ] Status uses standard vocabulary (DRAFT / REVIEW / APPROVED / IMPLEMENTED / SUPERSEDED)
+- [ ] Header has date and authors, and no status line
 
 **Content quality:**
 
@@ -389,18 +384,18 @@ When asked to improve an existing doc:
 
 A design doc's value is realized when it drives implementation:
 
-- **Architecture (phase 3):** once this record is APPROVED, write
+- **Architecture (phase 3):** once this record is merged, write
    `ARCHITECTURE.<name>.md` beside it: the seams, the module map, each
    Behaviors row's use-case signature, where each bound is carried, and
-   operability, against the as-built in `docs/arch/`. It freezes at its own
-   APPROVED. -> the architecture skill
+   operability, against the as-built in `docs/arch/`. It freezes once it
+   is merged. -> the architecture skill
 - **Planning (phase 3b):** break the design into test-first phases,
    recorded as task files under `tasks/` and ordered in the repo's root
    `TODO_PLAN.md`. -> the planning skill
 - **Behaviors and Code (phases 4-5):** implement RED -> GREEN -> COMMIT
    against both records -- each RED test asserts a Behaviors row's Then,
    calling the use case the architecture record gives that row, by that
-   signature. **Both records are frozen from APPROVED onward** -- see Drift
+   signature. **Both records are frozen once merged** -- see Drift
    below
 - **Retrospective (phase 8):** walk the doc against the code and file
    every divergence. Do **not** silently "update the doc to match". -> the
@@ -409,11 +404,11 @@ A design doc's value is realized when it drives implementation:
 ### Where this doc sits
 
 ```
-docs/design/DESIGN.feature.md         (what it can and cannot do -- FROZEN at APPROVED)
+docs/design/DESIGN.feature.md         (what it can and cannot do -- FROZEN once merged)
          |
          v
 docs/design/ARCHITECTURE.feature.md   (how it intends to -- written against docs/arch/,
-         |                             FROZEN at its own APPROVED)
+         |                             FROZEN once merged)
          v
 tasks/ + TODO_PLAN.md                 (how to build it, and in what order)
          |
@@ -487,7 +482,7 @@ decisions made during implementation belong there -- but:
 Every other section -- Overview, Goals, Non-Goals, Design, Behaviors,
 State Machine, Domain Language, Parameters, Security, Open Questions -- is
 frozen until a human amends it. The architecture record freezes the same
-way at its own APPROVED.
+way once it is merged.
 
 ---
 
@@ -495,7 +490,7 @@ way at its own APPROVED.
 
 Implementation is not done when the tests pass. The closing checklist --
 cut drift issues, append Key Decisions, record lessons, file what you
-discovered, update `TODO_PLAN.md`, set the status -- is
+discovered, update `TODO_PLAN.md` -- is
 **the retrospective skill (phase 8)**, run in a docs-only PR separate from
 the feature PR.
 
@@ -508,44 +503,44 @@ closes the loop was hidden behind the rule that kept them out of it.
 
 ---
 
-## Status Transitions
+## Lifecycle is metadata
 
-```
-DRAFT (or REVIEW)  -->  APPROVED  -->  IMPLEMENTED  -->  SUPERSEDED
-   on its branch         merged        shipped, drift      replaced
-```
+**A record never carries its own status (owner ruling, 2026-11-01).** No
+status line, status field or badge, no "(status: ...)" note on a link,
+no "Current Status" section. Each state lives where git and GitHub keep
+it:
 
-**Status is bookkeeping, never a question (owner ruling, 2026-10-24).**
-The agent sets the status line itself, by the rules below. It never asks
-a human to move a status, reminds them of one, offers to, or reports one
-as pending, in chat, in a PR or anywhere else. Once a record is merged
-and the next phase has begun, the work moves on.
+- **In progress:** the record is on an open PR's branch. Run the
+  reviewer panel before the PR (-> the designomatic skill)
+- **Approved and frozen:** the record is on the default branch. The
+  merge is the approval and the freeze, when a human lands it: a human
+  merges the PR or posts its `/land`. An agent never merges or lands its
+  own design or architecture record (the github-workflow skill)
+- **Implemented:** shipped, and its retrospective landed -- the
+  retrospective's PR merged and the tracking issue closed (the
+  retrospective skill). The retrospective does not land, and does not
+  close the tracking issue, while drift cut from it is open
+- **Superseded:** the PR that lands the replacing record deletes the old
+  one. The replacement cites it in Related Documents, by path and the
+  commit that removed it; git history keeps it
 
-- **DRAFT, or REVIEW:** the record on its branch, before it lands. REVIEW
-  is an optional label for the same state; run the reviewer panel before
-  the PR (-> the designomatic skill)
-- **APPROVED:** merging to the default branch is the approval, when a
-  human lands it: a human merges the PR or posts its `/land`. An agent
-  never merges or lands its own design or architecture record (the
-  github-workflow skill). The record lands with its DRAFT or REVIEW line,
-  so nothing freezes before the merge, and is APPROVED from that moment.
-  The first PR after the merge that touches it, or that opens the next
-  phase, writes `Status: APPROVED`, in a commit of its own
-- **IMPLEMENTED:** **shipped, as-built updated, drift closed.** The
-  retrospective PR sets it once all three hold, not merely the merge:
-  code that is merged but not released is not in the shared
-  architecture, and the status is a lie while drift is open. While drift
-  is open the status stays APPROVED, silently
-- **SUPERSEDED:** the PR that lands a replacing record sets it here and
-  links the replacement
+**The design PR opens or names the tracking issue.** Implementation PRs
+cite it with `Refs #N`, never `Closes`; only the retrospective PR closes
+it.
 
-**APPROVED and IMPLEMENTED carry the merged-but-unreleased gap.** APPROVED
-means designed and merged, but not yet in the shared architecture
-described by `docs/arch/`. That is what lets the as-built stay strictly
+**The open tracking issue carries the merged-but-unshipped gap.** A
+merged record whose code is not yet released is not in the shared
+architecture that `docs/arch/` describes; the issue stays open until the
+retrospective lands. That is what lets the as-built stay strictly
 factual instead of needing a "pending" marker.
 
-**APPROVED is a freeze.** From APPROVED onward the doc changes only by human
-amendment through the design process -- never as a side effect of someone
-implementing it. See Drift above. **APPROVED is also the gate to phase 3:**
-the architecture record is written against a frozen design, so a design
-that has not merged has no architecture record yet.
+**Lifecycle is never a question.** An agent never writes, sets or
+reports a status, and never asks a human to approve one or reminds them
+of one, in chat, in a PR or anywhere else: the merge is the approval.
+
+**Merged is a freeze.** From the merge onward the body changes only by
+human amendment through the design process -- never as a side effect of
+someone implementing it; Key Decisions stays append-only. See Drift
+above. **The merge is also the gate to phase 3:** the architecture
+record is written against a frozen design, so a design that has not
+merged has no architecture record yet.

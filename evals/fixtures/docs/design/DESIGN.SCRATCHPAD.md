@@ -1,7 +1,5 @@
 # DESIGN.SCRATCHPAD -- cross-session agent scratchpad
 
-**Status:** REVIEW
-
 > Gauntlet fixture. A minimal design record so persona prompts can point at
 > a real file. Not a real design; nothing cites it.
 

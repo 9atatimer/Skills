@@ -76,10 +76,10 @@ those phases, a documentation-only change gets the self-review pass alone
 
 Do **not** reach for it when:
 
-- The document is APPROVED. It is frozen, and designomatic refuses it --
-  cut a drift issue instead. A merged record is APPROVED whatever its
-  status line says, and the tool reads only the line: correct a stale
-  DRAFT or REVIEW line first, in a commit of its own. -> the design skill
+- The document is a merged design or architecture record, and the human
+  did not ask for an amendment. Never run the panel on one; a merged
+  record otherwise changes only by Key Decisions appends (the design
+  skill).
 - You want code reviewed. That is the gates skill.
 - You want to know what a document must contain. That is the concept,
   design, architecture and as-built skills -- which are also exactly what
@@ -117,7 +117,6 @@ panel's narrowing in a `--rubric` supplement.
 | `--kind concept\|design\|as-built` | Only when the path does not say what the document is |
 | `--rubric PATH` | A repo-local supplement read after the skills: it may narrow them, never override them |
 | `--rubric PATH` is also the only way to steer the editor in 0.3.0 | There is no `--guidance` flag in designomatic 0.3.0; a run that passes one fails before the first reviewer. Put editor constraints ("KISS, this is a prototype") in the rubric supplement |
-| `--allow-frozen` | Amend an APPROVED record. **Human decision only** -- an agent never passes this |
 
 **Tell the panel the scope, or it grows the record.** Every reviewer
 judges against the skills for completeness, so each edge case the owner
@@ -156,8 +155,8 @@ agent's to lift: report it. Provisioning and the model-id grammar are the
 tool's runbook (template-tools `docs/ops/designomatic.md`).
 
 **The panel's output is a proposal, not an approval.** A human's merge is
-the approval, and the first PR after it writes the status line (the
-design skill, Status Transitions). What a green run buys is that a human's first
+the approval, and no line in the record records it (the design skill,
+Lifecycle is metadata). What a green run buys is that a human's first
 read is not spent on what a panel would have caught.
 
 ---

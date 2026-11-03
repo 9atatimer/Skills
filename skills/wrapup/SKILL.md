@@ -1,6 +1,6 @@
 ---
 name: wrapup
-description: "The session epilogue, typically human-invoked (/wrapup) before a session is archived: first preserve any uncommitted or unpushed work on the session's feature branch, then sweep what the session produced into durable homes -- comments on the issues it touched, new issues for what it discovered, TODO_PLAN lessons and status, as-built corrections -- batching all file edits into at most ONE docs-only PR. Records only what would be wasteful to forget; 'nothing worth recording' is a valid outcome. If an implementation landed this session and phase 8 has not run, run the retrospective skill first -- wrapup is not a substitute for it."
+description: "The session epilogue, typically human-invoked (/wrapup) before a session is archived: first preserve any uncommitted or unpushed work on the session's feature branch, then sweep what the session produced into durable homes -- comments on the issues it touched, new issues for what it discovered, TODO_PLAN lessons and its Now list, as-built corrections -- batching all file edits into at most ONE docs-only PR. Records only what would be wasteful to forget; 'nothing worth recording' is a valid outcome. If an implementation landed this session and phase 8 has not run, run the retrospective skill first -- wrapup is not a substitute for it."
 ---
 
 # SKILL: Wrapup (session epilogue)

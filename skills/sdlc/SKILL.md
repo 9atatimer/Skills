@@ -34,16 +34,17 @@ skill.
    you built destroys the only artifact that can show you drifted, and
    turns an unreviewed decision into apparent spec. The single exception
    is *appending* to the Key Decisions log, each row citing its
-   authorizing issue, in a docs-only PR. Status is bookkeeping, never a
-   question: a human's merge is APPROVED, and the agent sets every status line
-   itself and never raises one with a human. -> the design skill
+   authorizing issue, in a docs-only PR. Status is metadata, never document
+   content and never a question: a human's merge is the approval, no
+   record carries a status line, and the agent never raises one with a
+   human. -> the design skill
 3. **The folder law: concept disposable, design frozen, arch living.**
    The concept tree -- `docs/concepts/`, or wherever the repo's `AGENT.md`
    says -- is unfunded, non-binding, never frozen, and **nothing
    downstream may cite it as authority**; an intention on disk is not a
    decision. A design record in `docs/design/` is aspirational and its
-   body freezes at APPROVED -- only its status and its append-only Key
-   Decisions log move after that. `docs/arch/` is factual, never frozen,
+   body freezes once merged -- only its append-only Key Decisions log
+   moves after that. `docs/arch/` is factual, never frozen,
    and describes **only what is deployed**. Those three lifecycles are why
    they are three trees. A want promoted to spec was never reviewed; a
    design doc rewritten to match the code is a lie; an as-built containing
@@ -54,8 +55,8 @@ skill.
    disposable end), the architecture skill and the as-built skill
 4. **Implementation ends with the retrospective, not with green tests.**
    Cut drift issues, append Key Decisions, reconcile the as-built, record
-   lessons learned at their layer (law 15), file what you discovered, and
-   set the status. A passing suite and a clean bot review say
+   lessons learned at their layer (law 15), and file what you discovered;
+   the retrospective's landing records the implementation. A passing suite and a clean bot review say
    nothing about whether you built what was designed. -> the retrospective
    skill
 5. **Test first; keep the behavior test.** Write the failing test before
@@ -226,8 +227,8 @@ skill.
     both from one sequence. Every number you write names its kind, in
     chat, commits, PR and issue bodies, review replies, and plan files.
     Another repo's number also names the repo: `quillmap PR#392`. The
-    one exception is a closing keyword (`Closes #N`), which GitHub only
-    parses bare. -> the github-workflow skill
+    one exception is a linking keyword (`Closes #N`, `Refs #N`), which
+    GitHub only parses bare. -> the github-workflow skill
 20. **A permission-classifier refusal is final for that outcome.** When
     the harness's auto-mode classifier denies a call, do not reach the
     same outcome another way: not with another tool, a script, a
@@ -246,8 +247,8 @@ skill.
 
 ```
 1 CONCEPT                    docs/concepts/  intent, unfunded, disposable
-2 DESIGN                     docs/design/    aspirational, FROZEN at APPROVED
-3 ARCHITECTURE               docs/design/    how it intends to; FROZEN at APPROVED
+2 DESIGN                     docs/design/    aspirational, FROZEN once merged
+3 ARCHITECTURE               docs/design/    how it intends to; FROZEN once merged
   3b PLANNING                the route from as-built to design; tasks/
 4 BEHAVIORS            <-+   tests, RED
 5 CODE                   |   the iterative core
@@ -269,8 +270,8 @@ one-pass the tests. Do not.
 | Phase | Artifact | Exit gate | Load |
 |---|---|---|---|
 | 1 Concept | `docs/concepts/<idea>/` -- statement of work + user stories | a human funds it | the concept skill |
-| 2 Design | `docs/design/DESIGN.<name>.md` | a human merges it (merged is APPROVED) | the design skill; run the panel before the PR -> the designomatic skill |
-| 3 Architecture | `docs/design/ARCHITECTURE.<name>.md` -- seams, module map, use-case surface, bounds placed, operability | a human merges it (merged is APPROVED) | the architecture skill; run the seam-review panel before the PR -> the designomatic skill |
+| 2 Design | `docs/design/DESIGN.<name>.md` | a human merges it (merged is the approval) | the design skill; run the panel before the PR -> the designomatic skill |
+| 3 Architecture | `docs/design/ARCHITECTURE.<name>.md` -- seams, module map, use-case surface, bounds placed, operability | a human merges it (merged is the approval) | the architecture skill; run the seam-review panel before the PR -> the designomatic skill |
 | 3b Planning | `tasks/`, ordered in `TODO_PLAN.md` | a phased, test-first route | the planning skill |
 | 4 Behaviors | the next behavior, RED | it fails because the code does not exist | the testing skill + the stack-specific one |
 | 5 Code | source | GREEN | the coding skill + the language style skill |
@@ -387,9 +388,9 @@ describes the *deployed* system that other developers must code against.
 CD is not universal, and merged is not shipped. Read "release" broadly:
 deploy, publish, or tag. Work that ships nowhere changes no shared
 architecture, which is a correct no-op rather than an exception. The gap
-between merged and deployed is carried by the design doc's status --
-APPROVED means designed and merged; IMPLEMENTED means shipped,
-as-built updated, drift closed.
+between merged and deployed is carried by the tracking issue, which
+stays open until the change has shipped and its retrospective landed
+-- never by a line in the design doc.
 
 The loop is not closed until the retrospective. Shipping code is not the
 same as shipping what was designed.

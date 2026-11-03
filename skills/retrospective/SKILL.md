@@ -1,6 +1,6 @@
 ---
 name: retrospective
-description: "Phase 8 of the SDLC, and the only thing that closes the loop: walking the frozen design against the shipped code, cutting drift issues, appending Key Decisions, recording lessons in TODO_PLAN.md, and setting the design record's status. Load whenever an implementation lands -- green tests and a clean review are not the end of the work. This phase never elides, including when the change shipped nowhere; for developer tooling (no design to walk) it shrinks to lessons and discovered issues."
+description: "Phase 8 of the SDLC, and the only thing that closes the loop: walking the frozen design against the shipped code, cutting drift issues, appending Key Decisions, and recording lessons in TODO_PLAN.md; its landing is the record of implementation. Load whenever an implementation lands -- green tests and a clean review are not the end of the work. This phase never elides, including when the change shipped nowhere; for developer tooling (no design to walk) it shrinks to lessons and discovered issues."
 ---
 
 # SKILL: Retrospective (Phase 8)
@@ -16,7 +16,7 @@ not "if there is time," and it does not elide.
 
 **Developer tooling runs a short retrospective.** A tool has no design
 doc and no as-built (sdlc, "Product or tooling"), so there is nothing to
-walk for drift, no Key Decisions to append and no status to set. Do
+walk for drift and no Key Decisions to append. Do
 the lessons and discovered-issues sections, confirm `docs/ops/<tool>.md`
 matches what shipped, and stop.
 
@@ -127,14 +127,14 @@ stays **visibly incomplete** until they are settled. Then prune
 `tasks/done/`: delete every entry whose work has shipped and whose lessons
 have graduated. -> the todo-plan skill
 
-### Set the status
+### Land it
 
-**The retrospective PR sets the status itself.** IMPLEMENTED means
-shipped, as-built updated, drift closed: set it, in a commit of its own,
-once all three hold. While drift is open the status stays APPROVED. This
-is bookkeeping, never a question: do not ask a human to move a status,
-remind them of one, or report one as pending (the design skill, Status
-Transitions).
+**The retrospective's landing is the record of implementation.** Its PR
+merging, and the tracking issue closing with it, is what says the design
+shipped; no line in the design record says so (the design skill,
+Lifecycle is metadata). Write no status line, and never ask a human to
+approve or move one. The retrospective does not land, and does not close
+the tracking issue, while drift cut from it is open.
 
 State plainly in the PR: what shipped, what drifted, and what is still
 open.
@@ -178,8 +178,8 @@ missing, not that agents keep being careless. Propose the change.
 
 The loop is closed when: every divergence is filed, Key Decisions cites its
 authorizations, every lesson sits at its layer (unsettled ones in
-`TODO_PLAN.md` alongside the open drift), and the status line says what
-is true.
+`TODO_PLAN.md` alongside the open drift), and the PR is open for a
+human to land.
 
 Shipping code is not the same as shipping what was designed.
 

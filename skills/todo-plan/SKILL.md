@@ -256,7 +256,6 @@ every future session.
 ```markdown
 # {Project Name} -- TODO Plan
 
-> **Status:** Active | Complete
 > **Updated:** YYYY-MM-DD
 > **Design:** link to the design doc, if applicable
 
