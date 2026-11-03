@@ -395,6 +395,27 @@ A failing pre-commit or pre-push hook is a diagnosis prompt. The sentry-file
 discipline for a check that genuinely cannot run, and the ban on
 blanket-skipping the suite, are the gates skill.
 
+## Act as the bot identity, never the owner
+
+Every tool below acts as whoever its credential belongs to. On the
+owner's repos a `CODEOWNERS` catch-all needs the owner's approval, and
+GitHub refuses self-approval, so a PR opened under the owner's login can
+never be approved and lands only by the owner overriding the queue. Push,
+open PRs, comment and `/land` as the fleet's machine account
+(`9atatimer-bot`); the owner's approval is the review.
+
+- Run `gh api user --jq .login` before the first push of a session. If it
+  names the owner, stop and switch identity; never push "just this once".
+- On the laptop the session starts under tds-utils `bin/claude-as-bot`
+  (the bot's token from 1Password as `GH_TOKEN`, GitHub over HTTPS only,
+  commits under the bot's name). A session already running as the owner
+  wraps each GitHub command in that launcher's environment.
+- In a cloud session the platform's GitHub App acts as whoever connected
+  it; the owner connects it as the bot. If it reports the owner, say so
+  and stop.
+- `clai.d/AGENT.global.md` in tds-utils, "Act on GitHub as the bot", is the
+  canonical statement.
+
 ## GitHub Tool Usage
 
 In token-frugal preference order:
