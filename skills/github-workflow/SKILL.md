@@ -405,14 +405,19 @@ open PRs, comment and `/land` as the fleet's machine account
 (`9atatimer-bot`); the owner's approval is the review.
 
 - Run `gh api user --jq .login` before the first push of a session. If it
-  names the owner, stop and switch identity; never push "just this once".
+  is not `9atatimer-bot`, stop and switch identity; never push "just this
+  once".
 - On the laptop the session starts under tds-utils `bin/claude-as-bot`
   (the bot's token from 1Password as `GH_TOKEN`, GitHub over HTTPS only,
   commits under the bot's name). A session already running as the owner
-  wraps each GitHub command in that launcher's environment.
+  runs each GitHub command and each commit inside that launcher's
+  environment: `op run --env-file <(claude-as-bot --print-env) -- <cmd>`.
 - In a cloud session the platform's GitHub App acts as whoever connected
-  it; the owner connects it as the bot. If it reports the owner, say so
-  and stop.
+  it; the owner connects it as the bot. If the identity is not
+  `9atatimer-bot`, say so and stop.
+- Codex runs on the Codex account of whoever posts `@codex review`; the
+  bot has none, so its trigger gets a "create a Codex account" reply and
+  no review. Codex stays the owner's to summon, on the owner's quota.
 - `clai.d/AGENT.global.md` in tds-utils, "Act on GitHub as the bot", is the
   canonical statement.
 
