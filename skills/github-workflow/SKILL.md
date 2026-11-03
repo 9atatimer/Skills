@@ -415,6 +415,9 @@ open PRs, comment and `/land` as the fleet's machine account
 - In a cloud session the platform's GitHub App acts as whoever connected
   it; the owner connects it as the bot. If the identity is not
   `9atatimer-bot`, say so and stop.
+- Codex runs on the Codex account of whoever posts `@codex review`; the
+  bot has none, so its trigger gets a "create a Codex account" reply and
+  no review. Codex stays the owner's to summon, on the owner's quota.
 - `clai.d/AGENT.global.md` in tds-utils, "Act on GitHub as the bot", is the
   canonical statement.
 
