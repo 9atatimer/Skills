@@ -150,21 +150,17 @@ Stage 2, the upstream PR, is the production PR:
   reviews and merges.
 - Close the Stage 1 PR.
 
-### Stacked PRs (GitHub Stacks)
+### One PR per repo per task
 
-When one change depends on another (code, then its docs; a retrospective,
-then the todos it produced), chain the PRs instead of bundling them or
-pretending they are independent: each PR targets the head branch of the
-one below, the bottom targets the default branch, and the chain is
-registered as a GitHub stack so a merge or change below rebases the ones
-above. Merge bottom-up; each PR still stands on its own as one reviewable
-story. The `gh api` calls and their traps are in
-[references/stacks.md](references/stacks.md).
-
-A PR higher in the stack measures "pre-existing" against the default
-branch, never against its parent. It inherits the parent's red gate as
-its starting state, and calling that pre-existing turns a break into
-background noise: the parent's failures are its own.
+A task gets exactly one PR in each repo it touches. Its code, its Key
+Decisions rows, its review fixes and its docs go onto that PR's branch,
+each kind in its own commit so a reviewer can read it alone. Never stack
+PRs, and never split off a docs-only or design-record companion: a stack
+lands only in order, a split leaves each PR citing text another has not
+landed, and every extra PR is another approval and another `gate` run.
+Once the task's PR has merged, follow-up work (the retrospective) is one
+new PR. The fork flow above is one PR too: its Stage 1 PR closes
+when Stage 2 opens.
 
 ### Landing via tedium (merge bot)
 
@@ -281,9 +277,9 @@ are never empty; omit the others only when there is nothing to say.
 
 - **Problem.** One or two sentences: what is wrong or missing, who hits
   it, and what it costs them. Link the issue (`Closes #N`) where one
-  exists (a design's tracking issue is cited `Refs #N`; only its
-  retrospective PR closes it), and still state the problem: the reader must not have to open
-  the issue to learn why the PR exists.
+  exists (a design's tracking issue is cited `Refs #N`; only the PR
+  carrying its retrospective closes it), and still state the problem:
+  the reader must not have to open the issue to learn why the PR exists.
 - **Evidence.** What shows the problem is real: a failing run, an
   observed output, a reproduction, the rule it breaks. Evidence about
   code names the commit it was read at (`at origin/main 48ab1cb`).
