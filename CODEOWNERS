@@ -19,6 +19,9 @@
 tedium.toml                  @9atatimer
 CODEOWNERS                   @9atatimer
 .github/workflows/           @9atatimer
+# The adherence declaration: in force only when a code owner approved or
+# merged its landing (tds-utils docs/design/DESIGN.ARCH-ADHERENCE.md, G9).
+adherence.toml               @9atatimer
 
 # The executable payload: every agent in the fleet loads skills/ and
 # agents/ verbatim and calls mcp/ servers by this catalog, and

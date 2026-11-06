@@ -1,0 +1,16 @@
+# adherence.toml -- this repository's declaration to the adherence suite
+# (tds-utils docs/design/DESIGN.ARCH-ADHERENCE.md; the rollout is tds-utils
+# Issue#601).
+#
+# What is declared here is what the suite measures; the rest of the tree
+# (the skills, personas and MCP catalog, which are prose and data) is
+# coverage it names and does not judge. The code here is developer tooling:
+# single-file node scripts that each are their own entry point, and the
+# evals runner. There is no domain, application or port layer to declare,
+# no design record and no radar of this repository's own, so the layered
+# and record-reading checks report coverage and the rest (Complete,
+# Behavior-driven, Declared) judge the scripts and their tests.
+
+[layers]
+"composition root" = ["scripts/*.mjs", "evals/run.sh"]
+test = ["test/**"]

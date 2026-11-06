@@ -34,6 +34,25 @@ jobs:
       - name: publicity guard (full tree)
         run: npm run guard
 
+  # The adherence suite judges the change in its ci stage (tds-utils
+  # docs/design/DESIGN.ARCH-ADHERENCE.md; Issue#601). `uses:` and `tools_ref`
+  # pin the same tds-utils commit and move together. Lowered and not run
+  # fail the job, inconclusive passes it. The job joins gate's needs after
+  # its first green run here (the architecture's Rollout row). On tedium's
+  # staging branches, which the bot force-pushes so the replaced tip is not
+  # fetched, the base is the staging commit's first parent.
+  adherence:
+    uses: 9atatimer/tds-utils/.github/workflows/adherence.yml@f566dec3540317d6d4fe374b6caa1f44e9a9f348
+    permissions:
+      contents: read
+      pull-requests: read
+      security-events: write
+      actions: read
+    with:
+      tools_ref: f566dec3540317d6d4fe374b6caa1f44e9a9f348
+      base: ${{ (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/tedium/')) && format('{0}^1', github.sha) || '' }}
+      timeout_minutes: 15
+
   gate:
     name: gate
     runs-on: ubuntu-latest
