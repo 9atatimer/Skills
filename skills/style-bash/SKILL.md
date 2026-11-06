@@ -8,7 +8,7 @@ description: "Writing or modifying Bash/shell scripts: function-based file organ
 Follow these instructions whenever you create or edit Bash scripts in this repository.
 
 ## General Expectations
-- Assume Bash 5.2+ (Homebrew build) and use the shebang `#!/usr/bin/env bash`
+- Assume Bash 5.2+ (Homebrew build), unless the repo's CI pins an older floor; then write to that floor. Use the shebang `#!/usr/bin/env bash`
 - Enable strict mode at the top of each script: `set -euo pipefail`
 - **Exception -- fail-open session hooks:** agent session-start/maintenance
   hooks (template-tools `hooks/`, the repo's agent hook directory --
@@ -88,6 +88,11 @@ Structure every script in clear sections, in this order:
   `if printf '%s\n' "${body}" | grep -q x`. A fleet tool's guard read a
   rate-limited fetch as "not applicable" this way, and was caught in
   review before it merged (tds-utils PR#434).
+- **Under bash 3.2 and `set -u`, `"${arr[@]}"` on an empty array is an
+  "unbound variable" error** (fixed in 4.4). A script green on a 5.x
+  laptop dies under a CI floor of Apple's `/bin/bash` 3.2 the first time
+  the array is empty. Expand with `${arr[@]+"${arr[@]}"}` (tds-utils
+  PR#467).
 
 ## Testing and Verification
 - Document in commit messages whether scripts were executed or only statically inspected

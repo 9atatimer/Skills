@@ -30,6 +30,13 @@ directly is what makes the test survive a rewrite of either neighbour.
 > `judge_assertion(assertion, completion=FakeCompletion(returns=garbage))`
 > returns a Verdict that is `inconclusive`, not `fail`.
 
+**A row that states a rule over inputs is not pinned by its example.**
+"Placement respects a lock" was pinned by one fixture whose inputs already
+sat where the rule sends them, so it passed while the rule was false
+(tds-utils Issue#423). Such a row needs a property test, or at least the
+adversarial case -- the input the rule exists to redirect -- not the
+illustrative one.
+
 **Domain rules** come from Design and Data Model: the pure functions and
 invariant-bearing types the use cases call. Their tests take values and
 assert on values, with **no fake at all**. A domain test that needs a fake
