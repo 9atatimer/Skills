@@ -5,12 +5,14 @@
 # What is declared here is what the suite measures; the rest of the tree
 # (the skills, personas and MCP catalog, which are prose and data) is
 # coverage it names and does not judge. The code here is developer tooling:
-# single-file node scripts that each are their own entry point, and the
-# evals runner. There is no domain, application or port layer to declare,
+# single-file node scripts that each are their own entry point, the evals
+# tree (its node runners, their helpers and scenarios, and the promptfoo
+# wrapper) and the husky installer. There is no domain, application or
+# port layer to declare,
 # no design record and no radar of this repository's own, so the layered
 # and record-reading checks report coverage and the rest (Complete,
 # Behavior-driven, Declared) judge the scripts and their tests.
 
 [layers]
-"composition root" = ["scripts/*.mjs", "evals/run.sh"]
-test = ["test/**"]
+"composition root" = ["scripts/*.mjs", "evals/**/*.mjs", "evals/run.sh", ".husky/install.mjs"]
+test = ["test/**", "evals/fixtures/**"]

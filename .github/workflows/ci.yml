@@ -1,7 +1,7 @@
-# ci.yml -- the non-discretionary gate: tests plus the publicity guard
+# ci.yml -- the non-discretionary gate: tests, the publicity guard
 # (scripts/publicity-guard.mjs --all) over the full tree, so nothing the
 # guard's denylists cover can merge even if a local commit bypassed the
-# husky hooks.
+# husky hooks, and the adherence judgement (the `adherence` job below).
 #
 # `gate` is the one always-present check the main ruleset requires and
 # tedium waits for (issue #33): it needs every other job and fails on any
