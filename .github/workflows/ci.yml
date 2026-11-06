@@ -37,8 +37,10 @@ jobs:
   # The adherence suite judges the change in its ci stage (tds-utils
   # docs/design/DESIGN.ARCH-ADHERENCE.md; Issue#601). `uses:` and `tools_ref`
   # pin the same tds-utils commit and move together. Lowered and not run
-  # fail the job, inconclusive passes it. The job joins gate's needs after
-  # its first green run here (the architecture's Rollout row). On tedium's
+  # fail the job, inconclusive passes it. The job is in gate's needs since
+  # its first green run here (run 42308481808, 2026-11-06; the
+  # architecture's Rollout row); gate counts a skipped job as a failure, so
+  # the job carries no `if:`. On tedium's
   # staging branches, which the bot force-pushes so the replaced tip is not
   # fetched, the base is the staging commit's first parent.
   adherence:
@@ -58,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 2
     if: always()
-    needs: [ci]
+    needs: [ci, adherence]
     permissions: {}
     steps:
       - name: Every needed job succeeded
