@@ -95,7 +95,7 @@ Decide placement in this order; the first rule that applies wins.
 
 | Owner | Manages |
 |---|---|
-| Terraform | durable state whose ids must survive redeploys (namespaces, buckets, routes, Access applications and policies, tokens, DNS posture, a service's deploy parameters, IAM, log metrics, alert policies) |
+| Terraform | durable state whose ids must survive redeploys (namespaces, buckets, routes, Access applications and policies, tokens, DNS posture, a service's deploy parameters, IAM, log metrics, alert policies), and every repository's GitHub policy: rulesets, branch protection, required checks, merge settings, App installation scope (the github-workflow skill) |
 | the deploy pipeline (wrangler, gcloud run deploy, a publish step) | everything a deploy rebuilds and replaces: the script or image, its vars, its runtime secrets, its migrations |
 | a human, once, per the module README | what no provider can create or must never hold: a GitHub App via the manifest flow, a monitoring notification channel (needs a verification round-trip), the VALUE of every secret |
 | the running process | validating its own configuration at startup; a bad value exits rather than serving |
