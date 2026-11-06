@@ -1,7 +1,7 @@
-# ci.yml -- the non-discretionary gate: tests plus the publicity guard
+# ci.yml -- the non-discretionary gate: tests, the publicity guard
 # (scripts/publicity-guard.mjs --all) over the full tree, so nothing the
 # guard's denylists cover can merge even if a local commit bypassed the
-# husky hooks.
+# husky hooks, and the adherence judgement (the `adherence` job below).
 #
 # `gate` is the one always-present check the main ruleset requires and
 # tedium waits for (issue #33): it needs every other job and fails on any
@@ -34,12 +34,33 @@ jobs:
       - name: publicity guard (full tree)
         run: npm run guard
 
+  # The adherence suite judges the change in its ci stage (tds-utils
+  # docs/design/DESIGN.ARCH-ADHERENCE.md; Issue#601). `uses:` and `tools_ref`
+  # pin the same tds-utils commit and move together. Lowered and not run
+  # fail the job, inconclusive passes it. The job is in gate's needs since
+  # its first green run here (run 42308481808, 2026-11-06; the
+  # architecture's Rollout row); gate counts a skipped job as a failure, so
+  # the job carries no `if:`. On tedium's
+  # staging branches, which the bot force-pushes so the replaced tip is not
+  # fetched, the base is the staging commit's first parent.
+  adherence:
+    uses: 9atatimer/tds-utils/.github/workflows/adherence.yml@f566dec3540317d6d4fe374b6caa1f44e9a9f348
+    permissions:
+      contents: read
+      pull-requests: read
+      security-events: write
+      actions: read
+    with:
+      tools_ref: f566dec3540317d6d4fe374b6caa1f44e9a9f348
+      base: ${{ (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/tedium/')) && format('{0}^1', github.sha) || '' }}
+      timeout_minutes: 15
+
   gate:
     name: gate
     runs-on: ubuntu-latest
     timeout-minutes: 2
     if: always()
-    needs: [ci]
+    needs: [ci, adherence]
     permissions: {}
     steps:
       - name: Every needed job succeeded

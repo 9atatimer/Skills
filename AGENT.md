@@ -40,6 +40,15 @@ PRs land through the tedium merge bot; the rules are in `tedium.toml` on
   requires `gate` and a PR; only the tedium App may bypass it. Tedium
   lands a green PR on a reviewer's `/land`. A PR from a fork runs with a
   read-only token and is human-merge.
+- **`adherence` is in `gate`'s needs.** The job calls tds-utils'
+  reusable `adherence.yml` and judges the change against `adherence.toml`
+  in the ci stage; a `lowered` or `not run` verdict fails it and blocks
+  the landing, `inconclusive` passes. A new code file in no declared
+  layer is `lowered` (the Covered check), so widen `[layers]` in the same
+  PR. The declaration in force is the newest landed `adherence.toml` the
+  owner approved or merged (CODEOWNERS names it). Pinned by commit
+  (`uses:` and `tools_ref` carry the same tds-utils sha); bump both
+  together.
 - **`review-settled` is off: always green (owner ruling, 2026-10-18).**
   `.github/workflows/review-settled.yml` still posts the status on every
   non-fork head, but the pinned tds-utils checker (7643b92, tds-utils
