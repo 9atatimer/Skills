@@ -185,6 +185,17 @@ off-the-shelf this change introduces is proposed here with the ring and a
 one-line rationale. The row itself lands with the code that uses it (the
 tech-radar skill) and is audited by the as-built skill.
 
+**A platform feature the record leans on names the plan, licence or
+visibility tier that gates it, or says none does, and the record checks
+that tier against every repository the design targets, public and
+private.** It goes in the Radar proposals table's Tier column, beside the
+ring, and the seam-review pass asks it. "None" is a complete answer;
+the rule is for features a plan or a repository's visibility gates, not
+a licence audit of every library. The adherence architecture leaned on
+GitHub code scanning for line annotations on the pull request, named no
+tier, and the first private consumer lost the feature
+([tds-utils PR#694](https://github.com/9atatimer/tds-utils/pull/694)).
+
 ---
 
 ## The record
@@ -204,7 +215,7 @@ Decisions, Open Questions, Rejections, Related Documents.
 | Which seam carries each design-named bound | Parameters placed |
 | Each mechanism choice with its rationale | Key Decisions |
 | Seams considered and rejected as ceremony; mechanisms dismissed | Rejections |
-| Proposed radar rows | Radar proposals (and the radar, with the code) |
+| Proposed radar rows, and the tier each platform feature needs, checked against the targeted repositories | Radar proposals (and the radar, with the code) |
 | Components this change touches that the as-built already describes | Related Documents |
 
 What does not land here: a capability, a scope boundary, a threat, a
@@ -225,7 +236,9 @@ asking exactly this phase's question -- is each axis named, does each map
 to one seam, is anything seamed that has one implementation forever. Ask
 the layer question in the same pass: is every behavior traced to one
 application function, is any domain module handed a port, is there one
-composition root per runtime. -> the designomatic skill
+composition root per runtime. And the tier question: does every platform
+feature the record leans on name the tier that gates it, checked against
+every repository the design targets. -> the designomatic skill
 
 ---
 
@@ -234,7 +247,9 @@ composition root per runtime. -> the designomatic skill
 Every volatile axis is named and mapped to exactly one seam; every design
 behavior is traced to one use case with a pure domain beneath it and one
 composition root per runtime; every design-named bound is placed; every
-new dependency has a proposed ring; operability is stated. **It merges,
+new dependency has a proposed ring and every platform feature the record
+leans on its tier, checked against the targeted repositories; operability
+is stated. **It merges,
 and the record freezes.** Then phase 3b (planning) computes the
 route.
 
