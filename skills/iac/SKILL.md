@@ -227,6 +227,11 @@ Rules that hold across all three:
 
 ## Pins
 
+- tfenv reads `.terraform-version` from the current directory, not from
+  `-chdir`. A `terraform -chdir=<root>` run from anywhere else gets
+  tfenv's default and fails `required_version` (1.5.6 against `>= 1.10`,
+  tds-internal PR#321). Set `TFENV_TERRAFORM_VERSION` to the pin for
+  every `-chdir` invocation, the `!` line handed to the human included.
 - Terraform version pinned by a `.terraform-version` file (tfenv) and
   `required_version`; provider versions pinned per module with `~>`,
   and major versions never mixed within a module family (a v4 and a v5

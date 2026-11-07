@@ -88,6 +88,17 @@ Structure every script in clear sections, in this order:
   `if printf '%s\n' "${body}" | grep -q x`. A fleet tool's guard read a
   rate-limited fetch as "not applicable" this way, and was caught in
   review before it merged (tds-utils PR#434).
+- **A function run in a command substitution can neither stop the script
+  nor talk to the runner.** `x="$(f)"` runs `f` in a subshell. Bash does
+  not carry `set -e` into it (no `inherit_errexit`), so a command that
+  fails inside `f` does not stop `f`. `f` runs on and returns its last
+  command's status, and the caller goes on with whatever it printed.
+  Every line `f` writes to stdout lands in `x`, including a GitHub
+  `::add-mask::` line, so the runner never sees it and the value is
+  never masked. A helper that must refuse, or must mask, sets a variable
+  (`REF=...`) and is called bare, never inside `$(...)`. Both bugs
+  shipped to a branch in one helper and were caught only by running the
+  step's script against the real `op` (tds-utils PR#716).
 
 ## Testing and Verification
 - Document in commit messages whether scripts were executed or only statically inspected
