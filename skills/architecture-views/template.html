@@ -72,6 +72,11 @@ tr.seam .also { color: var(--bad); }
 button { font: 13px ui-sans-serif, system-ui, sans-serif; background: transparent; color: var(--ink);
   border: 1px solid var(--rule); border-radius: 6px; padding: 4px 10px; cursor: pointer; margin-top: 6px; }
 footer { color: var(--muted); font-size: 13px; padding: 32px 16px 48px; }
+#tip { position: fixed; z-index: 10; display: none; max-width: 340px; pointer-events: none;
+  background: var(--ink); color: var(--bg); border-radius: 6px; padding: 6px 9px; white-space: pre-line;
+  font: 12.5px/1.4 ui-sans-serif, system-ui, sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,.25); }
+[data-tip] { cursor: help; }
+.node[data-tip] { cursor: pointer; }
 </style>
 </head>
 <body>
@@ -160,7 +165,24 @@ const N = JSON.parse(document.getElementById("page-notes").textContent);
 const NS = "http://www.w3.org/2000/svg";
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const el = (t, a, p) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; };
-const tip = (e, text) => { el("title", {}, e).textContent = text; return e; };
+/* Hover hints: a <title> (first child, for screen readers) plus data-tip, shown by our own
+   tooltip so every browser shows it the same way, immediately, on boxes and arrows alike. */
+const tip = (e, text) => {
+  const t = document.createElementNS(NS, "title"); t.textContent = text; e.insertBefore(t, e.firstChild);
+  e.setAttribute("data-tip", text); return e;
+};
+const tipBox = document.createElement("div"); tipBox.id = "tip"; tipBox.setAttribute("role", "tooltip"); document.body.appendChild(tipBox);
+document.addEventListener("mousemove", ev => {
+  const t = ev.target.closest && ev.target.closest("[data-tip]");
+  if (!t) { tipBox.style.display = "none"; return; }
+  tipBox.textContent = t.getAttribute("data-tip"); tipBox.style.display = "block";
+  const pad = 14, w = tipBox.offsetWidth, h = tipBox.offsetHeight;
+  let x = ev.clientX + pad, y = ev.clientY + pad;
+  if (x + w > innerWidth - 8) x = ev.clientX - w - pad;
+  if (y + h > innerHeight - 8) y = ev.clientY - h - pad;
+  tipBox.style.left = Math.max(8, x) + "px"; tipBox.style.top = Math.max(8, y) + "px";
+});
+document.addEventListener("mouseleave", () => { tipBox.style.display = "none"; });
 const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
 
 /* ---------- header ---------- */

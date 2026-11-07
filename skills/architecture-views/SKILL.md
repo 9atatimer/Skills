@@ -85,10 +85,17 @@ description: "Producing a repo's architecture view page, <system>-layers.html: t
   the same from the keyboard.
 - **Side panel** for the selected node: what it holds, its id and files,
   what it imports and what imports it, each with its import count.
-- **Hover titles** on every box and every edge, in both figures: what it
-  is, and what crosses it.
-- A legend, a "Copy SVG" button per figure, light and dark through CSS
-  variables, and a layout that works at phone width.
+- **Hover hints** on every box and every edge, in both figures: what it
+  is, and what crosses it. The page draws them itself (the template's
+  `data-tip` tooltip), shown at once beside the pointer; a native SVG
+  `<title>` alone is not enough, because browsers show it late or not at
+  all. Each element also keeps its `<title>` as first child for screen
+  readers.
+- A legend, a "Copy SVG" button per figure, and light and dark through
+  CSS variables.
+- **Desktop only** (owner, 2026-11-07). These pages are read on a desktop;
+  size the figures for a wide window and never shrink a graph to fit a
+  phone.
 
 ---
 
