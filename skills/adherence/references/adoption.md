@@ -56,9 +56,11 @@ first parent there too.
   commit's first parent, which judges the last landed change.
 - `timeout_minutes` defaults to 9. template-tools keeps 9 because its
   runner pool kills a job at 10; checks unfinished in time are coverage.
-- The `secrets:` the workflow accepts (`DECIDE_GATEWAY_TOKEN` and the
-  four `ADHERENCE_LEDGER_*`) are optional. No caller passes the judge's
-  token while design Q4 is open.
+- The workflow accepts one secret, `ADHERENCE_OP_SA_TOKEN`, optional:
+  pass it as `secrets: ADHERENCE_OP_SA_TOKEN: ${{ secrets.ADHERENCE_OP_SA_TOKEN }}`
+  (from tds-utils f28ea3c0, PR#716; the seven earlier secrets are gone).
+  The judge's token and the warehouse's credential are items the workflow
+  finds by tag; the caller passes no variable.
 - The job joins `gate`'s `needs` only after its first green run on the
   repository.
 

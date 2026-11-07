@@ -140,9 +140,15 @@ The caller shapes, scope lines and CODEOWNERS lines are in
   gate on its default branch, for that too. Set `timeout_minutes` under the
   runner pool's own kill limit; the judgement is bounded by what is left
   of it.
-- **Bind no judge secret** until the owner rules on the hosted judge in
-  CI (design Q4). Without it the judged checks are coverage and the verdict
-  is inconclusive at best, which passes.
+- **Pass the one secret, `ADHERENCE_OP_SA_TOKEN`** (the owner bound the
+  hosted judge in CI on 2026-11-07; tds-utils PR#716): the adherence
+  vault's read-only 1Password service account, through which the
+  workflow finds the judge's token by tag. Seed it per repository on a
+  personal account, or select the repository on the organization secret;
+  the credential registry in tds-internal lists the holders. Without it
+  the judged checks are coverage and the verdict is inconclusive at best,
+  which passes. Never add a variable naming a vault or item: a step's log
+  header prints variables, and the judge needs none.
 - **Select the job with a changed-scopes scope**, never a `paths:` filter:
   a workflow that does not run never reports the required check. The
   scope matches every `adherence.toml` at any depth, the root included,
