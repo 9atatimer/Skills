@@ -198,6 +198,15 @@ only.
   with its code.
 - **Removing a behavior or a term from an approved record is a Record
   kept finding.** It lowers, and it cannot be exempted.
+- **Renaming a behavior is removing it.** Record kept matches rows by
+  name, so a row renamed to fit a changed check lowers the change (tds-utils
+  PR#723, the Two jobs row). Keep the old row, say in it which row
+  supersedes it and which Key Decisions row ruled, and add the new row
+  beside it: an approved record only grows.
+- **Never count the record's own parts in prose.** "Nine qualities" in
+  the overview, the Domain Language and a Key Decisions row each went
+  stale when the tenth landed, and nothing mechanical reads a count. Name
+  the set, or point at the table that holds it.
 - **One radar.** A repository whose dependencies the fleet's radar rings
   carries a row for each in its own radar, at the fleet's ring, naming the
   fleet as the source (Key Decisions, One radar, carrying the fleet's
