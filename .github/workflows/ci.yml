@@ -44,12 +44,12 @@ jobs:
   # staging branches, which the bot force-pushes so the replaced tip is not
   # fetched, the base is the staging commit's first parent.
   adherence:
-    uses: 9atatimer/tds-utils/.github/workflows/adherence.yml@c11477c2771c9ce6e51991ab0d0b964570ba0625
+    uses: 9atatimer/tds-utils/.github/workflows/adherence.yml@ba5257cdd9a5aaabcbefdc0afa115fcd93fec7c6
     permissions:
       contents: read
       pull-requests: read
     with:
-      tools_ref: c11477c2771c9ce6e51991ab0d0b964570ba0625
+      tools_ref: ba5257cdd9a5aaabcbefdc0afa115fcd93fec7c6
       base: ${{ (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/tedium/')) && format('{0}^1', github.sha) || '' }}
       timeout_minutes: 15
 
