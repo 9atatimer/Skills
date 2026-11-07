@@ -314,7 +314,7 @@ and asks for no finding.
 The filesystem limit is in the brief because a panelist that searched
 `/` for a provider's documentation outlived its own report by two hours,
 still scanning, and the session could not stop it: the owner had to kill
-it by hand (the tds-internal PR#321 review, 2026-11-07).
+it by hand (a review of a private repository's PR, 2026-11-07).
 
 ## Synthesis and the panel's decision
 
