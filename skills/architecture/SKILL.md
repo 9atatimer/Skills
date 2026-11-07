@@ -185,6 +185,16 @@ off-the-shelf this change introduces is proposed here with the ring and a
 one-line rationale. The row itself lands with the code that uses it (the
 tech-radar skill) and is audited by the as-built skill.
 
+**A vendor or platform feature names the plan or licence tier it needs,
+and the record checks that tier against every repository the design
+targets, public and private.** The adherence architecture gave the PR
+surface line annotations through GitHub code scanning; code scanning is
+free on a public repository and a paid add-on on a private one, the
+fleet's monorepos are private, and the owner would not buy it. The first
+private consumer's gate failed over the upload while the judge passed,
+and the feature was removed (tds-utils PR#694, 2026-11-06). Neither the
+record nor its seam-review panel had asked the tier question.
+
 ---
 
 ## The record
@@ -234,7 +244,9 @@ composition root per runtime. -> the designomatic skill
 Every volatile axis is named and mapped to exactly one seam; every design
 behavior is traced to one use case with a pure domain beneath it and one
 composition root per runtime; every design-named bound is placed; every
-new dependency has a proposed ring; operability is stated. **It merges,
+new dependency has a proposed ring and every vendor or platform feature
+its tier, checked against the targeted repositories; operability is
+stated. **It merges,
 and the record freezes.** Then phase 3b (planning) computes the
 route.
 
