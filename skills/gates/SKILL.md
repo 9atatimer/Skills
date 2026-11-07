@@ -228,7 +228,13 @@ and the agent never summons a reviewer to turn it green.
   `AGENT.md`/`CLAUDE.md`, prompts, CI workflows and gate configuration
   are executed by an agent or a gate; a PR touching any of them takes the
   full ladder. This is the self-review skill's Sizing rule: no
-  "docs-only" discount for operating rules.
+  "docs-only" discount for operating rules. The ladder's agentic rung
+  is OCR, and OCR reads source only; it skips Markdown (the self-review
+  skill, Adapters). So a PR whose every changed file is Markdown, a skill
+  or persona or `AGENT.md` included, never posts `/ocr`: the summons can
+  only answer "no items were selected" and costs a run. Its
+  three-panelist self-review is the agentic rung; the human review is
+  still owed. Post `/ocr` only when the diff holds a file OCR reads.
 - **A PR that mixes documentation with anything else is not
   documentation-only.**
 - **A pin bump gets no agentic reviewer either.** A PR whose only change

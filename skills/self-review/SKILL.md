@@ -438,7 +438,10 @@ agentic reviewer).
   an agentic reviewer -> the designomatic skill.
 - **Operating rules are not documentation.** Skills, personas,
   `AGENT.md`, prompts, CI and gate configuration take the full ladder
-  (Sizing, above: no "docs-only" discount).
+  (Sizing, above: no "docs-only" discount). The ladder's OCR rung still
+  fires only for files OCR reads: a Markdown-only skill, persona or
+  `AGENT.md` PR posts no `/ocr`, and this three-panelist pass is its
+  agentic review; the human review is still owed.
 
 ---
 
