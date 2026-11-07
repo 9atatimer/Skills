@@ -235,9 +235,10 @@ unit, evidence and provenance: the fix is read from the report.
 
 What differs between places:
 
-- **Judged checks are coverage wherever no judge is bound**, which today
-  is every CI caller. A judged finding on the laptop does not mean CI will
-  see it.
+- **Judged checks are coverage wherever no judge is bound**: a CI caller
+  that does not pass `ADHERENCE_OP_SA_TOKEN`, the hook, and a laptop with
+  no door. A judged finding on the laptop does not mean such a caller
+  will see it.
 - **The laptop reads no reviews.** Outside the `ci` stage the newest
   landed revision of each `adherence.toml` stands as in force, approved or
   not, so a laptop verdict can differ from CI's. To see what CI sees, run
