@@ -77,28 +77,28 @@ skill.
    the only kind that can report the thing is missing. Scaffolding may be
    written and may be thrown away -- it is not what the suite is for.
    -> the testing skill
-6. **Stable core, volatile edges -- on three axes, not one.** Separate
-   what the software *means* (decisions and rules, in the problem's
-   language) from how it *connects to the world* (vendors, HTTP, fs, env
-   vars, model ids). The core imports nothing concrete; dependencies point
-   inward (`cli -> application -> domain`, `adapters -> ports -> domain`).
+6. **Stable core, volatile edges -- and three more rules beside it.**
+   Separate what the software *means* (decisions and rules, in the
+   problem's language) from how it *connects to the world* (vendors,
+   HTTP, fs, env vars, model ids). The core imports nothing concrete.
    Quick check: if "we now also use <new vendor>" would touch the core,
    there is a missing seam. Counter-check: a port with one
    forever-implementation is ceremony -- seam only at real axes of change
-   (YAGNI). That is the **core vs edge** axis, and it is the one agents
-   hear. Two more hold with equal force. **Layers inside the core:** the
-   domain is pure rules and values (no port ever reaches it), the
-   application is workflow (one function per behavior, ports as
-   dependencies, domain values in and out -- the BDD surface), and the
-   composition root is wiring (the only code that names a concrete
-   adapter). Functional in the domain, procedural in the workflow; DI
-   starts at the use case and never goes below it. **Language and
-   boundaries:** the nouns in the code are the nouns in the design doc,
-   and each invariant has one owner. Clean, Hexagonal, Layered, and DDD
-   each guard one of these; a change is architecturally done only when it
-   passes the mechanical tests of all three axes. -> the architecture
-   skill (where the seams and the module map are named) and the coding
-   skill (where they are built and tested)
+   (YAGNI). That is the **core vs edge** rule (Hexagonal), and it is the
+   one agents hear. Three more hold with equal force. **Layered:** a
+   unit imports only its own layer or a layer below it. The order,
+   bottom to top: `domain`, `ports`, then `application` and `adapters`
+   side by side, then the composition root. A layer does not know who
+   calls it. **Todd's LAW:** every function is logic, action, or
+   workflow, never two of them. Logic computes a value. Action changes
+   something. Workflow calls the other two in order. Logic takes values
+   and needs no fake; dependency injection starts at the workflow and
+   never goes below it. **Language and boundaries:** the nouns in the
+   code are the nouns in the design doc, and each invariant has one
+   owner. A change is architecturally done only when it passes the
+   mechanical tests of all four rules. -> the architecture skill (where
+   the seams and the module map are named) and the coding skill (where
+   they are built and tested)
 7. **File anatomy.** Lay every source file out top-to-bottom: module
    header, imports, constants, flags/config, then per sub-component
    predicates -> helpers -> flow functions -> entry points. -> the coding
