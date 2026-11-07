@@ -148,9 +148,9 @@ The caller shapes, scope lines and CODEOWNERS lines are in
   vault's read-only 1Password service account, through which the
   workflow finds the judge's token by tag. Seed it per repository on a
   personal account, or select the repository on the organization secret;
-  the credential registry in tds-internal lists the holders. Without it
-  the judged checks are coverage and the verdict is inconclusive at best,
-  which passes. Never add a variable naming a vault or item: a step's log
+  the private ops repo's credential registry lists the holders. Without
+  it the judged checks are coverage and the verdict is inconclusive at
+  best, which passes. Never add a variable naming a vault or item: a step's log
   header prints variables, and the judge needs none.
 - **Select the job with a changed-scopes scope**, never a `paths:` filter:
   a workflow that does not run never reports the required check. The
