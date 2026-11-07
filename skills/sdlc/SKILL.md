@@ -77,29 +77,26 @@ skill.
    the only kind that can report the thing is missing. Scaffolding may be
    written and may be thrown away -- it is not what the suite is for.
    -> the testing skill
-6. **Stable core, volatile edges -- four rules, not one.** Separate
-   what the software *means* (decisions and rules, in the problem's
-   language) from how it *connects to the world* (vendors, HTTP, fs, env
-   vars, model ids). The core imports nothing concrete. Quick check: if
-   "we now also use <new vendor>" would touch the core, there is a
-   missing seam. Counter-check: a port with one forever-implementation is
-   ceremony -- seam only at real axes of change (YAGNI). That is the
-   **core vs edge** rule (Hexagonal), and it is the one agents hear.
-   Three more hold with equal force. **Layered:** every unit sits in one
-   layer and imports only its own layer and the layers beneath it
-   (`application -> ports -> domain`, `adapters -> ports -> domain`,
-   the composition root over all); `application` and `adapters` are
-   peers that never import each other, and a layer assumes nothing about
-   how it will be used, which is what lets layers be assembled into
-   stacks. **Todd's LAW -- Logic, Action, Workflow:** every function is
-   exactly one kind: logic computes a value, action changes the world,
-   workflow sequences calls to the other two; a function of two kinds
-   fails, in any layer. Logic takes values and needs no fake; DI starts
-   at the workflow and never goes below it. **Language and boundaries:**
-   the nouns in the code are the nouns in the design doc, and each
-   invariant has one owner. Layered, Hexagonal, LAW and DDD each guard
-   one of these; a change is architecturally done only when it passes
-   the mechanical tests of all four. -> the architecture skill (where
+6. **Stable core, volatile edges -- and three more rules beside it.**
+   Separate what the software *means* (decisions and rules, in the
+   problem's language) from how it *connects to the world* (vendors,
+   HTTP, fs, env vars, model ids). The core imports nothing concrete.
+   Quick check: if "we now also use <new vendor>" would touch the core,
+   there is a missing seam. Counter-check: a port with one
+   forever-implementation is ceremony -- seam only at real axes of change
+   (YAGNI). That is the **core vs edge** rule (Hexagonal), and it is the
+   one agents hear. Three more hold with equal force. **Layered:** a
+   unit imports only its own layer or a layer below it. The order,
+   bottom to top: `domain`, `ports`, then `application` and `adapters`
+   side by side, then the composition root. A layer does not know who
+   calls it. **Todd's LAW:** every function is logic, action, or
+   workflow, never two of them. Logic computes a value. Action changes
+   something. Workflow calls the other two in order. Logic takes values
+   and needs no fake; dependency injection starts at the workflow and
+   never goes below it. **Language and boundaries:** the nouns in the
+   code are the nouns in the design doc, and each invariant has one
+   owner. A change is architecturally done only when it passes the
+   mechanical tests of all four rules. -> the architecture skill (where
    the seams and the module map are named) and the coding skill (where
    they are built and tested)
 7. **File anatomy.** Lay every source file out top-to-bottom: module

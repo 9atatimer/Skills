@@ -108,8 +108,9 @@ alike, assigned to one layer, with one composition root per runtime.
 
 The map is small -- a table of unit, layer, runtime -- and it is judged by
 the coding skill's Arrow, Wiring and Trace tests before a line is
-written; LAW (the coding skill, Todd's LAW: the function taxonomy) is
-judged per function at phase 5, not here. Layers are not directories; a one-file tool keeps them as three
+written. Todd's LAW is about functions, not layers, and is judged at
+phase 5 (the coding skill, Todd's LAW: the function taxonomy). Layers
+are not directories; a one-file tool keeps them as three
 regions of one file.
 
 ---
