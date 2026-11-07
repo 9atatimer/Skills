@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SYSTEM Layers</title>
+<!--
+  architecture-views template (the architecture-views skill).
+  Fill exactly two blocks below and nothing else:
+    #layer-graph  the verbatim output of tds-utils `bin/layer-graph --root <repo>` (schema layer-graph/1)
+    #page-notes   the per-repo prose: framing, what each node holds, findings costs, seams, runtime topology
+  Everything else is rendered from those two blocks. Self-contained: no network.
+-->
+<style>
+:root {
+  --bg: #fbfaf7; --ink: #1d1d1b; --muted: #6b6a64; --rule: #dcd9d0; --panel: #f2f0ea;
+  --domain: #2f6f4f; --ports: #6a4c93; --app: #1f5f8b; --surface: #8a6d1f; --adapt: #9a3f2b; --root: #444;
+  --other: #5a6b7a; --warn: #c07a00; --bad: #b3261e;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #161615; --ink: #e9e7e1; --muted: #9b998f; --rule: #34332f; --panel: #1f1e1c;
+    --domain: #6fbf8f; --ports: #b49ae0; --app: #7fb4dd; --surface: #d9b85a; --adapt: #e08a72; --root: #bbb;
+    --other: #9fb3c4; --warn: #e0a030; --bad: #f2766d; }
+}
+:root[data-theme="dark"] { --bg: #161615; --ink: #e9e7e1; --muted: #9b998f; --rule: #34332f; --panel: #1f1e1c;
+  --domain: #6fbf8f; --ports: #b49ae0; --app: #7fb4dd; --surface: #d9b85a; --adapt: #e08a72; --root: #bbb;
+  --other: #9fb3c4; --warn: #e0a030; --bad: #f2766d; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink);
+  font: 16px/1.55 ui-serif, Georgia, "Iowan Old Style", serif; }
+header, section, footer { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
+header { padding-top: 32px; }
+h1 { font: 600 28px/1.2 ui-sans-serif, system-ui, sans-serif; margin: 0 0 8px; }
+h2 { font: 600 19px/1.3 ui-sans-serif, system-ui, sans-serif; margin: 36px 0 8px; }
+.lede { max-width: 75ch; color: var(--muted); margin: 0; }
+.meta { font: 13px ui-monospace, Menlo, monospace; color: var(--muted); margin-top: 8px; overflow-wrap: anywhere; }
+.wrap { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; align-items: start; }
+@media (max-width: 900px) { .wrap { grid-template-columns: 1fr; } }
+figure { margin: 0; min-width: 0; }
+svg { width: 100%; height: auto; display: block; font-family: ui-sans-serif, system-ui, sans-serif; }
+figcaption { color: var(--muted); font-size: 14px; margin-top: 6px; }
+aside { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 14px 16px;
+  font: 14px/1.5 ui-sans-serif, system-ui, sans-serif; position: sticky; top: 12px; overflow-wrap: anywhere; }
+aside h3 { margin: 0 0 4px; font-size: 16px; }
+aside .layer { font: 12px ui-monospace, Menlo, monospace; color: var(--muted); }
+aside ul { padding-left: 18px; margin: 6px 0; }
+aside code, td code, .finding code { font: 12.5px ui-monospace, Menlo, monospace; }
+.node rect { cursor: pointer; }
+.node text { pointer-events: none; }
+.node:focus { outline: none; }
+.node:focus rect { stroke-width: 3; }
+.edge { fill: none; opacity: .45; transition: opacity .15s; }
+.dim .edge { opacity: .07; }
+.dim .edge.hot { opacity: .95; }
+.dim .node { opacity: .35; }
+.dim .node.hot { opacity: 1; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font: 13px ui-sans-serif, system-ui, sans-serif; color: var(--muted); margin: 8px 0 0; }
+.legend span::before { content: ""; display: inline-block; width: 11px; height: 11px; border-radius: 2px;
+  margin-right: 6px; vertical-align: -1px; background: var(--c); }
+.legend span.line::before { height: 3px; vertical-align: 3px; }
+table { border-collapse: collapse; width: 100%; font: 14px/1.45 ui-sans-serif, system-ui, sans-serif; }
+th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-weight: 600; color: var(--muted); }
+.scroll { overflow-x: auto; }
+tr.seam { cursor: pointer; }
+tr.seam:hover, tr.seam:focus, tr.seam.on { background: var(--panel); outline: none; }
+tr.seam .also { color: var(--bad); }
+.finding { border-left: 3px solid var(--warn); padding: 8px 12px; background: var(--panel); max-width: 80ch;
+  font: 14.5px/1.5 ui-sans-serif, system-ui, sans-serif; margin: 0 0 10px; }
+.finding.holds { border-left-color: var(--domain); }
+.finding.bad { border-left-color: var(--bad); }
+button { font: 13px ui-sans-serif, system-ui, sans-serif; background: transparent; color: var(--ink);
+  border: 1px solid var(--rule); border-radius: 6px; padding: 4px 10px; cursor: pointer; margin-top: 6px; }
+footer { color: var(--muted); font-size: 13px; padding: 32px 16px 48px; }
+#tip { position: fixed; z-index: 10; display: none; max-width: 340px; pointer-events: none;
+  background: var(--ink); color: var(--bg); border-radius: 6px; padding: 6px 9px; white-space: pre-line;
+  font: 12.5px/1.4 ui-sans-serif, system-ui, sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,.25); }
+[data-tip] { cursor: help; }
+.node[data-tip] { cursor: pointer; }
+</style>
+</head>
+<body>
+
+<!-- The verbatim JSON from `bin/layer-graph --root <repo>`. Never hand-edited. -->
+<script type="application/json" id="layer-graph">
+{"schema":"layer-graph/1","repo":"owner/repo","commit":"0000000","declarations":[],"layers":[],"runtimes":{},"nodes":[],"edges":[],"findings":{"outward":[],"cycles":[],"unassigned":[]},"stats":{}}
+</script>
+
+<!--
+  Per-repo notes. Shape:
+  {
+    "system": "Display name", "branch": "main",   (repo and commit come from the tool's JSON)
+    "framing": "One line: what the reader is looking at.",
+    "records": ["docs/design/DESIGN.X.md", "docs/design/ARCHITECTURE.X.md"],
+    "nodes": { "<node id>": "What it holds, one line." },
+    "costs": ["Plain-words cost of changing a subsystem, one entry per finding worth a sentence."],
+    "seams": [ { "axis": "Where games are stored", "seam": "GameRepository", "kind": "port",
+                 "port": "<node id>", "adapters": ["<node id>"], "roots": ["<node id>"],
+                 "implementations": "memory, R2",
+                 "chosenIn": ["<node id>, only when no root supplies it and the core picks it"] } ],
+                 (kind is port | policy | parameter; for a policy or parameter, "port" is the node that defines the value)
+    "runtime": {
+      "caption": "One paragraph: what crosses which gate.",
+      "nodes": [ { "id": "browser", "kind": "client|gate|service|store", "label": "Browser", "sub": "Nuxt UI",
+                   "transparent": true, "title": "Hover text: what it is (from config)." } ],
+      "edges": [ { "from": "browser", "to": "app", "via": "access", "label": "pages, /api",
+                   "bypass": "reason, only for a path that legitimately skips the gate",
+                   "title": "Hover text: what crosses it." } ]
+    }
+  }
+-->
+<script type="application/json" id="page-notes">
+{"system":"SYSTEM","branch":"main","framing":"","records":[],"nodes":{},"costs":[],"seams":[],"runtime":{"caption":"","nodes":[],"edges":[]}}
+</script>
+
+<header>
+  <h1 id="title">Layers and domains</h1>
+  <p class="lede" id="framing"></p>
+  <div class="meta" id="meta"></div>
+</header>
+
+<section>
+  <h2>Layer graph</h2>
+  <div class="wrap">
+    <figure>
+      <svg id="layers" viewBox="0 0 900 700" role="img" aria-labelledby="layers-title"><title id="layers-title">Module layers and import edges</title></svg>
+      <figcaption>Bands run from the composition roots (top) to the domain (bottom); every arrow should point down or sideways. Box: one node, file count in brackets. Edge width scales with import count. Arcs below a band are same-layer imports. Click a node (or Tab to it and press Enter) to trace its active paths; click it again to clear. Hover any box or edge for detail.</figcaption>
+      <div class="legend" id="legend"></div>
+      <button data-copy="layers">Copy SVG</button>
+    </figure>
+    <aside id="panel"><h3>Click a node</h3><p>Each node opens what it holds, its files, what it imports and what imports it.</p></aside>
+  </div>
+</section>
+
+<section>
+  <h2>Runtime topology</h2>
+  <figure>
+    <svg id="runtime" viewBox="0 0 960 360" role="img" aria-labelledby="rt-title"><title id="rt-title">Request paths, gates, services and stores</title></svg>
+    <figcaption id="rt-caption"></figcaption>
+    <div id="rt-findings"></div>
+    <button data-copy="runtime">Copy SVG</button>
+  </figure>
+</section>
+
+<section>
+  <h2>What the graph shows</h2>
+  <div id="findings"></div>
+</section>
+
+<section>
+  <h2>Seam Abstractions</h2>
+  <p class="lede" style="margin-bottom:10px">A seam is a place where behavior can change without editing the code that uses it (Feathers, <em>Working Effectively with Legacy Code</em>). Each comes in one of three kinds: a <strong>port</strong>, an interface that adapters plug into; a <strong>policy</strong>, a rule value handed to a use case; or a <strong>parameter</strong>, a tuned value supplied from outside. The composition root chooses which adapter, policy or value is used. To swap something listed here, write one new adapter, policy or value and change the root. Anything not listed is hard-wired. Click a row to light up its port, adapters and composition roots in the layer graph above.</p>
+  <div class="scroll"><table>
+    <thead><tr><th>Axis of change</th><th>Seam</th><th>Kind</th><th>Day-one implementations</th><th>To swap it</th></tr></thead>
+    <tbody id="seams"></tbody>
+  </table></div>
+</section>
+
+<footer id="footer"></footer>
+
+<script>
+"use strict";
+const G = JSON.parse(document.getElementById("layer-graph").textContent);
+const N = JSON.parse(document.getElementById("page-notes").textContent);
+const NS = "http://www.w3.org/2000/svg";
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const el = (t, a, p) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; };
+/* Hover hints: a <title> (first child, for screen readers) plus data-tip, shown by our own
+   tooltip so every browser shows it the same way, immediately, on boxes and arrows alike. */
+const tip = (e, text) => {
+  const t = document.createElementNS(NS, "title"); t.textContent = text; e.insertBefore(t, e.firstChild);
+  e.setAttribute("data-tip", text); return e;
+};
+const tipBox = document.createElement("div"); tipBox.id = "tip"; tipBox.setAttribute("role", "tooltip"); document.body.appendChild(tipBox);
+document.addEventListener("mousemove", ev => {
+  const t = ev.target.closest && ev.target.closest("[data-tip]");
+  if (!t) { tipBox.style.display = "none"; return; }
+  tipBox.textContent = t.getAttribute("data-tip"); tipBox.style.display = "block";
+  const pad = 14, w = tipBox.offsetWidth, h = tipBox.offsetHeight;
+  let x = ev.clientX + pad, y = ev.clientY + pad;
+  if (x + w > innerWidth - 8) x = ev.clientX - w - pad;
+  if (y + h > innerHeight - 8) y = ev.clientY - h - pad;
+  tipBox.style.left = Math.max(8, x) + "px"; tipBox.style.top = Math.max(8, y) + "px";
+});
+document.addEventListener("mouseleave", () => { tipBox.style.display = "none"; });
+const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+
+/* ---------- header ---------- */
+const system = N.system || "System";
+document.title = `${system} Layers`;
+document.getElementById("title").textContent = `${system}: layers and domains`;
+document.getElementById("framing").textContent = N.framing || "";
+/* layer-graph/1: repo, commit, declarations, layers, runtimes {name: [node ids]}, nodes, edges, findings, stats. */
+if (G.schema !== "layer-graph/1") document.getElementById("framing").textContent = `Unknown schema ${G.schema}: this template reads layer-graph/1 only.`;
+const commit = String(G.commit || "?").slice(0, 12), st = G.stats || {};
+document.getElementById("meta").textContent = [
+  `repo ${G.repo || "?"}`, `branch ${N.branch || "?"}`, `commit ${commit}`, G.schema,
+  (G.declarations || []).length ? `declared in ${G.declarations.join(", ")}` : "UNDECLARED: no adherence.toml",
+  (N.records || []).length ? `records: ${N.records.join(", ")}` : ""
+].filter(Boolean).join(" -- ");
+document.getElementById("footer").textContent =
+  `Drawn by tds-utils bin/layer-graph from ${G.repo || "the repo"} at ${commit}: ${st.files ?? "?"} files, ${st.imports ?? "?"} imports` +
+  ` (${st.viaBarrel ?? 0} resolved through a package barrel to the module behind it, ${st.barrelFallback ?? 0} drawn to the barrel itself, ${st.unresolved ?? 0} unresolved). Test files are not drawn.`;
+
+/* ---------- layers: order, color ---------- */
+const CANON = ["composition root", "adapters", "application", "ports", "domain"];
+const COLOR = { "composition root": "var(--root)", adapters: "var(--adapt)", application: "var(--app)", ports: "var(--ports)", domain: "var(--domain)" };
+const EXTRA = ["var(--surface)", "var(--other)"];
+const nodes = (G.nodes || []).filter(n => n.layer && n.layer !== "test");
+const present = [...new Set(nodes.map(n => n.layer))];
+/* G.layers is the band order, outermost first; a layer it omits goes before application. */
+const order = (G.layers && G.layers.length ? G.layers : CANON).filter(l => present.includes(l));
+present.filter(l => !order.includes(l)).sort().forEach(l => order.splice(Math.max(0, order.indexOf("application")), 0, l));
+order.forEach((l, i) => { if (!COLOR[l]) COLOR[l] = EXTRA[i % EXTRA.length]; });
+const legend = document.getElementById("legend");
+legend.innerHTML = order.map(l => `<span style="--c:${COLOR[l]}">${esc(l)}</span>`).join("") +
+  `<span class="line" style="--c:var(--warn)">mutual / cycle</span><span class="line" style="--c:var(--bad)">outward (violation)</span>`;
+
+/* ---------- edges ---------- */
+const byId = new Map(nodes.map(n => [n.id, n]));
+const label = n => n.context || n.id;
+/* A context name can repeat across layers (table in application and domain): qualify it wherever text names a node. */
+const dup = new Set(nodes.map(label).filter((c, i, a) => a.indexOf(c) !== i));
+const qual = n => dup.has(label(n)) ? `${label(n)} (${n.layer})` : label(n);
+const edges = (G.edges || []).filter(e => byId.has(e.from) && byId.has(e.to) && e.from !== e.to)
+  .map(e => ({ s: e.from, t: e.to, n: e.imports || 1, dir: e.direction || "inward" }));
+const pair = new Set(edges.map(e => e.s + ">" + e.t));
+const inCycle = new Set();
+((G.findings || {}).cycles || []).forEach(ids => { for (const a of ids) for (const b of ids) if (a !== b) inCycle.add(a + ">" + b); });
+edges.forEach(e => { e.amber = pair.has(e.t + ">" + e.s) || inCycle.has(e.s + ">" + e.t); });
+
+/* ---------- layout: bands, rows, barycenter order ---------- */
+/* A band wider than PER_ROW wraps into rows; alternate rows are offset half a slot so edges pass between boxes. */
+const NW = 150, NH = 44, GAPX = 16, LEFT = 130, PER_ROW = 6, ROWGAP = 26, TOP = 30, CHARS = 20;
+const band = {};
+order.forEach(l => band[l] = nodes.filter(n => n.layer === l).sort((a, b) => label(a).localeCompare(label(b))));
+const nbrs = id => edges.filter(e => e.s === id || e.t === id).map(e => e.s === id ? e.t : e.s);
+const idx = {};
+const reindex = () => order.forEach(l => band[l].forEach((n, i) => idx[n.id] = i / Math.max(1, band[l].length - 1)));
+reindex();
+for (let pass = 0; pass < 4; pass++) {
+  order.forEach(l => {
+    const bary = n => { const ns = nbrs(n.id).filter(m => byId.get(m).layer !== l); return ns.length ? ns.reduce((s, m) => s + idx[m], 0) / ns.length : idx[n.id]; };
+    band[l].sort((a, b) => bary(a) - bary(b));
+  });
+  reindex();
+}
+const maxRow = Math.max(1, ...order.map(l => Math.min(PER_ROW, band[l].length)));
+const W = Math.max(900, LEFT + maxRow * (NW + GAPX) + (NW + GAPX) / 2 + 20);
+const pos = {}, bandTop = {};
+let y = TOP;
+order.forEach(l => {
+  const list = band[l], rows = Math.max(1, Math.ceil(list.length / PER_ROW)), per = Math.ceil(list.length / rows);
+  bandTop[l] = y;
+  for (let r = 0; r < rows; r++) {
+    const row = list.slice(r * per, (r + 1) * per), slot = NW + GAPX;
+    const step = rows > 1 ? slot : (W - LEFT - 20) / row.length;
+    const x0 = LEFT + (rows > 1 ? (PER_ROW - row.length) * slot / 2 + (r % 2) * slot / 2 : 0);
+    row.forEach((n, i) => pos[n.id] = { x: x0 + step * i + (step - NW) / 2, y: y + r * (NH + ROWGAP) });
+  }
+  const lateral = edges.some(e => byId.get(e.s).layer === l && byId.get(e.t).layer === l);
+  y += rows * (NH + ROWGAP) - ROWGAP + (lateral ? 70 : 0) + 56;
+});
+const H = y;
+const svg = document.getElementById("layers");
+svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+
+const defs = el("defs", {}, svg);
+[["ink", "var(--muted)"], ["warn", "var(--warn)"], ["bad", "var(--bad)"]].forEach(([id, c]) => {
+  const m = el("marker", { id: "ar-" + id, viewBox: "0 0 10 10", refX: "9", refY: "5", markerWidth: "6", markerHeight: "6", orient: "auto" }, defs);
+  el("path", { d: "M0,0 L10,5 L0,10 z", fill: c }, m);
+});
+order.forEach(l => {
+  el("line", { x1: 10, x2: W - 10, y1: bandTop[l] - 14, y2: bandTop[l] - 14, stroke: "var(--rule)" }, svg);
+  const words = l.toUpperCase().split(" ");
+  words.forEach((w, i) => {
+    const t = el("text", { x: 14, y: bandTop[l] + NH / 2 + 4 + (i - (words.length - 1) / 2) * 13, "font-size": "11", "font-weight": "600", fill: COLOR[l], "letter-spacing": ".04em" }, svg);
+    t.textContent = w;
+  });
+});
+const gE = el("g", {}, svg), gN = el("g", {}, svg);
+edges.forEach(e => {
+  const a = pos[e.s], b = pos[e.t];
+  const w = Math.min(1 + Math.log2(e.n + 1) * 1.3, 7);
+  let d, col = "var(--muted)", mk = "ar-ink";
+  const sameBand = byId.get(e.s).layer === byId.get(e.t).layer;
+  if (sameBand && a.y === b.y) {
+    const x1 = a.x + NW / 2, x2 = b.x + NW / 2, dir = x2 > x1 ? 1 : -1, yy = a.y + NH, dip = 30 + Math.min(Math.abs(x2 - x1) * 0.12, 40);
+    d = `M${x1 + dir * 10},${yy} C ${x1 + dir * 10},${yy + dip} ${x2 - dir * 10},${yy + dip} ${x2 - dir * 10},${yy + 2}`;
+  } else {
+    const down = b.y >= a.y;
+    const x1 = a.x + NW / 2, y1 = down ? a.y + NH : a.y, x2 = b.x + NW / 2, y2 = down ? b.y - 2 : b.y + NH + 2, my = (y1 + y2) / 2;
+    d = `M${x1},${y1} C ${x1},${my} ${x2},${my} ${x2},${y2}`;
+  }
+  if (e.amber) { col = "var(--warn)"; mk = "ar-warn"; }
+  if (e.dir === "outward") { col = "var(--bad)"; mk = "ar-bad"; }
+  const p = el("path", { d, class: "edge", stroke: col, "stroke-width": w.toFixed(1), "marker-end": `url(#${mk})` }, gE);
+  e.el = p;
+  const what = e.dir === "outward" ? "OUTWARD: an inner layer importing an outer one" : e.dir === "lateral" ? "lateral, same layer" : "inward";
+  tip(p, `${qual(byId.get(e.s))} imports ${qual(byId.get(e.t))}: ${plural(e.n, "import")} (${what}${e.amber ? "; mutual or in a cycle" : ""})`);
+});
+nodes.forEach(n => {
+  const p = pos[n.id], c = COLOR[n.layer];
+  const g = el("g", { class: "node", tabindex: "0", role: "button", "aria-label": `${label(n)}, ${n.layer}` }, gN);
+  g.dataset.k = n.id;
+  el("rect", { x: p.x, y: p.y, width: NW, height: NH, rx: 7, fill: "var(--bg)", stroke: c, "stroke-width": 1.6 }, g);
+  const name = label(n), short = name.length > CHARS ? name.slice(0, CHARS - 3) + "..." : name;
+  el("text", { x: p.x + NW / 2, y: p.y + 19, "text-anchor": "middle", "font-size": "12.5", "font-weight": "600", fill: c }, g).textContent = short;
+  const fc = n.fileCount != null ? n.fileCount : (n.files || []).length;
+  el("text", { x: p.x + NW / 2, y: p.y + 35, "text-anchor": "middle", "font-size": "11", fill: "var(--muted)" }, g).textContent = `[${plural(fc, "file")}]`;
+  tip(g, `${n.id} -- ${n.layer}, ${plural(fc, "file")}${(n.runtimes || []).length ? "; runs in " + n.runtimes.join(", ") : ""}${N.nodes && N.nodes[n.id] ? "\n" + N.nodes[n.id] : ""}`);
+  g.addEventListener("click", () => select(n.id));
+  g.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); select(n.id); } });
+});
+
+/* ---------- highlight ---------- */
+let current = null;
+const panel = document.getElementById("panel");
+const PANEL0 = panel.innerHTML;
+function clearHot() {
+  svg.classList.remove("dim");
+  document.querySelectorAll(".hot").forEach(x => x.classList.remove("hot"));
+  document.querySelectorAll("tr.seam.on").forEach(x => x.classList.remove("on"));
+}
+function light(ids, es) {
+  clearHot(); svg.classList.add("dim");
+  es.forEach(e => e.el.classList.add("hot"));
+  document.querySelectorAll(".node").forEach(g => { if (ids.has(g.dataset.k)) g.classList.add("hot"); });
+}
+function select(k) {
+  if (current === k) { current = null; clearHot(); panel.innerHTML = PANEL0; return; }
+  current = k;
+  const out = edges.filter(e => e.s === k), inn = edges.filter(e => e.t === k);
+  light(new Set([k, ...out.map(e => e.t), ...inn.map(e => e.s)]), [...out, ...inn]);
+  const n = byId.get(k), files = n.files || [];
+  const li = arr => arr.length ? "<ul>" + arr.sort((x, y) => y.n - x.n).map(e => `<li><code>${esc(e.label)}</code> (${e.n})</li>`).join("") + "</ul>" : "<p>none</p>";
+  const fl = files.length ? `<details><summary>${plural(files.length, "file")}</summary><ul>${files.map(f => `<li><code>${esc(f)}</code></li>`).join("")}</ul></details>` : "";
+  panel.innerHTML = `<div class="layer">${esc(n.layer)}${(n.runtimes || []).length ? " -- " + esc(n.runtimes.join(", ")) : ""}</div><h3>${esc(label(n))}</h3>
+    <p>${esc((N.nodes || {})[k] || "")}</p><p><code>${esc(n.id)}</code></p>${fl}
+    <strong>Imports</strong>${li(out.map(e => ({ label: qual(byId.get(e.t)), n: e.n })))}
+    <strong>Imported by</strong>${li(inn.map(e => ({ label: qual(byId.get(e.s)), n: e.n })))}`;
+}
+
+/* ---------- findings ---------- */
+(function findings() {
+  const box = document.getElementById("findings");
+  const F = G.findings || {}, outward = F.outward || [], cycles = F.cycles || [], unassigned = F.unassigned || [];
+  /* outward: [{from, to, imports}]; cycles: [[node ids]]; unassigned: [file paths]. */
+  const edgeText = x => `${x.from} -> ${x.to} (${plural(x.imports, "import")})`, cycleText = ids => ids.join(" <-> ");
+  const holds = [];
+  if (!outward.length) holds.push("no edge points outward: no inner layer imports an outer one");
+  if (!cycles.length) holds.push("no cycles between contexts");
+  if (!unassigned.length) holds.push("every measured file sits in a declared layer");
+  let html = holds.length ? `<div class="finding holds"><strong>Holds:</strong> ${esc(holds.join("; "))}.</div>` : "";
+  if (outward.length) html += `<div class="finding bad"><strong>Outward edges (${outward.length}):</strong> an inner layer reaches out; the outer module cannot change without the inner one. <ul>${outward.map(x => `<li><code>${esc(edgeText(x))}</code></li>`).join("")}</ul></div>`;
+  if (cycles.length) html += `<div class="finding"><strong>Cycles (${cycles.length}):</strong> these modules import each other, so none of them can be replaced alone. <ul>${cycles.map(x => `<li><code>${esc(cycleText(x))}</code></li>`).join("")}</ul></div>`;
+  if (unassigned.length) html += `<div class="finding"><strong>Unassigned files (${unassigned.length}):</strong> in no declared layer, so nothing above judges them. <ul>${unassigned.map(x => `<li><code>${esc(x)}</code></li>`).join("")}</ul></div>`;
+  (N.costs || []).forEach(c => html += `<div class="finding"><strong>Cost of change:</strong> ${esc(c)}</div>`);
+  box.innerHTML = html;
+})();
+
+/* ---------- seams ---------- */
+(function seams() {
+  const body = document.getElementById("seams");
+  const names = ids => ids.map(id => byId.has(id) ? qual(byId.get(id)) : id + " (not in graph)").join(", ") || "(no root named)";
+  (N.seams || []).forEach(s => {
+    const adapters = s.adapters || [], roots = s.roots || [], chosen = s.chosenIn || [];
+    const set = new Set([s.port, ...adapters, ...roots, ...chosen].filter(Boolean));
+    const inside = edges.filter(e => set.has(e.s) && set.has(e.t));
+    /* A composition root importing an adapter is wiring; anything else importing the seam's adapters or roots goes around the port. */
+    const bypass = edges.filter(e => (adapters.includes(e.t) || roots.includes(e.t)) && !set.has(e.s) && byId.get(e.s).layer !== "composition root");
+    const kind = ["port", "policy", "parameter"].includes(s.kind) ? s.kind : "port";
+    const write = { port: `write a new adapter for ${s.seam}; wire it in`, policy: `write a new ${s.seam} policy; hand it in from`, parameter: `supply a new ${s.seam} value from` }[kind];
+    const text = roots.length
+      ? `To change ${s.axis.toLowerCase()}: ${write} ${names(roots)}; `
+      : `To change ${s.axis.toLowerCase()}: write a new ${s.seam} ${kind === "parameter" ? "value" : kind}; no composition root supplies it today, so select it in ${chosen.length ? names(chosen) : "the core"}; `;
+    const also = bypass.length
+      ? `<span class="also">also changes: ${esc(bypass.map(e => `${qual(byId.get(e.s))} (imports ${qual(byId.get(e.t))} directly, ${e.n})`).join("; "))}.</span>`
+      : roots.length ? "nothing else changes." : "the swap edits the core, not the root.";
+    const tr = document.createElement("tr");
+    tr.className = "seam"; tr.tabIndex = 0;
+    tr.innerHTML = `<td>${esc(s.axis)}</td><td><code>${esc(s.seam)}</code></td><td>${kind}</td><td>${esc(s.implementations || "")}</td><td>${esc(text)}${also}</td>`;
+    tr.title = `Port node: ${s.port || "-"}; adapters: ${adapters.join(", ") || "-"}; roots: ${roots.join(", ") || "-"}`;
+    const pick = () => {
+      if (current === "seam:" + s.seam) { current = null; clearHot(); panel.innerHTML = PANEL0; return; }
+      light(set, [...inside, ...bypass]); current = "seam:" + s.seam; tr.classList.add("on");
+      panel.innerHTML = `<div class="layer">seam -- ${kind}</div><h3>${esc(s.seam)}</h3><p>${esc(text)}${also}</p>`;
+      svg.scrollIntoView({ behavior: "smooth", block: "center" });
+    };
+    tr.addEventListener("click", pick);
+    tr.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); pick(); } });
+    body.appendChild(tr);
+  });
+  if (!(N.seams || []).length) body.innerHTML = `<tr><td colspan="5">No seams filled: copy them from the architecture record's Seams table.</td></tr>`;
+})();
+
+/* ---------- runtime topology ---------- */
+(function runtime() {
+  const R = N.runtime || { nodes: [], edges: [] }, rsvg = document.getElementById("runtime");
+  document.getElementById("rt-caption").textContent = R.caption || "";
+  const rn = new Map((R.nodes || []).map(n => [n.id, n]));
+  const kind = id => (rn.get(id) || {}).kind;
+  const problems = [];
+  /* Gate rule: every path into a service comes through a gate, or is labeled as a bypass. */
+  (R.edges || []).forEach(e => {
+    if (!rn.has(e.from) || !rn.has(e.to)) { problems.push(`edge ${e.from} -> ${e.to} names a node that is not drawn`); e.bad = true; return; }
+    if (e.via && kind(e.via) !== "gate") { problems.push(`edge ${e.from} -> ${e.to} says via ${e.via}, which is not a gate`); e.bad = true; }
+    if (kind(e.to) === "service" && kind(e.from) !== "gate" && !e.via && !e.bypass) {
+      problems.push(`path ${e.from} -> ${e.to} reaches a service through no gate and is not labeled as a bypass`); e.bad = true;
+    }
+  });
+  (R.nodes || []).filter(n => n.kind === "gate").forEach(g => {
+    const used = (R.edges || []).some(e => e.via === g.id || e.from === g.id || e.to === g.id);
+    if (!used) problems.push(`gate ${g.label || g.id} is on no request path`);
+  });
+  /* Columns: clients, transparent gates (bands), boxed gates, services, stores. */
+  const cols = [
+    (R.nodes || []).filter(n => n.kind === "client"),
+    ...(R.nodes || []).filter(n => n.kind === "gate" && n.transparent).map(n => [n]),
+    (R.nodes || []).filter(n => n.kind === "gate" && !n.transparent),
+    (R.nodes || []).filter(n => n.kind === "service"),
+    (R.nodes || []).filter(n => n.kind !== "client" && n.kind !== "gate" && n.kind !== "service")
+  ].filter(c => c.length);
+  const RW = 960, RH = Math.max(300, 40 + Math.max(1, ...cols.map(c => c.filter(n => !n.transparent).length)) * 96);
+  rsvg.setAttribute("viewBox", `0 0 ${RW} ${RH}`);
+  const colW = RW / Math.max(1, cols.length), box = {};
+  cols.forEach((c, ci) => {
+    const cx = colW * ci + colW / 2;
+    c.forEach((n, i) => {
+      if (n.transparent) { box[n.id] = { x: cx - 11, y: 20, w: 22, h: RH - 40, band: true }; return; }
+      const store = n.kind !== "client" && n.kind !== "gate" && n.kind !== "service";
+      const w = store ? 130 : 200, h = store ? 44 : 70, step = (RH - 40) / c.length;
+      box[n.id] = { x: cx - w / 2, y: 20 + step * i + (step - h) / 2, w, h };
+    });
+  });
+  const rdefs = el("defs", {}, rsvg);
+  [["rt-ink", "var(--muted)"], ["rt-bad", "var(--bad)"]].forEach(([id, c]) => {
+    const m = el("marker", { id, viewBox: "0 0 10 10", refX: "9", refY: "5", markerWidth: "7", markerHeight: "7", orient: "auto" }, rdefs);
+    el("path", { d: "M0,0 L10,5 L0,10 z", fill: c }, m);
+  });
+  const gEdges = el("g", { fill: "none", "stroke-width": "1.4" }, rsvg), gBoxes = el("g", {}, rsvg), gText = el("g", { "pointer-events": "none" }, rsvg);
+  const STROKE = { client: "var(--root)", gate: "var(--warn)", service: "var(--app)" };
+  (R.nodes || []).forEach(n => {
+    const b = box[n.id]; if (!b) return;
+    const g = tip(el("g", {}, gBoxes), n.title || n.label || n.id);
+    if (b.band) {
+      /* A gate transparent after the first hit: thin dashed band, no fill, muted ink; paths pass through it. */
+      el("rect", { x: b.x, y: b.y, width: b.w, height: b.h, rx: 4, fill: "none", stroke: "var(--muted)", "stroke-width": 1.5, "stroke-dasharray": "6 5" }, g);
+      el("rect", { x: b.x - 6, y: b.y, width: b.w + 12, height: b.h, fill: "transparent" }, g);
+      const tx = b.x + b.w / 2 + 4, ty = b.y + b.h / 2;
+      el("text", { x: tx, y: ty, "text-anchor": "middle", "font-size": "12", fill: "var(--muted)", stroke: "var(--bg)", "stroke-width": 4, "paint-order": "stroke", transform: `rotate(-90 ${tx} ${ty})` }, gText)
+        .textContent = [n.label, n.sub].filter(Boolean).join(" -- ");
+      return;
+    }
+    el("rect", { x: b.x, y: b.y, width: b.w, height: b.h, rx: 8, fill: "var(--bg)", stroke: STROKE[n.kind] || "var(--domain)", "stroke-width": n.kind === "gate" ? 2.5 : 1.5 }, g);
+    el("text", { x: b.x + b.w / 2, y: b.y + (n.sub ? b.h / 2 - 3 : b.h / 2 + 4), "text-anchor": "middle", "font-size": "13", "font-weight": "600", fill: "var(--ink)" }, gText).textContent = n.label || n.id;
+    if (n.sub) el("text", { x: b.x + b.w / 2, y: b.y + b.h / 2 + 14, "text-anchor": "middle", "font-size": "11.5", fill: "var(--muted)" }, gText).textContent = n.sub;
+  });
+  (R.edges || []).forEach(e => {
+    const a = box[e.from], b = box[e.to]; if (!a || !b) return;
+    let d, lx, ly;
+    if (Math.abs(a.x - b.x) < 1) {
+      const down = b.y > a.y, x = a.x + a.w / 2, y1 = down ? a.y + a.h : a.y, y2 = down ? b.y - 2 : b.y + b.h + 2;
+      d = `M${x},${y1} L${x},${y2}`; lx = x + 8; ly = (y1 + y2) / 2;
+    } else {
+      const x1 = a.x + a.w, y1 = a.y + a.h / 2, x2 = b.x - 2, y2 = b.y + b.h / 2, mx = (x1 + x2) / 2;
+      d = `M${x1},${y1} C ${mx},${y1} ${mx},${y2} ${x2},${y2}`;
+      /* A path through a band gate is labeled midway between the band and its target, never on the band. */
+      const g = e.via && box[e.via] && box[e.via].band ? box[e.via] : null, want = g ? (g.x + g.w + x2) / 2 : mx;
+      const bz = (t, p0, p1, p2, p3) => { const u = 1 - t; return u * u * u * p0 + 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t * p3; };
+      let best = 0.5;
+      for (let t = 0; t <= 1; t += 0.01) if (Math.abs(bz(t, x1, mx, mx, x2) - want) < Math.abs(bz(best, x1, mx, mx, x2) - want)) best = t;
+      lx = bz(best, x1, mx, mx, x2); ly = bz(best, y1, y1, y2, y2) - 7;
+    }
+    const col = e.bad ? "var(--bad)" : "var(--muted)";
+    const attrs = { d, stroke: col, "marker-end": `url(#${e.bad ? "rt-bad" : "rt-ink"})` };
+    if (e.bypass) attrs["stroke-dasharray"] = "4 3";
+    const viaGate = e.via && rn.get(e.via);
+    tip(el("path", attrs, gEdges), (e.title || `${e.from} -> ${e.to}`) +
+      (viaGate ? `\nPasses through ${viaGate.label || e.via}.` : "") + (e.bypass ? `\nBypasses the gate: ${e.bypass}` : ""));
+    const text = [e.label, e.bypass ? "bypass: " + e.bypass : ""].filter(Boolean).join(" -- ");
+    if (text) el("text", { x: lx, y: ly, "text-anchor": Math.abs(a.x - b.x) < 1 ? "start" : "middle", "font-size": "11.5", fill: e.bad ? "var(--bad)" : "var(--muted)" }, gText).textContent = text;
+  });
+  el("text", { x: RW - 10, y: 14, "text-anchor": "end", "font-size": "11.5", fill: "var(--muted)" }, gText).textContent = "hover any box or arrow for detail";
+  if (!(R.nodes || []).length) problems.push("no runtime topology filled: derive it from the deploy configuration");
+  document.getElementById("rt-findings").innerHTML = problems.map(p => `<div class="finding bad"><strong>Gate finding:</strong> ${esc(p)}.</div>`).join("");
+})();
+
+/* ---------- copy SVG ---------- */
+document.querySelectorAll("button[data-copy]").forEach(b => b.addEventListener("click", () => {
+  const s = document.getElementById(b.dataset.copy).outerHTML;
+  const done = () => { b.textContent = "Copied"; setTimeout(() => (b.textContent = "Copy SVG"), 1200); };
+  if (navigator.clipboard) navigator.clipboard.writeText(s).then(done, () => (b.textContent = "Copy failed"));
+}));
+</script>
+</body>
+</html>
