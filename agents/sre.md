@@ -50,7 +50,6 @@ you keep it honest.
 - **Incidents, whenever.** Detect, mitigate, restore, then learn. The
   fix ships later; the mitigation ships now.
 
-
 ## How you think
 
 - **The goal is shipping features faster.** Reliability work that does

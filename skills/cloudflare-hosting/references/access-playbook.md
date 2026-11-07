@@ -29,7 +29,9 @@ they implement.
   rule: a gmail.com match is a match shared with the internet. The
   group's display name says who it is for (`<Product> - players`,
   `<Product> - GMs`). Cloudflare rejects an empty group at apply time;
-  a `validation` block fails it at plan time.
+  a `lifecycle { precondition }` on the group fails it at plan time (a
+  variable `validation` block cannot: the list is count-gated on another
+  variable, and cross-variable validation needs Terraform 1.9).
 - **One reusable allow policy** per audience: `decision = "allow"`,
   `include` is the group by id, `session_duration` from a variable. A
   policy admits a group, never an inline email; the email list has one
@@ -71,7 +73,9 @@ they implement.
 
 A new hostname behind Access goes through four states that look alike
 from a browser. Classify it with the probes below before you
-diagnose anything; each probe is read-only.
+diagnose anything; each probe is read-only, and so is every remedy an
+agent may take from this table. The one remedy that is not read-only
+is handed to the human.
 
 | Rung | Probe | Result | Meaning |
 |---|---|---|---|
@@ -79,12 +83,12 @@ diagnose anything; each probe is read-only.
 | | | nothing | wrangler never attached the hostname; check `custom_domain = true` on the stage and the deploy log |
 | TLS | `curl -sSI --max-time 10 https://<host>/` | a response with `server: cloudflare` and `cf-ray` | the certificate is active |
 | | | a handshake error or a certificate-name mismatch | the certificate is not active yet; go to the certificate rung |
-| Certificate | `GET /zones/<zone_id>/ssl/certificate_packs` with a token holding `SSL and Certificates Read`; find the pack whose `hosts` holds `<host>` | `status` is `active` | issued; a TLS failure now is a client or cache problem |
+| Certificate | `GET /zones/<zone_id>/ssl/certificate_packs?status=all` (without `?status=all` the API lists active packs only, and a pending pack is invisible); find the pack whose `hosts` holds `<host>` | `status` is `active` | issued; a TLS failure now is a client or cache problem |
 | | | `pending_validation`, `pending_issuance`, `pending_deployment`, `initializing` | provisioning; wait, do not change anything |
-| | | a `*_timed_out` status, or `validation_errors` set | it will not complete by itself; delete the Custom Domain and deploy again, which re-creates it and the pack |
+| | | a `*_timed_out` status, or `validation_errors` set | it will not complete by itself. Report it to the human with the pack's status: the remedy is to remove the Custom Domain from the Worker and deploy again, and that drops the hostname's DNS record while it runs, so an agent never does it |
 | | | no pack names the host | no Custom Domain exists for it; `GET /accounts/<account_id>/workers/domains` lists what wrangler created, each with its `cert_id` |
 | Gate | `curl -sSI https://<host>/` and the same on a deep path | `302` to `<team>.cloudflareaccess.com/cdn-cgi/access/login/<host>` with `www-authenticate: Cloudflare-Access` on both | the application covers the whole hostname |
-| | | `200` or origin content on either | no application binds this hostname, or it binds a path; the hostname is public |
+| | | `200` or origin content on either | no application binds this hostname, or it binds a path, or the probed path lies under a narrower `bypass` application (a webhook, a health check). Check the applications before calling the hostname public, and probe a path no bypass application covers |
 | | | `302` on `/` only | the application is path-scoped; it must be on the hostname |
 
 Facts the ladder rests on:
@@ -99,13 +103,15 @@ Facts the ladder rests on:
   the client reports a name mismatch. That is provisioning, not a fault,
   unless the pack says otherwise.
 - Access decides at the hostname before the request reaches the origin,
-  so a nonexistent deep path is gated identically to a real one; the
-  deep-path probe needs no knowledge of the site.
+  so a nonexistent deep path is gated identically to a real one, unless
+  a narrower `bypass` application covers that path; the deep-path probe
+  needs no knowledge of the site, only a path no bypass covers.
 
 The infra repo's `ops/terraform/access-smoketest.sh` runs the DNS, TLS
 and gate rungs against any list of hostnames and prints the rung a host
-stopped at; with a token it runs the certificate rung too. Run it after
-every apply and whenever a host "is not reachable".
+stopped at; with a read-only token it runs the certificate rung too. Run
+it after every apply and whenever a host "is not reachable".
+
 
 ## Tokens
 
@@ -113,22 +119,33 @@ every apply and whenever a host "is not reachable".
   and Policies Write` and, if it owns a group, `Access: Organizations,
   Identity Providers, and Groups Write`. Nothing zone-level: the root
   touches no DNS.
+- The readiness ladder's two API calls need a different, read-only
+  token: `SSL and Certificates Read` on the zone for the certificate
+  packs, `Workers Scripts Read` on the account for `workers/domains`.
+  Never run the probes under the apply token, and never under the
+  Global API Key.
 - Error `9106` means no token reached the API (terraform ran bare, not
-  under `op run`); `10000` means the token lacks Access permission.
-  `/user/tokens/verify` reports a `10000` token valid, so verify scope
-  before an apply that mints a one-time `client_secret`.
+  under `op run`); `10000` means the token lacks the permission the
+  call needs: Access write on an apply, one of the two read scopes
+  above on a probe. `/user/tokens/verify` reports a `10000` token
+  valid, so verify scope before an apply that mints a one-time
+  `client_secret`.
+
 
 ## Pre-apply, every time
 
 - `terraform state list` shows every live object the root describes;
   a missing one is imported first, or the apply duplicates the group and
   policy and then fails on the second application for the domain.
-- `terraform plan` shows only the additions this change makes: zero
-  changes to any existing application, policy or group. A plan that
+- `terraform plan` shows only what this change intends. For a new gate
+  that is additions alone: zero changes to any existing application,
+  policy or group. For a membership edit it is one change, the group;
+  for attaching a group it is one change, the policy. A plan that
   renames a hand-made object means a variable does not match the live
   value.
 - A human applies, from the laptop or through the Tower, with the plan
   line the agent handed over (the iac skill).
+
 
 ## Hand-off to the human
 

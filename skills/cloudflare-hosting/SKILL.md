@@ -212,7 +212,6 @@ groups and commands.
   raw response. A pending certificate pack is provisioning: wait. A
   timed-out pack will not finish by itself.
 
-
 ## Ownership: wrangler versus Terraform
 
 | Owner | Manages |
@@ -318,7 +317,7 @@ zonal.
 | `terraform apply` fails on a hostname | the worker with the Custom Domain has not deployed yet |
 | TLS name mismatch or handshake failure on a new Custom Domain | the Advanced Certificate is not active yet; read the certificate pack's `status` (the Access playbook, Readiness), a `pending_*` status is provisioning |
 | the hostname does not resolve after a green deploy | wrangler never attached the Custom Domain; the stage lacks `custom_domain = true`, or `workers/domains` lists no entry for it |
-| `200` on a deep path of a gated hostname | no application binds the hostname, or it binds a path; the hostname is public |
+| `200` on a deep path of a gated hostname | no application binds the hostname, or it binds a path, or a narrower `bypass` application covers the probed path; check the applications before calling the hostname public |
 | API error `9106` under Terraform | no Authorization header reached the API: the token variable is empty, terraform ran bare instead of under `op run` |
 | API error `10000` on an account endpoint | the token authenticated and lacks that permission: scope, not plumbing |
 | `1010` `auth.forbidden` on an account resource | a zone-scoped token; the resource is not zonal (see the iac skill's minting posture) |
