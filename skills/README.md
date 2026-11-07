@@ -28,7 +28,8 @@ and is the one to load first when unsure:
 
 `github-workflow`, `markdown`, `tech-radar`, `wrapup` (the session
 epilogue, typically invoked as `/wrapup`), and the tool skills
-(`chrome-mcp`, `decision-models`, `knowledge-base`, `lmde-dashboards`) are not phases -- they
+(`architecture-views`, `chrome-mcp`, `decision-models`, `knowledge-base`,
+`lmde-dashboards`) are not phases -- they
 are loaded whenever their subject comes up.
 
 Neither are the platform skills. `iac` is the umbrella for declared
