@@ -94,6 +94,17 @@ description: "Provisioning and governing the credentials infrastructure needs: t
 - Non-secret identifiers -- account ids, project refs, AUDs, team
   domains, hostnames, role ARNs -- are repository VARIABLES. They show
   in logs, can be checked, and do not count against a secret budget.
+- **In a public repository a variable is public.** The runner prints a
+  step's evaluated `env:` block in the log header before the step runs,
+  so no `::add-mask::` can hide a `vars.*` value, and a public
+  repository's logs are public. A 1Password reference (it names the
+  vault and the item), an account id, or a URL that contains one is
+  therefore never a variable there. Give the workflow's service account
+  exactly one vault, tag each item, and find it at run time with
+  `op item list --tags <tag>`, masking the vault and item ids it returns.
+  The caller then passes the one secret and nothing else (tds-utils
+  `adherence.yml`, tds-utils PR#716: the variable form printed
+  `DECIDE_GATEWAY_OP_ITEM:` in the PR's own run log).
 - No `secrets.A || secrets.B` fallbacks. The expression only falls
   through when the left side is completely unset; an org-level secret
   makes it unconditionally non-empty, and the fallback then hides which
