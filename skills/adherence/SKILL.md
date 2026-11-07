@@ -28,9 +28,12 @@ and types; the records and the engine's tests own the mechanics.
 
 ## What the gate is
 
-The engine measures nine qualities (Layered, Hexagonal, Domain-driven,
-Composable, Injectable, Behavior-driven, Complete, Radar-true, Declared)
-through named checks. A rule check is a fact: same code and declaration,
+The engine measures ten qualities (Layered, Hexagonal, LAW,
+Domain-driven, Composable, Injectable, Behavior-driven, Complete,
+Radar-true, Declared) through named checks. Layered is the dependency
+rule between layers; LAW is Todd's LAW, every function exactly one of
+logic, action and workflow (the coding skill, Todd's LAW: the function
+taxonomy). A rule check is a fact: same code and declaration,
 same result everywhere. A judged check asks a decision model one bounded
 question about one unit and carries a confidence; it may abstain. The
 design's Qualities table lists every check.
@@ -145,9 +148,9 @@ The caller shapes, scope lines and CODEOWNERS lines are in
   vault's read-only 1Password service account, through which the
   workflow finds the judge's token by tag. Seed it per repository on a
   personal account, or select the repository on the organization secret;
-  the credential registry in tds-internal lists the holders. Without it
-  the judged checks are coverage and the verdict is inconclusive at best,
-  which passes. Never add a variable naming a vault or item: a step's log
+  the private ops repo's credential registry lists the holders. Without
+  it the judged checks are coverage and the verdict is inconclusive at
+  best, which passes. Never add a variable naming a vault or item: a step's log
   header prints variables, and the judge needs none.
 - **Select the job with a changed-scopes scope**, never a `paths:` filter:
   a workflow that does not run never reports the required check. The
