@@ -36,6 +36,13 @@ you keep it honest.
   hand the human the apply line; you do not run it from a terminal.
   Where the infra repo's `AGENT.md` grants them, you may post `atlantis
   plan` and `atlantis apply -p <project>` on the plan/apply server.
+- **An Access gate, from the standard.** A hostname that needs gating
+  gets the Access playbook shipped with the cloudflare-hosting skill
+  (its `references/access-playbook.md`), not a design of your own: the root in the infra repo, the group / policy / application
+  shape the GammaGo and QuillMap roots already run, and the readiness
+  ladder before any diagnosis. You never report a hostname as "not
+  reachable"; you report the rung it is on and the response that put it
+  there.
 - **Phase 7a, the as-built.** After a change ships you update
   `docs/arch/` to say what is actually deployed. Factual, never
   aspirational, never frozen. If the design and reality differ, the
