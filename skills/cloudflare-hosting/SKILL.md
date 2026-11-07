@@ -86,10 +86,16 @@ application. The cost is bring-up order (script first, then Terraform)
 and a worker whose root `/health` is unreachable once mounted under a
 path; probe a path the route actually covers.
 
-Universal SSL covers one label under the zone. A `preview.app.<zone>`
-hostname is a third-level name and needs Advanced Certificate Manager
-or an equivalent; check the zone is provisioned for it before the first
-preview deploy.
+Certificates follow the hostname mechanism. A Workers Custom Domain
+creates the DNS record and issues an Advanced Certificate for that exact
+hostname at any depth (`preview.app.<zone>` included), with no Advanced
+Certificate Manager subscription; it is active minutes after the deploy,
+and until then the edge presents the zone's Universal certificate, so a
+client sees a name mismatch. A hostname served through a DNS record and
+a route is covered by Universal SSL, which names the apex and one label
+only; a deeper name on a route needs Advanced Certificate Manager. The
+certificate rung of the Access playbook (`references/access-playbook.md`)
+reads the pack's status instead of guessing.
 
 ## Bindings
 
@@ -160,25 +166,52 @@ preview deploy.
 
 ## Cloudflare Access
 
-- Requires a custom domain on a Cloudflare-managed zone. One
-  self-hosted application per hostname, per stage.
-- Access cannot exclude paths within one application. Punch a hole with
-  a SECOND, narrower application over exactly the public paths (a
-  webhook, a health check) carrying a `bypass` policy; most-specific
-  application wins. The bypassed handler authenticates itself (an HMAC
-  on every request, constant-time compare).
+The fleet has one Access shape, run since 2026-07 by the GammaGo and
+QuillMap roots: `references/access-playbook.md` is the standard, with
+the readiness ladder and the hand-off. A new gate copies it. The infra
+repo's `docs/runbook.cloudflare-access.md` carries the hostnames,
+groups and commands.
+
+- **Every Access resource lives in the private infra repo**, under
+  `ops/terraform/<system>-access/`: applications, policies, groups,
+  service tokens, the OIDC SaaS app. Security-bearing, so no exception
+  for a demo or a "hermetic" project (owner ruling 2026-11-07). The app
+  repo keeps the Worker and its Custom Domain and names the Access root
+  in its `AGENT.md`.
+- **Group -> reusable policy -> one application per hostname.** A named
+  group of enumerated addresses (never `email_domain`), one allow
+  policy that admits the group by id, one `self_hosted` application per
+  hostname per stage listing that policy. Production and preview share
+  the policy and get two applications; the preview one is `count`-gated
+  on its hostname variable.
+- **A group has one owning root.** Another root attaches it by id
+  (`table_group_ids`); it never re-lists the emails. Same people, attach
+  the group; one address different, a new group. Dropping an id
+  detaches it on the next apply.
+- Sign-in is the built-in One-Time PIN; no identity provider. An OIDC
+  SaaS app is added only when a downstream service must receive a
+  token. A Worker that verifies the Access JWT itself needs none.
+- Requires a custom domain on a Cloudflare-managed zone. Access cannot
+  exclude paths within one application. Punch a hole with a SECOND,
+  narrower application over exactly the public paths (a webhook, a
+  health check) carrying a `bypass` policy; most-specific application
+  wins. The bypassed handler authenticates itself (an HMAC on every
+  request, constant-time compare).
 - **Automation uses a service token**, admitted by a `non_identity`
-  policy on the application, sent as two headers. A bypass on the paths
-  under test would make exactly the paths that must not be public,
-  public. Service tokens are an ACCOUNT-level resource; a zone-scoped
-  Access token cannot mint one, however it is spelled. Minting is a
-  credential-lifecycle module (the iac skill).
+  policy behind the human policy, sent as two headers. A bypass on the
+  paths under test would make exactly the paths that must not be
+  public, public. Service tokens are an ACCOUNT-level resource; a
+  zone-scoped Access token cannot mint one, however it is spelled.
+  Minting is a credential-lifecycle module (the iac skill).
 - A `302` to the team domain on an unauthenticated probe is the gate
   WORKING, not a deploy failure. Behind Access every external probe
   looks the same whether or not the route exists; verify wiring through
   the API, or through the gate with the service token.
-- Access configuration for a hostname often belongs to the zone's owning
-  repo, not the app's. The repo file says which.
+- **"Not reachable" is not a diagnosis.** Run the playbook's readiness
+  ladder (DNS, TLS, certificate pack, gate) and report the rung with the
+  raw response. A pending certificate pack is provisioning: wait. A
+  timed-out pack will not finish by itself.
+
 
 ## Ownership: wrangler versus Terraform
 
@@ -283,6 +316,9 @@ zonal.
 | the deploy shipped localhost values | a bare `wrangler deploy` with no `--env` |
 | a probe is green and the feature is dead | the probe never exercised the credential or the upstream; run the real-behaviour smoke |
 | `terraform apply` fails on a hostname | the worker with the Custom Domain has not deployed yet |
+| TLS name mismatch or handshake failure on a new Custom Domain | the Advanced Certificate is not active yet; read the certificate pack's `status` (the Access playbook, Readiness), a `pending_*` status is provisioning |
+| the hostname does not resolve after a green deploy | wrangler never attached the Custom Domain; the stage lacks `custom_domain = true`, or `workers/domains` lists no entry for it |
+| `200` on a deep path of a gated hostname | no application binds the hostname, or it binds a path; the hostname is public |
 | API error `9106` under Terraform | no Authorization header reached the API: the token variable is empty, terraform ran bare instead of under `op run` |
 | API error `10000` on an account endpoint | the token authenticated and lacks that permission: scope, not plumbing |
 | `1010` `auth.forbidden` on an account resource | a zone-scoped token; the resource is not zonal (see the iac skill's minting posture) |
@@ -293,11 +329,15 @@ blaming the deploy tool.
 
 ## Related
 
+- `references/access-playbook.md`: the fleet's Access shape, the
+  readiness ladder, the pre-apply checks and the hand-off
 - the cloudflare-think skill: an agent worker on this platform
 - the lmde-tunnels skill: a laptop service reached through a tunnel and
   Access rather than served from a Worker
 - the iac skill: the Terraform half of the ownership split, state,
   authority
+- the infra-credentials skill: minting the service token a machine
+  consumer presents to Access
 - the release skill: the credential chain, workflow verification,
   diagnosing a red run
 - the gates skill: the law that governs changing any gate above
