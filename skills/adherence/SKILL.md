@@ -28,9 +28,12 @@ and types; the records and the engine's tests own the mechanics.
 
 ## What the gate is
 
-The engine measures nine qualities (Layered, Hexagonal, Domain-driven,
-Composable, Injectable, Behavior-driven, Complete, Radar-true, Declared)
-through named checks. A rule check is a fact: same code and declaration,
+The engine measures ten qualities (Layered, Hexagonal, LAW,
+Domain-driven, Composable, Injectable, Behavior-driven, Complete,
+Radar-true, Declared) through named checks. Layered is the dependency
+rule between layers; LAW is Todd's LAW, every function exactly one of
+logic, action and workflow (the coding skill, Todd's LAW: the function
+taxonomy). A rule check is a fact: same code and declaration,
 same result everywhere. A judged check asks a decision model one bounded
 question about one unit and carries a confidence; it may abstain. The
 design's Qualities table lists every check.
