@@ -16,9 +16,22 @@ sides of the account boundary:
   org, `user` for a personal account); there is no level that crosses
   owners outside an Enterprise. A consumer under another owner references
   a mirror of the action under that owner -- never a token that fetches
-  it. Which reference each owner uses, and how a mirror is stood up, is
-  the action's own ops playbook (template-tools
-  `docs/ops/ci-magic/PLAYBOOK.ACTION-MIRROR.md`).
+  it. How a mirror is stood up and kept in sync is the action's own ops
+  playbook (template-tools `docs/ops/ci-magic/PLAYBOOK.ACTION-MIRROR.md`);
+  the reference each consumer owner uses is:
+
+  | Consumer owner | `uses:` line in `.github/workflows/ci-magic.yml` |
+  |---|---|
+  | `Nine-At-A-Time-Media` | `Nine-At-A-Time-Media/template-tools/packages/naatm-ci-magic@main` (the source) |
+  | `9atatimer` | `9atatimer/ci-magic@main` (the mirror, synced from the source on every push to template-tools `main`) |
+
+  An owner with no row has no mirror and cannot run ci.magic until the
+  playbook stands one up. **The template carries the org's line**, so a
+  9atatimer repository made from template-base fails every run at "Set up
+  job" with `Unable to resolve action nine-at-a-time-media/template-tools,
+  repository not found` until its `uses:` is switched to the mirror's.
+  That failure is the reference, never the credential, and no secret
+  fixes it.
 - **The credential** (`CI_MAGIC_OP_SA_TOKEN`) is an org secret for an
   org-owned consumer and a PER-REPOSITORY secret for one under a personal
   account, which has no org tier. Without it the action resolves and then
