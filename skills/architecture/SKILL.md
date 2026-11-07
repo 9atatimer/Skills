@@ -107,8 +107,9 @@ alike, assigned to one layer, with one composition root per runtime.
 | composition root | the container: one per runtime (CLI, server, worker, each app) | the only code that names a concrete adapter |
 
 The map is small -- a table of unit, layer, runtime -- and it is judged by
-the coding skill's Trace, Purity and Wiring tests before a line is
-written. Layers are not directories; a one-file tool keeps them as three
+the coding skill's Arrow, Wiring and Trace tests before a line is
+written; LAW (the coding skill, Todd's LAW: the function taxonomy) is
+judged per function at phase 5, not here. Layers are not directories; a one-file tool keeps them as three
 regions of one file.
 
 ---

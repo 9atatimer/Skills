@@ -30,26 +30,28 @@ These gates are non-negotiable. Do not skip them because the change "looks small
 
 ---
 
-## 1. Architecture: One Idea, Three Axes
+## 1. Architecture: One Idea, Four Rules
 
 **The idea, in one sentence:** Separate what the software *means* from how it *connects to the world* -- keep the meaning stable and central, keep the connections volatile and replaceable, and point every dependency inward, toward the meaning.
 
-Clean Architecture, Hexagonal (Ports & Adapters), Layered Architecture, and Domain-Driven Design all serve that one idea -- but **they are not one checklist, and they do not collapse into each other.** Each tradition guards a different axis, and an agent that hears "hexagonal" and stops there builds a domain with ports around it and nothing else: no application layer, no use-case surface, no shared language. That is the commonest failure this skill exists to prevent. The three axes, each with its own mechanical tests (Section 1.2):
+Clean Architecture, Hexagonal (Ports & Adapters), Layered Architecture, Domain-Driven Design and Todd's LAW all serve that one idea -- but **they are not one checklist, and they do not collapse into each other.** Each guards a different rule, and an agent that hears "hexagonal" and stops there builds a domain with ports around it and nothing else: no use-case surface, no shared language, functions that decide and act in one body. That is the commonest failure this skill exists to prevent. The four rules, each with its own mechanical tests (Section 1.2):
 
-| Axis | Tradition | Question it guards | Tests |
+| Rule | Tradition | Question it guards | Tests |
 |---|---|---|---|
-| **Core vs edge** | Hexagonal / Clean | does the meaning depend on a mechanism? | Grep, Swap, Arrow, Change |
-| **Layers inside the core** | Layered / Clean | is *workflow* separate from *rules* and from *wiring*? | Trace, Purity, Wiring |
-| **Language and boundaries** | DDD | is each concept named once, in the problem's words, with one owner? | Decision, Language, Boundary |
+| **Layered** | Layered / Clean / Onion | does any unit depend on a layer above it, or on a peer? | Arrow, Wiring |
+| **Core vs edge** | Hexagonal / Clean | does the meaning depend on a mechanism? | Grep, Swap, Change |
+| **LAW** | Todd's LAW | is every function exactly one of logic, action, workflow? | Kind, Purity |
+| **Language and boundaries** | DDD | is each concept named once, in the problem's words, with one owner? | Trace, Decision, Language, Boundary |
 
-Internalize the idea; reach for the vocabulary only where it earns its place. But run all three axes' tests, every time. (The lineage is footnoted at the end of this section for readers who want to follow it.)
+Internalize the idea; reach for the vocabulary only where it earns its place. But run all four rules' tests, every time. (The lineage is footnoted at the end of this section for readers who want to follow it.)
 
 ### 1.1 The spirit (internalize these)
 
 * **Stable core, volatile edges.** The core is the decisions and rules in the language of the problem. The edges are mechanisms: HTTP, GitHub, the filesystem, a specific LLM vendor. Mechanisms change; meaning should not have to.
 * **Dependencies point toward stability.** Details import abstractions; the core imports nothing concrete. A vendor SDK, an env var, a wire format, or a model id must never appear in the core.
 * **The core owns decisions; edges own mechanisms.** "Which model should judge this" is a decision -> core. "Speak Anthropic's API" is a mechanism -> edge.
-* **Three layers inside the non-edge code, and they do different jobs.** The **domain** is rules and values: pure functions and invariant-bearing types, values in, values out, no port in sight. The **application** is workflow: one function per behavior, orchestrating domain functions and ports. The **composition root** (the container) is wiring: the only code that names a concrete adapter. Workflow is not a rule, and a rule is not wiring; a file that does two of the three is a file to split.
+* **Layers depend downward, never sideways.** Each unit sits in one layer and may import only its own layer and the layers beneath it: `domain` at the bottom, `ports` above it, `application` and `adapters` above ports as peers that never import each other, the composition root over everything. A layer makes no assumption about how it will be used. Dependencies are allowed and kept to a minimum, which is what lets layers be assembled quickly into larger stacks.
+* **Every function is one of three kinds -- Todd's LAW.** **Logic** computes: a predicate or an evaluator, values in, a value out. **Action** does: it mutates, writes, calls, sends. **Workflow** is the control flow that knits logic and action together. A function is exactly one of these; a function that decides and acts in one body is two functions that were never split. This is what makes each one testable alone: logic by its return value, action by its effect through injected dependencies, workflow by the sequence it drives through fakes.
 * **Name the things that change.** Every axis of change becomes one explicit seam -- a port, a policy, or a parameter -- never a hardcoded value and never an inline `if`.
 * **One language, one owner.** The nouns in the code are the nouns in the design doc, and each concept is owned by exactly one module. A concept with two names, or an invariant enforced in two places, is a boundary that was never drawn.
 * **Keep behavior with its data.** A type that is only fields, with the logic living somewhere else, is the anemic smell. Put invariants where the data is.
@@ -64,26 +66,32 @@ Run these against any change. They are checks, not opinions, and **a change pass
 |---|---|---|
 | **Grep test** | Does the core mention a vendor, SDK, `fetch`, `process.env`, `fs`, or a model string? | Leak -- move it to an edge |
 | **Swap test** | Can I replace the LLM / code host / storage without touching the core? | Missing seam |
-| **Arrow test** | Does every import cross *inward* (detail -> abstraction -> core)? | Inverted dependency |
 | **Change test** | List what is likely to change. Does each axis map to exactly one module? | A hardcoded value, or a tangle |
 
-**Layers inside the core (Layered):**
+**Layered (the dependency rule):**
 
 | Test | Question | Fail means |
 |---|---|---|
-| **Trace test** | Does every row in the design's Behaviors table map, through the architecture record's use-case surface, to exactly one application function, with the signature that surface gives it? Several rows may share one function -- a happy path and its error paths are scenarios of the same use case | A row with no home (logic in a handler or a helper), or one row's behavior split across two functions |
-| **Purity test** | Does any domain function take a port, a callback that does I/O, or a clock? | Workflow leaked into the rules -- lift the orchestration to the application layer and pass the domain a value |
-| **Wiring test** | Is there exactly one place per runtime (CLI, worker, server) that names concrete adapters, and can it be built with every adapter faked? | Wiring scattered into use cases or handlers; or a use case that constructs its own dependencies |
+| **Arrow test** | Does every import stay in its own layer or cross downward (`application -> ports -> domain`, `adapters -> ports -> domain`, the composition root -> any), and is the import graph free of cycles? | An upward or sideways dependency: `application` importing an adapter, `domain` importing a port, two units importing each other |
+| **Wiring test** | Is there exactly one place per runtime (CLI, worker, server) that names concrete adapters, is it in the composition-root layer, and can it be built with every adapter faked? | Wiring scattered into use cases or handlers; or a use case that constructs its own dependencies |
+
+**LAW (every function is one kind):**
+
+| Test | Question | Fail means |
+|---|---|---|
+| **Kind test** | Read the body. Does it compute a value (logic), change the world (action), or sequence calls to other functions (workflow)? Exactly one answer? | A function of two kinds -- a predicate that also writes, a step that also decides -- split it along the seam between deciding and doing |
+| **Purity test** | Does any logic function take a port, a callback that does I/O, or a clock? | Workflow leaked into the rules -- lift the orchestration to a workflow function and pass the logic a value |
 
 **Language and boundaries (DDD):**
 
 | Test | Question | Fail means |
 |---|---|---|
+| **Trace test** | Does every row in the design's Behaviors table map, through the architecture record's use-case surface, to exactly one application function, with the signature that surface gives it? Several rows may share one function -- a happy path and its error paths are scenarios of the same use case | A row with no home (logic in a handler or a helper), or one row's behavior split across two functions |
 | **Decision test** | Is each important decision named, in one place, in the problem's language? | Scattered `||` / `if` logic -- extract a policy |
 | **Language test** | Is every noun in a use-case signature a term the design doc defines, spelled the same way? | A concept the design never named, or one concept under two names |
 | **Boundary test** | Does each invariant have exactly one owning module, and does every write that could break it go through that module? | An invariant enforced twice, or bypassable |
 
-The signal is concrete: if "we now also use Cloudflare" forces an edit to the core, the architecture failed the test -- that is the result, not a style preference. Likewise, if a new behavior forces an edit to an existing use case rather than a new one beside it, the Trace test failed; if a domain test needs a fake, the Purity test failed.
+The signal is concrete: if "we now also use Cloudflare" forces an edit to the core, the architecture failed the test -- that is the result, not a style preference. Likewise, if a new behavior forces an edit to an existing use case rather than a new one beside it, the Trace test failed; if a logic function's test needs a fake, the Purity test failed; if one function cannot be tested without both a fake and an assertion on a computed value, the Kind test failed.
 
 ### 1.3 The smells
 
@@ -92,7 +100,9 @@ The signal is concrete: if "we now also use Cloudflare" forces an edit to the co
 * **Decision as a `||`-chain** -- an important choice spread across inline conditionals instead of one named policy.
 * **Port with one impl that will never have two** -- a seam introduced as ceremony (see the counter-warning).
 * **Hexagon with no application layer** -- ports and a domain, and the workflow living in the CLI handler or HTTP route that calls them. The Trace test finds it: the behavior has no function.
-* **Port in a domain function** -- a rule that takes a repository, a clock, or an HTTP client. The Purity test finds it.
+* **Upward or sideways import** -- a use case importing an adapter, a domain module importing a port, two modules importing each other. The Arrow test finds it.
+* **Function of two kinds** -- a predicate that also writes, a save that also validates, a step that decides and then does. The Kind test finds it; the fix is two functions and a workflow that calls both.
+* **Port in a logic function** -- a rule that takes a repository, a clock, or an HTTP client. The Purity test finds it.
 * **Use case that builds its own adapters** -- `new AnthropicClient()` inside a workflow. The Wiring test finds it.
 * **Two names for one thing** -- `verdict` in the doc, `result` in the code, `outcome` in the test. The Language test finds it.
 
@@ -102,14 +112,14 @@ The opposite sin is just as real, and agents over-rotate here:
 
 * **Abstract at the axes of change, not everywhere.** Introduce a seam when there are (or plausibly will be) *two* implementations, or when it crosses a vendor/process boundary. A port with a single forever-implementation is ceremony -- inline it.
 * **Not every struct is an Entity / Value Object / Aggregate.** Use the pattern when the type carries an invariant; otherwise it is a plain value.
-* **Layers are not directories.** A small tool keeps domain, application, and wiring as three regions of one file (Section 2's anatomy is exactly that order); a large one gives each its own package. The Trace, Purity, and Wiring tests are indifferent to the layout -- they ask whether the three jobs are separate, not whether they are far apart.
+* **Layers are not directories.** A small tool keeps domain, application, and wiring as three regions of one file (Section 2's anatomy is exactly that order); a large one gives each its own package. The Arrow, Kind and Purity tests are indifferent to the layout -- they ask which way the dependencies point and what kind each function is, not how far apart the regions sit.
 * **Vocabulary is a means.** Lead with intent, the tests, and the smells. The named patterns are lineage, not a checklist.
 
 ### 1.5 Worked example (ci-magic)
 
 > Model selection is a *decision*, so it lives in the core as a named policy whose inputs (the assertion's properties, its past performance, cost and availability) are core concepts. The model id is *volatile*, so it is a parameter supplied at the edge, never a constant in the domain. "Talk to Anthropic / Cloudflare / Claude CLI" are interchangeable *mechanisms* behind one seam. When Claude is slow, the policy picks another model -- and nothing in the core changed, because the core never knew the model's name.
 
-That paragraph teaches the core-vs-edge axis without naming any tradition. The other two axes show in the same tool: `judge_assertion(assertion, *, completion: CompletionPort) -> Verdict` is the **application** function for the behavior "an assertion is judged" -- one behavior, one function, ports as keyword dependencies, a domain value returned; `select_model(assertion, history) -> ModelChoice` is a **domain** function it calls, values in and values out, testable with no fake at all; and the registry that maps vendor names to adapters is the **composition root**, the single place that knows the vendor set. Adding an endpoint is one adapter file plus one `register()` call, with zero edits to the use case or domain. That is the Swap test, the Change test, the Trace test, and the Wiring test, passing together.
+That paragraph teaches the core-vs-edge rule without naming any tradition. The other three rules show in the same tool: `judge_assertion(assertion, *, completion: CompletionPort) -> Verdict` is the **application** function for the behavior "an assertion is judged" -- one behavior, one function, ports as keyword dependencies, a domain value returned, a workflow and nothing else; `select_model(assertion, history) -> ModelChoice` is a **domain** function it calls, logic only, values in and values out, testable with no fake at all; the adapter that speaks to Anthropic is an action, asserted on what it sends; and the registry that maps vendor names to adapters is the **composition root**, the single place that knows the vendor set. Adding an endpoint is one adapter file plus one `register()` call, with zero edits to the use case or domain. That is the Swap test, the Change test, the Arrow test, the Kind test, the Trace test, and the Wiring test, passing together.
 
 ### 1.6 What this looks like in practice (the lineage)
 
@@ -132,23 +142,24 @@ The realization of the idea, with the name each tradition gives each part:
 * The **application** layer is Clean's *use cases* and Layered's *service/workflow* layer. Its functions are the **BDD surface**: each Given/When/Then in the design names one of them. They compose because they take and return domain values, never wire formats or adapter handles -- a use case can call a use case, and a test can drive one without a handler in front of it.
 * A **seam** is Hexagonal's *port*; an **edge** is an *adapter*.
 * The **composition root** is the *container* (with or without a DI framework): the one place per runtime where concrete adapters meet ports. Entry points call it; nothing below it knows it exists.
-* "Dependencies point inward" is Clean's *Dependency Rule*: `cli -> application -> domain`, and `adapters -> ports -> domain`. The domain depends on nothing concrete.
+* "Dependencies point downward" is Layered Architecture's rule, Clean's *Dependency Rule* and Onion's rings, all one statement: `cli -> application -> ports -> domain`, and `adapters -> ports -> domain`. `application` and `adapters` are peers and never import each other; the domain depends on nothing concrete. It is the same rule the OSI model gives a network stack, and it buys the same thing: a layer that assumes nothing about its callers can be assembled into any stack above it.
+* **Todd's LAW** -- Logic, Action, Workflow -- is a rule about functions, not about layers, and it holds in every layer: an adapter has its own logic (parse this response) and workflow (retry, then parse) beside its actions, and each is still its own function.
 
 **Functional core, imperative shell -- both, on purpose.** The domain is functional: pure functions over immutable values, composed by return value, needing no injection and no fake. The application and the adapters are procedural: sequenced steps with injected effects, tested through fakes. That is not a compromise between two schools; it is the assignment of each school to the layer where it is strongest. A domain written procedurally (mutating shared state, reaching for a port) is untestable without fakes; a workflow written as a point-free pipeline hides its sequencing from the reader. Put the pure part where purity is cheap and the steps where steps are honest.
 
 Other constants that hold regardless of vocabulary: composable functional areas over monoliths; side effects isolated to adapters and the composition root; clarity over speculative optimization.
 
-### 1.7 Function taxonomy
+### 1.7 Todd's LAW: the function taxonomy
 
-Every function is exactly one of these, and **the layer decides which kinds a file may contain**: domain files hold predicates and pure helpers only; application files hold flow functions; adapters hold effectful helpers; entry files hold entry points and the composition root.
+**Every function is exactly one of three kinds: Logic, Action, or Workflow.** That is Todd's LAW, and the Kind test (Section 1.2) grades each function against it. The kind is a property of the function, not of where it lives: every layer holds functions of all three kinds, and the layer only decides which kinds dominate (the domain is almost all logic; adapters carry the actions; the application is workflow). The payoff is testability without compromise: a logic function is asserted on its return value and needs no fake; an action is asserted on its effect, through the dependency injected into it; a workflow is asserted on the sequence it drives, through fakes. A function of two kinds can be tested only by faking and computing at once, and that is the smell. The five shapes a function takes, by kind:
 
-* **Predicates** -- pure boolean tests; answer a yes/no question. No side effects, deterministic. Named as a question: `is_*`, `has_*`, `should_*`, `can_*`. Domain.
-* **Pure helpers** -- one computation; values in, values out; deterministic. **Never injected into.** If a helper needs a port, it is not a domain helper -- either the port is really a value (pass the result in) or the function is really a flow function. Domain.
-* **Effectful helpers** -- one action against the world: a query, a write, a call. Live only in adapters, behind a port. Tested by integration test, or not at all in the unit tier.
-* **Flow (orchestration) functions** -- the use cases. One per behavior in the design's Behaviors table, carrying the signature the architecture record's use-case surface gives it: domain values in, ports as keyword-only dependencies, a domain value or result out. Contain control flow; compose predicates, pure helpers, other flow functions, and ports. Tested via fakes. Application.
-* **Entry points** -- the public surface (CLI handler, HTTP route, action `main`); thin (parse/validate input, call one flow function, shape the result). The composition root lives here (wire adapters to ports). Never contain a rule or a workflow step.
+* **Predicates** (logic) -- pure boolean tests; answer a yes/no question. No side effects, deterministic. Named as a question: `is_*`, `has_*`, `should_*`, `can_*`.
+* **Evaluators, or pure helpers** (logic) -- one computation; values in, values out; deterministic. **Never injected into.** If a helper needs a port, it is not logic -- either the port is really a value (pass the result in) or the function is really a workflow.
+* **Actions, or effectful helpers** (action) -- one act against the world: a query, a write, a call, a mutation. Behind a port when the world is a vendor or a mechanism; tested on the effect, through the injected dependency, or by integration test.
+* **Flow (orchestration) functions** (workflow) -- control flow and nothing else: compose predicates, evaluators, actions, other flow functions, and ports. The use cases are the flow functions at the application surface: one per behavior in the design's Behaviors table, carrying the signature the architecture record's use-case surface gives it, domain values in, ports as keyword-only dependencies, a domain value or result out. Tested via fakes. A flow function that computes a value inline, or performs an effect inline, is two kinds in one body.
+* **Entry points** (workflow) -- the public surface (CLI handler, HTTP route, action `main`); thin (parse/validate input, call one flow function, shape the result). The composition root lives here (wire adapters to ports). Never contain a rule or an effect of their own.
 
-**Dependency injection starts at the flow function and never goes below it.** A pure helper that "readily accepts DI" is the leak that dissolves the domain: inject one port there and every test of that rule now needs a fake. Predicates and pure helpers take values. Flow functions take ports. Entry points build them.
+**Dependency injection starts at the workflow and never goes below it.** A pure helper that "readily accepts DI" is the leak that dissolves the domain: inject one port there and every test of that rule now needs a fake. Logic takes values. Workflows take ports and actions. Entry points build them.
 
 Avoid nested/inner functions due to their inherent testing difficulty.
 
@@ -205,7 +216,7 @@ Every source file is laid out top-to-bottom in this fixed order. A reader should
 * When a file has multiple sub-components, repeat the `predicates -> helpers -> flow -> entry` grouping per sub-component rather than scattering all predicates at the top. Keep each sub-component's pieces together.
 * If a file grows more than one clear sub-component, that is a signal to split it along domain boundaries.
 * Entry points stay thin; push logic down into flow/helper functions so it stays testable.
-* The anatomy is the layering in miniature: rows 5-6 are the domain, row 7 is the application, row 8 is the wiring. A tool small enough for one file still keeps the three regions distinct; a tool that outgrows one file splits along those same lines (`domain/`, `application/`, `adapters/`, and an entry that composes them), and the Trace, Purity, and Wiring tests read the same either way.
+* The anatomy is the layering in miniature: rows 5-6 are the domain, row 7 is the application, row 8 is the wiring. A tool small enough for one file still keeps the three regions distinct; a tool that outgrows one file splits along those same lines (`domain/`, `application/`, `adapters/`, and an entry that composes them), and the Arrow, Kind, Purity and Wiring tests read the same either way.
 
 **Illustrative skeleton:**
 
