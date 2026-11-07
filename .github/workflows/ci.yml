@@ -44,12 +44,12 @@ jobs:
   # staging branches, which the bot force-pushes so the replaced tip is not
   # fetched, the base is the staging commit's first parent.
   adherence:
-    uses: 9atatimer/tds-utils/.github/workflows/adherence.yml@50214ac27a7ceb40a4a1ad3e54d583edd1c4089b
+    uses: 9atatimer/tds-utils/.github/workflows/adherence.yml@b7390dc916108a5593b3d667d33c3e3bd08e9110
     permissions:
       contents: read
       pull-requests: read
     with:
-      tools_ref: 50214ac27a7ceb40a4a1ad3e54d583edd1c4089b
+      tools_ref: b7390dc916108a5593b3d667d33c3e3bd08e9110
       base: ${{ (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/tedium/')) && format('{0}^1', github.sha) || '' }}
       timeout_minutes: 15
     # The one credential: the adherence vault's read-only 1Password service
