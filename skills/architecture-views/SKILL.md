@@ -37,6 +37,10 @@ description: "Producing a repo's architecture view page, <system>-layers.html: t
   one through the adherence skill first. If that is out of scope, the page
   says in its framing line that the graph is undeclared, and draws nothing
   pretending to be layers.
+- **Build with the embedder.** `node <skill dir>/embed.mjs template.html
+  <layer-graph.json> <notes.json> <out.html>` fills the two JSON blocks
+  and writes `<out.html>.js` (the page script) for `node --check`. The
+  notes file holds only the per-repo prose, seams and runtime figure.
 - **Regenerate, do not patch.** The page is rebuilt from fresh JSON when
   the code moves. An edited node or edge in the embedded JSON is a
   fabricated record.
