@@ -78,20 +78,21 @@ footer { color: var(--muted); font-size: 13px; padding: 32px 16px 48px; }
 
 <!-- The verbatim JSON from `bin/layer-graph --root <repo>`. Never hand-edited. -->
 <script type="application/json" id="layer-graph">
-{"schema":"layer-graph/1","commit":"0000000","nodes":[],"edges":[],"findings":{"outward":[],"cycles":[],"unassigned":[]},"runtimes":[]}
+{"schema":"layer-graph/1","repo":"owner/repo","commit":"0000000","declarations":[],"layers":[],"runtimes":{},"nodes":[],"edges":[],"findings":{"outward":[],"cycles":[],"unassigned":[]},"stats":{}}
 </script>
 
 <!--
   Per-repo notes. Shape:
   {
-    "system": "Display name", "repo": "owner/name", "branch": "main",
+    "system": "Display name", "branch": "main",   (repo and commit come from the tool's JSON)
     "framing": "One line: what the reader is looking at.",
     "records": ["docs/design/DESIGN.X.md", "docs/design/ARCHITECTURE.X.md"],
     "nodes": { "<node id>": "What it holds, one line." },
     "costs": ["Plain-words cost of changing a subsystem, one entry per finding worth a sentence."],
     "seams": [ { "axis": "Where games are stored", "seam": "GameRepository", "kind": "port",
                  "port": "<node id>", "adapters": ["<node id>"], "roots": ["<node id>"],
-                 "implementations": "memory, R2" } ],
+                 "implementations": "memory, R2",
+                 "chosenIn": ["<node id>, only when no root supplies it and the core picks it"] } ],
                  (kind is port | policy | parameter; for a policy or parameter, "port" is the node that defines the value)
     "runtime": {
       "caption": "One paragraph: what crosses which gate.",
@@ -104,7 +105,7 @@ footer { color: var(--muted); font-size: 13px; padding: 32px 16px 48px; }
   }
 -->
 <script type="application/json" id="page-notes">
-{"system":"SYSTEM","repo":"owner/repo","branch":"main","framing":"","records":[],"nodes":{},"costs":[],"seams":[],"runtime":{"caption":"","nodes":[],"edges":[]}}
+{"system":"SYSTEM","branch":"main","framing":"","records":[],"nodes":{},"costs":[],"seams":[],"runtime":{"caption":"","nodes":[],"edges":[]}}
 </script>
 
 <header>
@@ -167,12 +168,17 @@ const system = N.system || "System";
 document.title = `${system} Layers`;
 document.getElementById("title").textContent = `${system}: layers and domains`;
 document.getElementById("framing").textContent = N.framing || "";
+/* layer-graph/1: repo, commit, declarations, layers, runtimes {name: [node ids]}, nodes, edges, findings, stats. */
+if (G.schema !== "layer-graph/1") document.getElementById("framing").textContent = `Unknown schema ${G.schema}: this template reads layer-graph/1 only.`;
+const commit = String(G.commit || "?").slice(0, 12), st = G.stats || {};
 document.getElementById("meta").textContent = [
-  `repo ${G.repo || N.repo || "?"}`, `branch ${G.branch || N.branch || "?"}`, `commit ${G.commit || "?"}`,
-  `schema ${G.schema || "layer-graph/1"}`, (N.records || []).length ? `records: ${N.records.join(", ")}` : ""
+  `repo ${G.repo || "?"}`, `branch ${N.branch || "?"}`, `commit ${commit}`, G.schema,
+  (G.declarations || []).length ? `declared in ${G.declarations.join(", ")}` : "UNDECLARED: no adherence.toml",
+  (N.records || []).length ? `records: ${N.records.join(", ")}` : ""
 ].filter(Boolean).join(" -- ");
 document.getElementById("footer").textContent =
-  `Drawn from the import graph tds-utils bin/layer-graph read at ${G.commit || "?"}, under the repo's adherence.toml. Test files are not drawn.`;
+  `Drawn by tds-utils bin/layer-graph from ${G.repo || "the repo"} at ${commit}: ${st.files ?? "?"} files, ${st.imports ?? "?"} imports` +
+  ` (${st.viaBarrel ?? 0} resolved through a package barrel to the module behind it, ${st.barrelFallback ?? 0} drawn to the barrel itself, ${st.unresolved ?? 0} unresolved). Test files are not drawn.`;
 
 /* ---------- layers: order, color ---------- */
 const CANON = ["composition root", "adapters", "application", "ports", "domain"];
@@ -180,16 +186,9 @@ const COLOR = { "composition root": "var(--root)", adapters: "var(--adapt)", app
 const EXTRA = ["var(--surface)", "var(--other)"];
 const nodes = (G.nodes || []).filter(n => n.layer && n.layer !== "test");
 const present = [...new Set(nodes.map(n => n.layer))];
-let order;
-if (Array.isArray(G.layers) && G.layers.length) {
-  order = G.layers.map(l => typeof l === "string" ? l : l.name).filter(l => present.includes(l));
-  present.forEach(l => { if (!order.includes(l)) order.push(l); });
-} else {
-  const unknown = present.filter(l => !CANON.includes(l)).sort();
-  order = CANON.filter(l => present.includes(l));
-  const at = Math.max(0, order.indexOf("application"));
-  order.splice(order.length ? at : 0, 0, ...unknown);
-}
+/* G.layers is the band order, outermost first; a layer it omits goes before application. */
+const order = (G.layers && G.layers.length ? G.layers : CANON).filter(l => present.includes(l));
+present.filter(l => !order.includes(l)).sort().forEach(l => order.splice(Math.max(0, order.indexOf("application")), 0, l));
 order.forEach((l, i) => { if (!COLOR[l]) COLOR[l] = EXTRA[i % EXTRA.length]; });
 const legend = document.getElementById("legend");
 legend.innerHTML = order.map(l => `<span style="--c:${COLOR[l]}">${esc(l)}</span>`).join("") +
@@ -198,18 +197,19 @@ legend.innerHTML = order.map(l => `<span style="--c:${COLOR[l]}">${esc(l)}</span
 /* ---------- edges ---------- */
 const byId = new Map(nodes.map(n => [n.id, n]));
 const label = n => n.context || n.id;
+/* A context name can repeat across layers (table in application and domain): qualify it wherever text names a node. */
+const dup = new Set(nodes.map(label).filter((c, i, a) => a.indexOf(c) !== i));
+const qual = n => dup.has(label(n)) ? `${label(n)} (${n.layer})` : label(n);
 const edges = (G.edges || []).filter(e => byId.has(e.from) && byId.has(e.to) && e.from !== e.to)
   .map(e => ({ s: e.from, t: e.to, n: e.imports || 1, dir: e.direction || "inward" }));
 const pair = new Set(edges.map(e => e.s + ">" + e.t));
 const inCycle = new Set();
-(G.findings && G.findings.cycles || []).forEach(c => {
-  const ids = Array.isArray(c) ? c : (c.nodes || c.members || []);
-  for (const a of ids) for (const b of ids) if (a !== b) inCycle.add(a + ">" + b);
-});
+((G.findings || {}).cycles || []).forEach(ids => { for (const a of ids) for (const b of ids) if (a !== b) inCycle.add(a + ">" + b); });
 edges.forEach(e => { e.amber = pair.has(e.t + ">" + e.s) || inCycle.has(e.s + ">" + e.t); });
 
 /* ---------- layout: bands, rows, barycenter order ---------- */
-const NW = 132, NH = 44, GAPX = 14, LEFT = 150, PER_ROW = 7, ROWGAP = 22, TOP = 30;
+/* A band wider than PER_ROW wraps into rows; alternate rows are offset half a slot so edges pass between boxes. */
+const NW = 150, NH = 44, GAPX = 16, LEFT = 130, PER_ROW = 6, ROWGAP = 26, TOP = 30, CHARS = 20;
 const band = {};
 order.forEach(l => band[l] = nodes.filter(n => n.layer === l).sort((a, b) => label(a).localeCompare(label(b))));
 const nbrs = id => edges.filter(e => e.s === id || e.t === id).map(e => e.s === id ? e.t : e.s);
@@ -224,15 +224,17 @@ for (let pass = 0; pass < 4; pass++) {
   reindex();
 }
 const maxRow = Math.max(1, ...order.map(l => Math.min(PER_ROW, band[l].length)));
-const W = Math.max(900, LEFT + maxRow * (NW + GAPX) + 20);
+const W = Math.max(900, LEFT + maxRow * (NW + GAPX) + (NW + GAPX) / 2 + 20);
 const pos = {}, bandTop = {};
 let y = TOP;
 order.forEach(l => {
-  const list = band[l], rows = Math.max(1, Math.ceil(list.length / PER_ROW));
+  const list = band[l], rows = Math.max(1, Math.ceil(list.length / PER_ROW)), per = Math.ceil(list.length / rows);
   bandTop[l] = y;
   for (let r = 0; r < rows; r++) {
-    const row = list.slice(r * PER_ROW, (r + 1) * PER_ROW), step = (W - LEFT - 20) / row.length;
-    row.forEach((n, i) => pos[n.id] = { x: LEFT + step * i + (step - NW) / 2, y: y + r * (NH + ROWGAP) });
+    const row = list.slice(r * per, (r + 1) * per), slot = NW + GAPX;
+    const step = rows > 1 ? slot : (W - LEFT - 20) / row.length;
+    const x0 = LEFT + (rows > 1 ? (PER_ROW - row.length) * slot / 2 + (r % 2) * slot / 2 : 0);
+    row.forEach((n, i) => pos[n.id] = { x: x0 + step * i + (step - NW) / 2, y: y + r * (NH + ROWGAP) });
   }
   const lateral = edges.some(e => byId.get(e.s).layer === l && byId.get(e.t).layer === l);
   y += rows * (NH + ROWGAP) - ROWGAP + (lateral ? 70 : 0) + 56;
@@ -273,14 +275,14 @@ edges.forEach(e => {
   const p = el("path", { d, class: "edge", stroke: col, "stroke-width": w.toFixed(1), "marker-end": `url(#${mk})` }, gE);
   e.el = p;
   const what = e.dir === "outward" ? "OUTWARD: an inner layer importing an outer one" : e.dir === "lateral" ? "lateral, same layer" : "inward";
-  tip(p, `${label(byId.get(e.s))} imports ${label(byId.get(e.t))}: ${plural(e.n, "import")} (${what}${e.amber ? "; mutual or in a cycle" : ""})`);
+  tip(p, `${qual(byId.get(e.s))} imports ${qual(byId.get(e.t))}: ${plural(e.n, "import")} (${what}${e.amber ? "; mutual or in a cycle" : ""})`);
 });
 nodes.forEach(n => {
   const p = pos[n.id], c = COLOR[n.layer];
   const g = el("g", { class: "node", tabindex: "0", role: "button", "aria-label": `${label(n)}, ${n.layer}` }, gN);
   g.dataset.k = n.id;
   el("rect", { x: p.x, y: p.y, width: NW, height: NH, rx: 7, fill: "var(--bg)", stroke: c, "stroke-width": 1.6 }, g);
-  const name = label(n), short = name.length > 19 ? name.slice(0, 18) + "..." : name;
+  const name = label(n), short = name.length > CHARS ? name.slice(0, CHARS - 3) + "..." : name;
   el("text", { x: p.x + NW / 2, y: p.y + 19, "text-anchor": "middle", "font-size": "12.5", "font-weight": "600", fill: c }, g).textContent = short;
   const fc = n.fileCount != null ? n.fileCount : (n.files || []).length;
   el("text", { x: p.x + NW / 2, y: p.y + 35, "text-anchor": "middle", "font-size": "11", fill: "var(--muted)" }, g).textContent = `[${plural(fc, "file")}]`;
@@ -313,23 +315,24 @@ function select(k) {
   const fl = files.length ? `<details><summary>${plural(files.length, "file")}</summary><ul>${files.map(f => `<li><code>${esc(f)}</code></li>`).join("")}</ul></details>` : "";
   panel.innerHTML = `<div class="layer">${esc(n.layer)}${(n.runtimes || []).length ? " -- " + esc(n.runtimes.join(", ")) : ""}</div><h3>${esc(label(n))}</h3>
     <p>${esc((N.nodes || {})[k] || "")}</p><p><code>${esc(n.id)}</code></p>${fl}
-    <strong>Imports</strong>${li(out.map(e => ({ label: label(byId.get(e.t)), n: e.n })))}
-    <strong>Imported by</strong>${li(inn.map(e => ({ label: label(byId.get(e.s)), n: e.n })))}`;
+    <strong>Imports</strong>${li(out.map(e => ({ label: qual(byId.get(e.t)), n: e.n })))}
+    <strong>Imported by</strong>${li(inn.map(e => ({ label: qual(byId.get(e.s)), n: e.n })))}`;
 }
 
 /* ---------- findings ---------- */
 (function findings() {
   const box = document.getElementById("findings");
   const F = G.findings || {}, outward = F.outward || [], cycles = F.cycles || [], unassigned = F.unassigned || [];
-  const show = x => typeof x === "string" ? x : Array.isArray(x) ? x.join(" -> ") : x.from ? `${x.from} -> ${x.to}${x.imports ? " (" + x.imports + ")" : ""}` : JSON.stringify(x);
+  /* outward: [{from, to, imports}]; cycles: [[node ids]]; unassigned: [file paths]. */
+  const edgeText = x => `${x.from} -> ${x.to} (${plural(x.imports, "import")})`, cycleText = ids => ids.join(" <-> ");
   const holds = [];
   if (!outward.length) holds.push("no edge points outward: no inner layer imports an outer one");
   if (!cycles.length) holds.push("no cycles between contexts");
   if (!unassigned.length) holds.push("every measured file sits in a declared layer");
   let html = holds.length ? `<div class="finding holds"><strong>Holds:</strong> ${esc(holds.join("; "))}.</div>` : "";
-  if (outward.length) html += `<div class="finding bad"><strong>Outward edges (${outward.length}):</strong> an inner layer reaches out; the outer module cannot change without the inner one. <ul>${outward.map(x => `<li><code>${esc(show(x))}</code></li>`).join("")}</ul></div>`;
-  if (cycles.length) html += `<div class="finding"><strong>Cycles (${cycles.length}):</strong> these modules import each other, so none of them can be replaced alone. <ul>${cycles.map(x => `<li><code>${esc(show(x))}</code></li>`).join("")}</ul></div>`;
-  if (unassigned.length) html += `<div class="finding"><strong>Unassigned files (${unassigned.length}):</strong> in no declared layer, so nothing above judges them. <ul>${unassigned.map(x => `<li><code>${esc(show(x))}</code></li>`).join("")}</ul></div>`;
+  if (outward.length) html += `<div class="finding bad"><strong>Outward edges (${outward.length}):</strong> an inner layer reaches out; the outer module cannot change without the inner one. <ul>${outward.map(x => `<li><code>${esc(edgeText(x))}</code></li>`).join("")}</ul></div>`;
+  if (cycles.length) html += `<div class="finding"><strong>Cycles (${cycles.length}):</strong> these modules import each other, so none of them can be replaced alone. <ul>${cycles.map(x => `<li><code>${esc(cycleText(x))}</code></li>`).join("")}</ul></div>`;
+  if (unassigned.length) html += `<div class="finding"><strong>Unassigned files (${unassigned.length}):</strong> in no declared layer, so nothing above judges them. <ul>${unassigned.map(x => `<li><code>${esc(x)}</code></li>`).join("")}</ul></div>`;
   (N.costs || []).forEach(c => html += `<div class="finding"><strong>Cost of change:</strong> ${esc(c)}</div>`);
   box.innerHTML = html;
 })();
@@ -337,18 +340,21 @@ function select(k) {
 /* ---------- seams ---------- */
 (function seams() {
   const body = document.getElementById("seams");
-  const names = ids => ids.map(id => byId.has(id) ? label(byId.get(id)) : id + " (not in graph)").join(", ") || "(no root named)";
+  const names = ids => ids.map(id => byId.has(id) ? qual(byId.get(id)) : id + " (not in graph)").join(", ") || "(no root named)";
   (N.seams || []).forEach(s => {
-    const adapters = s.adapters || [], roots = s.roots || [];
-    const set = new Set([s.port, ...adapters, ...roots].filter(Boolean));
+    const adapters = s.adapters || [], roots = s.roots || [], chosen = s.chosenIn || [];
+    const set = new Set([s.port, ...adapters, ...roots, ...chosen].filter(Boolean));
     const inside = edges.filter(e => set.has(e.s) && set.has(e.t));
-    const bypass = edges.filter(e => adapters.includes(e.t) && !set.has(e.s));
+    /* A composition root importing an adapter is wiring; anything else importing the seam's adapters or roots goes around the port. */
+    const bypass = edges.filter(e => (adapters.includes(e.t) || roots.includes(e.t)) && !set.has(e.s) && byId.get(e.s).layer !== "composition root");
     const kind = ["port", "policy", "parameter"].includes(s.kind) ? s.kind : "port";
     const write = { port: `write a new adapter for ${s.seam}; wire it in`, policy: `write a new ${s.seam} policy; hand it in from`, parameter: `supply a new ${s.seam} value from` }[kind];
-    const text = `To change ${s.axis.toLowerCase()}: ${write} ${names(roots)}; `;
+    const text = roots.length
+      ? `To change ${s.axis.toLowerCase()}: ${write} ${names(roots)}; `
+      : `To change ${s.axis.toLowerCase()}: write a new ${s.seam} ${kind === "parameter" ? "value" : kind}; no composition root supplies it today, so select it in ${chosen.length ? names(chosen) : "the core"}; `;
     const also = bypass.length
-      ? `<span class="also">also changes: ${esc(bypass.map(e => `${label(byId.get(e.s))} (imports ${label(byId.get(e.t))} directly, ${e.n})`).join("; "))}.</span>`
-      : "nothing else changes.";
+      ? `<span class="also">also changes: ${esc(bypass.map(e => `${qual(byId.get(e.s))} (imports ${qual(byId.get(e.t))} directly, ${e.n})`).join("; "))}.</span>`
+      : roots.length ? "nothing else changes." : "the swap edits the core, not the root.";
     const tr = document.createElement("tr");
     tr.className = "seam"; tr.tabIndex = 0;
     tr.innerHTML = `<td>${esc(s.axis)}</td><td><code>${esc(s.seam)}</code></td><td>${kind}</td><td>${esc(s.implementations || "")}</td><td>${esc(text)}${also}</td>`;
@@ -401,7 +407,7 @@ function select(k) {
     c.forEach((n, i) => {
       if (n.transparent) { box[n.id] = { x: cx - 11, y: 20, w: 22, h: RH - 40, band: true }; return; }
       const store = n.kind !== "client" && n.kind !== "gate" && n.kind !== "service";
-      const w = store ? 130 : 170, h = store ? 44 : 70, step = (RH - 40) / c.length;
+      const w = store ? 130 : 200, h = store ? 44 : 70, step = (RH - 40) / c.length;
       box[n.id] = { x: cx - w / 2, y: 20 + step * i + (step - h) / 2, w, h };
     });
   });
@@ -437,9 +443,12 @@ function select(k) {
     } else {
       const x1 = a.x + a.w, y1 = a.y + a.h / 2, x2 = b.x - 2, y2 = b.y + b.h / 2, mx = (x1 + x2) / 2;
       d = `M${x1},${y1} C ${mx},${y1} ${mx},${y2} ${x2},${y2}`;
-      /* Label past the midpoint, so it never sits on a gate band the path crosses. */
-      const t = e.via ? 0.75 : 0.5, u = 1 - t, bz = (p0, p1, p2, p3) => u * u * u * p0 + 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t * p3;
-      lx = bz(x1, mx, mx, x2); ly = bz(y1, y1, y2, y2) - 6;
+      /* A path through a band gate is labeled midway between the band and its target, never on the band. */
+      const g = e.via && box[e.via] && box[e.via].band ? box[e.via] : null, want = g ? (g.x + g.w + x2) / 2 : mx;
+      const bz = (t, p0, p1, p2, p3) => { const u = 1 - t; return u * u * u * p0 + 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t * p3; };
+      let best = 0.5;
+      for (let t = 0; t <= 1; t += 0.01) if (Math.abs(bz(t, x1, mx, mx, x2) - want) < Math.abs(bz(best, x1, mx, mx, x2) - want)) best = t;
+      lx = bz(best, x1, mx, mx, x2); ly = bz(best, y1, y1, y2, y2) - 7;
     }
     const col = e.bad ? "var(--bad)" : "var(--muted)";
     const attrs = { d, stroke: col, "marker-end": `url(#${e.bad ? "rt-bad" : "rt-ink"})` };

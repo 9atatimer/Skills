@@ -20,11 +20,19 @@ description: "Producing a repo's architecture view page, <system>-layers.html: t
   <repo>` and embed its JSON verbatim. Never hand-assemble nodes or edges
   from memory, from the design record, or from the architecture record's
   module map: those say what was intended, the page shows what is.
-- **Schema `layer-graph/1`:** `nodes` {id, layer, context, files,
-  fileCount, runtimes}; `edges` {from, to, imports, direction:
-  inward|lateral|outward}; `findings` {outward, cycles, unassigned};
-  `runtimes`; `commit`. A field the template does not know is ignored; a
-  missing field degrades the page, never the data.
+- **Schema `layer-graph/1`**, the only shape the template reads:
+  - `repo`, `commit`, `declarations` (the adherence files read), `layers`
+    (band order, outermost first);
+  - `nodes` {id, layer, context, files, fileCount, runtimes}, ids like
+    `domain/kernel` or `composition root/app:composition`;
+  - `edges` {from, to, imports, direction: inward|lateral|outward};
+  - `runtimes` {name: [node ids]};
+  - `findings`: `outward` [{from, to, imports}], `cycles` [[node ids]],
+    `unassigned` [file paths];
+  - `stats` {files, imports, unresolved, viaBarrel, barrelFallback}, shown
+    in the footer.
+- **A new schema version is a template change**, made here in this skill,
+  never a per-repo patch of the page.
 - **The tool reads the repo's `adherence.toml`.** A repo without one gets
   one through the adherence skill first. If that is out of scope, the page
   says in its framing line that the graph is undeclared, and draws nothing
@@ -58,6 +66,10 @@ description: "Producing a repo's architecture view page, <system>-layers.html: t
     `layers` order when given, else root, adapters, application, ports,
     domain.
   - Every node a box colored by its layer, labeled with its file count.
+    A band wider than six boxes wraps into balanced, staggered rows; no box
+    overlaps another and every label fits its box.
+  - A context name used in two layers (`table` in application and domain)
+    is qualified with its layer wherever text names it.
   - Every edge a curve whose width scales with its import count; arrows
     point inward, down the page.
   - Same-layer (lateral) edges are arcs below their band.
@@ -147,10 +159,14 @@ changes?".
 - **The row reads:** "To change <axis>: write a new adapter for <port>;
   wire it in <roots>; nothing else changes." A policy or parameter row says
   the same with a new value.
-- **The graph overrules the sentence.** An edge into one of the seam's
-  adapters from outside its roots means something else changes; the
-  template replaces "nothing else changes" with the importing nodes, in
-  red. Report it as a finding too.
+- **A seam no root supplies** (a policy the core picks for itself) names
+  the node that picks it in `chosenIn`; its row says the swap edits the
+  core, not the root. That is a finding about the seam, stated plainly.
+- **The graph overrules the sentence.** A non-root node importing one of
+  the seam's adapters or roots means something else changes; the template
+  replaces "nothing else changes" with the importing nodes, in red. A root
+  importing an adapter is wiring, not a bypass. Report it as a finding
+  too.
 - **Clicking a row lights exactly those nodes and edges** in the layer
   graph, and the side panel repeats the sentence.
 
