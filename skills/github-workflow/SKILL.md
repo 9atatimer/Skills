@@ -59,6 +59,12 @@ directory: provisioning overwrites it every session.
 - Run `git branch --show-current` before any git operation.
 - On the default branch: stop, warn the human, do not proceed.
 - Every change goes on a feature branch and merges through a pull request.
+- Never rewrite or discard history, on any branch, clean tree or not:
+  no `reset --hard`, no `checkout -- <path>` over edits that are not
+  yours, no amend or rebase of a pushed commit, no force-push. To bring
+  a local default branch up to date, `git pull --ff-only origin
+  <default>`; if that refuses, the branch has diverged and the human
+  decides.
 
 ## Gates are phase 6
 
