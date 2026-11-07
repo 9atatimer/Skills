@@ -24,7 +24,7 @@ expensive:
 | 1 | Pre-commit hooks -- lint, build, test, gitleaks, trivy, semgrep | your machine | Git Hook Discipline, below |
 | 2 | CI status checks | the PR | read the job log, fix, push |
 | 3 | ci.magic assertions | the PR | the assertion names the file and the violation |
-| 4 | Agentic review (OCR by default; Copilot or Codex only when the human summons one; never on a documentation-only PR) | the PR | the review-watch loop, below; Spend Review Turns on Load-Bearing Fixes says when a turn is owed |
+| 4 | Agentic review (OCR by default; Copilot or Codex only when the human summons one; never on a Markdown-only PR) | the PR | the review-watch loop, below; Spend Review Turns on Load-Bearing Fixes says when a turn is owed |
 | 5 | Review settled and merge authorization by the gates: the repo's required check `gate` plus the `review-settled` status, both green on the head | the PR | address or defer; never merge around it. On a repo without `tedium.toml`, a human reviews and merges |
 
 **A red gate is a diagnosis prompt, not an obstacle.** The laws below
@@ -212,13 +212,11 @@ find a new defect in" is.
 
 A PR is **documentation-only** when every changed file is human-read
 prose: a README, a `docs/` runbook or as-built, `TODO_PLAN.md`, task
-files, a changelog, a comment-only edit to source. Such a PR never
-summons OCR and never asks a human to summon Copilot or Codex. The adversarial
-self-review (the self-review skill) is the whole review: it satisfies
-Zero Unreviewed Code for that PR, its ledger on the PR is the record,
-and there is no review-watch loop. Where the repo requires
-`review-settled`, the status stays red on such a PR: a human lands it,
-and the agent never summons a reviewer to turn it green.
+files, a changelog, a comment-only edit to source. Such a PR summons no
+reviewer. The adversarial self-review (the self-review skill) is the
+whole review: it satisfies Zero Unreviewed Code for that PR, its ledger
+on the PR is the record, and there is no review-watch loop. Where the
+repo requires `review-settled`, it stays red: a human lands it.
 
 - **Except a design or architecture draft in phases 2 and 3.** A design
   record under review (`docs/design/`) or a phase-3 seam map gets the
@@ -227,14 +225,10 @@ and the agent never summons a reviewer to turn it green.
 - **Operating rules are not documentation.** Skills, personas,
   `AGENT.md`/`CLAUDE.md`, prompts, CI workflows and gate configuration
   are executed by an agent or a gate; a PR touching any of them takes the
-  full ladder. This is the self-review skill's Sizing rule: no
-  "docs-only" discount for operating rules. The ladder's agentic rung
-  is OCR, and OCR reads source only; it skips Markdown (the self-review
-  skill, Adapters). So a PR whose every changed file is Markdown, a skill
-  or persona or `AGENT.md` included, never posts `/ocr`: the summons can
-  only answer "no items were selected" and costs a run. Its
-  three-panelist self-review is the agentic rung; the human review is
-  still owed. Post `/ocr` only when the diff holds a file OCR reads.
+  full ladder (the self-review skill's Sizing rule). OCR skips Markdown
+  (the self-review skill, Adapters), so a Markdown-only PR, operating
+  rules included, never posts `/ocr`: its three-panelist self-review is
+  the agentic rung, and the human review is still owed.
 - **A PR that mixes documentation with anything else is not
   documentation-only.**
 - **A pin bump gets no agentic reviewer either.** A PR whose only change
