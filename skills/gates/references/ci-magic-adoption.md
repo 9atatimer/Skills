@@ -23,13 +23,14 @@ sides of the account boundary:
   | Consumer owner | `uses:` line in `.github/workflows/ci-magic.yml` |
   |---|---|
   | `Nine-At-A-Time-Media` | `Nine-At-A-Time-Media/template-tools/packages/naatm-ci-magic@main` (the source) |
-  | `9atatimer` | `9atatimer/ci-magic@main` (the mirror, synced from the source on every push to template-tools `main`) |
+  | `9atatimer` | `9atatimer/ci-magic@main` (the mirror, synced from the source on every push to template-tools `main` that touches the package) |
 
   An owner with no row has no mirror and cannot run ci.magic until the
   playbook stands one up. **The template carries the org's line**, so a
   9atatimer repository made from template-base fails every run at "Set up
-  job" with `Unable to resolve action nine-at-a-time-media/template-tools,
-  repository not found` until its `uses:` is switched to the mirror's.
+  job" with ``Unable to resolve action `nine-at-a-time-media/template-tools`,
+  repository not found`` (the log line, verbatim) until its `uses:` is
+  switched to the mirror's.
   That failure is the reference, never the credential, and no secret
   fixes it.
 - **The credential** (`CI_MAGIC_OP_SA_TOKEN`) is an org secret for an
