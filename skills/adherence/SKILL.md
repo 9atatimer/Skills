@@ -157,10 +157,13 @@ The caller shapes, scope lines and CODEOWNERS lines are in
   `ci.yml`), the job carries no `if:`; where a skip is a pass (tds-utils
   `dist-ci.yml`, template-tools `gate.yml`), it carries the scope and the
   fork guard in `if:`.
-- **Bump pins by PR**, both lines in one commit, and merge the default
-  branch into open branches after a bump: the engine is fetched at the PR
-  head, and a branch cut before an engine change runs the old engine
-  against the new workflow and dies on an unknown option.
+- **Bump pins by PR**, both lines in one commit, only to a commit on
+  tds-utils master. An adopter's branch cut before a bump keeps the old
+  pair, so its workflow and engine still agree. Only tds-utils itself
+  fetches the engine at the PR head (`dist-ci.yml` passes the head sha as
+  `tools_ref`), so there, and only there, a branch cut before an engine
+  change must merge master first or it runs the old engine against the new
+  workflow and dies on an unknown option.
 
 Rollback is the reverse: remove the job from `gate`'s `needs` and the
 check from branch protection. An `adherence.toml` may stay; without a
@@ -205,10 +208,11 @@ unit, evidence and provenance: the fix is read from the report.
 - **Lowered.** Fix each introduced finding in the code. When you believe
   a finding is wrong, cut an issue on tds-utils citing the rulings log
   (tds-utils Issue#590), name the finding and the evidence, and let the
-  owner rule. In the PR that drew the finding never edit an
-  `adherence.toml`, add an exemption, loosen a limit, remove the job from
-  `gate`'s `needs`, or move the pins. The engine refuses most of these on
-  its own; the rest is the gates skill's law.
+  owner rule. To clear a finding, never edit an `adherence.toml`, add an
+  exemption, loosen a limit, remove the job from `gate`'s `needs`, or move
+  the pins, in that PR or in one before it: an exemption is the owner's
+  act, proposed on the issue and landed by the owner. The engine refuses
+  most of these on its own; the rest is the gates skill's law.
 - **Inconclusive.** A pass with named coverage. Read the coverage lines:
   an analyzer missing on the runner, the judge unbound, a judged-check
   budget spent, CI out of time, a base that could not be measured the same
