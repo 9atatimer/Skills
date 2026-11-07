@@ -91,9 +91,9 @@ No values here. The as-built holds them.
 
 ## Radar proposals
 
-| Dependency | Ring proposed | Why |
-|---|---|---|
-| | | |
+| Dependency or platform feature | Ring proposed | Tier needed, checked against | Why |
+|---|---|---|---|
+| | | | |
 
 ---
 
