@@ -236,14 +236,16 @@ error.
 - Production is `workflow_dispatch` only. Its deploy job requires a text
   input equal to `production` before it reads prod credentials or deploys.
   That explicit confirmation is the sufficient production control. The job
-  may name the `production` Environment to select prod-scoped credentials.
-  A repo may add a reviewer gate or branch restriction, but neither is a
-  fleet requirement.
+  names the `production` Environment that supplies prod-scoped credentials.
+  That Environment selects credentials; it is not an approval gate. A repo
+  may add a reviewer gate or branch restriction, but neither is a fleet
+  requirement.
 - **Declare the posture in the repo and check it in CI**: a file
-  listing each deploy workflow, the furthest stage it can reach, and
-  the environment that gates it, with a script that fails the PR when a
-  workflow reaches production ungated or an automatic trigger can pass
-  a production target. A protection nobody asserts is a protection
+  listing each deploy workflow, the furthest stage it can reach, its
+  production confirmation, and the Environment that supplies its tiered
+  credentials. A script fails the PR when a workflow reaches production
+  without the confirmation or credential boundary, or an automatic trigger
+  can pass a production target. A protection nobody asserts is a protection
   nobody notices the removal of.
 - Resolve everything stage-derived in ONE step before any credential is
   read; write the env flag to `GITHUB_ENV`; never interpolate the

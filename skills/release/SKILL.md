@@ -98,10 +98,11 @@ reader; keep it legible to a human.
   the conversation, unless `AGENT.md` records an automatic path.
 - A manual prod workflow is sufficiently controlled when it is
   `workflow_dispatch` only and its deploy job refuses to run unless its
-  required text input is exactly `production`. The job may name the
-  `production` Environment to select prod-scoped credentials. Do not add a
-  reviewer gate, branch restriction, or another confirmation unless the
-  consuming repo requires one.
+  required text input is exactly `production`. Where deploy credentials are
+  tiered, the job names the `production` Environment that supplies the
+  prod-scoped credential. That Environment selects credentials; it is not an
+  approval gate. Do not add a reviewer gate, branch restriction, or another
+  confirmation unless the consuming repo requires one.
 - Build once, promote the artifact, wherever stage differences are
   runtime config (bindings, vars, secrets). Where the platform bakes
   config in at build time (Nuxt runtime config on Workers), build each
