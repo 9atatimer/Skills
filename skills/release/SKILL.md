@@ -96,6 +96,12 @@ reader; keep it legible to a human.
   prerelease dist-tag, a PR preview) or says none, and why.
 - Agents deploy to nonprod unattended. Prod is a human's call, named in
   the conversation, unless `AGENT.md` records an automatic path.
+- A manual prod workflow is sufficiently controlled when it is
+  `workflow_dispatch` only and its deploy job refuses to run unless its
+  required text input is exactly `production`. The job may name the
+  `production` Environment to select prod-scoped credentials. Do not add a
+  reviewer gate, branch restriction, or another confirmation unless the
+  consuming repo requires one.
 - Build once, promote the artifact, wherever stage differences are
   runtime config (bindings, vars, secrets). Where the platform bakes
   config in at build time (Nuxt runtime config on Workers), build each

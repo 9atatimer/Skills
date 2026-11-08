@@ -233,13 +233,12 @@ error.
   reflexive "Run workflow" must land on the least consequential stage.
   A `workflow_call` form lets CD chain the same file with the same
   guards.
-- Production needs three things at once: the run is on the default
-  branch, a typed `confirm` equal to a value the operator would only
-  type on purpose, and a GitHub Environment that requires a human
-  reviewer. **The typed confirm is a fat-finger guard, not authority**:
-  its value is in the repo, an agent can read it, and being able to
-  clear a guard is not being permitted to. The environment with a
-  required reviewer is the gate; every job that ships names it.
+- Production is `workflow_dispatch` only. Its deploy job requires a text
+  input equal to `production` before it reads prod credentials or deploys.
+  That explicit confirmation is the sufficient production control. The job
+  may name the `production` Environment to select prod-scoped credentials.
+  A repo may add a reviewer gate or branch restriction, but neither is a
+  fleet requirement.
 - **Declare the posture in the repo and check it in CI**: a file
   listing each deploy workflow, the furthest stage it can reach, and
   the environment that gates it, with a script that fails the PR when a
