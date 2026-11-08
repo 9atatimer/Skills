@@ -59,6 +59,25 @@ a hook for what is specific to one agent's config surface.
   public repository.
 - **Idempotent.** Running the hook twice changes nothing the second time.
 
+## Each agent spends under its own name
+
+Agents that share a model gateway never share its credential. Each agent
+authenticates with a token of its own and tags every request with its
+own name in the gateway's metadata (for the Cloudflare AI Gateway,
+`cf-aig-metadata: {"tool":"<agent>"}`), so the gateway's logs and spend
+limits show what each agent cost and one agent can be revoked or capped
+alone.
+
+- The token lives in the vault for agent (non-human) credentials, one
+  item per agent, and the agent's hook writes only its reference.
+- A shared item (gateway base URL, gateway id) may supply the routing;
+  the key is always the agent's own.
+- Adding an agent means asking the human for that agent's token, or
+  minting one per the infra-credentials skill; never pointing it at
+  another agent's.
+- The infra repo's credential registry records the item: who made it,
+  which agent reads it.
+
 ## Agents read each other's config
 
 Several agents import other agents' configuration: omp, for one, loads
@@ -77,8 +96,9 @@ disabled list, read from a sibling `.conf` file.
   never a fetched install script.
 - Add `clai.d/<agent>/pre/05-provision` (copy an existing agent's) so the
   agent provisions like the rest.
-- Add the hooks its config surface needs: model provider and credential
-  reference, default model, disable list for servers it imports but must
+- Add the hooks its config surface needs: model provider and its own
+  credential reference (Each agent spends under its own name), default
+  model, disable list for servers it imports but must
   not run.
 - Add `alias <agent>='clai <agent>'` beside the others in tds-utils.
 - If it has an MCP config dialect clai does not emit, file an Issue on
