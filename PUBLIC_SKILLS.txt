@@ -10,6 +10,7 @@ as-built
 aws-ops
 cdp-browser
 chrome-mcp
+clai
 cloudflare-hosting
 cloudflare-think
 coding
