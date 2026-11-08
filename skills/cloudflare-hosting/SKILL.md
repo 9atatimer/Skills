@@ -233,18 +233,19 @@ error.
   reflexive "Run workflow" must land on the least consequential stage.
   A `workflow_call` form lets CD chain the same file with the same
   guards.
-- Production needs three things at once: the run is on the default
-  branch, a typed `confirm` equal to a value the operator would only
-  type on purpose, and a GitHub Environment that requires a human
-  reviewer. **The typed confirm is a fat-finger guard, not authority**:
-  its value is in the repo, an agent can read it, and being able to
-  clear a guard is not being permitted to. The environment with a
-  required reviewer is the gate; every job that ships names it.
+- Production is `workflow_dispatch` only. Its deploy job requires a text
+  input equal to `production` before it reads prod credentials or deploys.
+  That explicit confirmation is the sufficient production control. The job
+  names the `production` Environment that supplies prod-scoped credentials.
+  That Environment selects credentials; it is not an approval gate. A repo
+  may add a reviewer gate or branch restriction, but neither is a fleet
+  requirement.
 - **Declare the posture in the repo and check it in CI**: a file
-  listing each deploy workflow, the furthest stage it can reach, and
-  the environment that gates it, with a script that fails the PR when a
-  workflow reaches production ungated or an automatic trigger can pass
-  a production target. A protection nobody asserts is a protection
+  listing each deploy workflow, the furthest stage it can reach, its
+  production confirmation, and the Environment that supplies its tiered
+  credentials. A script fails the PR when a workflow reaches production
+  without the confirmation or credential boundary, or an automatic trigger
+  can pass a production target. A protection nobody asserts is a protection
   nobody notices the removal of.
 - Resolve everything stage-derived in ONE step before any credential is
   read; write the env flag to `GITHUB_ENV`; never interpolate the
