@@ -37,6 +37,7 @@ plannotator-last
 plannotator-review
 realchrome-cdp
 release
+repo-bootstrap
 retrospective
 sdlc
 self-review
