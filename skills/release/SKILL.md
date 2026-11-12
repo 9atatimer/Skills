@@ -93,7 +93,7 @@ reader; keep it legible to a human.
   `production` (the infra-credentials skill); `prod` is the stage's
   short name, not an environment name.
 - "nonprod" is the quality of not being prod, never a tier's name
-  (owner, 2026-11-11; tds-internal `docs/policy/INFRASTRUCTURE.md`). It
+  (owner, 2026-11-11; the infra repo's infrastructure policy). It
   names what serves every non-prod tier: a vault, a service account, a
   state bucket. A tier already named `nonprod` keeps that name until
   someone renames it on purpose.
