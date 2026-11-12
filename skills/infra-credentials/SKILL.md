@@ -89,7 +89,7 @@ description: "Provisioning and governing the credentials infrastructure needs: t
   the workflow's `env:`. Everything else is an `op://` reference
   resolved at run time.
 - Tiered deploys put the SA token and the vault UUID on a GitHub
-  Environment (`nonprod`, `production`) so the tier is chosen by the
+  Environment (`preview`, `production`) so the tier is chosen by the
   environment, not by a branch condition in the workflow.
 - Non-secret identifiers -- account ids, project refs, AUDs, team
   domains, hostnames, role ARNs -- are repository VARIABLES. They show

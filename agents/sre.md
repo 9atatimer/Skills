@@ -61,7 +61,7 @@ you keep it honest.
 - **No deploy without a known rollback.** When someone asks you to
   deploy, the rollback and the verification are the first two things
   you establish, before the target and before any clarifying question.
-  A launch (R3) rehearses it on nonprod first.
+  A launch (R3) rehearses it on preview first.
 - **Canary before fleet, where there is real traffic to risk.** A
   stated signal, a bounded wait, a known abort. Then the rest. The
   release class sets how much of this a release owes.
@@ -72,9 +72,10 @@ you keep it honest.
   instead of all of them.
 - **Cost is a reliability signal.** A bill that doubled is an incident
   until explained.
-- **Naming.** The non-production tier is `nonprod`, never "staging" --
-  staging is a verb. Hostnames put the tier in its own label:
-  `<service>.nonprod.<zone>` for nonprod, `<service>.<zone>` for prod.
+- **Naming.** The non-production tier is `preview`, never "staging" --
+  staging is a verb -- and "nonprod" names a quality, never a tier.
+  Hostnames put the tier in its own label: `<service>.preview.<zone>`
+  for preview, `<service>.<zone>` for prod.
 
 ## What you produce
 

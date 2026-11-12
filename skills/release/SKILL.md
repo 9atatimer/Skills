@@ -1,6 +1,6 @@
 ---
 name: release
-description: "Phase 7 of the SDLC: shipping -- deploy, publish, or tag -- so the next change ships faster. Release classes (R0-R3) that scale the bar with blast radius; the per-component runbook (ship, verify, roll back, debug, gotchas); docs as gotchas written for LLM readers; nonprod/prod stages; per-platform distribution smoke; debuggability on OpenTelemetry (traces, logs, events, metrics), landing today in platform-native logs and LMDE metrics; turning release failures into hook and CI checks; rollout, flags and rollback; supply chain; launch readiness for new components. Load when shipping anything, writing or fixing a deploy or publish workflow, adding a stage or telemetry, wiring a deploy credential, or diagnosing a red CD run. Skip for PR/CI flow with no deploy boundary (github-workflow, gates) and terraform itself (iac)."
+description: "Phase 7 of the SDLC: shipping -- deploy, publish, or tag -- so the next change ships faster. Release classes (R0-R3) that scale the bar with blast radius; the per-component runbook (ship, verify, roll back, debug, gotchas); docs as gotchas written for LLM readers; preview/prod stages; per-platform distribution smoke; debuggability on OpenTelemetry (traces, logs, events, metrics), landing today in platform-native logs and LMDE metrics; turning release failures into hook and CI checks; rollout, flags and rollback; supply chain; launch readiness for new components. Load when shipping anything, writing or fixing a deploy or publish workflow, adding a stage or telemetry, wiring a deploy credential, or diagnosing a red CD run. Skip for PR/CI flow with no deploy boundary (github-workflow, gates) and terraform itself (iac)."
 ---
 
 # Release (Phase 7)
@@ -28,9 +28,9 @@ pipeline is missing automation -- fix the pipeline, not the bar.
 | Class | Triggered by | Owes |
 |---|---|---|
 | R0 | ships nowhere | nothing |
-| R1 | a change inside an operated component, no new surface | a pipeline ships it; proven on nonprod (or the named stand-in) before prod; docs the diff made false are fixed in the same PR |
+| R1 | a change inside an operated component, no new surface | a pipeline ships it; proven on preview (or the named stand-in) before prod; docs the diff made false are fixed in the same PR |
 | R2 | new endpoint, command, flag, config key, secret, scheduled job, package or library dependency, or data migration | R1 + its telemetry; the runbook delta; expand-contract for anything a running version still names; a flag if risky or half-built |
-| R3 | new component, stage, data store, external service dependency, user population, or platform | R2 + `references/readiness.md`; rollback rehearsed on nonprod (or the named stand-in) |
+| R3 | new component, stage, data store, external service dependency, user population, or platform | R2 + `references/readiness.md`; rollback rehearsed on preview (or the named stand-in) |
 
 - Calling a release a lower class than its triggers lowers a gate (the
   gates skill). Higher is always allowed.
@@ -86,15 +86,20 @@ reader; keep it legible to a human.
 
 ## Stages
 
-- `nonprod` and `prod` for anything with users other than its author or
+- `preview` and `prod` for anything with users other than its author or
   data that cannot be recreated. Never "staging". Same shape; they differ
   in scale, data, and the literals the tier directory pins (the iac
-  skill). The GitHub Environments that gate them are `nonprod` and
+  skill). The GitHub Environments that gate them are `preview` and
   `production` (the infra-credentials skill); `prod` is the stage's
   short name, not an environment name.
+- "nonprod" is the quality of not being prod, never a tier's name
+  (owner, 2026-11-11; the infra repo's infrastructure policy). It
+  names what serves every non-prod tier: a vault, a service account, a
+  state bucket. A tier already named `nonprod` keeps that name until
+  someone renames it on purpose.
 - One stage only: the runbook names the stand-in (consumer CI, a
   prerelease dist-tag, a PR preview) or says none, and why.
-- Agents deploy to nonprod unattended. Prod is a human's call, named in
+- Agents deploy to preview unattended. Prod is a human's call, named in
   the conversation, unless `AGENT.md` records an automatic path.
 - A manual prod workflow is sufficiently controlled when it is
   `workflow_dispatch` only and its deploy job refuses to run unless its
@@ -107,7 +112,7 @@ reader; keep it legible to a human.
   runtime config (bindings, vars, secrets). Where the platform bakes
   config in at build time (Nuxt runtime config on Workers), build each
   stage from the same commit, assert each build's env-file pins its
-  stage, and let nonprod's smoke prove the code (the cloudflare-hosting
+  stage, and let preview's smoke prove the code (the cloudflare-hosting
   skill).
 - A new stage's resources are terraform -- in the infra repo by default
   (the iac skill says when a project may keep them) -- applied by a
@@ -138,7 +143,7 @@ red smoke. No alerting; nothing here notifies anyone.
   core (the coding skill's core/edge axis).
 - **Resource attributes on everything:** `service.name`,
   `service.version` (commit sha or published version),
-  `deployment.environment.name` (`nonprod` / `prod`). Without them two
+  `deployment.environment.name` (`preview` / `prod`). Without them two
   stages or two versions are indistinguishable.
 - **Propagate trace context** (`traceparent`) across every hop you own,
   and log inside the active span so log records carry the trace id.
@@ -182,8 +187,8 @@ cloudflare-hosting skill, Deploy workflows.
 
 | Stage | Population | Proves |
 |---|---|---|
-| Preview / PR | you | it starts and serves |
-| Nonprod | team, synthetic | integration and config |
+| A PR on preview | you | it starts and serves |
+| Preview, from the default branch | team, synthetic | integration and config |
 | Canary | a small real slice | real traffic and data |
 | Full | everyone | -- |
 
@@ -225,7 +230,7 @@ This skill is shared policy. The repo's `AGENT.md` holds: stages and
 URLs, deploying workflows, who may start prod, runbook home if not the
 default, where its telemetry lands, supported platforms. Derive
 GitHub identity at runtime (the github-workflow skill). Defaults the
-repo may override: prod deploys run in CI, never from a laptop; nonprod
+repo may override: prod deploys run in CI, never from a laptop; preview
 deploys go through the repo's scripts, not the bare tool. A deploy that
 needs a resource that does not exist stops and raises it in the infra
 repo -> the iac skill.

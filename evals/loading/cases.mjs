@@ -120,7 +120,7 @@ export const CASES = [
     "Add the Access application and service token for the laptop tunnel's hostname.", // lmde-tunnels
     "Build a Grafana dashboard for the gateway's request counts.", // lmde-dashboards
     "Mint a new Cloudflare API token for the deploy workflow.", // infra-credentials
-    "Write the GitHub Actions workflow that deploys the worker to nonprod.", // release
+    "Write the GitHub Actions workflow that deploys the worker to preview.", // release
     "Set up a Cloudflare Worker with a KV binding.", // cloudflare-hosting
     "Restructure this bash script into header, helpers and a main function.", // style-bash
     "Should we add Redis as a dependency? Check the radar first.", // tech-radar
@@ -136,7 +136,7 @@ export const CASES = [
     "Callers of my laptop endpoint get a 524 after 100 seconds on a cold model load. What should the route do?",
     "Which 1Password vault should the tunnel's run token go in?",
     "Can the Access policy in front of my laptop tunnel just use any_valid_service_token?",
-    "What hostname should the new laptop webhook endpoint get, and does it need a nonprod tier?",
+    "What hostname should the new laptop webhook endpoint get, and does it need a preview tier?",
     "How do I check that the tunnel's origin port still reaches the proxy layer and not some other listener?",
     "The human just applied the new tunnel module. What do I verify, and how?",
   ]),
