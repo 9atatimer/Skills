@@ -47,10 +47,10 @@ is more specific than this skill.
   terraform in the private infra repo; nothing is made in the dashboard.
   The exceptions are what terraform cannot create: vaults and service
   accounts, made once by a human.
-- Hostnames: `<service>.<zone>` for production, `<service>.nonprod.<zone>`
-  for nonprod; the tier is its own DNS label and never "staging". A
-  request naming no tier means nonprod. A production-only root (one
-  laptop, one store: a nonprod tier would front the same hardware) is an
+- Hostnames: `<service>.<zone>` for production, `<service>.preview.<zone>`
+  for preview; the tier is its own DNS label and never "staging". A
+  request naming no tier means preview. A production-only root (one
+  laptop, one store: a preview tier would front the same hardware) is an
   explicit exception, recorded as a Key Decision before it is built.
 
 ## The road

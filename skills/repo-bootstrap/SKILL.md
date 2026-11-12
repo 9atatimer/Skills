@@ -19,13 +19,15 @@ places and renaming later touches all of them.
 
 - Owner and repo name (an organization repo and a user repo differ in
   secret tiers and in the ci.magic action reference).
-- The stages and their names. The template may say `nonprod`; the repo
-  chooses (`prod` and `preview` is allowed: the tier is a DNS label,
-  `preview.<host>`). Rename EVERY occurrence at once -- tier directories,
-  workflow files and names, concurrency groups, GitHub Environments,
-  vault and item names, posture file, tests, docs -- then grep the old
-  word to prove none is left. A half rename deploys to a name the
-  credentials do not match.
+- The stages and their names. The template may say `nonprod`; the tier
+  is `preview` and `prod` (the release skill, Stages), with the tier as
+  its own DNS label. Rename EVERY occurrence of the tier's name at once
+  -- tier directories, workflow files and names, concurrency groups,
+  GitHub Environments, hostnames, posture file, tests, docs -- then grep
+  the old word to prove none is left in that sense. A vault, service
+  account or state bucket that serves every non-prod tier keeps
+  `nonprod`. A half rename deploys to a name the credentials do not
+  match.
 - Zone and hostname per stage; prove the zone exists with `dig +short NS`
   before writing it, since a mistyped domain looks plausible in a plan.
 - Who passes the Access gate (enumerated addresses, never a domain).

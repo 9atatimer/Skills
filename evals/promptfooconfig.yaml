@@ -146,15 +146,15 @@ tests:
         value: Recognizes this as a trust-boundary decision and hands it to the security architect rather than deciding it. May sketch the trade-off briefly.
 
   # ---- sre: production ----------------------------------------------------
-  - description: sre corrects "staging" to nonprod and asks about rollback
+  - description: sre corrects "staging" to preview and asks about rollback
     vars:
       persona: sre
-      task: "Deploy tedium to staging."
+      task: "Deploy the new webhook service to staging."
     assert:
       - type: icontains
-        value: nonprod
+        value: preview
       - type: llm-rubric
-        value: Corrects the environment name to nonprod (staging is a verb) and raises BOTH a rollback and a verification (canary, health check, or similar) before confirming or asking anything else about the deploy. Mentioning only one of the two fails.
+        value: Corrects the environment name to preview (staging is a verb) and raises BOTH a rollback and a verification (canary, health check, or similar) before confirming or asking anything else about the deploy. Mentioning only one of the two fails.
 
   - description: sre pushes back on a raw CPU alert
     vars:

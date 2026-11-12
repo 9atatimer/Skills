@@ -28,14 +28,14 @@
   each. Duplicate deliveries (retries, cron re-runs, webhooks) are
   harmless or writes are idempotent.
 - **Data:** what is stored, whether it can be recreated; if not, the
-  backup and one restore run on nonprod (or the stand-in). User content
+  backup and one restore run on preview (or the stand-in). User content
   never reaches telemetry.
 - **Access:** who can reach it, and what an unauthenticated caller can
   do. Public-facing gets a security-architect pass on the trust
   boundary before launch.
 - **Credentials:** each in the registry, read from the vault, scoped to
   this component and tier.
-- **Rollout:** the stages, and the rollback rehearsed on nonprod (or
+- **Rollout:** the stages, and the rollback rehearsed on preview (or
   the stand-in).
 - **Debug:** OTel resource attributes set; one request or run findable
   in wherever its telemetry lands today (the release skill, Debuggability).

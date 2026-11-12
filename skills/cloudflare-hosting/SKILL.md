@@ -21,9 +21,10 @@ configuration for a hostname. Derive GitHub identity at runtime; never
 from memory. -> the release and github-workflow skills
 
 Fleet defaults where the repo is silent: the non-production tier is
-`nonprod` (or `preview` where the repo already says so); "staging" is a
-verb. A preview hostname is `preview.<production-host>` or
-`<service>.nonprod.<zone>`; the tier is its own DNS label either way.
+`preview`, and "nonprod" names a quality, never a tier (the release
+skill, Stages); "staging" is a verb. A preview hostname is
+`<service>.preview.<zone>`, or `preview.<production-host>` where the
+repo already says so; the tier is its own DNS label either way.
 
 ## The shape of a hosted product
 
@@ -152,7 +153,7 @@ reads the pack's status instead of guessing.
   the run on the first that does not exist.
 - One vault item per stage; a shared secret between two workers is one
   field both workflows read. Sharing a secret across stages would make a
-  nonprod leak a production capability.
+  non-prod leak a production capability.
 - A value several workers or containers share, or a provider key AI
   Gateway reads, may live in the Cloudflare Secrets Store instead (the
   tech-radar skill, Trial). A secret's scopes name services, not

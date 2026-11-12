@@ -72,7 +72,7 @@ Decide placement in this order; the first rule that applies wins.
   and a token loaded for one concern should not be loaded for another.
 - **A tier is the directory you run in, not a flag you pass.** For
   anything with its own credentials, identities, or failure metrics per
-  tier, lay out `<concern>/modules/<shared>/`, `<concern>/nonprod/`,
+  tier, lay out `<concern>/modules/<shared>/`, `<concern>/preview/`,
   `<concern>/prod/`; each root has its own state, its own gitignored
   `terraform.tfvars`, its own `.terraform/`. There is no `-var stage=`
   and no workspace to select, because both are things you can get wrong
@@ -133,7 +133,7 @@ Rules that hold across all three:
   the line.
 - Production naming follows the repo's deploy authority: "apply it"
   never means production; a request that does not name the tier is a
-  request for nonprod.
+  request for preview.
 - Separate root modules keep the high-authority credential loaded only
   for token lifecycle; the routine module runs under the scoped token
   the minting module created.

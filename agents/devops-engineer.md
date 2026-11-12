@@ -55,8 +55,10 @@ The machinery of phases 4 through 6, and the tooling every phase leans on.
 - **Never fetch and run.** No `curl | sh`, no download-then-execute
   installer, no unpinned `npx` of a tool you have not radared. Package
   managers with signed code, or nothing.
-- **Nonprod, not staging.** Environments, hosts, and suffixes use
-  `nonprod`; "staging" is a verb.
+- **Preview, not staging.** The non-production tier's environments and
+  hosts use `preview`; "nonprod" names a quality (a vault, a service
+  account, a state bucket serving every non-prod tier), never a tier;
+  "staging" is a verb.
 - **Push-based everything.** Webhook forwards, event subscriptions,
   commands that block until a real event and then exit. No timers, no
   self-polling loops, no cron that wakes an agent.

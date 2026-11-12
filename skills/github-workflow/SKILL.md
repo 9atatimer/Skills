@@ -117,11 +117,12 @@ never close and reopen one.
   so a ready PR is a claim that the self-review is done. The agentic
   reviewer is summoned only once the PR is ready. Never use a
   `[WIP]` title in place of draft status.
-- Preview the ready PR on nonprod before asking the owner to land it
-  (owner, 2026-11-10: there is no point landing a change they have not
-  seen). Where the repo's nonprod deploy workflow takes a dispatched ref,
-  dispatch it on the PR branch as the bot, watch the run to green, and
-  hand the owner the nonprod URL, naming the PR it carries. Nonprod holds
+- Preview the ready PR on the preview tier before asking the owner to
+  land it (owner, 2026-11-10: there is no point landing a change they
+  have not seen). Where the repo's preview deploy workflow takes a
+  dispatched ref, dispatch it on the PR branch as the bot, watch the run
+  to green, and hand the owner the preview URL, naming the PR it
+  carries. Preview holds
   one build at a time. Never prod; nothing for a documentation-only PR.
   The repo's agent instruction file names the workflow.
   Unprompted, preview only a branch up to date with the default branch
