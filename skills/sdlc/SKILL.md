@@ -34,7 +34,7 @@ skill.
    you built destroys the only artifact that can show you drifted, and
    turns an unreviewed decision into apparent spec. The single exception
    is *appending* to the Key Decisions log, each row citing its
-   authorizing issue, in its own commit on the task's one PR. Status is
+   authorizing issue, in its own commit on the session's one PR. Status is
    metadata, never document content and never a question: a human's
    merge is the approval, no record carries a status line, and the agent
    never raises one with a human. -> the design skill
