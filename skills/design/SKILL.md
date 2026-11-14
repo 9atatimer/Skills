@@ -483,8 +483,8 @@ decisions made during implementation belong there -- but:
   reversed gets a new row saying so, with the reason.
 - **Each row cites its authorizing issue.** If nothing authorized it, it is
   drift, not a decision -- file it first.
-- **In its own commit, on the task's one PR** (the github-workflow skill,
-  One PR per repo per task). A doc change folded into a code commit does
+- **In its own commit, on the session's one PR** (the github-workflow skill,
+  One open PR per repo per session). A doc change folded into a code commit does
   not get read. That is exactly how the failure above shipped.
 
 Every other section -- Overview, Goals, Non-Goals, Design, Behaviors,
@@ -499,7 +499,7 @@ way once it is merged.
 Implementation is not done when the tests pass. The closing checklist --
 cut drift issues, append Key Decisions, record lessons, file what you
 discovered, update `TODO_PLAN.md` -- is
-**the retrospective skill (phase 8)**, run on the task's PR while it is
+**the retrospective skill (phase 8)**, run on the session's PR while it is
 open, else in one follow-up PR.
 
 It used to live here, which is why it got skipped: the freeze rule above

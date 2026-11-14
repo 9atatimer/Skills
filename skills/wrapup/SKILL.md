@@ -1,6 +1,6 @@
 ---
 name: wrapup
-description: "The session epilogue, typically human-invoked (/wrapup) before a session is archived: first preserve any uncommitted or unpushed work on the session's feature branch, then sweep what the session produced into durable homes -- comments on the issues it touched, new issues for what it discovered, TODO_PLAN lessons and its Now list, as-built corrections -- batching all file edits into at most ONE PR (the task's PR while it is open, else one follow-up). Records only what would be wasteful to forget; 'nothing worth recording' is a valid outcome. If an implementation landed this session and phase 8 has not run, run the retrospective skill first -- wrapup is not a substitute for it."
+description: "The session epilogue, typically human-invoked (/wrapup) before a session is archived: first preserve any uncommitted or unpushed work on the session's feature branch, then sweep what the session produced into durable homes -- comments on the issues it touched, new issues for what it discovered, TODO_PLAN lessons and its Now list, as-built corrections -- batching all file edits into at most ONE PR (the session's PR while it is open, else one follow-up). Records only what would be wasteful to forget; 'nothing worth recording' is a valid outcome. If an implementation landed this session and phase 8 has not run, run the retrospective skill first -- wrapup is not a substitute for it."
 ---
 
 # SKILL: Wrapup (session epilogue)
@@ -88,8 +88,8 @@ from than a terse one.
 
 **2. At most one PR.** Batch every file edit the sweep produces --
 TODO_PLAN updates, as-built corrections, instruction-file lines -- into
-ONE PR: the task's PR while it is open, else one follow-up PR (the
-github-workflow skill, One PR per repo per task). Issue comments and new issues need no PR at all, so
+ONE PR: the session's PR while it is open, else one follow-up PR (the
+github-workflow skill, One open PR per repo per session). Issue comments and new issues need no PR at all, so
 a sweep that routes everything to issues correctly produces zero PRs.
 Wrapup starts no new work: anything nontrivial it uncovers becomes an
 issue for a future session, never a task picked up now, and never a

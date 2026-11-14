@@ -170,17 +170,19 @@ Stage 2, the upstream PR, is the production PR:
   reviews and merges.
 - Close the Stage 1 PR.
 
-### One PR per repo per task
+### One open PR per repo per session
 
-A task gets exactly one PR in each repo it touches. Its code, its Key
-Decisions rows, its review fixes and its docs go onto that PR's branch,
+A session has at most one open PR in each repo it touches. Everything
+the session does in that repo goes onto that PR's branch, however
+unrelated the tasks: code, Key Decisions rows, review fixes and docs,
 each kind in its own commit so a reviewer can read it alone. Never stack
 PRs, and never split off a docs-only or design-record companion: a stack
 lands only in order, a split leaves each PR citing text another has not
 landed, and every extra PR is another approval and another `gate` run.
-Once the task's PR has merged, follow-up work (the retrospective) is one
-new PR. The fork flow above is one PR too: its Stage 1 PR closes
-when Stage 2 opens.
+Once the session's PR has merged or closed, later work in that repo (the
+retrospective) is one new PR, from a fresh branch off the default
+branch. The fork flow above is one PR too: its Stage 1 PR closes when
+Stage 2 opens.
 
 ### Landing via tedium (merge bot)
 
