@@ -158,9 +158,13 @@ or later and `OCR_NO_UPDATE=1 ocr llm test` exits 0; source code only),
 bound when only the version check passes), and `subagent` (the panel,
 always bound, covers everything including prose). A change that touches
 `.opencodereview/` goes entirely to `subagent`. Pass `OCR_NO_UPDATE=1`
-on every `ocr` call.
+on every `ocr` call. For `subagent` (and the panel `ocr-delegate`
+briefs), pin the model on every spawn, since an omitted model inherits
+the session's: panelists on a cheaper model, the verifier on the
+strongest available. Probe sub-agent tooling before fanning out: one
+agent, one trivial write, confirmed.
 
-Read `references/adapters-and-sources.md`, "Adapters", for the commands, the output mapping and the exclusion routing, before you run `ocr` or `ocr-delegate`.
+Read `references/adapters-and-sources.md`, "Adapters", for the commands, the output mapping and the exclusion routing, before you run any of the three adapters.
 
 ## Sizing
 
