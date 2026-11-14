@@ -44,13 +44,13 @@ permissions:
 
 jobs:
   ocr-review:
-    uses: 9atatimer/tds-utils/.github/workflows/ocr-review.yml@2a6c7a2c50df2c8c8e6165c5aa3f5872363e20ca
+    uses: 9atatimer/tds-utils/.github/workflows/ocr-review.yml@183e6da968f9e28ba638a61496130574a3b721b9
     with:
       # fromJSON: a dispatch's pr arrives as a string, and the reusable
       # workflow's number input refuses one (Issue#485).
       pr: ${{ fromJSON(format('{0}', github.event_name == 'workflow_dispatch' && inputs.pr || github.event.issue.number)) }}
       model: ${{ github.event_name == 'workflow_dispatch' && inputs.model || '' }}
       backend: ${{ github.event_name == 'workflow_dispatch' && inputs.backend || '' }}
-      tools_ref: '2a6c7a2c50df2c8c8e6165c5aa3f5872363e20ca'
+      tools_ref: '183e6da968f9e28ba638a61496130574a3b721b9'
     secrets:
       OLLAMA_GATEWAY_OP_SA_TOKEN: ${{ secrets.OLLAMA_GATEWAY_OP_SA_TOKEN }}
