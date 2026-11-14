@@ -1,6 +1,6 @@
 ---
 name: agent-instructions
-description: "Writing or editing the instructions an agent loads: a skill (SKILL.md, its description and its reference files), a repo's AGENT.md (and its CLAUDE.md / AGENTS.md symlinks), the machine-global instruction file, and an agent persona. States what such a file holds (instructions for the present, never history), which layer a rule belongs in, how to word a rule for current models, soft size limits per file type, how to write a description that loads the skill when it should, and what to check before committing. Load before creating a skill, changing a skill's description or body, adding, trimming or rewording a rule in AGENT.md or the global file, or reviewing such a change. Skip for where a lesson is routed after a retrospective (retrospective, todo-plan), Markdown characters and list markup (markdown), the wording of runbooks, PRs and issues (technical-writing), and prompts a product sends to a model at run time (coding, decision-models)."
+description: "Writing or editing the instructions an agent loads: a skill (SKILL.md, its description and its reference files), a repo's AGENT.md (and its CLAUDE.md / AGENTS.md symlinks), the machine-global instruction file, and an agent persona. States what such a file holds (instructions for the present, never history), which layer a rule belongs in, how to word a rule for current models, soft size limits per file type, how to write a description that loads the skill when it should, and what to check before committing. Load before creating a skill, changing a skill's description or body, adding, trimming or rewording a rule in AGENT.md or the global file, writing or editing a persona, or reviewing such a change. Skip for where a lesson is routed after a retrospective (retrospective, todo-plan), Markdown characters and list markup (markdown), the wording of runbooks, PRs and issues (technical-writing), and prompts a product sends to a model at run time (coding, decision-models)."
 ---
 
 # Agent Instructions
@@ -13,9 +13,10 @@ ask what you meant.
 
 The technical-writing skill sets the wording: plain, literal English in
 connected sentences. This skill sets what the file holds, where a rule
-goes, how large the file may grow, and how a skill gets loaded.
-`references/sources.md` lists the vendor and community guidance behind
-the rules here, with the date each source was read.
+goes, how large the file may grow, and how a skill gets loaded. The
+sources behind these rules are in the Skills repo at
+`docs/ops/agent-instructions.md`; you do not need them to apply the
+skill.
 
 ## Instructions, not history
 
@@ -36,6 +37,10 @@ to exist.
   it. A reason is a property of the system ("GitHub refuses
   self-approval"). An anecdote ("two PRs went out as the owner") is
   history.
+- These rules apply to the text you write or change. Leave history that
+  is already in the file where it is, unless the task is to trim the
+  file. A trim is a rewrite, and the deletions check under Editing
+  AGENT.md and the global file applies to it.
 
 ## Choose the layer before you write
 
@@ -157,6 +162,11 @@ reduce it, because they load only when needed.
 - **Reference files** sit one level below `SKILL.md`, and `SKILL.md`
   says when to read each one. A reference file does not point to another
   reference file.
+- **Rationale goes in a runbook.** The citations, studies and rejected
+  alternatives behind a skill's rules go in `docs/ops/<skill>.md` in the
+  repo that owns the skill, and the skill names that file in one line. A
+  reference file is for the agent doing the task. The runbook is for
+  whoever revises the skill, and it is not published with the skill.
 - **Test loading both ways.** Add prompts that should load the skill and
   near-misses that belong to a neighbouring skill, and run the loading
   eval after each description change. The skill tree's `evals/loading`

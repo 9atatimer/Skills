@@ -162,7 +162,7 @@ export const CASES = [
     "Review this change to the global agent instruction file before I land it.",
     "This skill section tells the story of the incident that caused the rule. Is that right?",
     "Does this rule go in AGENT.md, in a skill, or in a hook?",
-    "Reword this rule in the coding skill so agents stop over-applying it.",
+    "Write a new persona under agents/ for a database reviewer.",
   ]),
   ...no("agent-instructions", [
     "Add this unsettled lesson to TODO_PLAN.md's Lessons Learned.", // todo-plan
@@ -172,7 +172,7 @@ export const CASES = [
     "Route the lessons from this retrospective to the right layer.", // retrospective
     "Write the system prompt our product's support assistant sends to the model.", // coding
     "Add a codex overlay hook that sets its MCP servers at launch.", // clai
-    "Write the design doc for the notification service.", // design
+    "Choose the reviewer personas for the panel over my design doc draft.", // designomatic
     "A review bot flagged my PR. Do I fix it or reject it on the thread?", // gates
     "Should this yes/no judgement be a rule, a classifier or an LLM call?", // decision-models
   ]),

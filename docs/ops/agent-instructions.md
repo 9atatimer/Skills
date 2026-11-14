@@ -1,9 +1,10 @@
-# Sources for the agent-instructions skill
+# Runbook: maintaining the agent-instructions skill
 
-Read this file when you revise the skill, or when someone questions a
-rule in it. It records which guidance each rule rests on and the date
-the source was read, so that a later reader can check whether the source
-still says it. All pages were read on 2026-11-14. Reddit could not be
+Read this file when you revise `skills/agent-instructions/SKILL.md`, or
+when someone questions a rule in it. It is not published with the skill
+and an agent applying the skill does not need it. It records which
+guidance each rule rests on and the date the source was read, so that a
+later reader can check whether the source still says it. All pages were read on 2026-11-14. Reddit could not be
 reached on that date, so no rule rests on a Reddit thread.
 
 Reread these sources when a new model generation ships. Prompt guidance
@@ -77,3 +78,29 @@ a summarizing fetch. Check a phrase against the page before quoting it.
 No source dated within the window measured the effect of incident
 history inside an instruction file, or compared terse fragments with
 plain sentences. Those two rules in the skill are the owner's.
+
+## Refreshing the research
+
+Refresh when a new model generation ships, and when a rule in the skill
+is questioned and its source is older than about two months.
+
+- Read the vendor pages in the table above again. They are living
+  documents, so compare what they say now with the rule that cites them.
+- Search Hacker News by date for threads on `AGENTS.md`, `CLAUDE.md` and
+  skills from the last two months. The Algolia API takes a
+  `created_at_i` filter, which gives dated results.
+- Try Reddit again. Record plainly whether it could be reached.
+- Drop a source that names a retired model as current, unless a current
+  page still says the same thing.
+- Change the rule in the skill and its row here in the same PR. Replace
+  the read date at the top of this file.
+- Record a new disagreement between sources under "Where the sources
+  disagree", with the choice the skill makes and why.
+
+## Loading eval
+
+`evals/loading/cases.mjs` holds ten should-load and ten near-miss
+prompts for this skill. Run `node evals/loading/run.mjs --skill
+agent-instructions` after each change to the description, several times,
+because one run moves a skill by up to two cases. The eval has not been
+run for this skill; record the first results here when it is.
