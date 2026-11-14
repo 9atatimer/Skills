@@ -66,20 +66,29 @@ first parent there too.
 
 ---
 
-## The changed-scopes scope
+## The gate's scope for the job
 
 The scope is the only place the job's paths live. It selects every
-`adherence.toml` at any depth, the root included, and the declared trees.
+`adherence.toml`, the root included, and the declared trees.
 
-template-tools (`.github/scripts/changed-scopes.sh`):
+A repo whose gate scopes with ci-scope names them in
+`.github/ci-scope.table`. template-tools:
 
-```bash
-adherence)    printf '%s\n' '*/adherence.toml' 'packages/naatm-ci-magic/**' 'packages/designomatic/**' 'packages/common/**' ;;
+```
+scope adherence     adherence.toml docs/**/adherence.toml .github/**/adherence.toml
+scope adherence     packages/naatm-tedium/**/adherence.toml packages/ast-mcp/**/adherence.toml
+scope adherence     packages/naatm-ci-magic/** packages/designomatic/** packages/common/**
 ```
 
-with `*/adherence.toml` matched as `(^|/)adherence\.toml$`. tds-utils adds
-its two adherence records and its radar to the scope, because the checks
-read them.
+The declarations are named tree by tree on purpose. One
+`**/adherence.toml` would also name a declaration inside a package that
+has no Scope of its own; that path would then select this job alone,
+where every other path in such a package selects every suite. Add a tree
+when a package gains a Scope, and an `example` line for it.
+
+A repo not yet on ci-scope keeps the scope in its changed-scopes script.
+tds-utils adds its two adherence records and its radar to the scope,
+because the checks read them.
 
 ---
 
