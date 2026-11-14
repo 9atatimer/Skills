@@ -152,11 +152,16 @@ The caller shapes, scope lines and CODEOWNERS lines are in
   it the judged checks are coverage and the verdict is inconclusive at
   best, which passes. Never add a variable naming a vault or item: a step's log
   header prints variables, and the judge needs none.
-- **Select the job with a changed-scopes scope**, never a `paths:` filter:
-  a workflow that does not run never reports the required check. The
-  scope matches every `adherence.toml` at any depth, the root included,
-  and the declared trees, plus whatever the records and radar the
-  declarations name.
+- **Select the job with a Scope in the gate's table**, never a `paths:`
+  filter: a workflow that does not run never reports the required check.
+  The table is ci-scope's `.github/ci-scope.table` (the repo-bootstrap
+  skill, Rungs); a repo not yet on it has a changed-scopes script that
+  plays the same part. The scope covers every `adherence.toml`, the root
+  included, and the declared trees, plus whatever the records and radar
+  the declarations name. In a ci-scope table, name the declarations tree
+  by tree: one wildcard for all of them also names a declaration inside a
+  package that has no Scope, and that path then selects this job alone
+  instead of every suite.
 - **CODEOWNERS names users for every `adherence.toml`, the caller
   workflow and its pins**, and branch protection requires code-owner
   review. Without that, nothing stops a PR rewriting its own judge.
