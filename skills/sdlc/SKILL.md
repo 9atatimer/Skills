@@ -350,6 +350,45 @@ edit it in the same PR that changes the tool. The tooling exception
 covers the *paperwork* only: law 5 (test first), law 10 (branch + PR),
 law 11 (clear the gate) and law 14 (defect anatomy) hold unchanged.
 
+### Fleet tooling: look first, build once, depend never
+
+A tool one repo needs, another repo usually has. Before writing a
+script, a CI helper or a checker, find out, because the answer changes
+what you build and where.
+
+- **Look before you build.** Search the tooling repo's packages
+  (template-tools `packages/`), the tools on the host's `PATH`, and the
+  other repos' `scripts/` and `.github/scripts/` for the same job. A
+  script that decides which CI suites a change needs was written three
+  times in three repos before anyone looked; each copy had a different
+  hole.
+- **A second copy is a defect, not a head start.** Where two exist, the
+  work is to forge them into one and delete both, never to add a third
+  and plan to converge later.
+- **A tool more than one repo needs is a package in the tooling repo.**
+  The template repo is copied once at creation and never syncs, so a
+  tool placed there reaches no existing repo.
+- **A shared tool is product where it lives.** Other repos code against
+  its command line and its file formats, so the self-contained test above
+  fails: in the tooling repo it gets a design record and an architecture
+  record. Each consumer still treats it as tooling.
+- **Fleet tooling is host-scoped. A project never depends on it.** The
+  tools an agent or a gate runs (clai, gadmin, designomatic, the
+  ci.magic engine, ci-scope) reach a host by the acquire rail, at the
+  fleet's pinned versions: `naatm-sandbox setup` provisions a cloud
+  session and a CI runner, `lmde acquire` a laptop. They are on `PATH`.
+  Do not add one to a project's manifest, its lockfile or an install
+  step in its CI to make it available, and do not read a project's rule
+  about where its dependencies come from as a rule about them. A tool
+  missing on a host is a provisioning fault: fix the rail.
+- **To put a new tool on the rail**, it needs a row in the acquire
+  engine's package table and a pin beside it, and its package must be
+  published. Until all three have landed, no host has it.
+- **Before you say how CI gets something, read the workflows and the
+  provisioning.** "The runner only has the checkout" and "that repo is
+  private, so nothing can reach it" were both asserted from memory in
+  one session, and both were wrong.
+
 ## Entering mid-flow
 
 **The phases flow in order; you will not always join at the start.** Work
