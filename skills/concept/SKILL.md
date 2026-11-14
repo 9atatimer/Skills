@@ -217,7 +217,7 @@ not pre-convert.
 |---|---|---|
 | The idea | Overview | the agent, from the text |
 | Aspirations and stories | Goals, and what is deliberately deferred | the human, in conversation |
-| What the human settled | Key Decisions rows | the agent, citing the concept |
+| What the human settled that shapes what the design can do | Key Decisions rows | the agent, citing the concept |
 | What is still open | Open Questions | the agent |
 | What the idea leans on | dependencies and sequencing | the agent |
 | Alternatives the human dismissed aloud | Rejections | the agent, from the record |

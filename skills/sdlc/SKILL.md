@@ -33,8 +33,9 @@ skill.
    doc.** That holds for POC and MVP too. Editing the spec to match what
    you built destroys the only artifact that can show you drifted, and
    turns an unreviewed decision into apparent spec. The single exception
-   is *appending* to the Key Decisions log, each row citing its
-   authorizing issue, in its own commit on the session's one PR. Status is
+   is *appending* the owner's ruling to the Key Decisions log, citing its
+   issue, in its own commit on the session's one PR; a choice made while
+   building goes in its issue, never in the log. Status is
    metadata, never document content and never a question: a human's
    merge is the approval, no record carries a status line, and the agent
    never raises one with a human. -> the design skill
@@ -54,8 +55,9 @@ skill.
    beside the design freezes the same way. -> the concept skill (the
    disposable end), the architecture skill and the as-built skill
 4. **Implementation ends with the retrospective, not with green tests.**
-   Cut drift issues, append Key Decisions, reconcile the as-built, record
-   lessons learned at their layer (law 15), and file what you discovered;
+   Cut drift issues, append any Key Decision the owner ruled, reconcile
+   the as-built, record lessons learned at their layer (law 15), and file
+   what you discovered;
    the retrospective's landing records the implementation. A passing suite and a clean bot review say
    nothing about whether you built what was designed. -> the retrospective
    skill
