@@ -71,6 +71,7 @@ of decisions that change what the design can or cannot do. It is the
   ruling changes what the design can do. The row cites the issue.
 - **Append only.** Never rewrite or delete an existing row. A reversed
   decision gets a new row saying so, with the reason.
+- **The architecture record's Key Decisions follow the same rule.**
 
 Every other section is frozen until a human amends it. -> the design skill
 
@@ -182,9 +183,9 @@ missing, not that agents keep being careless. Propose the change.
 ## Exit gate
 
 The loop is closed when: every divergence is filed, any owner's ruling is
-a Key Decisions row citing its issue, every lesson sits at its layer (unsettled ones in
-`TODO_PLAN.md` alongside the open drift), and the PR is open for a
-human to land.
+a Key Decisions row citing its issue, every lesson sits at its layer
+(unsettled ones in `TODO_PLAN.md` alongside the open drift), and the PR is
+open for a human to land.
 
 Shipping code is not the same as shipping what was designed.
 

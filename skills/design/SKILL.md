@@ -180,7 +180,7 @@ conversation with the human, not a transcription.**
 |---|---|---|
 | The idea | Overview | you, from the text |
 | Aspirations and user stories | Goals, and what is deferred | the human, in conversation |
-| What the human settled | Key Decisions rows, citing the concept | you |
+| What the human settled that shapes what the design can do | Key Decisions rows, citing the concept | you |
 | What is still open | Open Questions | you |
 | What the idea leans on | dependencies and sequencing | you |
 | Anything the agent assumed | confirmed or dropped | the human, before anything else |
@@ -382,7 +382,7 @@ When asked to improve an existing doc:
 | Vague goals | Name the observable and its bound (a latency ceiling, an error-rate ceiling, a coverage floor); the number is tuned and lives in the as-built |
 | No state machine | Look for lifecycle states in the design section and extract them |
 | Prose-heavy design | Convert responsibilities and transitions to tables |
-| Missing key decisions | Look for implicit choices and make them explicit with rationale |
+| Missing key decisions | Look for implicit choices that shape what the design can do, and make them explicit with rationale |
 | No open questions | Every design has unknowns -- be honest about them |
 | No rejections section | Look at the conversation/PR history for alternatives that were debated and dropped; surface them with one-line reasons so they don't get relitigated |
 
@@ -489,6 +489,8 @@ what the design can or cannot do, and the owner made or ratified it.
   the issue.
 - **Append only.** Never rewrite or delete an existing row. A decision that was
   reversed gets a new row saying so, with the reason.
+- **The architecture record's Key Decisions follow the same rule.** A
+  mechanism chosen while building goes in its issue, not in that table.
 - **In its own commit, on the session's one PR** (the github-workflow skill,
   One open PR per repo per session). A doc change folded into a code commit does
   not get read. That is exactly how the failure above shipped.

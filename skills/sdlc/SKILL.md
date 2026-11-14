@@ -55,8 +55,9 @@ skill.
    beside the design freezes the same way. -> the concept skill (the
    disposable end), the architecture skill and the as-built skill
 4. **Implementation ends with the retrospective, not with green tests.**
-   Cut drift issues, append any Key Decision the owner ruled, reconcile the as-built, record
-   lessons learned at their layer (law 15), and file what you discovered;
+   Cut drift issues, append any Key Decision the owner ruled, reconcile
+   the as-built, record lessons learned at their layer (law 15), and file
+   what you discovered;
    the retrospective's landing records the implementation. A passing suite and a clean bot review say
    nothing about whether you built what was designed. -> the retrospective
    skill
