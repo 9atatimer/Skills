@@ -431,16 +431,28 @@ open PRs, comment and `/land` as the fleet's machine account
 - On the laptop the session starts under tds-utils `bin/claude-as-bot`
   (the bot's token from 1Password as `GH_TOKEN`, GitHub over HTTPS only,
   commits under the bot's name). A session already running as the owner
-  runs each GitHub command and each commit inside that launcher's
-  environment: `op run --env-file <(claude-as-bot --print-env) -- <cmd>`.
+  runs each GitHub command and each `git commit` through tds-utils
+  `bin/asbot`: `asbot <cmd> [args]`, or `asbot bash -c '<commands>'` for
+  a sequence. `asbot` runs the command only after `gh api user` reports
+  `9atatimer-bot`, and runs nothing otherwise.
+- Never use the inline form `op run --env-file <(claude-as-bot
+  --print-env) -- <cmd>`. When the launcher fails, the process
+  substitution's exit status is lost, `op run` gets an empty env file,
+  and the command runs as the owner.
+- When `asbot` refuses, the action does not happen. Never run the same
+  command bare, as the owner. Say what refused and stop; the fix is the
+  human's (unlock 1Password, or re-seed the bot token).
+- Run each `asbot` command in the foreground. A 1Password authorization
+  prompt that nobody answers fails the command with `authorization
+  timeout`, and in a background job nobody sees the prompt.
 - In a cloud session the platform's GitHub App acts as whoever connected
   it; the owner connects it as the bot. If the identity is not
   `9atatimer-bot`, say so and stop.
 - Codex runs on the Codex account of whoever posts `@codex review`; the
   bot has none, so its trigger gets a "create a Codex account" reply and
   no review. Codex stays the owner's to summon, on the owner's quota.
-- `clai.d/AGENT.global.md` in tds-utils, "Act on GitHub as the bot", is the
-  canonical statement.
+- This section is the canonical statement; the tds-utils global
+  instruction file names the rule and points here.
 
 ## GitHub Tool Usage
 
