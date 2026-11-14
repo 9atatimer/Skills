@@ -4,6 +4,7 @@
 # conscious decision to publish it. Add the directory name (one per line,
 # # comments ignored) in the same commit that adds the skill.
 adherence
+agent-instructions
 architecture
 architecture-views
 as-built
