@@ -4,6 +4,15 @@ Procedure moved out of this skill's `SKILL.md`. Each section here is
 named there with a summary. A section named here and not found below
 ("Behaviors", "Lifecycle is metadata") is in `SKILL.md`.
 
+Contents:
+
+- If a concept exists, phase 2 converts it
+- Fill Sections in Order
+- Apply the Style Guide
+- Quality Checklist
+- Review Output Format
+- Common Improvements
+
 #### If a concept exists, phase 2 converts it
 
 A concept (-> the concept skill) holds a statement of work and user

@@ -99,7 +99,8 @@ reader; keep it legible to a human.
   someone renames it on purpose.
 - One stage only: the runbook names the stand-in (consumer CI, a
   prerelease dist-tag, a PR preview) or says none, and why.
-- Agents deploy to preview unattended. Prod is a human's call, named in
+- Agents deploy to preview unattended, within the limits under Who
+  ships. Prod is a human's call, named in
   the conversation, unless `AGENT.md` records an automatic path.
 - A manual prod workflow is sufficiently controlled when it is
   `workflow_dispatch` only and its deploy job refuses to run unless its

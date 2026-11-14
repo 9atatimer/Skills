@@ -7,6 +7,18 @@ how. A section named here and not found below (Reviewer Selection,
 Spend Review Turns on Load-Bearing Fixes, Zero Unreviewed Code) is in
 `SKILL.md`.
 
+Contents:
+
+- Review-watch loop
+- Transport
+- On each wake or event
+- Termination
+- Feedback becomes pr-todo issues (turn cap)
+- Event taxonomy
+- Use `/loop` to drive it
+- What to tell the user
+- Automated Review Response
+
 ## Review-watch loop
 
 A PR review is **iterative, not one-shot**. Start this loop by default

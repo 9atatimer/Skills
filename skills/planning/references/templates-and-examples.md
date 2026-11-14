@@ -3,6 +3,13 @@
 Detail moved out of this skill's `SKILL.md`. Each section here is
 named there with a summary; read it when you write the plan.
 
+Contents:
+
+- The BDD TODO_PLAN Template [OK]
+- Language-Specific Adaptations
+- Phase Structure Template
+- Examples
+
 ## The BDD TODO_PLAN Template [OK]
 
 > **NOTE -- this is the shape of your thinking, not a file template.**

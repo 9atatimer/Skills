@@ -365,10 +365,11 @@ Before writing a script, a CI helper or a checker, search the tooling
 repo's packages, the host's `PATH` and the other repos for the same job,
 and build one shared tool rather than another copy. A tool more than one
 repo needs is a package in the tooling repo, and a tool on the acquire
-rail is never a project dependency. A tool missing from a host is a
-provisioning fault to report, not to patch.
+rail is never added as a project dependency to make it available; that
+is no reason to remove a fleet package a repo already declares. A tool
+missing from a host is a provisioning fault to report, not to patch.
 
-Read `references/tooling-and-rationale.md`, "Fleet tooling -- look first, build once, depend never", before you build, place, or depend on any tool.
+Read `references/tooling-and-rationale.md`, "Fleet tooling -- look first, build once, depend never", before you build, place, depend on, or remove any tool.
 
 ## Entering mid-flow
 

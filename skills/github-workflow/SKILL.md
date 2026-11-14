@@ -81,8 +81,8 @@ directory: provisioning overwrites it every session.
 - On a laptop, worktrees live in `~/workplace/.worktrees/<repo>-<topic>`,
   never beside the clone, where they clutter the workspace and break
   tab-completion of the repo's name. Move a stray one with
-  `git worktree move`, which rewrites both gitdir pointers; a plain `mv`
-  breaks it.
+  `git -C <clone> worktree move <stray> <dir>`, which rewrites both
+  gitdir pointers; a plain `mv` breaks it.
 - `git worktree remove` deletes ignored files without asking. Run
   `git -C <worktree> clean -ndX` first, read the list, and move out
   anything you cannot regenerate.
@@ -194,8 +194,10 @@ A repo is enrolled when its default branch carries a `tedium.toml`.
 On an enrolled repo an agent comments `/land` on its own PR only when
 every precondition holds on the current head: `gate` green, the review
 settled by a reviewer that is not your own self-review, no turn cap
-fired and no open `pr-todo` issue, every CODEOWNERS path approved, and
-no `hold` label. Anything short of all of them goes to the human. A
+fired and no open `pr-todo` issue, every CODEOWNERS path approved, no
+`hold` label, and no design or architecture record added or changed by
+the PR (a human lands those). Anything short of all of them goes to the
+human. A
 tedium landing does not close issues; close them by hand. On a repo
 without `tedium.toml`, an agent never merges and never comments
 `/land`.
@@ -371,7 +373,9 @@ open PRs, comment and `/land` as the fleet's machine account
   and the command runs as the owner.
 - When `asbot` refuses, the action does not happen. Never run the same
   command bare, as the owner. Say what refused and stop; the fix is the
-  human's (unlock 1Password, or re-seed the bot token).
+  human's: unlock 1Password, or seed the bot token into the login
+  Keychain with tds-utils `bin/seed-bot-token` (once per machine and per
+  rotation), after which `asbot` asks 1Password nothing.
 - Run each `asbot` command in the foreground. A 1Password authorization
   prompt that nobody answers fails the command with `authorization
   timeout`, and in a background job nobody sees the prompt.

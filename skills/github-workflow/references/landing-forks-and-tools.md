@@ -4,6 +4,12 @@ Detail moved out of this skill's `SKILL.md`. Each section here is
 named there with a summary. A section named here and not found below
 ("Single PR Workflow", "Remote Topology") is in `SKILL.md`.
 
+Contents:
+
+- Two-Stage PR Workflow (fork + upstream)
+- Landing via tedium (merge bot)
+- GitHub Tool Usage
+
 ### Two-Stage PR Workflow (fork + upstream)
 
 Stage 1, the fork PR, is where AI review happens so the charge lands on

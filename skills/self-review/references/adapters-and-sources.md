@@ -5,6 +5,11 @@ named there with a summary. A section named here and not found below
 ("The panelist brief", "Sizing", "The ReviewEngine port") is in
 `SKILL.md`.
 
+Contents:
+
+- Adapters
+- Why these rules
+
 ### Adapters
 
 | Adapter | Who finds | Bound when | Covers |
