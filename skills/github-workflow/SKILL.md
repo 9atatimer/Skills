@@ -257,9 +257,12 @@ passes (template-tools `docs/design/DESIGN.TEDIUM.md`, the double-bar
 extension). A test in the same PR that asserts the new workflow -- a scan
 of the workflow file, or a CI-only check that the new step took effect --
 fails that first build by design. Land the workflow change first and its
-guard tests in a PR after it, and `tedium dryrun` any PR that changes
-workflows before you `land` it: iae PR#338 failed its staging `gate` this
-way on 2026-10-16.
+guard tests in a PR after it: iae PR#338 failed its staging `gate` this
+way on 2026-10-16, and tds-utils PR#780 twice on 2026-11-12. Do not count
+on `tedium dryrun` to catch it: the try build does not graft the base's
+workflows, so it passed PR#780 and its landing build failed
+(template-tools Issue#1109). Check the PR yourself: if it changes a file
+under `.github/workflows/` and a test that reads that file, split it.
 
 **A tedium landing does not close issues.** `Closes #N` in the PR body or
 the commit message links the issue but leaves it open when tedium merges
