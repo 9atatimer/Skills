@@ -53,10 +53,46 @@ The default reviewer, and the one an agent may summon. Runbook: tds-utils
   `reviewed-nothing` (ocr never selects Markdown): the agentic rung is
   unserved; say so in the handoff and summon no other bot.
   `configuration`, `credential`, `runner-tool-missing`, `budget`,
-  `limited`: report; the fix is the human's.
-- **Stall.** The review job's limit is 9 minutes. `eyes` still on the
-  comment and no summary after 15 minutes: report the sha and time, stop,
+  `limited`: report; the fix is the human's. `timeout`: the review job hit
+  its limit; read the plan (below) before anything else, then report.
+- **The plan: which runner, how long.** The authorize job decides the
+  review job's runner and limit from the PR's size (tds-utils
+  `lib/ocr-review/tier.mjs`, Issue#776) and logs one line in its
+  Authorize step: `plan: <tier> tier, <N> minutes`, with the reason in
+  parentheses when the plan could not be honoured. A PR changing more than
+  25 files or more than 800 lines (callers move these with
+  `long_review_files`, `long_review_lines`) is `long`: it runs on the
+  owner's `CI_RUNS_ON_LONG`, the long niner (`cf-pool-long`, a 2-hour
+  ceiling), for 115 minutes. Every other PR is `standard`: `CI_RUNS_ON`,
+  9 minutes. A caller's own `review_runs_on` always wins, with its own
+  timeout. Read the plan line first whenever a run times out, stalls or
+  queues.
+- **Stall.** The limit is the plan's N: 9 minutes on the standard tier,
+  115 on the long one. `eyes` still on the comment and no summary 6
+  minutes past N: report the sha, the time and the plan line, stop, and
   leave the re-run to the human.
+- **A large PR that went wrong.** Check, in this order:
+  - Plan says `standard` on a large PR: the caller pins the reusable
+    workflow at a commit before tds-utils PR#780 (`f7d4fbbc`), or the
+    caller passes its own `review_runs_on`. Report the pin; bumping it is
+    a PR in that repository.
+  - Plan says `long`, with "CI_RUNS_ON_LONG is not set": the review ran on
+    the standard runner with the standard limit. Setting the variable on
+    the repository or its org is the human's.
+  - Review job queued and never started: no long runner took it. The long
+    pool's cap is 2, so a third large review waits for one to finish; past
+    that, the pool or its deploy is the problem. The infra repo's
+    runner-pool runbook ("The long pool", "First run") has the checks;
+    report, do not re-run.
+  - Review job ran on a runner not named `cfpool-long-*`: the labels the
+    job asked for were not the long pool's. Report the job's `runs-on`.
+  - `timeout` on the long tier after about 115 minutes: the review itself
+    was too slow for 2 hours. Report the PR size and the model; splitting
+    the PR or a faster backend is the human's call. The Review step has
+    its own limit 2 minutes under the job's, so the verdict and the result
+    upload should still run; whether the runner enforces a step limit on
+    the upstream composite action is not yet confirmed (tds-utils PR#780),
+    so a timeout with no verdict is that, not a new fault.
 
 ## Copilot (human-summoned)
 
