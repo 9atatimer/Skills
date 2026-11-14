@@ -134,6 +134,14 @@ An import or an `@` reference to another file does not reduce the cost
 when the harness loads the file anyway. A skill and a reference file do
 reduce it, because they load only when needed.
 
+An agent reads a skill's `SKILL.md` whole, once per session (the sdlc
+skill), and the text stays in its context for every later turn. So a
+`SKILL.md` over about 15 KB costs every session that enters its topic,
+whatever the task. Move a procedure used at one step, a template, tool
+mechanics and rationale into reference files, keep each heading that
+other text cites, and leave under it a summary and the condition for
+reading the reference.
+
 ## Writing a skill
 
 - **Look for an existing skill first.** Fetch `main` and search the
