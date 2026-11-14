@@ -1,6 +1,6 @@
 # Reviewer mechanics
 
-Per-reviewer surface for the review-watch loop in `SKILL.md`: how each
+Per-reviewer surface for the review-watch loop: how each
 agentic reviewer is summoned, how its queue reads, where it files
 findings outside threads, and when it counts as stalled. Who may summon
 whom is policy and stays in `SKILL.md` (Reviewer Selection); this file
