@@ -152,4 +152,28 @@ export const CASES = [
     "Sandbox the local inference server so it cannot read my home directory.", // lmde-daemons
     "Wire a Think chat assistant into the product's worker.", // cloudflare-think
   ]),
+  ...yes("agent-instructions", [
+    "Write a new skill for running database migrations.",
+    "Our AGENT.md is 700 lines. Trim it.",
+    "Add a rule to AGENT.md that agents open one PR per repo per session.",
+    "The gates skill doesn't load when I ask about review turns. Fix its description.",
+    "How long should a SKILL.md be before I split it into reference files?",
+    "Should I write IMPORTANT in capitals so the agent stops skipping this rule in CLAUDE.md?",
+    "Review this change to the global agent instruction file before I land it.",
+    "This skill section tells the story of the incident that caused the rule. Is that right?",
+    "Does this rule go in AGENT.md, in a skill, or in a hook?",
+    "Reword this rule in the coding skill so agents stop over-applying it.",
+  ]),
+  ...no("agent-instructions", [
+    "Add this unsettled lesson to TODO_PLAN.md's Lessons Learned.", // todo-plan
+    "Convert the numbered list in this design doc to bullets.", // markdown
+    "Write the PR description for this branch.", // technical-writing
+    "Write a runbook for rotating the signing key.", // technical-writing
+    "Route the lessons from this retrospective to the right layer.", // retrospective
+    "Write the system prompt our product's support assistant sends to the model.", // coding
+    "Add a codex overlay hook that sets its MCP servers at launch.", // clai
+    "Write the design doc for the notification service.", // design
+    "A review bot flagged my PR. Do I fix it or reject it on the thread?", // gates
+    "Should this yes/no judgement be a rule, a classifier or an LLM call?", // decision-models
+  ]),
 ];

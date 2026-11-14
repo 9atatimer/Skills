@@ -1,6 +1,6 @@
 ---
 name: technical-writing
-description: "Writing text that humans read and act on: runbooks, playbooks, operator procedures, and every PR or issue title, body, and comment. Plain, literal wording in the style of ASD-STE100 (precise meaning, familiar words, clear references, explicit relationships), with technical terms kept. Load when writing or revising a runbook or playbook for a human operator, and before opening a PR, filing an issue, or posting a PR or issue comment. Skip for docs written for agents (release, Docs; markdown), what a PR or issue body must contain (github-workflow), Markdown formatting rules (markdown), and design records (design)."
+description: "Writing text that humans read and act on: runbooks, playbooks, operator procedures, and every PR or issue title, body, and comment. Plain, literal wording in the style of ASD-STE100 (precise meaning, familiar words, clear references, explicit relationships), with technical terms kept. Load when writing or revising a runbook or playbook for a human operator, and before opening a PR, filing an issue, or posting a PR or issue comment. Skip for what a skill or AGENT.md holds (agent-instructions, which applies this wording), other docs written for agents (release, Docs; markdown), what a PR or issue body must contain (github-workflow), Markdown formatting rules (markdown), and design records (design)."
 ---
 
 # Technical Writing
@@ -15,8 +15,10 @@ Scope: documents a human reads under pressure or to make a decision,
 such as a runbook or playbook (release phase), and the text of a PR or
 issue: title, body, comment, review reply. The github-workflow skill
 sets what a PR or issue contains (PR Anatomy, Issue Anatomy); this skill
-sets how it reads. Docs written for agents follow the release skill's
-Docs section (terse, imperative) instead.
+sets how it reads. Skills and agent instruction files
+(`AGENT.md`, the global file) use this wording too; the
+agent-instructions skill sets what they hold. Other docs written for
+agents follow the release skill's Docs section instead.
 
 These are writing preferences, not a change to the task. Follow the
 requested format and tone. Keep deliberate warmth, humour, and creativity
