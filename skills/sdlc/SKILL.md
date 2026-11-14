@@ -361,13 +361,11 @@ law 11 (clear the gate) and law 14 (defect anatomy) hold unchanged.
 
 ### Fleet tooling -- look first, build once, depend never
 
-Before writing a script, a CI helper or a checker, search the tooling
-repo's packages, the host's `PATH` and the other repos for the same job,
-and build one shared tool rather than another copy. A tool more than one
-repo needs is a package in the tooling repo, and a tool on the acquire
-rail is never added as a project dependency to make it available; that
-is no reason to remove a fleet package a repo already declares. A tool
-missing from a host is a provisioning fault to report, not to patch.
+Before writing a tool, search the tooling repo, the host's `PATH` and
+other repos for the same job; build one shared tool, not a copy. Never
+add an acquire-rail tool as a project dependency, and never remove a
+fleet package a repo already declares. A tool missing from a host is a
+provisioning fault to report, not to patch.
 
 Read `references/tooling-and-rationale.md`, "Fleet tooling -- look first, build once, depend never", before you build, place, depend on, or remove any tool.
 

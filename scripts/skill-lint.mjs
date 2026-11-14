@@ -31,10 +31,10 @@ const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 // table line holds ten lines of prose. Words are counted exactly as `wc -w`
 // counts them, so anyone can check a number with the shell. A true token
 // count needs Claude's tokenizer, which only the API exposes; an estimate
-// is not a measure. Today's largest SKILL.md is sdlc, at 4,203 words. A
+// is not a measure. Today's largest SKILL.md is sdlc, at 4,167 words. A
 // ratchet: lower it as skills move detail into reference files; never raise
 // it to fit a file.
-export const WORD_BUDGET = 4203;
+export const WORD_BUDGET = 4167;
 
 export function countWords(text) {
   return text.split(/\s+/).filter(Boolean).length;
