@@ -131,6 +131,21 @@ Rules that hold across all three:
   commands, `atlantis plan` and `atlantis apply -p <project>`, and only where the infra repo's `AGENT.md` grants
   them; no other server command. For every other root, hand the human
   the line.
+- **The plan/apply server is the first path.** A root the infra repo's
+  authority table marks as served by the server plans on the PR, and the
+  human applies by commenting `atlantis apply -p <project>` there.
+  Apply before landing: a `/land` before the apply merges configuration
+  that is not live.
+- A routine-apply root that runs on the laptop only because the server
+  cannot serve it yet is a candidate to move: say so in the PR, and
+  enable it only by the infra repo's runbook (a server-side workflow and
+  its token, not only an `atlantis.yaml` entry). A root that is
+  laptop-only by decision (a human's own token, local state, ADC,
+  credential minting) stays there. `import`, `state mv`, `destroy` and
+  `force-unlock` run only on the laptop, on every root.
+- On the laptop path, run `plan -out=tfplan`, read it, and hand the
+  human the `op run ... terraform apply tfplan` line to run where its
+  output lands in the conversation.
 - Production naming follows the repo's deploy authority: "apply it"
   never means production; a request that does not name the tier is a
   request for preview.

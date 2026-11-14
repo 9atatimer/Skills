@@ -12,6 +12,26 @@ description: "Provisioning and governing the credentials infrastructure needs: t
 > which token fired, an item category that dropped a field, a deleted
 > item that started a scramble.
 
+## Where a secret may come from
+
+- A secret is read from 1Password at the moment of use, with
+  `op read op://<vault>/<item>/<field>` or `op run`. It never lands in a
+  file, a log, a transcript or a commit. Code takes an `op://` reference
+  in its config and resolves it at run time; the reference is
+  configuration, the value is never stored.
+- The one bootstrap credential is the service account token that
+  unlocks one vault. The human hands it to an agent; a workflow gets it
+  as a CI secret.
+- git-crypt (`.env.crypt`, `secrets/**`, decrypted with a GPG identity
+  the human provisions) is the one other channel, and an exception, not
+  a default.
+- There is no third channel. Never design, build, document or test on a
+  secret arriving in an environment variable, a plaintext `.env` file, a
+  CI secret other than the vault token, or an agent platform's
+  environment-secrets store, and never ask the human to put one there.
+  A secret the human puts in direnv to unblock you is temporary: use it,
+  and build nothing that depends on it.
+
 ## The vault boundary
 
 - A **personal vault** (`Private`) is interactive only. It holds the
