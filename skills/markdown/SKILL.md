@@ -74,6 +74,14 @@ related:
 - Use quotes around titles with special characters
 - Keep it minimal -- only metadata that tools will read
 
+## Reading a large Markdown file
+
+When the ast-mcp tools are connected, read a Markdown or HTML file with
+`get_outline`, then `read_node` for the sections the task needs, rather
+than reading the whole file. The outline costs a fraction of the file,
+and most tasks need one or two sections. A skill's `SKILL.md` is the
+exception: read it whole, once per session (the sdlc skill).
+
 ## Surgical Editing with markdown-editor MCP
 
 ### When to use markdown-editor

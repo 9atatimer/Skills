@@ -66,6 +66,27 @@ directory: provisioning overwrites it every session.
   <default>`; if that refuses, the branch has diverged and the human
   decides.
 
+### Worktrees
+
+- Prefer a worktree to checking a branch out in a shared clone. Other
+  terminals and agent sessions use the same clone, and a branch switch
+  there changes their checkout without telling them.
+- Cut it from a fresh fetch of the default branch, never from the
+  clone's HEAD, which may be any branch and stale:
+  `git -C <clone> fetch origin`, then
+  `git -C <clone> worktree add <dir> -b <branch> origin/<default>`. With
+  `branch.autoSetupMerge=simple` and `push.autoSetupRemote=true` the new
+  branch pushes to its own name; without them it tracks the default
+  branch, and a bare push is refused or lands there.
+- On a laptop, worktrees live in `~/workplace/.worktrees/<repo>-<topic>`,
+  never beside the clone, where they clutter the workspace and break
+  tab-completion of the repo's name. Move a stray one with
+  `git worktree move`, which rewrites both gitdir pointers; a plain `mv`
+  breaks it.
+- `git worktree remove` deletes ignored files without asking. Run
+  `git -C <worktree> clean -ndX` first, read the list, and move out
+  anything you cannot regenerate.
+
 ## Gates are phase 6
 
 Clear the gate before you move it, and Zero unreviewed code are the gates
