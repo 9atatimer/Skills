@@ -91,6 +91,22 @@ description: "Provisioning and governing the credentials infrastructure needs: t
 - Tiered deploys put the SA token and the vault UUID on a GitHub
   Environment (`preview`, `production`) so the tier is chosen by the
   environment, not by a branch condition in the workflow.
+- **The Environment's branch rule is the only gate on its token.**
+  GitHub releases an Environment secret only to a run whose ref matches
+  the Environment's deployment-branch rule. With no rule, a pushed branch
+  that edits the deploy workflow and dispatches itself receives the
+  token. So a production-tier Environment allows `main` only, declared
+  as code in the infra repo, never clicked. Required reviewers and wait
+  timers are not available on a private repository below GitHub
+  Enterprise: the API answers 422 ("ensure the billing plan supports the
+  required reviewers protection rule"). Never design, document or rely
+  on a reviewer gate there.
+- **`main`-only is two objects, and the first locks the door.** Turning
+  on custom branch policies starts the allow-list empty; the `main`
+  policy is a second object. An apply that stops between them leaves
+  production deployable from no branch (2026-11-14: a reviewer request
+  failed with the 422 above and stranded two repos). Apply that change
+  alone, and finish a partial apply at once.
 - Non-secret identifiers -- account ids, project refs, AUDs, team
   domains, hostnames, role ARNs -- are repository VARIABLES. They show
   in logs, can be checked, and do not count against a secret budget.
