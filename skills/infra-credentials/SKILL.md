@@ -61,6 +61,12 @@ description: "Provisioning and governing the credentials infrastructure needs: t
   Key or an admin token from the personal vault for the provider, and
   the `op` desktop app for the 1Password terraform provider. Minting
   modules say LAPTOP ONLY in their README and offer no CI path.
+- Never gate a script on `op whoami`. Under the desktop-app integration
+  it reports "not signed in" until another `op` command in the session
+  has prompted, and it never prompts itself, so the gate refuses with
+  1Password unlocked. Let the script's first real read (`op vault get`,
+  `op item get`) be the sign-in check: it prompts when the app can
+  authorize and fails when 1Password is locked.
 - Least privilege per purpose: a deploy token (scripts, routes, KV), a
   terraform token (Access, DNS), a bucket-scoped storage token, a
   service account per workload per tier. Two purposes, two tokens, even

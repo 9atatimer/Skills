@@ -124,6 +124,16 @@ the commit message links the issue but leaves it open when tedium merges
 the link; once tedium reports the merge, close each issue by hand with a
 comment naming the PR.
 
+**A tedium refusal is a failing check, not a reaction.** When the batch
+cannot build, the PR's `tedium` check goes red with the reason ("Merge
+conflict") and a link to the batch, and the PR stays open with no other
+signal. A conflict usually means the default branch moved after the
+branch was cut. Merge the default branch into the PR branch (never
+rebase or force-push), push, and comment `/land` again: the push cancels
+the old batch ("Canceled.") and the new `/land` queues a fresh one.
+Review approvals survive a merge commit where the Landing ruleset keeps
+them (9atatimer/tds-utils PR#808, 2026-11-15).
+
 ## GitHub Tool Usage
 
 In token-frugal preference order:
