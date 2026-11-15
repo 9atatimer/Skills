@@ -171,6 +171,34 @@ description: "Provisioning and governing the credentials infrastructure needs: t
 - Deleting an item is a rotation you did not plan. Before deleting,
   grep for its ID and title across the fleet.
 
+**A service-account token is rotated by a script the human runs**, never
+by hand and never by an agent. The script lives in the infra repo, next
+to the runbook for that account, and its tests run against fake `op`
+and `gh`. It enforces this order:
+
+- **Refuse before minting** when the holders it finds (the org secret
+  and every repository secret of that name) differ from the registry.
+  A holder the registry does not list is a finding, not a guess.
+- **Mint a new account with the same single-vault read grant.** The
+  grant cannot be edited after creation, so a new token is a new
+  account.
+- **Store it in the existing item, in place.** The token travels on
+  stdin only: never in argv, a file, the output or an exported
+  variable. The item's history keeps the old value.
+- **Probe before seeding.** Give the new token to one read-only child
+  process against its vault. If that fails, stop: no holder has been
+  touched, and the old account still works.
+- **Re-seed every holder from the item.** Keep the org secret's
+  visibility and its selected-repository list exactly as they were.
+- **Revoke the old account last, by hand,** after a green run on each
+  owner's side. The `op` CLI cannot delete a service account, so this
+  is the one console step. The script names which account to revoke.
+- **Recover from a half-rotation by naming the original account.** A
+  failure after the item edit leaves the item holding the new token
+  while every holder still has the old one. Re-seed from the item, or
+  revoke the new account and rerun, passing the original account's
+  name explicitly so the old account is still the one revoked.
+
 ## The registry
 
 The infra repo (named in this repo's `AGENT.md` under Infrastructure)
