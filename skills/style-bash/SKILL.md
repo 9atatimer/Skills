@@ -52,6 +52,10 @@ Structure every script in clear sections, in this order:
   `node_modules/x`. A downstream filter written for one form silently
   matches nothing on the other: exclude at the source with
   `--exclude-dir=node_modules`, or match both (`^(\./)?node_modules/`).
+- **`ln -sfn TARGET LINK` does not replace a real directory at LINK.**
+  It creates TARGET's basename inside that directory and returns
+  success; `-n` guards only a symlink to a directory. Where LINK must be
+  a symlink, refuse explicitly when LINK is a directory and not a link.
 - Let `main` exit on the first failure by propagating non-zero statuses (`set -e`)
 - Provide actionable error messages
 - **Under `set -euo pipefail`, redirecting stderr does NOT prevent the

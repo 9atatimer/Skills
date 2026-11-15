@@ -50,6 +50,11 @@ a hook for what is specific to one agent's config surface.
   provisioned skill is a link into a shared cache, so its content follows
   any later provision; a skill added since, or a checkout that holds
   copies, needs the provision in place.
+- `clai provision` exits 0 with no output when it skips (not a
+  project, an agent config absent, a skills directory blocked by local
+  edits), so a run that placed nothing looks like one that placed
+  everything. Pass `--report` in any unattended run and when you check
+  that a provision did something.
 - Each worktree has its own skill directories. After cutting one, run
   `clai provision` in it before an agent starts there.
 - Codex lists skills from `.codex/skills` in the checkout it was started
