@@ -355,10 +355,10 @@ read costs only the diff, because your context is already loaded; a
 fresh reviewer costs a whole new context. Hand the read to one fresh
 reviewer on a cheaper model than the session's only when the change is
 large or you are too close to it. Either way there is no verifier and no
-second round. Summon no OCR, ask
-no human to summon Copilot or Codex, and run no review-watch loop; the
-epilogue on the PR records that read and satisfies Zero Unreviewed Code
-(the gates skill, Documentation-only changes get no agentic reviewer).
+second round. Summon no OCR, ask no human to summon Copilot or Codex,
+and run no review-watch loop; the epilogue on the PR records that read
+and satisfies Zero Unreviewed Code (the gates skill, Documentation-only
+changes get no agentic reviewer).
 
 - **Phases 2 and 3 are the exception.** A design record under review or a
   phase-3 seam map gets the designomatic panel, not this pass and not

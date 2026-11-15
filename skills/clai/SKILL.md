@@ -43,9 +43,9 @@ a hook for what is specific to one agent's config surface.
 ## When an agent sees new skills
 
 - New skills reach the machine through `lmde acquire`, and a checkout
-  through `clai provision` run in it: a `clai <agent>` launch or a
-  Claude Code session-start hook runs both. The Codex desktop app runs
-  neither. In a checkout only Codex opens, run `lmde acquire`, then
+  through `clai provision` run in it. A Claude Code session-start hook
+  runs both; a `clai <agent>` launch runs `clai provision` only. The
+  Codex desktop app runs neither. In a checkout only Codex opens, run `lmde acquire`, then
   `clai provision` there, after a skills release. On a laptop a
   provisioned skill is a link into a shared cache, so its content follows
   any later provision; a skill added since, or a checkout that holds
