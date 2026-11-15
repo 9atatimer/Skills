@@ -40,6 +40,21 @@ the telemetry; use it only to prove something about the agent itself.
 Use provision for what every agent shares (skills, catalog servers). Use
 a hook for what is specific to one agent's config surface.
 
+## When an agent sees new skills
+
+- A checkout gets new skills only when something runs `clai provision`
+  in it: a `clai <agent>` launch, or a session-start hook. The Codex
+  desktop app does neither, so a repo or worktree that only Codex opens
+  keeps the skills it last received. Run `clai provision` there after a
+  skills release.
+- Each worktree has its own skill directories. After cutting one, run
+  `clai provision` in it before an agent starts there.
+- Codex builds its skill catalog from `.codex/skills` in the checkout it
+  was started in, when a conversation starts. A conversation, resumed or
+  not, does not see a skill added or refreshed after it began; only a new
+  conversation does. Until then the agent can read the `SKILL.md` by
+  path. A repo-local skill must be in that checkout's `.codex/skills`.
+
 ## Writing a hook
 
 - **Fail open.** A pre-hook that exits non-zero aborts the launch. Guard
@@ -49,6 +64,13 @@ a hook for what is specific to one agent's config surface.
   survive. Where the agent's format cannot be merged safely, own the
   whole file only while it carries a marker line, and leave an unmarked
   (hand-managed) file alone.
+- **Prove an edit before writing it.** Where no safe writer for the
+  format is at hand (TOML from a shell hook), make the edit, parse both
+  the result and the original, and write only when they differ in exactly
+  the keys the hook owns. A line-by-line edit that does not track
+  multi-line strings and brackets reads text inside a string as a key or
+  a table header, and its output still parses. Write atomically, edit a
+  symlinked config in its target, and keep the file's mode.
 - **Never symlink a file the agent writes at runtime** out of a
   repository checkout; that dirties the checkout on every launch. Merge
   into a real file in `$HOME` instead.

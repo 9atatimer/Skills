@@ -77,7 +77,9 @@ directory: provisioning overwrites it every session.
   `git -C <clone> worktree add <dir> -b <branch> origin/<default>`. With
   `branch.autoSetupMerge=simple` and `push.autoSetupRemote=true` the new
   branch pushes to its own name; without them it tracks the default
-  branch, and a bare push is refused or lands there.
+  branch, and a bare push is refused or lands there. Then run
+  `clai provision` in the new worktree, so the agents started there get
+  the current skills (the clai skill, When an agent sees new skills).
 - On a laptop, worktrees live in `~/workplace/.worktrees/<repo>-<topic>`,
   never beside the clone, where they clutter the workspace and break
   tab-completion of the repo's name. Move a stray one with
