@@ -103,12 +103,13 @@ Structure every script in clear sections, in this order:
   step's script against the real `op` (tds-utils PR#716).
 - **A function called in a condition runs with `set -e` off, for its
   whole call tree:** `if f`, `elif f`, `while f`, `until f`, `! f`, and
-  `f` before the last operand of `&&` or `||` (`f || x`, `f && x`). A command that fails inside
-  `f`, or inside anything `f` calls, does not stop it: `f` runs on and
-  returns its last command's status. So `render >"$tmp"` failing inside
-  a helper that then runs `mv -f "$tmp" "$out"` installs the partial
-  file and reports success. In any function a caller might test with
-  `||` or `if`, check each command that must stop it:
+  `f` before the last operand of `&&` or `||` (`f || x`, `f && x`). A
+  command that fails inside `f`, or inside anything `f` calls, does not
+  stop it: `f` runs on and returns its last command's status. So
+  `render >"$tmp"` failing inside a helper that then runs
+  `mv -f "$tmp" "$out"` installs the partial file and reports success.
+  In any function a caller might use as a condition, check each command
+  that must stop it:
   `render >"$tmp" || { rm -f "$tmp"; return 1; }`.
 
 ## Testing and Verification
