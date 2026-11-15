@@ -84,13 +84,9 @@ Rules you must hold when writing one:
   assigns to the test layer is a fixture**, not a declaration.
 - **Never declare assets, art or the scripts that make them.**
 
-Say in the file's header what is left undeclared on purpose and why: what
-the code is, what has no layer yet and is coverage until the owner decides
-its layer, why there is no `[records]` or `[radar]`, and that a new file
-in the governed tree needs a layer when it lands. template-tools
-`packages/designomatic/adherence.toml` and
-`packages/naatm-ci-magic/adherence.toml` are the worked examples; guess no
-layer to make coverage look complete.
+Say in the file's header what is left undeclared and why; guess no
+layer. Read `references/adoption.md`, "A declaration header", before
+you write one.
 
 ### When an edit is in force
 
@@ -188,39 +184,20 @@ agent's response to a red verdict.
 ## Records and radar
 
 Trace, Language, Change, Kept test and Record kept read the design and
-architecture records `[records]` names: the Behaviors table, the Domain
-Language, the use-case surface and the seam list, at the revision of the
-code. A record on the default branch is approved; nothing reads a status
-word. Without a record those five checks are coverage, and the report
-names the record. The radar `[radar]` names drives Dependency and Edge
-only.
+architecture records `[records]` names; the radar `[radar]` drives
+Dependency and Edge only. Removing a behavior or a term from an approved
+record is a Record kept finding: it lowers and cannot be exempted.
+Renaming a behavior is removing it: an approved record only grows.
+Never count the record's own parts in prose. When a check reading a
+record finds a gap, fix the record or the code, never edit the
+declaration to stop the check reading it.
 
-- **A sub-project's records must live under its directory**, because
-  paths cannot leave it. A package whose records sit in the root
-  `docs/design/` declares no `[records]` and says so in its header.
-- **A behavior and its use case may land together**: the record is read
-  with its code.
-- **Removing a behavior or a term from an approved record is a Record
-  kept finding.** It lowers, and it cannot be exempted.
-- **Renaming a behavior is removing it.** Record kept matches rows by
-  name, so a row renamed to fit a changed check lowers the change (tds-utils
-  PR#723, the Two jobs row). Keep the old row, say in it which row
-  supersedes it and which Key Decisions row ruled, and add the new row
-  beside it: an approved record only grows.
-- **Never count the record's own parts in prose.** "Nine qualities" in
-  the overview, the Domain Language and a Key Decisions row each went
-  stale when the tenth landed, and nothing mechanical reads a count. Name
-  the set, or point at the table that holds it.
-- **One radar.** A repository whose dependencies the fleet's radar rings
-  carries a row for each in its own radar, at the fleet's ring, naming the
-  fleet as the source (Key Decisions, One radar, carrying the fleet's
-  packages).
-- **When a check reading a record finds a gap**, fix the record (through
-  its own phase and review) or the code. Never edit the declaration to
-  stop the check reading the record.
+Read `references/records-and-radar.md`, "Records and radar", before you
+change a design or architecture record the gate reads, rename a
+behavior, write a `[records]` or `[radar]` section, or answer a Record
+kept, Trace, Language or Change finding.
 
 ---
-
 ## Reading a verdict and answering it
 
 The job summary carries the verdict, findings, notices and coverage; the
@@ -249,72 +226,39 @@ unit, evidence and provenance: the fix is read from the report.
   retry.
 - **Held or raised.** Pass. Raised names the findings removed.
 
-What differs between places:
-
-- **Judged checks are coverage wherever no judge is bound**: a CI caller
-  that does not pass `ADHERENCE_OP_SA_TOKEN`, the hook, and a laptop with
-  no door. A judged finding on the laptop does not mean such a caller
-  will see it.
-- **The laptop reads no reviews.** Outside the `ci` stage the newest
-  landed revision of each `adherence.toml` stands as in force, approved or
-  not, so a laptop verdict can differ from CI's. To see what CI sees, run
-  the `ci` stage with `GITHUB_REPOSITORY`, `GITHUB_BASE_REF` and
-  `GITHUB_TOKEN` set; without them every landing reads "reviews cannot be
-  read" and nothing is in force.
-- **A cloud sandbox cannot reach the reviews either**, so its verdict is
-  the newest-landing one, the laptop's.
+What differs between places: judged checks are coverage wherever no
+judge is bound, and the laptop and a cloud sandbox read no reviews, so
+their verdict can differ from CI's. Read `references/local-and-monorepos.md`,
+"What differs between places", before you trust a laptop verdict over
+CI's or run the `ci` stage locally.
 
 ---
 
 ## Running it locally
 
 Run the engine from a tds-utils checkout at the commit the repository
-pins, so the verdict is the one CI will reach. `bin/adhere` needs `uv`.
-`--stage` comes before the verb.
+pins, so the verdict is the one CI will reach; `bin/adhere` needs `uv`
+and `--stage` comes before the verb. Run `bin/adhere declaration check
+--root <repo>` after every declaration edit, before committing, and
+`bin/adhere judge` on your branch against its merge-base before opening
+the PR.
 
-- `bin/adhere declaration check --root <repo>`: reads every
-  `adherence.toml` and the merge of them. Run it after every declaration
-  edit, before committing.
-- `bin/adhere measure --root <repo>`: the working tree's report, no
-  verdict. Use it to see findings and coverage before declaring or
-  refactoring.
-- `bin/adhere judge --root <repo> --base <sha> --head <sha>`: the
-  verdict on a change. Run it on your branch against its merge-base before
-  opening the PR; it is one more reviewer of your own diff (the
-  self-review skill).
-- `bin/adhere --stage hook judge --root <repo> --staged`: the staged
-  index against `HEAD`, within the commit-time bound, as the pre-commit
-  stage runs it.
-- `bin/adhere --stage ci judge --root <repo> --base <sha> --head <sha>`
-  with the three variables above: the gate's own view of which
-  declarations are in force.
-
-`--format` takes `terminal`, `json`, `sarif` or `summary`. The laptop
-stage asks the hosted judge only when the decide client is configured
-(tds-utils `docs/ops/decide.md`); otherwise the judged checks are coverage
-there too.
+Read `references/local-and-monorepos.md`, "Running it locally", before
+you run the engine: it lists every command (`measure`, `judge`, the
+`hook` and `ci` stages) and what each needs.
 
 ---
-
 ## Monorepos
 
-- **Declare package by package**, each with its own `adherence.toml`
-  whose paths are relative to the package. A root declaration that names
-  two packages makes every file created anywhere else a Covered finding;
-  per-package files are the ruling (tds-utils Issue#695).
-- **Leave the rest undeclared**, and say so in each file's header. A
-  shared package no declaration governs is coverage, not a finding.
-- **Inside a declared package, a new file needs its layer in the PR that
-  creates it.** That holds for its `bin/`, `scripts/` and `bench/` trees
-  too.
-- **The scope selects every `adherence.toml` and each declared package's
-  tree**, so a change outside them skips the job.
-- **Records go with the package** or the package declares none.
-- **Land a new package declaration on its own**, then the code it
-  governs is judged from the next change.
+Declare package by package, each with its own `adherence.toml` whose
+paths are relative to the package; leave the rest undeclared and say so
+in each header. Inside a declared package a new file needs its layer in
+the PR that creates it. Land a new package declaration on its own.
+
+Read `references/local-and-monorepos.md`, "Monorepos", before you
+declare a monorepo or add a package to one.
 
 ---
-
 ## Rulings
 
 The engine's behavior is settled by the records and the owner's rulings,

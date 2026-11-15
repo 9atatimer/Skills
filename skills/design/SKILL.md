@@ -5,8 +5,6 @@ description: "Phase 2 of the SDLC: writing, reviewing, or improving a design doc
 
 # SKILL: Design Document Authoring & Review (Phase 2)
 
-> **Purpose:** Author, review, and improve design documents that are useful to both AI agents and human engineers.
-> **When to use:** Before implementing a new system, major feature, or architectural change.
 > **Exit gate:** the record is complete and a human merges it.
 > Merged is the approval (Lifecycle is metadata). From then on its body
 > is frozen; only the append-only Key Decisions log moves.
@@ -33,8 +31,7 @@ product.
 * **Every product component gets its own `DESIGN.<name>.md`.** One
   component, one design doc.
 * A design doc that spans multiple tools describes the boundaries and
-  contracts between them, and links out to each `DESIGN.<name>.md` rather
-  than duplicating them.
+  contracts between them and links out to each `DESIGN.<name>.md`.
 * The design doc answers **what** and **why**; `tasks/` and the root
   `TODO_PLAN.md` (via the planning skill) answer **how** and **in what
   order**; the code (via the coding skill) is the result.
@@ -49,34 +46,29 @@ Three records, three kinds of fact, and each constrains the next step:
 | Architecture (`docs/design/ARCHITECTURE.<name>.md`, phase 3) | how it intends to do that: the seams, the module map, the use-case signatures, the mechanism behind each capability, which seam carries each bound | capabilities the design did not grant; tuned values |
 | As-built (`docs/arch/`) | what runs: the components, the seams as coded, and **every tuned value** | intentions |
 
-A policy value ("how long is it kept"), an appearance ("what is the tier
-called"), or a tuning ("who is shown first") is neither a design decision
-nor an architecture decision. The design says the value exists, is bounded,
-and is a parameter, and names the bound in the problem's language ("sightings
-are kept strictly shorter than mutuals"); architecture says which seam
-carries it; the as-built records what it is set to. A number written into a
-design record freezes a tuning as if it were a capability, and every retune
-then reads as drift.
+A policy value, an appearance or a tuning is neither a design nor an
+architecture decision: the design says the value exists, is bounded and is
+a parameter; architecture says which seam carries it; the as-built records
+what it is set to. Never write a number into a design record. Read
+`references/phases-drift-behaviors.md`, "Why the record does not hold
+numbers", for the argument.
 
 ### `docs/design/` is not `docs/arch/`
 
 **The as-built lives in `docs/arch/` and is not a design doc.** The two
 trees fail in opposite directions, which is why they are separate:
 
-| | `docs/design/` | `docs/arch/` |
-|---|---|---|
-| Describes | what we intend to build | what is deployed right now |
-| Lifecycle | **body frozen once merged** | **living, never frozen** |
-| Wrong when | rewritten to match the code | contains anything not yet shipped |
+`docs/design/` is what we intend to build (body frozen once merged); `docs/arch/`
+is what is deployed right now (living, never frozen). Read
+`references/phases-drift-behaviors.md`, "The two trees", for the table.
 
 Never place an as-built document in `docs/design/`, and never describe
 unshipped intentions in `docs/arch/`. -> the as-built skill
 
 **The freeze covers a record's body, and only design and architecture
-records.** Key Decisions is still append-only (Lifecycle is metadata).
-And `STYLE-GUIDE.md` / `TEMPLATE.md`, which live in `docs/design/` as reusable
-process guidance rather than descriptions of an intended system, have no
-approval lifecycle and evolve freely.
+records.** Key Decisions is still append-only (Lifecycle is metadata);
+`STYLE-GUIDE.md` and `TEMPLATE.md` have no approval lifecycle and evolve
+freely.
 
 ---
 
@@ -94,16 +86,12 @@ does not hold how:
 The test for a sentence: if a different mechanism could satisfy it
 unchanged, it is design. "A blocked person is absent by every path" is
 design; "the exposure gate filters after scoring" is architecture; "the
-anonymity bound is six" is the as-built. A design that names a mechanism
-has decided it before anyone reviewed the capability, and the freeze then
-makes the mechanism unreviewable; one that names a number freezes a tuning
-as if it were a capability, and every retune reads as drift.
+anonymity bound is six" is the as-built.
 
-What the design does say about mechanism is nothing, and what it says
-about bounds is that each exists and what constrains it: "sightings are
-kept strictly shorter than mutuals", "the anonymity bound is at least the
-scanner and one other". The architecture record places each bound in a
-seam; the as-built records the value.
+A design says nothing about mechanism; about bounds it says that each
+exists and what constrains it. Architecture places each bound in a seam;
+the as-built records the value. Read `references/phases-drift-behaviors.md`,
+"What the design says about bounds", for the examples.
 
 ---
 
@@ -115,33 +103,12 @@ Given/When/Then that phase 4 will keep as a test, and it is the section
 phases 3, 4 and 5 all read. The architecture record gives each row its
 use-case signature and ports; this record gives each row its meaning.
 
-```
-| Behavior | Given / When / Then |
-|---|---|
-| An assertion is judged | Given a PR and an assertion, When the judge runs, Then a Verdict names pass/fail and the evidence |
-| An unreadable verdict never fails a clean PR | Given a judgement that cannot be read, When the judge runs, Then the Verdict is inconclusive, not fail |
-```
-
-The rules the table must satisfy:
-
-- **Every noun is in the Domain Language.** If the row says `Verdict`,
-  the Domain Language defines `Verdict`, and the architecture record and
-  the code spell it the same way. One concept, one name, everywhere.
-- **A behavior is observable from outside.** Something a person or a
-  calling component does, and what they then see. What they do not see
-  is a behavior too ("B is told nothing"), and is often the one that
-  matters.
-- **Error paths are rows.** A happy path and what happens when a
-  precondition fails are separate kept tests, so they are separate rows,
-  named so the architecture record can trace each to one use case.
-- **The Given/When/Then is the test that will be kept.** A row that
-  cannot be written as a failing test is not a behavior; move it to Goals
-  or delete it.
-- **Rules are not rows.** "The tax rate for digital goods is zero" is a
-  domain rule a behavior calls; it belongs in Design, stated once, in the
-  problem's language.
-- **No signature, no port, no store.** Those are the architecture
-  record's use-case surface, which cites these rows by name.
+The rules the table must satisfy: every noun is in the Domain Language;
+a behavior is observable from outside; error paths are rows; the Given/When/Then
+is the test that will be kept; rules are not rows; **no signature, no port,
+no store** (those are the architecture record's use-case surface). Read
+`references/phases-drift-behaviors.md`, "Behaviors rules and example",
+before you write or review the Behaviors table.
 
 A design record without this table describes a system nobody can observe.
 It is not complete, and it must not be approved.
@@ -150,10 +117,8 @@ It is not complete, and it must not be approved.
 
 ## When to Invoke This Skill
 
-- User asks to write, draft, or create a design doc
-- User asks to review or improve an existing design doc
-- User is about to start a feature that lacks a design doc
-- User asks "how should we design X?"
+When asked to write, draft, review or improve a design doc, when a feature
+lacks one, or when asked how to design X.
 
 ---
 
@@ -161,13 +126,9 @@ It is not complete, and it must not be approved.
 
 ### Gather Context
 
-Before writing, understand:
-
-- **What problem are we solving?** (not what we're building)
-- **Who is the audience?** (AI agents implementing it + human reviewers)
-- **What already exists?** Check `docs/design/` for related docs, and
-  `docs/concepts/<idea>/` for a phase 1 record of this idea
-- **What are the constraints?** (tech stack, timeline, dependencies)
+Before writing, understand the problem, the audience, what exists
+(`docs/design/`, `docs/concepts/<idea>/`) and the constraints. Read
+`references/authoring.md`, "Gather Context", for the questions.
 
 #### If a concept exists, phase 2 converts it
 
@@ -180,21 +141,14 @@ Read `references/authoring.md`, "If a concept exists, phase 2 converts it", when
 
 ### Start from the Template
 
-Copy `docs/design/TEMPLATE.md` to a new file following naming conventions:
-
-| Pattern | Use For |
-|---------|---------|
-| `DESIGN.<name>.md` | Feature or component design |
-| `INTEGRATION.md` | How components connect |
-
-(As-built system documentation is not a design doc -- it belongs in
-`docs/arch/`. See the as-built skill. The architecture record is written
-after this one is approved; see the architecture skill.)
+Copy `docs/design/TEMPLATE.md` to `DESIGN.<name>.md` (a feature or
+component) or `INTEGRATION.md` (how components connect). As-built system
+documentation is not a design doc; it belongs in `docs/arch/`.
 
 ### Fill Sections in Order
 
-Write every section, in the template's order, from the header block
-through Rejections; do not skip one.
+Write every section in the template's order, header block through
+Rejections; skip none.
 
 Read `references/authoring.md`, "Fill Sections in Order", for the order and what each section holds, before you write the first.
 
@@ -209,22 +163,14 @@ Read `references/authoring.md`, "Apply the Style Guide", for the prose and table
 
 **Run the panel before you ask a human.** `designomatic run <draft> --panel
 design-review` puts several distinct lenses over the document against the
-SDLC skills themselves -- this one and architecture, the same standard the
-checklist below states.
-This matters most for a document *you* drafted: reviewing your own draft
-re-reads your intent rather than the text, and a panel is the cheapest
-correction for that. -> the designomatic skill
+SDLC skills (this one and architecture) -> the designomatic skill. It
+matters most for a document *you* drafted. The checklist stays yours to
+apply; the panel is a first pass, and the merge is the approval.
 
-The checklist stays yours to apply. The panel is a first pass, not an
-approval; the merge is the approval.
-
-**Run one worked example through it before it freezes.** A record that
-specifies a protocol, a workflow or a state machine hides bugs prose review
-does not see. A concrete instance makes every rule run, and so does
-adversarial review of that instance. Porting g1n1's Panel to a runnable
-workflow file and reviewing it found two contract bugs that prose review and
-a six-lens audit missed. Attribute propagation through fork and join was
-unstated. An enabling rule deadlocked work gates over input attributes.
+**Run one worked example through it before it freezes** when the record
+specifies a protocol, a workflow or a state machine; read
+`references/phases-drift-behaviors.md`, "A worked example before the
+freeze", for why.
 
 ### Quality Checklist
 
@@ -242,13 +188,10 @@ Read `references/authoring.md`, "Review Output Format", for the template, when y
 
 ## Improving a Design Doc
 
-When asked to improve an existing doc:
-
-- **Read the full doc first** -- Understand the intent before suggesting changes
-- **Check against the template** -- Identify missing sections
-- **Apply this skill's style rules** -- Fix vague language, add tables, improve diagrams
-- **Preserve the author's intent** -- Improve clarity without changing decisions
-- **Add, don't remove** -- Missing sections should be added; existing content should be refined
+Read the full doc first, check it against the template, apply this skill's
+style rules, preserve the author's intent, and add rather than remove.
+Read `references/authoring.md`, "Improving a Design Doc", before you
+start.
 
 ### Common Improvements
 
@@ -260,47 +203,16 @@ Read `references/authoring.md`, "Common Improvements", for each gap's fix.
 
 ## Connecting Design Docs to Implementation
 
-A design doc's value is realized when it drives implementation:
-
-- **Architecture (phase 3):** once this record is merged, write
-   `ARCHITECTURE.<name>.md` beside it: the seams, the module map, each
-   Behaviors row's use-case signature, where each bound is carried, and
-   operability, against the as-built in `docs/arch/`. It freezes once it
-   is merged. -> the architecture skill
-- **Planning (phase 3b):** break the design into test-first phases,
-   recorded as task files under `tasks/` and ordered in the repo's root
-   `TODO_PLAN.md`. -> the planning skill
-- **Behaviors and Code (phases 4-5):** implement RED -> GREEN -> COMMIT
-   against both records -- each RED test asserts a Behaviors row's Then,
-   calling the use case the architecture record gives that row, by that
-   signature. **Both records are frozen once merged** -- see Drift
-   below
-- **Retrospective (phase 8):** walk the doc against the code and file
-   every divergence. Do **not** silently "update the doc to match". -> the
-   retrospective skill
-
-### Where this doc sits
-
-```
-docs/design/DESIGN.feature.md         (what it can and cannot do -- FROZEN once merged)
-         |
-         v
-docs/design/ARCHITECTURE.feature.md   (how it intends to -- written against docs/arch/,
-         |                             FROZEN once merged)
-         v
-tasks/ + TODO_PLAN.md                 (how to build it, and in what order)
-         |
-         v
-Implementation                    (the code)
-         |
-         v
-docs/arch/                       (updated at 7a with what actually shipped)
-```
-
-The design record answers **what** and **why**. The architecture record
-answers **how it intends to**. The as-built answers **what is actually
-there**. The tasks answer **how to get there**, and the plan **in what
-order**.
+A design doc's value is realized when it drives implementation. Once the
+record is merged: write `ARCHITECTURE.<name>.md` beside it (phase 3, the
+architecture skill); break the design into test-first phases under `tasks/`
+(phase 3b, the planning skill); implement RED -> GREEN -> COMMIT against
+both records, each RED test asserting a Behaviors row's Then (phases 4-5).
+**Both records are frozen once merged** -- see Drift below. In the
+retrospective (phase 8, the retrospective skill) file every divergence; do
+**not** silently "update the doc to match". Read
+`references/phases-drift-behaviors.md`, "Connecting Design Docs to
+Implementation", for each phase's hand-off and the document chain.
 
 ---
 
@@ -310,13 +222,6 @@ order**.
 implementation is checked against. The moment you edit it to describe what you
 actually built, you destroy the only artifact that can show you drifted -- and
 you launder an unreviewed decision into apparent spec.
-
-This is a real failure mode, not a hypothetical. It happened here: an
-implementation swarm rewrote the flag tables, deleted the data-model fields it
-had chosen not to build, and converted the Open Questions into RESOLVED
-entries -- inside a `+4574` feature PR where 87 lines of doc churn were
-invisible. The rewritten doc no longer stated the security rule the code was
-violating. It shipped.
 
 ### The rule
 
@@ -330,19 +235,12 @@ change the code, through the design process.
 ### What counts as drift
 
 Anything the doc specifies that the code does not do, and anything the code
-does that the doc does not specify. **The drift walk itself -- the kinds,
-and what to file for each -- is the retrospective skill (phase 8).** Two
-things must be true here, at design time, for that walk to be possible
-later:
-
-- The doc says something specific enough to diverge *from*. "Handle errors
-  gracefully" cannot drift; "retry twice, then fail closed" can.
-- The doc stays frozen, so the divergence is visible at all.
-
-One split is worth knowing before you get there: for anything the code does
-that the doc never specified, the as-built **records** it as fact (phase 7a)
-*and* an issue **accuses** -- asks whether it should have been designed.
-Recording is not approving, and this doc is not where either happens.
+does that the doc does not specify; the drift walk is the retrospective
+skill (phase 8). The doc must say something specific enough to diverge
+*from*, and it stays frozen so the divergence is visible. Recording what
+the code does that the doc never specified is the as-built's job; an issue
+accuses. Read `references/phases-drift-behaviors.md`, "Drift detail", when
+you must explain why the freeze exists or what to file.
 
 ### One legitimate exception
 
@@ -362,8 +260,8 @@ what the design can or cannot do, and the owner made or ratified it.
 - **The architecture record's Key Decisions follow the same rule.** A
   mechanism chosen while building goes in its issue, not in that table.
 - **In its own commit, on the session's one PR** (the github-workflow skill,
-  One open PR per repo per session). A doc change folded into a code commit does
-  not get read. That is exactly how the failure above shipped.
+  One open PR per repo per session). A doc change folded into a code commit
+  does not get read.
 
 Every other section -- Overview, Goals, Non-Goals, Design, Behaviors,
 State Machine, Domain Language, Parameters, Security, Open Questions -- is
@@ -380,13 +278,6 @@ file what you discovered, update `TODO_PLAN.md` -- is
 **the retrospective skill (phase 8)**, run on the session's PR while it is
 open, else in one follow-up PR.
 
-It used to live here, which is why it got skipped: the freeze rule above
-tells implementers not to be in this skill, so the one checklist that
-closes the loop was hidden behind the rule that kept them out of it.
-
-> A green test suite and a clean review say nothing about whether you built
-> what was designed. Only the retrospective does.
-
 ---
 
 ## Lifecycle is metadata
@@ -402,23 +293,21 @@ it:
   merge is the approval and the freeze, when a human lands it: a human
   merges the PR or posts its `/land`. An agent never merges or lands its
   own design or architecture record (the github-workflow skill)
-- **Implemented:** shipped, and its retrospective landed -- the
-  PR carrying the retrospective merged and the tracking issue closed (the
-  retrospective skill). The retrospective does not land, and does not
-  close the tracking issue, while drift cut from it is open
+- **Implemented:** shipped, and its retrospective landed (the retrospective
+  skill); it does not land, and does not close the tracking issue, while
+  drift cut from it is open
 - **Superseded:** the PR that lands the replacing record deletes the old
-  one. The replacement cites it in Related Documents, by path and the
-  commit that removed it; git history keeps it
+  one; the replacement cites it in Related Documents by path and the
+  commit that removed it
 
 **The design PR opens or names the tracking issue.** Implementation PRs
 cite it with `Refs #N`, never `Closes`; only the PR that carries the
 retrospective closes it.
 
-**The open tracking issue carries the merged-but-unshipped gap.** A
-merged record whose code is not yet released is not in the shared
-architecture that `docs/arch/` describes; the issue stays open until the
-retrospective lands. That is what lets the as-built stay strictly
-factual instead of needing a "pending" marker.
+**The open tracking issue carries the merged-but-unshipped gap**, so the
+as-built stays strictly factual with no "pending" marker; it stays open
+until the retrospective lands. Read `references/phases-drift-behaviors.md`,
+"The tracking issue and the merged-but-unshipped gap", for why.
 
 **Lifecycle is never a question.** An agent never writes, sets or
 reports a status, and never asks a human to approve one or reminds them
@@ -426,7 +315,6 @@ of one, in chat, in a PR or anywhere else: the merge is the approval.
 
 **Merged is a freeze.** From the merge onward the body changes only by
 human amendment through the design process -- never as a side effect of
-someone implementing it; Key Decisions stays append-only. See Drift
-above. **The merge is also the gate to phase 3:** the architecture
-record is written against a frozen design, so a design that has not
-merged has no architecture record yet.
+implementing it; Key Decisions stays append-only, as the drift section above says.
+**The merge also opens phase 3:** an unmerged design has no architecture
+record yet.

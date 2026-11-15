@@ -101,16 +101,12 @@ is used as a *tool* by the policy rather than treated as the policy itself.
 Both are excellent and actively maintained. The decision is a licensing
 decision that happens to be about software.
 
-| | **Marker** (datalab-to) | **Docling** (Linux Foundation AAIF, donated by IBM) |
-|---|---|---|
-| Code license | Apache-2.0 | MIT |
-| Model weights | Modified AI Pubs Open RAIL-M: free for research, personal use, and startups under $5M funding or revenue; a paid weights license past that | Layout and TableFormer under CDLA-Permissive-2.0; granite-docling VLM under Apache-2.0 |
-| Stewardship | A company (Datalab), which also sells the hosted API | A foundation, with IBM Research behind the models |
-| Inputs | PDF, images, PPTX, DOCX, XLSX, HTML, EPUB | Those, plus audio and video via ASR, email, LaTeX, and more |
-| Outputs | Markdown, JSON, HTML, `chunks` | `DoclingDocument` -> Markdown, HTML, JSON, DocTags |
-| Chunking | `chunks` output format: top-level blocks, HTML per block | `HybridChunker`: tokenizer-aware, heading-contextualized, table-header repeating |
-| Service mode | `marker_server`, or Datalab's hosted API | `docling-serve` container image |
-| LLM assist | `--use_llm` against Gemini, Claude, OpenAI, Ollama, and others | VLM pipeline with granite-docling, or a remote VLM |
+The side-by-side comparison (code license, model weights, stewardship, inputs,
+outputs, chunking, service mode, LLM assist) is in
+`references/extractor-comparison.md`; read it before you write either adapter
+or when the rule below does not settle the choice. The deciding fact: Marker's
+model weights are free only for research, personal use and startups under $5M
+funding or revenue; Docling's are permissive.
 
 **The rule:**
 
@@ -167,18 +163,10 @@ Rules that hold in all three:
 
 ## The turnkey checklist
 
-What a complete knowledge-base slice lands, by SDLC phase. Nothing here is
-optional; the ones teams skip are deletion and eval, and both hurt later.
-
-| Phase | What lands |
-|---|---|
-| Design | The corpus model and its tenancy rule; the citation promise; the hobby-or-commercial answer with the extractor it implies; retention and deletion; what happens when the answer is not in the corpus |
-| Architecture | The four ports named in the architecture record; the process boundary for extraction; the reindex key (extractor version plus embedding model); radar rows proposed |
-| Behaviors | The contract suite both extraction adapters must pass; the labeled question set that defines retrieval quality; fixtures for born-digital text, a scan, and a table-heavy page |
-| Code | Domain, then the chosen extraction adapter, then embedding, index, and the query use case. The other extractor is written only when needed, and costs one file |
-| Gates | Recall and MRR floors in CI; contract suite green against every adapter; ingest-time secret and PII scanning |
-| Release | Weights baked into the image; queue and dead-letter path; backfill and reindex runbook |
-| Retrospective | Reindex cost measured against the estimate; eval floors revisited against real questions |
+A complete knowledge-base slice lands something in every SDLC phase. Nothing
+here is optional; the ones teams skip are deletion and eval, and both hurt
+later. Read `references/turnkey-checklist.md`, "The turnkey checklist", at each
+phase boundary of a knowledge-base feature to see what that phase must land.
 
 ## Testing
 
@@ -243,3 +231,5 @@ and it is read back by a model with tools.
 | [references/docling.md](references/docling.md) | Docling cookbook: install, converter options, VLM pipeline, `HybridChunker`, `docling-serve` sidecar |
 | [references/marker.md](references/marker.md) | Marker cookbook: install, converter API, config, `chunks` output, LLM mode, server mode |
 | [references/retrieval.md](references/retrieval.md) | Chunk policy, embedding choice, pgvector schema and hybrid search, reranking, and the eval harness |
+| [references/extractor-comparison.md](references/extractor-comparison.md) | Marker versus Docling, side by side |
+| [references/turnkey-checklist.md](references/turnkey-checklist.md) | What each SDLC phase lands for a knowledge-base slice |
