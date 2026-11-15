@@ -42,18 +42,23 @@ a hook for what is specific to one agent's config surface.
 
 ## When an agent sees new skills
 
-- A checkout gets new skills only when something runs `clai provision`
-  in it: a `clai <agent>` launch, or a session-start hook. The Codex
-  desktop app does neither, so a repo or worktree that only Codex opens
-  keeps the skills it last received. Run `clai provision` there after a
-  skills release.
+- New skills reach the machine through `lmde acquire`, and a checkout
+  through `clai provision` run in it: a `clai <agent>` launch or a
+  Claude Code session-start hook runs both. The Codex desktop app runs
+  neither. In a checkout only Codex opens, run `lmde acquire`, then
+  `clai provision` there, after a skills release. On a laptop a
+  provisioned skill is a link into a shared cache, so its content follows
+  any later provision; a skill added since, or a checkout that holds
+  copies, needs the provision in place.
 - Each worktree has its own skill directories. After cutting one, run
   `clai provision` in it before an agent starts there.
-- Codex builds its skill catalog from `.codex/skills` in the checkout it
-  was started in, when a conversation starts. A conversation, resumed or
-  not, does not see a skill added or refreshed after it began; only a new
-  conversation does. Until then the agent can read the `SKILL.md` by
-  path. A repo-local skill must be in that checkout's `.codex/skills`.
+- Codex lists skills from `.codex/skills` in the checkout it was started
+  in, and sends that list to the model only at some points in a
+  conversation, not on every turn and not when the app reopens a
+  conversation. Do not count on a running conversation to see a skill
+  added after it began; start a new one, or have the agent read the
+  `SKILL.md` by path. A repo-local skill must be in that checkout's
+  `.codex/skills`.
 
 ## Writing a hook
 
