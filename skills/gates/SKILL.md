@@ -224,7 +224,7 @@ repo requires `review-settled`, it stays red: a human lands it.
   agentic reviewer -> the designomatic skill.
 - **Prose that agents follow is reviewed as prose.** A PR whose every
   changed file is prose -- skills, personas, `AGENT.md`/`CLAUDE.md` and
-  prompts included -- gets one cheaper-model review for correctness,
+  prompts included -- gets the author's own read for correctness,
   readability and specificity, no panel, and the human review (the
   self-review skill, Documentation-only changes). CI workflows and gate
   configuration are code: a PR touching them takes the full ladder.
