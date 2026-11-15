@@ -50,6 +50,11 @@ a hook for what is specific to one agent's config surface.
   provisioned skill is a link into a shared cache, so its content follows
   any later provision; a skill added since, or a checkout that holds
   copies, needs the provision in place.
+- `clai provision` exits 0 with no output when it skips (not a
+  project, an agent config absent, a skills directory blocked by local
+  edits), so a run that placed nothing looks like one that placed
+  everything. Pass `--report` in any unattended run and when you check
+  that a provision did something.
 - Each worktree has its own skill directories. After cutting one, run
   `clai provision` in it before an agent starts there.
 - Codex lists skills from `.codex/skills` in the checkout it was started
@@ -116,6 +121,13 @@ poller per bot, so a second agent starting it takes the channel away
 from the first. Each agent that imports a server it must not run gets a
 `clai.d/<agent>/pre/` hook adding that server to the agent's own
 disabled list, read from a sibling `.conf` file.
+
+Claude Code matches a project `.mcp.json` server and a user-scope server
+by name, and the higher scope (project) supplies the whole entry -- but
+only once the project entry is approved. An unapproved one is skipped in
+favour of user scope, and a fresh clone is never approved, so a cloud
+sandbox runs the user-scope server while an approved laptop runs the
+project one. Point both scopes at the same binary path.
 
 ## Adding a coding agent
 

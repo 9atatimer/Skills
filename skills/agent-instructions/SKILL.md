@@ -170,6 +170,13 @@ short rule that applies whatever the case in the summary itself.
   agent must decide and type. Deterministic work goes in a tested script
   that the skill names. Say whether the agent runs the script or reads
   it.
+- **A skill directory is a unit of distribution.** It is versioned,
+  copied or linked into a shared cache, and overwritten by the
+  provisioner, so the same directory serves every repo on the machine.
+  Never put consumer-owned configuration in it (a file each repo is told
+  to copy, fill in and commit): the last writer wins for all repos.
+  Derive the value at run time, or read it from the consuming repo's
+  `AGENT.md`.
 - **Reference files** sit one level below `SKILL.md`, and `SKILL.md`
   says when to read each one. A reference file does not point to another
   reference file.
@@ -188,6 +195,14 @@ short rule that applies whatever the case in the summary itself.
 - Edit `AGENT.md`. `CLAUDE.md` and `AGENTS.md` are symlinks to it.
 - An entry is the rule in one or two lines, and a pointer to the skill,
   doc or script that has the rest.
+- **Keep instruction files free of HTML comments.** The harness loads
+  `CLAUDE.md` verbatim and strips nothing, so a comment costs tokens
+  and reads as instruction every session. Put provenance ("generated,
+  do not edit") in a sibling marker or the package README.
+- **A rule about generated output is encoded in the generator.** If a
+  tool regenerates a file, a hand correction or a prose decision is
+  reverted on the next run. Change the generator's source and add a
+  regression test; prose alone is not the decision.
 - **Search before you add.** Grep the file, and the layers loaded with
   it, for the noun. Two rules that disagree are resolved arbitrarily by
   the reader, and neither harness guarantees which file wins.

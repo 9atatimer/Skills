@@ -222,6 +222,15 @@ Every test must start with clean state:
 - Fakes created per-test (never shared mutable state between tests)
 - Temp directories auto-cleaned by the test framework
 - No global state mutation -- if unavoidable, restore in teardown
+- A test that drives code which detects its environment (a cloud
+  sandbox, CI, a TTY) clears the detector's inputs first, for example
+  `unset CLAUDE_CODE_REMOTE` at the top of the suite. Ambient signals
+  from the machine running the test otherwise leak into every child
+  call, and a case meant to be a no-op writes to the real host. Each
+  case that needs the environment opts in with a scratch path.
+- Deleting a feature deletes its tests, and adds an inverse assertion
+  that the feature is gone (the tool is not invoked, the file is not
+  written). Without it the feature can return and no test notices.
 
 ### A guard needs an accept case
 

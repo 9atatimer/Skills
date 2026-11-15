@@ -220,6 +220,16 @@ to rule on a finding the author rebuts.
   gates skill), or escalated to the human.
 - **When a finding names N instances of a pattern, N is a sample, not a
   list.** Script the sweep for the whole class before pushing the fix.
+- **A sweep is extension-agnostic.** A leftover-reference search
+  filtered to some file types (`*.md`, `*.sh`) misses the rest, and the
+  PR then asserts a cleanliness the search never tested. Search the
+  whole tree, excluding only what you can name and justify.
+- **A link is not evidence that its target exists.** Open or `ls` the
+  target before citing it as support.
+- **When a premise flips, sweep its consequences.** Search for what
+  follows from the old premise (the claims, table cells and rules built
+  on it), not for the issue number, because most restatements never
+  cite one.
 - **Do not fold.** A finding is evidence, not authority. Folding on every
   finding to make the ledger clean is the failure this skill exists to
   prevent; so is waving them all away.
