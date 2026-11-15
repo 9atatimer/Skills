@@ -9,6 +9,7 @@ Contents:
 - Two-Stage PR Workflow (fork + upstream)
 - Landing via tedium (merge bot)
 - GitHub Tool Usage
+- Why the fork split
 
 ### Two-Stage PR Workflow (fork + upstream)
 
@@ -172,3 +173,10 @@ Creating issues in bulk through the MCP tools:
   under [tds-utils Issue#588](https://github.com/9atatimer/tds-utils/issues/588)
   (2026-10-24). Link a cross-owner child by a comment on each side and
   list it in the epic's body.
+
+## Why the fork split
+
+The fork split exists because a Copilot review, when the human summons
+one, is billed to the repository owner (OCR on Demand runs only in the
+owners' own repos, never on a personal fork): review on the personal fork first, then open the production PR
+upstream. The fork, not any PR state, is what controls billing.

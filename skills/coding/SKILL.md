@@ -5,13 +5,9 @@ description: "Phase 5 of the SDLC: writing, implementing, or modifying source co
 
 # SKILL: Implementation (Phase 5)
 
-**Role & Mandate**
-
-Act as a **Senior Software Architect and Principal Engineer** for a high-growth startup. Implement the attached design document to **production quality**, with an emphasis on correctness, clarity, maintainability, and testability, and low risk. This code must be suitable for a fast-moving startup and explicitly avoid accumulating technical debt.
+**Role & Mandate:** act as a Senior Software Architect and Principal Engineer; implement the design to production quality (correct, clear, maintainable, testable, low risk, no accumulating tech debt).
 
 If the design document is ambiguous, **do not guess**. Surface the ambiguity, explain the tradeoffs briefly, and propose the smallest reasonable resolution.
-
-Deliver maintainable, testable, low-risk code for a fast-moving startup -- ship quickly without accumulating tech debt.
 
 ---
 
@@ -22,7 +18,7 @@ These gates are non-negotiable. Do not skip them because the change "looks small
 - **Design gate (product only).** There must be an approved design doc for the product component you are touching.
    - Every product component has a `DESIGN.<name>.md` under `docs/design/`.
    - If it does not exist or is ambiguous, stop and use the design skill to write/fix it first.
-   - Developer tooling (self-contained dev QoL, invisible to the product -- the sdlc skill's "Product or tooling" test) has no design doc and needs none. Its gate is an issue framing the change; its record is `docs/ops/<tool>.md`, updated in the same PR. The architecture and plan gates below do not apply to it either. The test and tech gates do.
+   - Developer tooling (self-contained dev QoL, invisible to the product) has no design doc, and the architecture and plan gates do not apply to it; the test and tech gates do. Read `references/tests-taxonomy-anatomy.md`, "0 Developer tooling", before you skip a gate on that ground.
 - **Architecture gate.** There is an approved architecture record beside the design: every volatile axis this change introduces is named and mapped to one seam, every behavior has its use-case signature, against the as-built in `docs/arch/`. A seam first discovered while coding was never reviewed. -> the architecture skill
 - **Plan gate.** For any multi-step feature, build the phased, test-first plan with the planning skill and record it per the todo-plan skill.
 - **Test gate.** Write the failing test first (see Section 3). No production code without a failing test demanding it.
@@ -34,7 +30,7 @@ These gates are non-negotiable. Do not skip them because the change "looks small
 
 **The idea, in one sentence:** Separate what the software *means* from how it *connects to the world* -- keep the meaning stable and central, keep the connections volatile and replaceable, and point every dependency inward, toward the meaning.
 
-Four traditions each contribute one rule, and the rules do not overlap. Layered Architecture says which way a dependency may point. Hexagonal says what the core may know about. Todd's LAW says what one function may do. Domain-Driven Design says how things are named and who owns each invariant. An agent that applies only one of them, usually Hexagonal, gets a domain with ports around it and nothing else: behaviors with no single home, two names for one concept, functions that decide and act in the same body. Run all four, every time. Each has mechanical tests in Section 1.2.
+Four traditions each contribute one rule, and the rules do not overlap; an agent that applies only one of them gets a domain with ports around it and nothing else. Run all four, every time.
 
 | Rule | From | Question | Tests |
 |---|---|---|---|
@@ -43,15 +39,15 @@ Four traditions each contribute one rule, and the rules do not overlap. Layered 
 | **LAW** | Todd's LAW | is each function exactly one of logic, action, workflow? | Kind, Purity |
 | **Language and boundaries** | DDD | is each concept named once, in the design's words, with one owner? | Trace, Decision, Language, Boundary |
 
-Lead with the tests and the intent behind them. Use the tradition names only where they help. Section 1.6 gives the lineage.
+Section 1.6 gives the lineage.
 
 ### 1.1 The spirit (internalize these)
 
 * **Stable core, volatile edges.** The core is the decisions and rules in the language of the problem. The edges are mechanisms: HTTP, GitHub, the filesystem, a specific LLM vendor. Mechanisms change; meaning should not have to.
 * **Dependencies point toward stability.** Details import abstractions; the core imports nothing concrete. A vendor SDK, an env var, a wire format, or a model id must never appear in the core.
 * **The core owns decisions; edges own mechanisms.** "Which model should judge this" is a decision -> core. "Speak Anthropic's API" is a mechanism -> edge.
-* **Layered: a unit imports only its own layer or a layer below it.** The order, bottom to top: `domain`, then `ports`, then `application` and `adapters` side by side, then the composition root. `application` and `adapters` never import each other. A layer does not know who calls it. That is what makes a layer reusable: anything can be built on top of code that assumes nothing about its callers.
-* **Todd's LAW: every function is logic, action, or workflow, never two of them.** Logic computes a value from its inputs. Action changes something: a write, a call, a mutation. Workflow calls logic and actions in order and does nothing else. The rule exists for testing. Logic is tested by its return value, with no fake. An action is tested by its effect, with its dependencies injected. A workflow is tested by the calls it makes, through fakes. A function that both decides and acts can be tested neither way cleanly.
+* **Layered: a unit imports only its own layer or a layer below it.** Bottom to top: `domain`, `ports`, `application` and `adapters` side by side (never importing each other), the composition root.
+* **Todd's LAW: every function is logic, action, or workflow, never two of them.** Logic is tested by its return value with no fake; an action by its effect through an injected dependency; a workflow by its calls through fakes. Read `references/tests-taxonomy-anatomy.md`, "1.1 Layered and LAW", for the reasoning.
 * **Name the things that change.** Every axis of change becomes one explicit seam -- a port, a policy, or a parameter -- never a hardcoded value and never an inline `if`.
 * **One language, one owner.** The nouns in the code are the nouns in the design doc, and each concept is owned by exactly one module. A concept with two names, or an invariant enforced in two places, is a boundary that was never drawn.
 * **Keep behavior with its data.** A type that is only fields, with the logic living somewhere else, is the anemic smell. Put invariants where the data is.
@@ -60,60 +56,27 @@ Lead with the tests and the intent behind them. Use the tradition names only whe
 
 Run these against any change. They are checks, not opinions, and **a change passes only when it passes every row** -- Grep and Swap alone certify a hexagon, not a design.
 
-**Core vs edge (Hexagonal):**
+* **Core vs edge:** **Grep test** (does the core mention a vendor, SDK, `fetch`, `process.env`, `fs` or a model string? -- move it to an edge), **Swap test** (can the LLM, code host or storage be replaced without touching the core?), **Change test** (does each likely axis of change map to exactly one module?).
+* **Layered:** **Arrow test** (every import stays in its layer or goes below, no cycles), **Wiring test** (exactly one composition-root place per runtime names concrete adapters; buildable with every adapter faked).
+* **LAW:** **Kind test** (each function is exactly one of logic, action, workflow), **Purity test** (a logic function takes no port, I/O callback or clock).
+* **Language and boundaries:** **Trace test** (every Behaviors row maps to exactly one application function), **Decision test** (each important decision named in one place), **Language test** (every noun in a use-case signature is a term the design defines), **Boundary test** (each invariant has one owning module).
 
-| Test | Question | Fail means |
-|---|---|---|
-| **Grep test** | Does the core mention a vendor, SDK, `fetch`, `process.env`, `fs`, or a model string? | Leak -- move it to an edge |
-| **Swap test** | Can I replace the LLM / code host / storage without touching the core? | Missing seam |
-| **Change test** | List what is likely to change. Does each axis map to exactly one module? | A hardcoded value, or a tangle |
+Read `references/tests-taxonomy-anatomy.md`, "1.2 The tests (tables)", before you grade a change or declare it done.
 
-**Layered:**
-
-| Test | Question | Fail means |
-|---|---|---|
-| **Arrow test** | Does every import stay in its own layer or go to a layer below it, and is the import graph free of cycles? | An import that goes up or sideways: `application` importing an adapter, `domain` importing a port, two modules importing each other |
-| **Wiring test** | Is there exactly one place per runtime (CLI, worker, server) that names concrete adapters, is it in the composition-root layer, and can it be built with every adapter faked? | Wiring scattered into use cases or handlers; or a use case that constructs its own dependencies |
-
-**LAW:**
-
-| Test | Question | Fail means |
-|---|---|---|
-| **Kind test** | Does the function compute a value (logic), change something (action), or call other functions in order (workflow)? It must be exactly one | A function of two kinds: a predicate that also writes, a step that also decides. Split it into one function per kind and a workflow that calls them |
-| **Purity test** | Does a logic function take a port, a callback that does I/O, or a clock? | The function is a workflow in disguise. Move the call out to a workflow and pass the result in as a value |
-
-**Language and boundaries (DDD):**
-
-| Test | Question | Fail means |
-|---|---|---|
-| **Trace test** | Does every row in the design's Behaviors table map, through the architecture record's use-case surface, to exactly one application function, with the signature that surface gives it? Several rows may share one function -- a happy path and its error paths are scenarios of the same use case | A row with no home (logic in a handler or a helper), or one row's behavior split across two functions |
-| **Decision test** | Is each important decision named, in one place, in the problem's language? | Scattered `||` / `if` logic -- extract a policy |
-| **Language test** | Is every noun in a use-case signature a term the design doc defines, spelled the same way? | A concept the design never named, or one concept under two names |
-| **Boundary test** | Does each invariant have exactly one owning module, and does every write that could break it go through that module? | An invariant enforced twice, or bypassable |
-
-The signal is concrete. If "we now also use Cloudflare" forces an edit to the core, the Swap test failed. If a new behavior forces an edit to an existing use case instead of a new one beside it, the Trace test failed. If a test of a logic function needs a fake, the Purity test failed. If one test needs a fake and also asserts a computed value, the function is two kinds and the Kind test failed.
+The signal is concrete: a new vendor forcing an edit to the core fails Swap; a new behavior forcing an edit to an existing use case fails Trace; a logic-function test that needs a fake fails Purity. Read `references/tests-taxonomy-anatomy.md`, "1.2 The signal is concrete", for all four.
 
 ### 1.3 The smells
 
-* **Anemic model** -- a type that is all fields and no behavior, with its invariants enforced elsewhere.
-* **Vendor in the core** -- an SDK import, `process.env`, a wire format, or a model id inside domain logic.
-* **Decision as a `||`-chain** -- an important choice spread across inline conditionals instead of one named policy.
-* **Port with one impl that will never have two** -- a seam introduced as ceremony (see the counter-warning).
-* **Hexagon with no application layer** -- ports and a domain, and the workflow living in the CLI handler or HTTP route that calls them. The Trace test finds it: the behavior has no function.
-* **Import that goes up or sideways** -- a use case importing an adapter, a domain module importing a port, two modules importing each other. The Arrow test finds it.
-* **Function of two kinds** -- a predicate that also writes, a save that also validates. The Kind test finds it. Split it into one function per kind and a workflow that calls them.
-* **Port in a logic function** -- a rule that takes a repository, a clock, or an HTTP client. The Purity test finds it.
-* **Use case that builds its own adapters** -- `new AnthropicClient()` inside a workflow. The Wiring test finds it.
-* **Two names for one thing** -- `verdict` in the doc, `result` in the code, `outcome` in the test. The Language test finds it.
+The smells are the failed tests in prose: an anemic model (all fields, invariants elsewhere), a vendor in the core, a decision spread as a `||`-chain, a port with one forever-implementation, a hexagon with no application layer, an import that goes up or sideways, a function of two kinds, a port in a logic function, a use case that builds its own adapters, and two names for one thing. Read `references/tests-taxonomy-anatomy.md`, "1.3 The smells", when a test fails.
 
 ### 1.4 Do not over-correct (YAGNI)
 
 The opposite sin is just as real, and agents over-rotate here:
 
 * **Abstract at the axes of change, not everywhere.** Introduce a seam when there are (or plausibly will be) *two* implementations, or when it crosses a vendor/process boundary. A port with a single forever-implementation is ceremony -- inline it.
-* **Not every struct is an Entity / Value Object / Aggregate.** Use the pattern when the type carries an invariant; otherwise it is a plain value.
-* **Layers are not directories.** A small tool keeps domain, application, and wiring as three regions of one file (Section 2's anatomy is exactly that order); a large one gives each its own package. The tests do not care about the layout. Arrow asks which way each import points. Kind and Purity ask what each function does.
-* **Vocabulary is a means.** Lead with intent, the tests, and the smells. The named patterns are lineage, not a checklist.
+* **Not every struct is an Entity / Value Object / Aggregate.** Use the pattern only when the type carries an invariant.
+* **Layers are not directories.** The tests do not care about the layout; read `references/tests-taxonomy-anatomy.md`, "1.4 Layers are not directories", before you decide to split a file into packages.
+* **Vocabulary is a means:** lead with intent and the tests.
 
 ### 1.5 Worked example (ci-magic)
 
@@ -122,7 +85,7 @@ policy, the model id a parameter at the edge, `judge_assertion` the one
 application function for its behavior, and the vendor registry the
 composition root.
 
-Read `references/worked-example-and-lineage.md`, "1.5 Worked example (ci-magic)", for the walk-through, when a rule above is unclear in practice.
+Read `references/worked-example-and-lineage.md`, "1.5 Worked example (ci-magic)", when a rule above is unclear in practice.
 
 ### 1.6 What this looks like in practice (the lineage)
 
@@ -131,38 +94,19 @@ application layer is Clean's use cases, a seam is Hexagonal's port, the
 composition root is the container. Functional in the domain, procedural
 in the workflow.
 
-Read `references/worked-example-and-lineage.md`, "1.6 What this looks like in practice (the lineage)", for the diagram and the mapping, when you need the vocabulary.
+Read `references/worked-example-and-lineage.md`, "1.6 What this looks like in practice (the lineage)", when you need the vocabulary.
 
 ### 1.7 Todd's LAW: the function taxonomy
 
-**Every function is exactly one of three kinds: logic, action, or workflow.** The Kind test in Section 1.2 grades each function against this. The kind belongs to the function, not to the layer it is in. Every layer holds all three kinds; the layer only changes the mix. The domain is almost all logic, adapters hold the actions, the application is mostly workflow. Each kind is tested one way. Logic is tested on its return value, with no fake. An action is tested on its effect, through the dependency injected into it. A workflow is tested on the calls it makes, through fakes. A function of two kinds needs both at once, and that is the smell. The five shapes a function takes:
+**Every function is exactly one of three kinds: logic, action, or workflow.** The Kind test grades each function; the kind belongs to the function, not to its layer.
 
-* **Predicates** (logic) -- pure boolean tests; answer a yes/no question. No side effects, deterministic. Named as a question: `is_*`, `has_*`, `should_*`, `can_*`.
-* **Evaluators, or pure helpers** (logic) -- one computation; values in, values out; deterministic. **Never injected into.** If a helper needs a port, it is not logic: either the port is really a value (pass the result in) or the function is really a workflow.
-* **Actions, or effectful helpers** (action) -- one act against the world: a query, a write, a call, a mutation. Behind a port when it reaches a vendor or a mechanism. Tested on the effect, through the injected dependency, or by an integration test.
-* **Flow (orchestration) functions** (workflow) -- control flow and nothing else: they call predicates, evaluators, actions, other flow functions, and ports. The use cases are the flow functions at the application surface: one per behavior in the design's Behaviors table, carrying the signature the architecture record's use-case surface gives it, domain values in, ports as keyword-only dependencies, a domain value or result out. Tested via fakes. A flow function that computes a value inline, or performs an effect inline, is two kinds in one body.
-* **Entry points** (workflow) -- the public surface (CLI handler, HTTP route, action `main`); thin (parse/validate input, call one flow function, shape the result). The composition root lives here (wire adapters to ports). Never contain a rule or an effect of their own.
+The five shapes a function takes -- predicates, evaluators (pure helpers), actions, flow functions, entry points -- are in `references/tests-taxonomy-anatomy.md`, "1.7 The five shapes"; read it when you name or place a function. Evaluators are **never injected into**, and entry points never contain a rule or an effect of their own.
 
 **Dependency injection starts at the workflow and never goes below it.** A pure helper that "readily accepts DI" is the leak that dissolves the domain: inject one port there and every test of that rule now needs a fake. Logic takes values. Workflows take ports. Entry points build them.
 
 Avoid nested/inner functions due to their inherent testing difficulty.
 
-**Adjacent same-typed parameters get keyword arguments at every call site.**
-Two `str` parameters side by side make a swapped call look correct: the types
-check, the linter is silent, and a reader sees two strings in a plausible
-order. Only someone who remembers the signature can catch it.
-
-This is not hypothetical. designomatic's `evaluate_scope(vision, proposal, ...)`
-was called as `evaluate_scope(proposal, vision, ...)` in the proofread path for
-the entire life of that path, so the scope gate judged the editor's proposal as
-though it were the document's goals. Every human review and every bot review
-passed over it; a bot finally caught it on template-tools PR #485, long after
-it shipped.
-
-The cost of prevention is one keyword per argument. Apply it whenever two or
-more adjacent parameters share a type, and test the *roles* rather than the
-call shape -- an assertion that the right value reached the right slot fails on
-a re-swap, where an assertion that the call happened does not.
+**Adjacent same-typed parameters get keyword arguments at every call site**, and tests assert the roles, not the call shape. Read `references/tests-taxonomy-anatomy.md`, "1.7 Adjacent same-typed parameters", before you write a signature with two parameters of one type.
 
 ### 1.8 Dependencies
 
@@ -177,65 +121,11 @@ a re-swap, where an assertion that the call happened does not.
 
 Every source file is laid out top-to-bottom in this fixed order. A reader should be able to scroll once and understand the file. (The language `STYLE.*` guide refines the syntax; this is the universal skeleton -- e.g. the style-bash skill's script layout is this same shape for shell.)
 
-```
-1. Module header        Docstring/comment: what this file is, which ports/deps it owns
-2. Imports              Grouped: stdlib -> third-party -> local. Inward-only (no adapter
-                        imports inside the domain). No wildcard imports.
-3. Constants            Module-level immutable values, lookup tables, regexes
-4. Flags / config       Feature flags and env-derived configuration, read once and named
+Fixed top-to-bottom order: module header, imports (stdlib -> third-party -> local, inward only), constants, flags/config; then per sub-component: predicates, pure helpers, flow functions, entry points. Read `references/tests-taxonomy-anatomy.md`, "2 The layout", before you create a file.
 
-   --- then, grouped per sub-component / responsibility, in this order: ---
+**Rules:** definitions before use, reading top-down; repeat the `predicates -> helpers -> flow -> entry` grouping per sub-component; split a file along domain boundaries when it grows more than one clear sub-component; keep entry points thin. Read `references/tests-taxonomy-anatomy.md`, "2 Anatomy rules", before you split a file.
 
-5. Predicates           Pure boolean tests for this sub-component        (domain)
-6. Pure helpers         Single computation, values in/out, no injection  (domain)
-7. Flow functions       The use cases: control flow over the predicates,
-                        helpers, and injected ports                      (application)
-8. Entry points         The exported/public surface; composition root
-                        if applicable                                    (wiring)
-```
-
-**Rules:**
-
-* Order within the file is **definitions-before-use** reading top-down: a flow function appears below the helpers it calls.
-* When a file has multiple sub-components, repeat the `predicates -> helpers -> flow -> entry` grouping per sub-component rather than scattering all predicates at the top. Keep each sub-component's pieces together.
-* If a file grows more than one clear sub-component, that is a signal to split it along domain boundaries.
-* Entry points stay thin; push logic down into flow/helper functions so it stays testable.
-* The anatomy is the layering in miniature: rows 5-6 are the domain, row 7 is the application, row 8 is the wiring. A tool small enough for one file still keeps the three regions distinct; a tool that outgrows one file splits along those same lines (`domain/`, `application/`, `adapters/`, and an entry that composes them), and the Arrow, Kind, Purity and Wiring tests read the same either way.
-
-**Illustrative skeleton:**
-
-```python
-"""orders/pricing.py -- price an order. Domain rules plus the one use case.
-
-The use case takes a TaxPort (injected at the entry point); the rules
-below it take values only.
-"""
-
-# 2. Imports
-from decimal import Decimal
-
-from orders.models import Order, LineItem      # local, inward only
-
-# 3. Constants
-FREE_SHIPPING_THRESHOLD = Decimal("50.00")
-
-# 4. Flags / config
-INCLUDE_DIGITAL_IN_TAX = feature_enabled("tax_on_digital")
-
-# --- sub-component: totals ---
-
-# 5. Predicates
-def qualifies_for_free_shipping(order: Order) -> bool: ...
-
-# 6. Helpers
-def line_subtotal(item: LineItem) -> Decimal: ...
-
-# 7. Flow (the use case: behavior "an order is priced")
-def price_order(order: Order, *, tax: TaxPort) -> PricedOrder: ...
-
-# 8. Entry point (CLI/HTTP handler; the composition root supplies `tax`)
-def main(argv: list[str]) -> int: ...
-```
+Read `references/tests-taxonomy-anatomy.md`, "2 Illustrative skeleton", before you lay out a new source file.
 
 ---
 
@@ -259,40 +149,14 @@ Tests exist to document and protect *what the system does*, not *how it does it*
 
 ## 4. Coding Standards & Error Handling
 
-**Defensive coding:**
-
-* Validate inputs explicitly; be very mindful of security practices
-* Handle edge cases deliberately
-* Fail fast and fail loud with clear, actionable errors
-* Establish consistent structure for error responses across a component
-
-**Error handling:**
-
-* Use a consistent, explicit error-handling strategy
-* Errors must be observable and diagnosable
-* Do not swallow or silently coerce failures
-
-**Logging:**
-
-* Structured and intentional (structlog -- see the tech-radar skill)
-* Use log levels; ensure debug logs are beneficial, not noisy
-* Log for diagnostics, tracing, and observability
-* Avoid noisy or redundant logs
-* Never invent your own logging system; use the radar's choice
+Validate inputs explicitly and fail fast and loud with actionable errors; never swallow or silently coerce a failure; log with structlog (the tech-radar skill), and never invent your own logging system. Read `references/tests-taxonomy-anatomy.md`, "4 Standards and error handling", when you design error handling or logging.
 
 ---
 
 ## 5. Programming Style
 
 * **Functional in the domain, procedural in the workflow** (Section 1.6). Pure functions over immutable values below the use case; explicit sequenced steps with injected effects at and above it. Neither style is the default everywhere
-* Favor **functional and declarative** patterns where they improve clarity
-* Prefer **async / non-blocking** designs for I/O
-* Prefer `map`, `filter`, `reduce`, and predicate functions over manual loops when simpler
-* Avoid cleverness; explicit and readable clarity beats concise
-* Keep side effects explicit and minimal, and confined to adapters/entry points
-* Use dependency injection where it improves testability and debugging
-* Comment for human readability and editing; e.g. periodic milestone comments
-* Establish clear module boundaries reflecting domain concepts
+Prefer async for I/O, `map`/`filter`/`reduce` over manual loops when simpler, explicit readable code over clever, and side effects confined to adapters and entry points. Read `references/tests-taxonomy-anatomy.md`, "5 Style bullets", when choosing between styles.
 
 ---
 
@@ -302,19 +166,7 @@ Tests exist to document and protect *what the system does*, not *how it does it*
 * Do not add speculative features or abstractions (see the YAGNI counter-warning in Section 1.4)
 * Follow existing project conventions and patterns where applicable
 * Do not refactor unrelated areas unless explicitly required
-* **Tool state is project-local -- each project is its own silo.** A
-  CLI's mutable state (auth session, config, logs, cached credentials)
-  lives under the project, never in `$HOME` or the keychain. Point the
-  tool's own config variable at a project path -- `<project>/.state/<tool>`
-  for `DOCKER_CONFIG`, `CLOUDSDK_CONFIG`, `AWS_CONFIG_FILE`;
-  `<project>/.venv` for `UV_PROJECT_ENVIRONMENT` -- and keep `.state/` out of
-  git and build contexts. A tool with none runs through a per-process
-  runner (wrangler -> `cfw`,
-  `@nine-at-a-time-media/deploy`). Never `wrangler login`, a keychain
-  `credsStore`, or a project-wide `HOME` / `XDG_CONFIG_HOME` export (it
-  moves gh, git and op too). Immutable toolchain installs (`~/.nvm`, the
-  npm cache) may be shared. Detail: template-tools
-  `docs/design/DESIGN.HERMETIC-TOOL-STATE.md`.
+* **Tool state is project-local -- each project is its own silo.** A CLI's mutable state (auth session, config, logs, cached credentials) lives under the project, never in `$HOME` or the keychain; never `wrangler login`, a keychain `credsStore`, or a project-wide `HOME` / `XDG_CONFIG_HOME` export. Read `references/tests-taxonomy-anatomy.md`, "6 Tool state is project-local", before you run or configure any CLI that keeps state.
 
 ---
 

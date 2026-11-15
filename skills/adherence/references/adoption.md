@@ -110,6 +110,14 @@ Skills names the single root file (`adherence.toml  @9atatimer`) beside a
 
 ## A declaration header
 
+Say in the file's header what is left undeclared on purpose and why: what
+the code is, what has no layer yet and is coverage until the owner decides
+its layer, why there is no `[records]` or `[radar]`, and that a new file
+in the governed tree needs a layer when it lands. template-tools
+`packages/designomatic/adherence.toml` and
+`packages/naatm-ci-magic/adherence.toml` are the worked examples; guess no
+layer to make coverage look complete.
+
 The header says what the subtree is, what is left undeclared on purpose,
 and why sections are absent. From template-tools
 `packages/naatm-ci-magic/adherence.toml`:

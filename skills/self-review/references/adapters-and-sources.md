@@ -2,7 +2,7 @@
 
 Detail moved out of this skill's `SKILL.md`. Each section here is
 named there with a summary. A section named here and not found below
-("The panelist brief", "Sizing", "The ReviewEngine port") is in
+("Sizing", "The ReviewEngine port") is in
 `SKILL.md`.
 
 Contents:

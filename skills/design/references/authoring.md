@@ -6,6 +6,9 @@ named there with a summary. A section named here and not found below
 
 Contents:
 
+- Gather Context
+- Start from the Template
+- Improving a Design Doc
 - If a concept exists, phase 2 converts it
 - Fill Sections in Order
 - Apply the Style Guide
@@ -187,3 +190,36 @@ When reviewing, organize feedback as:
 | No rejections section | Look at the conversation/PR history for alternatives that were debated and dropped; surface them with one-line reasons so they don't get relitigated |
 
 ---
+
+## Gather Context
+
+Before writing, understand:
+
+- **What problem are we solving?** (not what we're building)
+- **Who is the audience?** (AI agents implementing it + human reviewers)
+- **What already exists?** Check `docs/design/` for related docs, and
+  `docs/concepts/<idea>/` for a phase 1 record of this idea
+- **What are the constraints?** (tech stack, timeline, dependencies)
+
+## Start from the Template
+
+Copy `docs/design/TEMPLATE.md` to a new file following naming conventions:
+
+| Pattern | Use For |
+|---------|---------|
+| `DESIGN.<name>.md` | Feature or component design |
+| `INTEGRATION.md` | How components connect |
+
+(As-built system documentation is not a design doc -- it belongs in
+`docs/arch/`. See the as-built skill. The architecture record is written
+after this one is approved; see the architecture skill.)
+
+## Improving a Design Doc
+
+When asked to improve an existing doc:
+
+- **Read the full doc first** -- Understand the intent before suggesting changes
+- **Check against the template** -- Identify missing sections
+- **Apply this skill's style rules** -- Fix vague language, add tables, improve diagrams
+- **Preserve the author's intent** -- Improve clarity without changing decisions
+- **Add, don't remove** -- Missing sections should be added; existing content should be refined

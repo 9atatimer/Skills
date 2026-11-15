@@ -30,19 +30,11 @@ repo already says so; the tier is its own DNS label either way.
 
 One worker package per deployable, under `cloudflare/<name>/`:
 
-| Package | Serves | Typical config |
-|---|---|---|
-| the app worker | the product's hostname; Nuxt SSR built with `NITRO_PRESET=cloudflare-module`, `main` pointing at `.output/server/index.mjs`, `[assets]` at `.output/public` | `custom_domain = true` on the hostname |
-| a sidecar worker (an agent, an API) | a PATH on the app's hostname | no routes in its own config; the route is Terraform's |
-| a cron worker | nothing; the cron calls it | `triggers.crons`, repeated per stage; no routes |
-
-The app's `nuxt.config.ts` reads `nitro.preset` from `NITRO_PRESET` so
-local dev stays `node-server` and the deploy sets the preset at build
-time. Runtime config baked at BUILD time (a Supabase URL, an API base)
-selects the stage by which vault env-file the build ran under, not by a
-runtime flag; getting it wrong ships a worker pointed at the other
-stage's data with no error. A check script pins each env-file to its
-stage.
+Packages: the app worker (Nuxt SSR via `NITRO_PRESET=cloudflare-module`, `custom_domain = true`), a sidecar worker
+(a PATH on the app's hostname, no routes in its own config; the route is Terraform's), and a cron worker (`triggers.crons`
+per stage, no routes). Runtime config baked at BUILD time selects the stage by which vault env-file the build ran
+under, not by a runtime flag; a check script pins each env-file to its stage.
+Read `references/cloudflare-detail.md`, "Worker package table", before you add a worker package.
 
 ## wrangler: stages are named environments
 
@@ -63,13 +55,10 @@ stage.
 - `observability.enabled = true`. A cron worker has no user watching it;
   the persisted log is the surface, and a failure that only a live
   `wrangler tail` could have caught is a failure nobody reads.
-- Pin `compatibility_date`; add `nodejs_compat` when a dependency needs
-  it.
-- In a public repo the account id is not in the file: `wrangler` reads
-  `CLOUDFLARE_ACCOUNT_ID` from the environment (a repository variable).
-- A stage var that names the OTHER stage's hostname or database is
-  unvalidated at runtime and fails silently. Keep stage vars beside each
-  other in the file, with the failure mode in a comment.
+- Pin `compatibility_date`; add `nodejs_compat` when a dependency needs it.
+- In a public repo the account id is not in the file: `wrangler` reads `CLOUDFLARE_ACCOUNT_ID` from the environment.
+- A stage var that names the OTHER stage's hostname or database is unvalidated at runtime and fails silently. Keep
+  stage vars beside each other in the file, with the failure mode in a comment.
 
 ## Hostnames: custom domain versus route
 
@@ -79,42 +68,20 @@ stage.
 | declared in | the worker's `wrangler` config, per stage | Terraform, because it is edge state shared between two workers and nobody's single config may claim it |
 | needs | DNS Edit and Workers Routes Edit on the zone, on top of Workers Scripts Edit | Workers Routes Edit; the script must exist BEFORE the route is applied |
 
-Cloudflare runs a matching route before the Custom Domain worker and
-treats that worker as the origin behind it, so an agent on
-`<host>/agents/*` and the app on `<host>` share one origin: the
-WebSocket is same-origin, there is no CORS and no second Access
-application. The cost is bring-up order (script first, then Terraform)
-and a worker whose root `/health` is unreachable once mounted under a
-path; probe a path the route actually covers.
-
-Certificates follow the hostname mechanism. A Workers Custom Domain
-creates the DNS record and issues an Advanced Certificate for that exact
-hostname at any depth (`preview.app.<zone>` included), with no Advanced
-Certificate Manager subscription; it is active minutes after the deploy,
-and until then the edge presents the zone's Universal certificate, so a
-client sees a name mismatch. A hostname served through a DNS record and
-a route is covered by Universal SSL, which names the apex and one label
-only; a deeper name on a route needs Advanced Certificate Manager. The
-certificate rung of the Access playbook (`references/access-playbook.md`)
-reads the pack's status instead of guessing.
+A matching route runs before the Custom Domain worker (one origin, no CORS); the script must exist before the route.
+Certificates follow the hostname mechanism; a name mismatch right after a deploy is provisioning.
+Read `references/cloudflare-detail.md`, "Route before Custom Domain" and "Certificates by hostname mechanism", before you pick a hostname depth.
 
 ## Bindings
 
 - **Service binding, not public fetch, between workers.** Access gates
   the hostname; a public subrequest carries no Access credential and
-  gets a login page. A binding never re-enters the edge, needs no
-  service token, and is GET-only if you type it that way. On a laptop,
-  run both workers under one `wrangler dev` session (multiple configs)
-  and the binding resolves locally, so dev exercises the production
-  topology. A loopback fallback is only for a peer that is not a wrangler
-  worker at all (a framework dev server), and it must refuse a REMOTE
-  peer with no binding rather than fall through to a public fetch.
-- **Static sites are Workers Static Assets, not Pages.** An assets-only
-  Worker (an `[assets]` block, no `main`) is reachable over a service
-  binding -- proved by experiment. The `env.ASSETS.fetch()` docs
-  constrain RPC methods only; do not read them as "bindings cannot reach
-  assets". Adding a `main` just to be bindable buys a Worker invocation
-  on every non-asset request.
+  gets a login page. A binding never re-enters the edge and needs no service token. On a laptop run both workers
+  under one `wrangler dev` session; a loopback fallback is only for a peer that is not a wrangler worker, and it must
+  refuse a REMOTE peer with no binding rather than fall through to a public fetch.
+  Read `references/cloudflare-detail.md`, "Service binding in local dev", before you wire a service binding for local dev.
+- **Static sites are Workers Static Assets, not Pages.** An assets-only Worker is reachable over a service binding;
+  do not add a `main` just to be bindable (`references/cloudflare-detail.md`, "Static assets over a service binding").
 - **KV** for a value that must be rewritten from inside the isolate (a
   rotating credential). Worker secrets are write-only in-isolate.
 - **R2** for bytes too big for a Durable Object SQLite row. Lifecycle
@@ -130,13 +97,10 @@ reads the pack's status instead of guessing.
   enrichment binding (a read-only corpus) degrades the turn when absent;
   the binding on the write path fails closed.
 
-- **Every method of a `WorkerEntrypoint` is callable over RPC.**
-  TypeScript `private` is erased at compile time, so a "private" helper
-  on the class is a public RPC method for any Worker that holds a binding
-  to it. Keep every step past an authorization check in a module
-  function, not on the class. A test calls that function by name through
-  the stub and expects `does not implement`. In g1n1 a `private issue()`
-  let any bound Worker mint an Identity for a Component it named itself.
+- **Every method of a `WorkerEntrypoint` is callable over RPC.** TypeScript `private` is erased at compile time, so
+  a "private" helper on the class is a public RPC method for any Worker that holds a binding to it. Keep every step
+  past an authorization check in a module function, not on the class.
+  Read `references/cloudflare-detail.md`, "WorkerEntrypoint RPC exposure", before you add a method to a WorkerEntrypoint class.
 
 ## Secrets
 
@@ -147,86 +111,52 @@ reads the pack's status instead of guessing.
   worker must exist first) and needs to succeed once. Guard against
   writing a BLANK over a live value: a wrong vault field label must not
   disarm a running worker.
-- Absent is a supported state for an optional credential; blank is not.
-  Load optional references in their own `continue-on-error` step,
-  because the vault action resolves every reference eagerly and fails
-  the run on the first that does not exist.
+- Absent is a supported state for an optional credential; blank is not. Load optional references in their own
+  `continue-on-error` step (the vault action resolves every reference eagerly).
 - One vault item per stage; a shared secret between two workers is one
   field both workflows read. Sharing a secret across stages would make a
   non-prod leak a production capability.
-- A value several workers or containers share, or a provider key AI
-  Gateway reads, may live in the Cloudflare Secrets Store instead (the
-  tech-radar skill, Trial). A secret's scopes name services, not
-  scripts: any worker or container in the account can bind it, so the
-  stage goes in the secret's name and a secret only one worker may see
-  stays a `wrangler secret`. The value still comes from the vault,
-  never from Terraform state.
+- A value several workers share, or a provider key AI Gateway reads, may live in the Cloudflare Secrets Store (the
+  tech-radar skill, Trial); the stage goes in the secret's name, a secret one worker may see stays a `wrangler secret`,
+  and the value still comes from the vault, never from Terraform state (`references/cloudflare-detail.md`, "Secrets Store detail").
 - Locally: `.dev.vars` (gitignored) for the worker, the app's local env
   for the other half of any pair. If the pair disagrees the write path
   fails closed by design.
 
 ## Cloudflare Access
 
-The fleet has one Access shape, run since 2026-07 by the GammaGo and
-QuillMap roots: `references/access-playbook.md` is the standard, with
-the readiness ladder and the hand-off. A new gate copies it. The infra
-repo's `docs/runbook.cloudflare-access.md` carries the hostnames,
+The fleet has one Access shape: `references/access-playbook.md` is the standard, with the readiness ladder and
+the hand-off. A new gate copies it. The infra repo's `docs/runbook.cloudflare-access.md` carries the hostnames,
 groups and commands.
 
-- **Every Access resource lives in the private infra repo**, under
-  `ops/terraform/<system>-access/`: applications, policies, groups,
-  service tokens, the OIDC SaaS app. Security-bearing, so no exception
-  for a demo or a "hermetic" project (owner ruling 2026-11-07). The app
-  repo keeps the Worker and its Custom Domain and names the Access root
-  in its `AGENT.md`.
-- **Group -> reusable policy -> one application per hostname.** A named
-  group of enumerated addresses (never `email_domain`), one allow
-  policy that admits the group by id, one `self_hosted` application per
-  hostname per stage listing that policy. Production and preview share
-  the policy and get two applications; the preview one is `count`-gated
-  on its hostname variable.
-- **A group has one owning root.** Another root attaches it by id
-  (`table_group_ids`); it never re-lists the emails. Same people, attach
-  the group; one address different, a new group. Dropping an id
-  detaches it on the next apply.
-- Sign-in is the built-in One-Time PIN; no identity provider. An OIDC
-  SaaS app is added only when a downstream service must receive a
-  token. A Worker that verifies the Access JWT itself needs none.
-- Requires a custom domain on a Cloudflare-managed zone. Access cannot
-  exclude paths within one application. Punch a hole with a SECOND,
-  narrower application over exactly the public paths (a webhook, a
-  health check) carrying a `bypass` policy; most-specific application
-  wins. The bypassed handler authenticates itself (an HMAC on every
-  request, constant-time compare).
+- **Every Access resource lives in the private infra repo**, under `ops/terraform/<system>-access/`; no exception for
+  a demo or a "hermetic" project (owner ruling 2026-11-07). The app repo keeps the Worker and its Custom Domain and
+  names the Access root in its `AGENT.md`.
+- **Group -> reusable policy -> one application per hostname per stage**; the group is enumerated addresses, never
+  `email_domain` (`references/cloudflare-detail.md`, "Access application layout").
+- **A group has one owning root.** Another root attaches it by id; it never re-lists the emails. Sign-in is the
+  built-in One-Time PIN. Access cannot exclude paths within one application: a public path (a webhook, a health check)
+  gets a SECOND, narrower application with a `bypass` policy, and the bypassed handler authenticates itself.
+  Read `references/cloudflare-detail.md`, "Access group, sign-in and bypass detail", before you share a group, add an
+  OIDC app or punch a public path.
 - **Automation uses a service token**, admitted by a `non_identity`
   policy behind the human policy, sent as two headers. A bypass on the
   paths under test would make exactly the paths that must not be
   public, public. Service tokens are an ACCOUNT-level resource; a
   zone-scoped Access token cannot mint one, however it is spelled.
   Minting is a credential-lifecycle module (the iac skill).
-- A `302` to the team domain on an unauthenticated probe is the gate
-  WORKING, not a deploy failure. Behind Access every external probe
-  looks the same whether or not the route exists; verify wiring through
-  the API, or through the gate with the service token.
-- **"Not reachable" is not a diagnosis.** Run the playbook's readiness
-  ladder (DNS, TLS, certificate pack, gate) and report the rung with the
-  raw response. A pending certificate pack is provisioning: wait. A
-  timed-out pack will not finish by itself.
+- A `302` to the team domain on an unauthenticated probe is the gate WORKING.
+- **"Not reachable" is not a diagnosis.** Run the playbook's readiness ladder (DNS, TLS, certificate pack, gate) and
+  report the rung with the raw response.
+  Read `references/cloudflare-detail.md`, "Access probe and readiness detail", before you probe an Access-gated host or declare it ready.
 
 ## Ownership: wrangler versus Terraform
 
-| Owner | Manages |
-|---|---|
-| wrangler (the deploy workflow) | the script, its vars, its secrets, Durable Object migrations, the Custom Domain it owns: everything a deploy rebuilds and replaces |
-| Terraform (the iac skill) | routes on a hostname another worker owns, KV namespaces and R2 buckets whose ids must survive redeploys, Access applications and policies, API tokens and service tokens, DNS that wrangler does not manage |
-| a human, once | what no provider can create: a GitHub App via the manifest flow, a monitoring notification channel, the VALUE of a secret |
-
-Bring-up order on a fresh stage follows the dependencies: the app
-worker (it carries the shared secret its sidecar needs), then the
-sidecar script, then the Terraform that routes to it. A route cannot
-reference a script that does not exist, and pointing a live production
-hostname at a missing script replaces "connection lost" with an edge
-error.
+Wrangler (the deploy workflow) owns what a deploy rebuilds (script, vars, secrets, Durable Object migrations, its
+Custom Domain); Terraform (the iac skill) owns routes on another worker's hostname, KV and R2 whose ids must survive
+redeploys, Access, tokens and DNS; a human, once, owns what no provider can create. Bring-up order on a fresh stage:
+app worker, sidecar script, then the Terraform that routes to it.
+Read `references/cloudflare-detail.md`, "Ownership table and bring-up", before you decide who owns a new resource.
 
 ## Deploy workflows
 
@@ -238,26 +168,16 @@ error.
   input equal to `production` before it reads prod credentials or deploys.
   That explicit confirmation is the sufficient production control. The job
   names the `production` Environment that supplies prod-scoped credentials.
-  That Environment selects credentials; it is not an approval gate. A repo
-  may add a reviewer gate or branch restriction, but neither is a fleet
-  requirement.
-- **Declare the posture in the repo and check it in CI**: a file
-  listing each deploy workflow, the furthest stage it can reach, its
-  production confirmation, and the Environment that supplies its tiered
-  credentials. A script fails the PR when a workflow reaches production
-  without the confirmation or credential boundary, or an automatic trigger
-  can pass a production target. A protection nobody asserts is a protection
-  nobody notices the removal of.
+  That Environment selects credentials; it is not an approval gate (`references/cloudflare-detail.md`, "Production Environment note").
+- **Declare the posture in the repo and check it in CI**: a script fails the PR when a workflow can reach production
+  without the confirmation (`references/cloudflare-detail.md`, "Deploy posture check").
 - Resolve everything stage-derived in ONE step before any credential is
   read; write the env flag to `GITHUB_ENV`; never interpolate the
   `github` context into a `run:` block.
 - One vault service-account token is the only GitHub secret; every other
   credential is an `op://` reference. -> the release skill
-- Order inside the run: gates (typecheck, tests) for a package the root
-  CI does not cover, then deploy, then secrets, then an advisory probe,
-  then an advisory real-behaviour smoke through the gate. A smoke that
-  exits non-zero must PROPAGATE its status under `continue-on-error`,
-  so it renders red at a glance instead of green with a warning.
+- Order inside the run: gates, deploy, secrets, advisory probe, advisory smoke through the gate; a smoke that exits
+  non-zero must PROPAGATE its status under `continue-on-error`.
 - `concurrency` per stage, `cancel-in-progress: false`: a
   half-superseded migrate-plus-deploy pair ships code against another
   merge's schema.
@@ -273,17 +193,12 @@ error.
 
 ## Egress limits
 
-- Every Worker subrequest is stamped with `cf-worker`, `cf-visitor` and
-  `cf-ew-via` headers the code cannot blank, and a raw socket cannot
-  reach a Cloudflare-fronted host. An origin that refuses those headers
-  is unreachable from a Worker DIRECTLY; reaching it needs a hop outside
-  Cloudflare, one per stage, with its own shared key sent by hostname
-  allowlist. The fleet's relay is a private ops repo module.
-- Workers AI and AI Gateway calls spend on the account. Put the ceiling
-  on the gateway: authentication required, a cost spend limit per
-  window, Workers AI billing set to draw from the credit balance rather
-  than postpaid, and auto top-up OFF so the loaded balance is the
-  ceiling.
+- Every Worker subrequest is stamped with headers the code cannot blank, so an origin that refuses them is
+  unreachable from a Worker DIRECTLY; it needs a hop outside Cloudflare, one per stage.
+  Read `references/cloudflare-detail.md`, "Worker egress stamping", before a Worker calls another Cloudflare-fronted host.
+- Workers AI and AI Gateway calls spend on the account. Put the ceiling on the gateway: authentication required, a
+  cost spend limit per window, credit-balance billing, and auto top-up OFF.
+  Read `references/cloudflare-detail.md`, "AI spend ceiling", before you enable Workers AI or AI Gateway on an account.
 
 ## API token scopes
 
@@ -291,42 +206,15 @@ Scope tokens to the job; a deploy token cannot edit Access and an
 Access token cannot deploy. The names below are the API permission
 groups (the dashboard shows Write as "Edit").
 
-| Job | Account permissions | Zone permissions |
-|---|---|---|
-| deploy a worker with a Custom Domain | Workers Scripts Write | Workers Routes Write, DNS Write, Zone Read |
-| deploy a worker that binds KV | plus Workers KV Storage Write | |
-| apply routes and namespaces (Terraform) | Workers KV Storage Write | Workers Routes Write |
-| apply Access apps and policies (Terraform) | Access: Apps and Policies Write | DNS Write if Terraform owns records |
-| mint Access service tokens (Terraform) | Access: Service Tokens Write, account scope (a zone-scoped Access grant cannot; the resource is not zonal) | |
-| mint API tokens | the human's Global API Key, laptop only (the iac skill's credential-minting posture) | |
-| R2 state backend | an R2 API token scoped to the state bucket; S3-compatible key pair | |
-
-A scoped token that fails `auth.forbidden` on an account-level resource
-is scoped to a zone; re-scoping it does not help, the resource is not
-zonal.
+A scoped token that fails `auth.forbidden` on an account-level resource is scoped to a zone; re-scoping does not
+help, the resource is not zonal. Read `references/cloudflare-detail.md`, "API token scope table", before you mint or choose a token for a job.
 
 ## Verification and diagnosis
 
-| Symptom | Fault |
-|---|---|
-| `404` on a sidecar's path after a green deploy | the route is not applied; deploy succeeded |
-| `302` to the team domain on a probe | Access is working; use the service token or the API |
-| every tool or callback `302`s at once | a public fetch through Access where a service binding was needed |
-| every callback `503` | the shared secret pair disagrees, or one side never received it |
-| a worker "never runs" with nothing logged | a stage block that omitted its cron, or its var |
-| the deploy shipped localhost values | a bare `wrangler deploy` with no `--env` |
-| a probe is green and the feature is dead | the probe never exercised the credential or the upstream; run the real-behaviour smoke |
-| `terraform apply` fails on a hostname | the worker with the Custom Domain has not deployed yet |
-| TLS name mismatch or handshake failure on a new Custom Domain | the Advanced Certificate is not active yet; read the certificate pack's `status` (the Access playbook, Readiness), a `pending_*` status is provisioning |
-| the hostname does not resolve after a green deploy | wrangler never attached the Custom Domain; the stage lacks `custom_domain = true`, or `workers/domains` lists no entry for it |
-| `200` on a deep path of a gated hostname | no application binds the hostname, or it binds a path, or a narrower `bypass` application covers the probed path; check the applications before calling the hostname public |
-| API error `9106` under Terraform | no Authorization header reached the API: the token variable is empty, terraform ran bare instead of under `op run` |
-| API error `10000` on an account endpoint | the token authenticated and lacks that permission: scope, not plumbing |
-| `1010` `auth.forbidden` on an account resource | a zone-scoped token; the resource is not zonal (see the iac skill's minting posture) |
-| an OIDC client behind Access reports `state` missing | usually Access rejected the request (`invalid_scope` and kin) with an error redirect that carries no `state`; reproduce the hop with `curl`, since a browser discards that redirect |
-
-Verify a suspect token read-only (`GET /user/tokens/verify`) before
-blaming the deploy tool.
+A `302` to the team domain is Access working; a green probe with a dead feature never exercised the
+credential or the upstream. Verify a suspect token read-only (`GET /user/tokens/verify`) before blaming the deploy tool.
+Read `references/cloudflare-detail.md`, "Verification and diagnosis table", before you diagnose a failed deploy, probe,
+Terraform apply, certificate or API error.
 
 ## Related
 
