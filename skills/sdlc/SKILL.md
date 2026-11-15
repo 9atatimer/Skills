@@ -26,7 +26,7 @@ already had, never the rule you did not know to ask about.
 These hold for every task, whether or not you have loaded the detailed
 skill.
 
-This file stays over 15 KB on purpose: the laws and the phase table apply to every task, and the detail that applies to one step is in `references/`.
+This file stays over 15 KB on purpose: the laws and the phase table apply to every task.
 
 1. **Design first -- for the product.** Every product component requires
    a `DESIGN.<name>.md` under `docs/design/`. This is a requirement, not a
@@ -80,8 +80,8 @@ This file stays over 15 KB on purpose: the laws and the phase table apply to eve
    workflow, never two of them), and language and boundaries (the
    design doc's nouns, one owner per invariant). A change is
    architecturally done only when it passes the mechanical tests of all
-   four. Read `references/laws-detail.md`, "Law 6", for the full
-   statement. -> the architecture skill (where the seams and the module
+   four. Read `references/laws-detail.md`, "Law 6", before
+   you call a change done. -> the architecture skill (where the seams and the module
    map are named) and the coding skill (where they are built and tested)
 7. **File anatomy.** Lay every source file out top-to-bottom: module
    header, imports, constants, flags/config, then per sub-component
@@ -96,7 +96,7 @@ This file stays over 15 KB on purpose: the laws and the phase table apply to eve
    and defect alike (`kind: task | bug`). Reference a task by its ID,
    never by its path. A legacy mono-file is migrated into `tasks/`
    before the plan is worked, not alongside. Read
-   `references/laws-detail.md`, "Law 9", for the full statement.
+   `references/laws-detail.md`, "Law 9", before you migrate a plan.
    -> the todo-plan skill
 10. **Branch + PR discipline.** Never work on the default branch. Feature
     branch -> PR. -> the github-workflow skill
@@ -156,8 +156,8 @@ This file stays over 15 KB on purpose: the laws and the phase table apply to eve
     (`task-NNN`, `D14`, `Q2`). A step list whose numbers other text cites
     keeps its `1.` `2.` markers. A number earns its place only as a
     measured quantity, a minted identifier, or a section or step number
-    other text cites. Read `references/laws-detail.md`, "Law 17", for
-    the full test.
+    other text cites. Read `references/laws-detail.md`, "Law 17", before
+    you number a list.
     -> the markdown skill
 18. **Infrastructure lives in the infra repo by default; agents plan, humans apply.**
     Long-lived cloud resources are terraform in the fleet's private infra

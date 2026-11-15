@@ -61,6 +61,11 @@ failing you, and `--no-verify` (see Git Hook Discipline -- a per-check
 sentry for a genuinely impossible check is not lowering a bar; skipping the
 suite is).
 
+Do not build proposal-versus-canon reconciliation into a tool; every gate
+in the fleet would need its own copy. Read `references/gate-detail.md`,
+"The environment enforces the bar", before you write or change a gate
+that reads its own configuration.
+
 **A repo owner may force past this. Nobody else may, and an agent never
 may.** If you believe a gate is wrong, say so and let the owner rule. Being
 blocked by a gate is not authorization to move it.
@@ -203,7 +208,9 @@ findings outside threads, when it is stalled -- are
   carries `.github/workflows/ocr-review-caller.yml`; on a repo without it,
   summon nothing and say in the handoff that the agentic rung is unserved.
   It never selects Markdown (do not summon it on an all-`.md` PR). An agent
-  summons by the `/ocr` comment alone. Read `references/gate-detail.md`,
+  summons by the `/ocr` comment alone; a dispatch that overrides the
+  backend or model (`cf-ai-gateway` and `anthropic` are billed per run)
+  is the human's to fire. Read `references/gate-detail.md`,
   "Summoning OCR", before you summon it.
 - **Copilot and Codex are human-summoned ONLY -- and "human-summoned"
   means the human fires the trigger themselves** (a Copilot review

@@ -309,7 +309,7 @@ Read `references/node-detail.md`, "Test naming example", for the example.
 
 ## 17. Performance Budgets
 
-Unit suite under 30 s and integration suite under 5 min per package; a unit test over 1 s or an integration test over 30 s fails CI. Performance regressions are bugs.
+Unit suite under 30 s and integration suite under 5 min per package; a unit test over 1 s or an integration test over 30 s fails CI. Any unit test over 10ms on modern dev hardware is suspicious: investigate before accepting it. Performance regressions are bugs.
 Read `references/node-detail.md`, "Performance budget detail", when investigating a slow or hanging test.
 ---
 

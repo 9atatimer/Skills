@@ -241,7 +241,8 @@ the ledger as fixed (SHA), and run no re-review for them.
 
 At most one, over `<last reviewed head>..<new head>`, reporting high and
 critical only: a panel of one, the panelist brief over that delta with
-`<threshold>` set to high, and nothing else -- no ledger, no rebuttals, no
+the lens the fix most concerns and `<threshold>` set to high, and nothing
+else (a first pass sets `<threshold>` to low) -- no ledger, no rebuttals, no
 round 2. Synthesis drops what the ledger already disposed of; the rest goes
 to the verifier. Each fix is new review surface; a loop of rounds grows
 findings instead of converging.

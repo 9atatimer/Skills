@@ -114,7 +114,9 @@ is not.
 A test must do what its name says, and must be able to fail. A test with no
 assertion, or whose only assertion is that nothing raised, says so in its
 name or gets the assertion it implies; a test that names a behavior and
-asserts an internal value is not the one to keep. Read `references/test-pitfalls.md`,
+asserts an internal value is not the one to keep. Setup may reach into
+the store; the *acting* and the *asserting* go through the door the human
+uses. Read `references/test-pitfalls.md`,
 "A name is not a behavior", for the worked example before you write or review a
 Given/When/Then test whose body you doubt.
 

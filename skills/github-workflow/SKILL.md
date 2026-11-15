@@ -110,7 +110,8 @@ never close and reopen one.
   `[WIP]` title in place of draft status.
 - Preview the ready PR on the preview tier before asking the owner to
   land it, dispatched as the bot. Never prod; nothing for a
-  documentation-only PR. Read `references/preview-and-identity.md`,
+  documentation-only PR. Unprompted, preview only a branch up to date
+  with the default branch whose diff leaves the deploy machinery alone. Read `references/preview-and-identity.md`,
   "Preview the ready PR", before you dispatch a preview or tell the owner
   a PR is ready to land.
 - Title it as a conventional-commit summary: `feat(scope): short description`.

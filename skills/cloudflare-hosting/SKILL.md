@@ -79,7 +79,7 @@ Read `references/cloudflare-detail.md`, "Route before Custom Domain" and "Certif
   gets a login page. A binding never re-enters the edge and needs no service token. On a laptop run both workers
   under one `wrangler dev` session; a loopback fallback is only for a peer that is not a wrangler worker, and it must
   refuse a REMOTE peer with no binding rather than fall through to a public fetch.
-  See `references/cloudflare-detail.md`, "Service binding in local dev".
+  Read `references/cloudflare-detail.md`, "Service binding in local dev", before you wire a service binding for local dev.
 - **Static sites are Workers Static Assets, not Pages.** An assets-only Worker is reachable over a service binding;
   do not add a `main` just to be bindable (`references/cloudflare-detail.md`, "Static assets over a service binding").
 - **KV** for a value that must be rewritten from inside the isolate (a
@@ -100,7 +100,7 @@ Read `references/cloudflare-detail.md`, "Route before Custom Domain" and "Certif
 - **Every method of a `WorkerEntrypoint` is callable over RPC.** TypeScript `private` is erased at compile time, so
   a "private" helper on the class is a public RPC method for any Worker that holds a binding to it. Keep every step
   past an authorization check in a module function, not on the class.
-  See `references/cloudflare-detail.md`, "WorkerEntrypoint RPC exposure".
+  Read `references/cloudflare-detail.md`, "WorkerEntrypoint RPC exposure", before you add a method to a WorkerEntrypoint class.
 
 ## Secrets
 
@@ -148,7 +148,7 @@ groups and commands.
 - A `302` to the team domain on an unauthenticated probe is the gate WORKING.
 - **"Not reachable" is not a diagnosis.** Run the playbook's readiness ladder (DNS, TLS, certificate pack, gate) and
   report the rung with the raw response.
-  See `references/cloudflare-detail.md`, "Access probe and readiness detail".
+  Read `references/cloudflare-detail.md`, "Access probe and readiness detail", before you probe an Access-gated host or declare it ready.
 
 ## Ownership: wrangler versus Terraform
 
@@ -195,10 +195,10 @@ Read `references/cloudflare-detail.md`, "Ownership table and bring-up", before y
 
 - Every Worker subrequest is stamped with headers the code cannot blank, so an origin that refuses them is
   unreachable from a Worker DIRECTLY; it needs a hop outside Cloudflare, one per stage.
-  See `references/cloudflare-detail.md`, "Worker egress stamping".
+  Read `references/cloudflare-detail.md`, "Worker egress stamping", before a Worker calls another Cloudflare-fronted host.
 - Workers AI and AI Gateway calls spend on the account. Put the ceiling on the gateway: authentication required, a
   cost spend limit per window, credit-balance billing, and auto top-up OFF.
-  See `references/cloudflare-detail.md`, "AI spend ceiling".
+  Read `references/cloudflare-detail.md`, "AI spend ceiling", before you enable Workers AI or AI Gateway on an account.
 
 ## API token scopes
 

@@ -51,7 +51,7 @@ architecture decision: the design says the value exists, is bounded and is
 a parameter; architecture says which seam carries it; the as-built records
 what it is set to. Never write a number into a design record. Read
 `references/phases-drift-behaviors.md`, "Why the record does not hold
-numbers", for the argument.
+numbers", before you put a number in a design record or argue to keep one.
 
 ### `docs/design/` is not `docs/arch/`
 
@@ -60,7 +60,8 @@ trees fail in opposite directions, which is why they are separate:
 
 `docs/design/` is what we intend to build (body frozen once merged); `docs/arch/`
 is what is deployed right now (living, never frozen). Read
-`references/phases-drift-behaviors.md`, "The two trees", for the table.
+`references/phases-drift-behaviors.md`, "The two trees", before you decide whether a fact goes in
+`docs/design/` or `docs/arch/`.
 
 Never place an as-built document in `docs/design/`, and never describe
 unshipped intentions in `docs/arch/`. -> the as-built skill
@@ -91,7 +92,8 @@ anonymity bound is six" is the as-built.
 A design says nothing about mechanism; about bounds it says that each
 exists and what constrains it. Architecture places each bound in a seam;
 the as-built records the value. Read `references/phases-drift-behaviors.md`,
-"What the design says about bounds", for the examples.
+"What the design says about bounds", before you write a bound into a
+design record.
 
 ---
 

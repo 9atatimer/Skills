@@ -125,7 +125,7 @@ Fixed top-to-bottom order: module header, imports (stdlib -> third-party -> loca
 
 **Rules:** definitions before use, reading top-down; repeat the `predicates -> helpers -> flow -> entry` grouping per sub-component; split a file along domain boundaries when it grows more than one clear sub-component; keep entry points thin. Read `references/tests-taxonomy-anatomy.md`, "2 Anatomy rules", before you split a file.
 
-**Illustrative skeleton:** `references/tests-taxonomy-anatomy.md`, "2 Illustrative skeleton".
+Read `references/tests-taxonomy-anatomy.md`, "2 Illustrative skeleton", before you lay out a new source file.
 
 ---
 
