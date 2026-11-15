@@ -134,9 +134,12 @@ Copilot once quota returned. Changing a rule here is done when
 `npm test` runs `test/*.test.mjs` under `node --test` (zero dependencies).
 That includes the skill lint (`scripts/skill-lint.mjs`, also in the husky
 pre-commit): every "the X skill" must name a skill, every cited section
-must name a heading in that skill, plus frontmatter, ordered lists and a
+must name a heading or a bold term in that skill, plus frontmatter, ordered lists and a
 per-SKILL.md word budget, counted as `wc -w` counts. Its `WORD_BUDGET` is
 a ratchet: lower it when a skill moves detail into reference files, never
-raise it to fit a file.
+raise it to fit a file. A citation can resolve through a bold term rather
+than a heading, so moving a section to a reference can break a citation
+whose heading stayed: run `npm test` after every move, and repoint a
+broken citation at the heading or section number.
 `npm run guard` runs the publicity guard over the full tree; `npm run
 evals` runs the skill evals under `evals/`.

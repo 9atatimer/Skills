@@ -140,7 +140,10 @@ skill), and the text stays in its context for every later turn. So a
 whatever the task. Move a procedure used at one step, a template, tool
 mechanics and rationale into reference files, keep each heading that
 other text cites, and leave under it a summary and the condition for
-reading the reference.
+reading the reference. The condition must cover every case the moved
+text governs: an agent reads a reference only at the step `SKILL.md`
+names, so a rule moved under a narrower condition is never read. Keep a
+short rule that applies whatever the case in the summary itself.
 
 ## Writing a skill
 
