@@ -77,7 +77,9 @@ directory: provisioning overwrites it every session.
   `git -C <clone> worktree add <dir> -b <branch> origin/<default>`. With
   `branch.autoSetupMerge=simple` and `push.autoSetupRemote=true` the new
   branch pushes to its own name; without them it tracks the default
-  branch, and a bare push is refused or lands there.
+  branch, and a bare push is refused or lands there. Then run
+  `clai provision` in the new worktree, so the agents started there get
+  the current skills (the clai skill, When an agent sees new skills).
 - On a laptop, worktrees live in `~/workplace/.worktrees/<repo>-<topic>`,
   never beside the clone, where they clutter the workspace and break
   tab-completion of the repo's name. Move a stray one with
@@ -154,8 +156,8 @@ never close and reopen one.
 - AI review: summon OCR on Demand with a `/ocr` PR comment on the ready
   PR when the diff holds a file OCR reads. OCR skips Markdown, so a PR
   whose every changed file is Markdown never posts `/ocr`, whether it is
-  documentation-only or operating rules (a skill, a persona, `AGENT.md`):
-  the self-review pass is its agentic rung (a design or architecture
+  documentation or the prose agents follow (a skill, a persona,
+  `AGENT.md`): the self-review pass is its agentic rung (a design or architecture
   draft in phases 2 and 3 gets designomatic instead). Copilot and Codex review only when the human
   summons them (the gates skill, Reviewer Selection). Re-summon OCR with
   a fresh `/ocr` only after a push that carries a load-bearing fix. A

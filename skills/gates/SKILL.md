@@ -222,13 +222,12 @@ repo requires `review-settled`, it stays red: a human lands it.
   record under review (`docs/design/`) or a phase-3 seam map gets the
   designomatic panel instead of the self-review pass, and never an
   agentic reviewer -> the designomatic skill.
-- **Operating rules are not documentation.** Skills, personas,
-  `AGENT.md`/`CLAUDE.md`, prompts, CI workflows and gate configuration
-  are executed by an agent or a gate; a PR touching any of them takes the
-  full ladder (the self-review skill's Sizing rule). OCR skips Markdown
-  (the self-review skill, Adapters), so a Markdown-only PR, operating
-  rules included, never posts `/ocr`: its three-panelist self-review is
-  the agentic rung, and the human review is still owed.
+- **Prose that agents follow is reviewed as prose.** A PR whose every
+  changed file is prose -- skills, personas, `AGENT.md`/`CLAUDE.md` and
+  prompts included -- gets the author's own read for correctness,
+  readability and specificity, no panel, and the human review (the
+  self-review skill, Documentation-only changes). CI workflows and gate
+  configuration are code: a PR touching them takes the full ladder.
 - **A PR that mixes documentation with anything else is not
   documentation-only.**
 - **A pin bump gets no agentic reviewer either.** A PR whose only change

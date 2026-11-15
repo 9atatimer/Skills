@@ -40,6 +40,26 @@ the telemetry; use it only to prove something about the agent itself.
 Use provision for what every agent shares (skills, catalog servers). Use
 a hook for what is specific to one agent's config surface.
 
+## When an agent sees new skills
+
+- New skills reach the machine through `lmde acquire`, and a checkout
+  through `clai provision` run in it. A Claude Code session-start hook
+  runs both; a `clai <agent>` launch runs `clai provision` only. The
+  Codex desktop app runs neither. In a checkout only Codex opens, run `lmde acquire`, then
+  `clai provision` there, after a skills release. On a laptop a
+  provisioned skill is a link into a shared cache, so its content follows
+  any later provision; a skill added since, or a checkout that holds
+  copies, needs the provision in place.
+- Each worktree has its own skill directories. After cutting one, run
+  `clai provision` in it before an agent starts there.
+- Codex lists skills from `.codex/skills` in the checkout it was started
+  in, and sends that list to the model only at some points in a
+  conversation, not on every turn and not when the app reopens a
+  conversation. Do not count on a running conversation to see a skill
+  added after it began; start a new one, or have the agent read the
+  `SKILL.md` by path. A repo-local skill must be in that checkout's
+  `.codex/skills`.
+
 ## Writing a hook
 
 - **Fail open.** A pre-hook that exits non-zero aborts the launch. Guard
@@ -49,6 +69,13 @@ a hook for what is specific to one agent's config surface.
   survive. Where the agent's format cannot be merged safely, own the
   whole file only while it carries a marker line, and leave an unmarked
   (hand-managed) file alone.
+- **Prove an edit before writing it.** Where no safe writer for the
+  format is at hand (TOML from a shell hook), make the edit, parse both
+  the result and the original, and write only when they differ in exactly
+  the keys the hook owns. A line-by-line edit that does not track
+  multi-line strings and brackets reads text inside a string as a key or
+  a table header, and its output still parses. Write atomically, edit a
+  symlinked config in its target, and keep the file's mode.
 - **Never symlink a file the agent writes at runtime** out of a
   repository checkout; that dirties the checkout on every launch. Merge
   into a real file in `$HOME` instead.
