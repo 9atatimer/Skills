@@ -171,10 +171,30 @@ description: "Provisioning and governing the credentials infrastructure needs: t
 - Deleting an item is a rotation you did not plan. Before deleting,
   grep for its ID and title across the fleet.
 
-**A service-account token is rotated by a script the human runs**, never
-by hand and never by an agent. The script lives in the infra repo, next
-to the runbook for that account, and its tests run against fake `op`
-and `gh`. It enforces this order:
+**A service-account token is rotated by the infra repo's rotator, run by
+the human**, never by hand and never by an agent. It is one generic tool,
+not a script per account: each rotatable credential is a config file
+beside it. The config format and what the tool checks are in its
+runbook in the infra repo's `docs/`, not here. Its tests run against
+fake `op` and `gh`.
+
+- **A config names the credential, never holds a value.** It decides
+  which vault gets a new account and which secrets are overwritten, so
+  the configs and the tool are owner-approved paths (CODEOWNERS): an
+  agent may propose a change to them, never land one alone.
+- **Dry run first, every time.** The default run changes nothing and
+  prints the plan: the account it would mint, the item it would write,
+  every holder it would re-seed, and the account you would revoke. Read
+  it, then rerun with apply.
+- **Adding a credential is a config and a first dry run.** A config that
+  has never had a dry run says so in its header; the dry run is what
+  proves its holders against the registry.
+- **Out of scope: fall back to the manual procedure.** A token held as a
+  GitHub Environment secret, or one held anywhere but a GitHub secret,
+  is not rotated by the tool. Rotate it by the rules above and the
+  account's own runbook.
+
+On apply, it enforces this order:
 
 - **Refuse before minting** when the holders it finds (the org secret
   and every repository secret of that name) differ from the registry.
