@@ -174,16 +174,14 @@ description: "Provisioning and governing the credentials infrastructure needs: t
 **A service-account token is rotated by the infra repo's rotator, run by
 the human**, never by hand and never by an agent. It is one generic tool,
 not a script per account: each rotatable credential is a config file
-beside it, and its runbook is in the infra repo's `docs/`. Its tests run
-against fake `op` and `gh`.
+beside it. The config format and what the tool checks are in its
+runbook in the infra repo's `docs/`, not here. Its tests run against
+fake `op` and `gh`.
 
-- **A config declares the credential, never a value.** It names the
-  vault and the read-only grant, the 1Password item and field, the title
-  marker before the account name, the account-name prefix, the GitHub
-  secret's name, the owners to scan, the org secret if there is one, and
-  the expected repository holders. The tool refuses a config with an
-  unknown key or a value outside its pattern, and reads it as data,
-  never as shell.
+- **A config names the credential, never holds a value.** It decides
+  which vault gets a new account and which secrets are overwritten, so
+  the configs and the tool are owner-approved paths (CODEOWNERS): an
+  agent may propose a change to them, never land one alone.
 - **Dry run first, every time.** The default run changes nothing and
   prints the plan: the account it would mint, the item it would write,
   every holder it would re-seed, and the account you would revoke. Read
