@@ -204,9 +204,9 @@ short rule that applies whatever the case in the summary itself.
   model can make a newer one over-correct. Remove cautions whose reason
   no longer holds.
 - A human reads every change to an instruction file before it lands.
-  These files are operating rules, so the change takes the review the
-  gates skill requires for operating rules, not the lighter path for
-  documentation.
+  Its self-review is the prose review (the self-review skill,
+  Documentation-only changes): correctness, readability and specificity,
+  no panel.
 
 ## Before committing
 

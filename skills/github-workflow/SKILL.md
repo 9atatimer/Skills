@@ -156,8 +156,8 @@ never close and reopen one.
 - AI review: summon OCR on Demand with a `/ocr` PR comment on the ready
   PR when the diff holds a file OCR reads. OCR skips Markdown, so a PR
   whose every changed file is Markdown never posts `/ocr`, whether it is
-  documentation-only or operating rules (a skill, a persona, `AGENT.md`):
-  the self-review pass is its agentic rung (a design or architecture
+  documentation or the prose agents follow (a skill, a persona,
+  `AGENT.md`): the self-review pass is its agentic rung (a design or architecture
   draft in phases 2 and 3 gets designomatic instead). Copilot and Codex review only when the human
   summons them (the gates skill, Reviewer Selection). Re-summon OCR with
   a fresh `/ocr` only after a push that carries a load-bearing fix. A

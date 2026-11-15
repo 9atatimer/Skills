@@ -173,14 +173,13 @@ that matches wins.
 
 | Diff | Panelists |
 |---|---|
-| Touches a skill, persona, `AGENT.md`, gate configuration, CI workflow, infrastructure or a credential path, at any size | 3 |
+| Touches gate configuration, a CI workflow, infrastructure or a credential path, at any size | 3 |
 | Code, over 100 lines | 3 |
 | Code, up to 100 lines | 2 |
-| Any other prose | 2 |
+| Prose only, skills and `AGENT.md` included | no panel (Documentation-only changes, below) |
 
-Skill and persona files are operating rules the fleet loads and runs: no
-"docs-only" discount. More than three panelists buys correlated agreement,
-not coverage.
+The panel is for code and for configuration a machine executes. More than
+three panelists buys correlated agreement, not coverage.
 
 **Pick the lenses the change most risks**, one per panelist, each naming
 a question asked of the whole change:
@@ -346,23 +345,25 @@ surface; a loop of rounds grows findings instead of converging.
 
 ## Documentation-only changes
 
-When every changed file is human-read prose -- a README, a `docs/`
-runbook or as-built, `TODO_PLAN.md`, task files, a changelog, a
-comment-only edit to source -- this pass is the whole review. Summon no
-OCR, ask no human to summon Copilot or Codex, and run no review-watch
-loop; the epilogue on the PR is the record that satisfies Zero
-Unreviewed Code (the gates skill, Documentation-only changes get no
-agentic reviewer).
+When every changed file is prose -- a README, a `docs/` runbook or
+as-built, `TODO_PLAN.md`, task files, a changelog, a comment-only edit to
+source, a skill, a persona, `AGENT.md`, a prompt -- no panel runs. One
+fresh reviewer, on a cheaper model than the session's, reads the change
+once for correctness, readability and specificity: each sentence is
+true, says one specific thing its reader can act on, in plain words, and
+nothing is vague or doubled. There is no verifier and no second round;
+the author triages what it reports. Summon no OCR, ask
+no human to summon Copilot or Codex, and run no review-watch loop; the
+epilogue on the PR records that read and satisfies Zero Unreviewed Code
+(the gates skill, Documentation-only changes get no agentic reviewer).
 
 - **Phases 2 and 3 are the exception.** A design record under review or a
   phase-3 seam map gets the designomatic panel, not this pass and not
   an agentic reviewer -> the designomatic skill.
-- **Operating rules are not documentation.** Skills, personas,
-  `AGENT.md`, prompts, CI and gate configuration take the full ladder
-  (Sizing, above: no "docs-only" discount). The ladder's OCR rung still
-  fires only for files OCR reads: a Markdown-only skill, persona or
-  `AGENT.md` PR posts no `/ocr`, and this three-panelist pass is its
-  agentic review; the human review is still owed.
+- **Configuration a machine executes is code.** CI workflows and gate
+  configuration get the panel (Sizing, above). A skill, persona,
+  `AGENT.md` or prompt is prose for this pass; the human review is still
+  owed.
 
 ---
 
