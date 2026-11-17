@@ -266,6 +266,15 @@ open PRs, comment and `/land` as the fleet's machine account
 - When `asbot` refuses, the action does not happen. Never run the same
   command bare, as the owner. Say what refused and stop; the fix is the
   human's.
+- When the bot cannot push to a repository, check its grant before its
+  token: `gh api repos/<owner>/<repo>/collaborators/9atatimer-bot/permission`.
+  The grant is a hand act per repository (the repo-bootstrap skill), so a
+  repository never bootstrapped, or renamed from one that was not, reads
+  `none`. The owner invites the bot (`gh api -X PUT
+  repos/<owner>/<repo>/collaborators/9atatimer-bot -f permission=push`)
+  and the bot accepts through `asbot` (`gh api -X PATCH
+  user/repository_invitations/<id>`). A repeat invite answers with no
+  output: the bot is already a collaborator.
 - Read `references/preview-and-identity.md`, "Bot identity mechanics", for
   the launcher, `asbot` use, the Keychain seed and the cloud case, before you push, open a PR or comment under a session whose identity you
   have not confirmed. Run each `asbot` command in the foreground. Codex
