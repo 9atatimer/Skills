@@ -118,6 +118,16 @@ workflows, so it passed PR#780 and its landing build failed
 (template-tools Issue#1109). Check the PR yourself: if it changes a file
 under `.github/workflows/` and a test that reads that file, split it.
 
+When such a PR is already open and the owner prefers one PR, the owner can
+merge it by hand instead, but only where the Landing ruleset lets them.
+Read its bypass list before you advise it:
+`gh api repos/<owner>/<repo>/rulesets/<id> --jq .bypass_actors`. Where the
+only bypass actor is tedium's App (most repos; the admin role is added only
+on owner-screened repos), the owner's merge still needs `gate` green on the
+PR's own head, so first fix whatever keeps `gate` red there.
+9atatimer/bnb PR#81 (2026-11-18) merged by hand this way, once its
+missing packages secret had been seeded.
+
 **A tedium landing does not close issues.** `Closes #N` in the PR body or
 the commit message links the issue but leaves it open when tedium merges
 (a web-UI merge by a human does close it). Keep writing the keyword for
