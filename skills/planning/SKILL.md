@@ -432,6 +432,11 @@ Use this checklist before creating TODO_PLAN:
 **Problem:** An open question gates building when its answer changes only whether the built thing succeeds at run time
 **Solution:** An unknown blocks a step only when its answer changes what gets built; otherwise build, then test the answer
 
+### "Each leaf can implement the shared contract itself"
+
+**Problem:** Parallel leaves implement a shared data contract unevenly, and the drift surfaces only at integration
+**Solution:** Pin the contract in a foundation task the leaves are `blocked_by`; when leaves still disagree, the foundation's semantics win; after integration, check each shared invariant at every entry point
+
 ---
 
 ## Examples
