@@ -118,6 +118,11 @@ panel's narrowing in a `--rubric` supplement.
 | `--rubric PATH` | A repo-local supplement read after the skills: it may narrow them, never override them |
 | `--rubric PATH` is also the only way to steer the editor in 0.3.0 | There is no `--guidance` flag in designomatic 0.3.0; a run that passes one fails before the first reviewer. Put editor constraints ("KISS, this is a prototype") in the rubric supplement |
 
+**The run edits the draft in place, even with `--no-commit`**, and
+leaves its artifacts in `.designomatic/`. Ignore that directory in the
+repository, run the panel in the background, and commit once it ends: a
+session hook that demands a clean tree otherwise fires mid-run.
+
 **Tell the panel the scope, or it grows the record.** Every reviewer
 judges against the skills for completeness, so each edge case the owner
 deferred reads to it as a defect. DESIGN.QUALITIES.md (9atatimer/iae)
