@@ -332,8 +332,5 @@ retrospective or wrapup.
 
 - Prune at the start of any major work session: stale entries in `Now`,
   tasks whose authority has moved, `done/` from a shipped cycle.
-- Verify a structural claim (a class's base type, a field's owner)
-  against the tree before writing it into the plan or a task. Nobody
-  reviews your own assertion until a task is built on it.
 - `PLAN.md` is not this file. Several repos gitignore it to catch
   agent-dropped plan files; leave that ignore in place.
