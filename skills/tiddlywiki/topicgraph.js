@@ -182,7 +182,8 @@ const viewBoxOf = (v) => `${v.x} ${v.y} ${v.w} ${v.h}`;
 
 /** The hover text for a neighbor, in the words the tiddler text uses. */
 function describe(n) {
-  return n.dir === "in" ? `${n.title} ${n.rel} this` : `${n.rel} ${n.title}`;
+  const base = n.dir === "in" ? `${n.title} ${n.rel} this` : `${n.rel} ${n.title}`;
+  return n.label ? `${base}: ${n.label}` : base;
 }
 
 /** A node's label, placed outward from its dot. */
@@ -238,12 +239,53 @@ function drawCentre(doc, svg, title) {
   svg.appendChild(g);
 }
 
-/** Scale the view about its centre; factor < 1 zooms in. 0 resets it. */
+const MAX_ZOOM_IN = 40; // the view can shrink to 1/40 of the whole drawing
+const MAX_ZOOM_OUT = 4; // and grow to 4 times it
+
+/**
+ * The view scaled by `factor` about `point` (in drawing units), so the
+ * point stays where it is on screen; factor < 1 zooms in. The width stays
+ * between 1/MAX_ZOOM_IN and MAX_ZOOM_OUT times the whole drawing. Pure.
+ */
+function zoomAround(v, factor, point) {
+  const w = Math.min(v.home.w * MAX_ZOOM_OUT, Math.max(v.home.w / MAX_ZOOM_IN, v.w * factor));
+  const k = w / v.w;
+  return { home: v.home, x: point.x - (point.x - v.x) * k, y: point.y - (point.y - v.y) * k, w, h: v.h * k };
+}
+
+/**
+ * Where a pointer at client (cx, cy) falls in the drawing. The square view
+ * is drawn centred in the element at the scale of its shorter side. Pure.
+ */
+function pointerToView(v, rect, cx, cy) {
+  const side = Math.min(rect.width, rect.height) || 1;
+  const scale = v.w / side;
+  return { x: v.x + (cx - rect.left - (rect.width - side) / 2) * scale, y: v.y + (cy - rect.top - (rect.height - side) / 2) * scale };
+}
+
+/** How much one wheel event zooms: a smooth factor from its vertical delta. Pure. */
+function wheelFactor(deltaY) {
+  return Math.exp(Math.max(-300, Math.min(300, deltaY)) * 0.0015);
+}
+
+/** The wheel over a drawing zooms it about the pointer instead of scrolling the page. */
+function onWheel(widget, svg, e) {
+  e.preventDefault();
+  const point = pointerToView(widget.view, svg.getBoundingClientRect(), e.clientX, e.clientY);
+  widget.view = zoomAround(widget.view, wheelFactor(e.deltaY), point);
+  svg.setAttribute("viewBox", viewBoxOf(widget.view));
+}
+
+/** The view after a toolbar zoom: about its centre, within the limits; 0 resets it. Pure. */
+function zoomedView(v, factor) {
+  if (factor === 0) return { home: v.home, x: v.home.x, y: v.home.y, w: v.home.w, h: v.home.h };
+  return zoomAround(v, factor, { x: v.x + v.w / 2, y: v.y + v.h / 2 });
+}
+
+/** Zoom the drawing from the toolbar. */
 function zoom(widget, svg, factor) {
-  const v = widget.view;
-  if (factor === 0) Object.assign(v, { x: v.home.x, y: v.home.y, w: v.home.w, h: v.home.h });
-  else Object.assign(v, { x: v.x + (v.w * (1 - factor)) / 2, y: v.y + (v.h * (1 - factor)) / 2, w: v.w * factor, h: v.h * factor });
-  svg.setAttribute("viewBox", viewBoxOf(v));
+  widget.view = zoomedView(widget.view, factor);
+  svg.setAttribute("viewBox", viewBoxOf(widget.view));
 }
 
 /** A toolbar button that runs onClick. */
@@ -283,14 +325,19 @@ function toolbar(widget, svg, chips) {
  * viewBox is square and drawn to fit, so the shorter side sets the scale.
  */
 function panTo(widget, svg, e) {
-  const d = widget.drag;
-  const scale = widget.view.w / (Math.min(svg.clientWidth, svg.clientHeight) || widget.view.w);
-  const dx = (e.clientX - d.x) * scale;
-  const dy = (e.clientY - d.y) * scale;
-  if (Math.abs(e.clientX - d.x) + Math.abs(e.clientY - d.y) > 4) d.moved = true;
-  widget.view.x = d.vx - dx;
-  widget.view.y = d.vy - dy;
+  const pan = panned(widget.drag, widget.view, Math.min(svg.clientWidth, svg.clientHeight), e.clientX, e.clientY);
+  widget.drag.moved = widget.drag.moved || pan.moved;
+  widget.view = pan.view;
   svg.setAttribute("viewBox", viewBoxOf(widget.view));
+}
+
+/** The view after dragging from `d` to (cx, cy), and whether the pointer moved enough to count. Pure. */
+function panned(d, v, side, cx, cy) {
+  const scale = v.w / (side || v.w);
+  return {
+    view: Object.assign({}, v, { x: d.vx - (cx - d.x) * scale, y: d.vy - (cy - d.y) * scale }),
+    moved: Math.abs(cx - d.x) + Math.abs(cy - d.y) > 4,
+  };
 }
 
 /**
@@ -329,8 +376,9 @@ function onGraphClick(widget, e) {
   if (action === "open") openNode(widget, node);
 }
 
-/** Pointer handlers: drag pans, a click on a node opens that tiddler. */
+/** Pointer handlers: drag pans, the wheel zooms, a click on a node opens that tiddler. */
 function attachPointer(widget, svg) {
+  svg.addEventListener("wheel", (e) => onWheel(widget, svg, e), { passive: false });
   svg.addEventListener("pointerdown", (e) => {
     widget.drag = { x: e.clientX, y: e.clientY, vx: widget.view.x, vy: widget.view.y, moved: false, touch: e.pointerType === "touch" };
   });

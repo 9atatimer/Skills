@@ -287,7 +287,7 @@ export function validate(g) {
   }
   for (const [i, e] of g.edges.entries()) errs.push(...edgeErrors(e, `edges[${i}]`, ids));
   const titles = new Set([g.title, AI_ACCESS, ...cats, ...[...types].map(TYPE_INDEX), ...labels]);
-  for (const [i, n] of g.nodes.entries()) errs.push(...writtenErrors(n, `nodes[${i}]`, titles, labels));
+  for (const [i, n] of g.nodes.entries()) errs.push(...writtenErrors(n, `nodes[${i}] (${isObj(n) ? n.id : ""})`, titles, labels));
   errs.push(...titleClashes([
     [g.title, "the home tiddler"],
     [AI_ACCESS, "the AI access tiddler"],
@@ -325,15 +325,30 @@ function partMarkup(p) {
   return p.shown ? `[[${p.shown}|${p.link}]]` : `[[${p.link}]]`;
 }
 
-/** Written text as wikitext: paragraphs split on blank lines, links kept, the rest plain. */
+/**
+ * Written text as wikitext: one <p> per paragraph (split on blank lines),
+ * links kept, the rest plain. The <p> is explicit because a paragraph that
+ * is only a widget would otherwise not be a paragraph.
+ */
 function linkedText(s) {
-  return s.split(/\n\s*\n/).map((para) => linkedParts(para.trim()).map(partMarkup).join("")).join("\n\n");
+  return paragraphs(s).map((para) => `<p>${linkedParts(para).map(partMarkup).join("")}</p>`).join("\n\n");
+}
+
+/** Written text as one run of wikitext, for a bullet: line breaks become spaces. */
+function inlineText(s) {
+  return linkedParts(s.replace(/\s+/g, " ").trim()).map(partMarkup).join("");
+}
+
+/** The non-empty paragraphs of written text. Pure. */
+function paragraphs(s) {
+  return s.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
 }
 
 /** Why one part of written text cannot be shown, or "". */
 function partProblem(p, titles) {
   if (p.bad) return "has a link it cannot read";
-  if (p.text !== undefined) return quoteAttr(p.text) === null || p.text.includes("[[") || p.text.includes("]]") ? "cannot be quoted" : "";
+  if (p.text !== undefined && (p.text.includes("[[") || p.text.includes("]]"))) return "has [[ or ]] outside a link";
+  if (p.text !== undefined) return quoteAttr(p.text) === null ? "cannot be quoted" : "";
   if (!titles.has(p.link)) return `links ${JSON.stringify(p.link)}, which is not a tiddler`;
   return p.shown && badTitle(p.shown) ? "has link text it cannot show" : "";
 }
@@ -341,7 +356,8 @@ function partProblem(p, titles) {
 /** Problems with a piece of written text: a string whose links all name tiddlers. */
 function linkedTextErrors(at, s, titles) {
   if (!isStr(s)) return [`${at} is not a string`];
-  const problems = s.split(/\n\s*\n/).flatMap((para) => linkedParts(para.trim()).map((p) => partProblem(p, titles)));
+  if (!s.trim()) return [`${at} is empty`];
+  const problems = [...paragraphs(s), s.replace(/\s+/g, " ").trim()].flatMap((para) => linkedParts(para).map((p) => partProblem(p, titles)));
   return [...new Set(problems.filter(Boolean))].map((why) => `${at} ${why}`);
 }
 
@@ -380,13 +396,16 @@ const WRITTEN = ["explanation", "compare", "cases"];
  * unknown id or field is an error, so a typo cannot drop content silently.
  */
 export function withContent(g, content) {
-  const ids = new Set(g.nodes.map((n) => n.id));
+  if (!isObj(content)) throw new Error("content: not an object");
+  if (!isObj(g) || !Array.isArray(g.nodes)) return g; // validate reports the graph's own problems
+  const ids = new Set(g.nodes.filter(isObj).map((n) => n.id));
   for (const [id, fields] of Object.entries(content)) {
     if (!ids.has(id)) throw new Error(`content: ${JSON.stringify(id)} is not a topic id`);
+    if (!isObj(fields)) throw new Error(`content.${id}: not an object`);
     const bad = Object.keys(fields).find((k) => !WRITTEN.includes(k));
     if (bad) throw new Error(`content.${id}: ${JSON.stringify(bad)} is not a written field`);
   }
-  return { ...g, nodes: g.nodes.map((n) => (content[n.id] ? { ...n, ...content[n.id] } : n)) };
+  return { ...g, nodes: g.nodes.map((n) => (isObj(n) && ownKey(content, n.id) ? { ...n, ...content[n.id] } : n)) };
 }
 
 const byLabel = (a, b) => a.label.localeCompare(b.label);
@@ -408,7 +427,11 @@ function tiddlywiki(...args) {
   execFileSync("npx", ["-y", TIDDLYWIKI, ...args], { stdio: ["ignore", "ignore", "inherit"] });
 }
 
-/** Render one topic's text: docs, tutorials, then its direct links out and in. */
+/** One case study as a bullet: its link, then its summary as plain text. */
+function caseLine(c) {
+  return "* " + link(c.title, c.url) + (c.summary ? " -- " + txt(c.summary) : "");
+}
+
 /** A heading and its lines; nothing at all when there are no lines. */
 function optionalSection(heading, lines) {
   return lines.length ? ["", heading, ...lines] : [];
@@ -428,19 +451,23 @@ function topicText(n) {
   const docs = [...(n.docs ? [link("Documentation", n.docs)] : []), ...(n.links || []).map((l) => link(l.title, l.url))];
   return [
     n.explanation ? linkedText(n.explanation) : "<$view field=\"description\"/>",
-    ...optionalSection("!! Compared with", (n.compare || []).map((c) => `* [[${c.title}]]: ${linkedText(c.text)}`)),
-    ...optionalSection("!! Case studies", (n.cases || []).map((c) => `* ${link(c.title, c.url)}${c.summary ? ` -- ${txt(c.summary)}` : ""}`)),
+    ...optionalSection("!! Compared with", (n.compare || []).map((c) => `* [[${c.title}]]: ${inlineText(c.text)}`)),
+    ...optionalSection("!! Case studies", (n.cases || []).map(caseLine)),
     ...recordedSection("!! Docs", docs.map((d) => `* ${d}`)),
     ...recordedSection("!! Tutorials", (n.tutorials || []).map((l) => `* ${link(l.title, l.url)}`)),
   ].join("\n");
 }
 
-function membersList(nodes) {
-  return nodes.length ? [...nodes].sort(byLabel).map((n) => `* [[${n.label}]]`).join("\n") : "None.";
-}
-
 /** One entry of a tiddler's neighbors field. */
 const neighbor = (title, rel, dir) => ({ title, rel, dir });
+
+/** A neighbor along an edge: the edge's note and evidence go with it, when it has them. */
+function edgeNeighbor(title, e, dir) {
+  const n = neighbor(title, human(e.type), dir);
+  if (e.label) n.label = e.label;
+  if ((e.evidence || []).length) n.evidence = e.evidence;
+  return n;
+}
 
 /**
  * A topic's neighbors: every link out and in to another topic, then the
@@ -449,8 +476,8 @@ const neighbor = (title, rel, dir) => ({ title, rel, dir });
  */
 function topicNeighbors(n, out, inn, byId, home) {
   const list = [
-    ...sortEdges(out.filter((e) => e.target !== n.id), "target", byId).map((e) => neighbor(byId.get(e.target).label, human(e.type), "out")),
-    ...sortEdges(inn.filter((e) => e.source !== n.id), "source", byId).map((e) => neighbor(byId.get(e.source).label, human(e.type), "in")),
+    ...sortEdges(out.filter((e) => e.target !== n.id), "target", byId).map((e) => edgeNeighbor(byId.get(e.target).label, e, "out")),
+    ...sortEdges(inn.filter((e) => e.source !== n.id), "source", byId).map((e) => edgeNeighbor(byId.get(e.source).label, e, "in")),
   ];
   if (n.category) list.push(neighbor(n.category, "in category", "out"));
   if (n.type) list.push(neighbor(TYPE_INDEX(n.type), "of type", "out"));
@@ -481,13 +508,8 @@ function topicTiddler(n, out, inn, byId, home) {
 /** A category's index tiddler: its members, grouped by type. */
 function categoryTiddler(g, c, types) {
   const members = g.nodes.filter((n) => n.category === c);
-  const parts = [`Every ${txt(g.title)} topic in the ${txt(c)} category, by type.`];
-  for (const ty of types) {
-    const m = members.filter((n) => n.type === ty);
-    if (m.length) parts.push("", `!! ${TYPE_INDEX(ty)} (${m.length})`, membersList(m));
-  }
-  const untyped = members.filter((n) => !n.type);
-  if (untyped.length) parts.push("", `!! Other (${untyped.length})`, membersList(untyped));
+  const counts = types.map((ty) => [ty, members.filter((n) => n.type === ty).length]).filter(([, k]) => k);
+  const parts = [`${members.length} ${txt(g.title)} topics in the ${txt(c)} category: ${counts.map(([ty, k]) => `${k} of type ${ty}`).join(", ") || "none typed"}.`];
   const near = [neighbor(g.title, "category", "in"), ...[...members].sort(byLabel).map((n) => neighbor(n.label, n.type || "other", "out"))];
   return { title: c, tags: tagList([g.title]), text: withGraph(parts.join("\n"), near), neighbors: JSON.stringify(near) };
 }
@@ -497,7 +519,7 @@ function typeTiddler(g, ty) {
   const m = g.nodes.filter((n) => n.type === ty);
   const near = [neighbor(g.title, "type", "in"), ...[...m].sort(byLabel).map((n) => neighbor(n.label, n.category || "other", "out"))];
   return { title: TYPE_INDEX(ty), tags: tagList([g.title]),
-    text: withGraph(`Every ${txt(g.title)} topic of type ${ty} (${m.length}).\n\n${membersList(m)}`, near),
+    text: withGraph(`${m.length} ${txt(g.title)} topics of type ${ty}.`, near),
     neighbors: JSON.stringify(near) };
 }
 
@@ -602,8 +624,8 @@ function homeTiddler(g, cats, types, top) {
  * codeblock shows verbatim; it is never spliced into markup.
  */
 function agentTiddlers(g, store, agent) {
-  const head = `Read the topic wiki at ${store}: a JSON array of tiddlers, one per topic, whose text links other topics by title in double square brackets and whose fields are described in its tiddler titled ${AI_ACCESS}. Query it with jq by title or topic_id rather than reading it whole. `;
-  const tail = " Then help me navigate it: answer from the tiddlers, follow those links, and cite docs_url and the evidence links.";
+  const head = `Read the topic wiki at ${store}: a JSON array of tiddlers, one per topic, whose fields are described in its tiddler titled ${AI_ACCESS}; a topic's neighbors field lists every topic it relates to, with the relation, a note and evidence URLs. Query it with jq by title or topic_id rather than reading it whole. `;
+  const tail = " Then help me navigate it: answer from the tiddlers, follow their neighbors, and cite docs_url and the evidence URLs.";
   return [
     {
       title: AI_ACCESS,
@@ -620,7 +642,7 @@ function agentTiddlers(g, store, agent) {
         "* `description` -- one or two plain sentences",
         "* `docs_url` -- the public documentation",
         "* `links_out`, `links_in` -- how many direct links it has",
-        "* `neighbors` -- JSON list of `{title, rel, dir}` that the graph draws: each link to another topic (`dir` `out` or `in`, `rel` the relation in words), then the way up: `in category` and `of type`, or `part of` the home when the topic has neither",
+        "* `neighbors` -- JSON list of `{title, rel, dir, label, evidence}` that the graph draws (`label` and `evidence` when the source gives them): each link to another topic (`dir` `out` or `in`, `rel` the relation in words), then the way up: `in category` and `of type`, or `part of` the home when the topic has neither",
         "* `text` -- TiddlyWiki markup: an explanation, then sections Compared with, Case studies, Docs, Tutorials, Neighbor graph",
         "",
         "Start a session over the whole wiki with:",

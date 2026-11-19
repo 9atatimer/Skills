@@ -90,12 +90,16 @@ builder merges it with `--content`. An unknown id or field is an error.
 |---|---|
 | `explanation` | plain text; paragraphs split on a blank line; links as `[[Title]]` or `[[shown text|Title]]`, each naming a tiddler |
 | `compare[].title` | another topic's title |
-| `compare[].text` | plain text with links, as `explanation` |
+| `compare[].text` | plain text with links, as `explanation`, shown on one line: line breaks become spaces |
 | `cases[].title`, `cases[].url` | a title with no link characters, an http(s) URL you opened |
 | `cases[].summary` | optional plain text |
 
 Everything outside a link is shown as plain text, never parsed as
-markup. A plain-text run must be quotable (see free text above).
+markup. A plain-text run must be quotable (see free text above) and
+must not hold `[[` or `]]` outside a link. Written text that is empty or
+only spaces is rejected. An error names the topic by its graph index and
+id, as `nodes[3] (kv): explanation links "Nowhere", which is not a
+tiddler`; find the entry by the id.
 
 ## Output: the tiddler store
 
@@ -110,7 +114,7 @@ has these fields:
 | `description` | the node description |
 | `docs_url` | the node docs URL |
 | `links_out`, `links_in` | edge counts, as strings |
-| `neighbors` | JSON list of `{title, rel, dir}` that the graph draws: each link to another topic (`dir` is `out` or `in`, `rel` the relation in words; a self-edge is left out), then the way up: `in category` and `of type` (`dir` `out`), or `part of` the home when the topic has neither |
+| `neighbors` | JSON list of `{title, rel, dir, label, evidence}` that the graph draws: each link to another topic (`dir` is `out` or `in`, `rel` the relation in words, `label` the edge's note and `evidence` its URLs when the source gives them; a self-edge is left out), then the way up: `in category` and `of type` (`dir` `out`), or `part of` the home when the topic has neither |
 | `tags` | the category and the type index, TiddlyWiki tag syntax |
 | `text` | TiddlyWiki markup: the explanation (or `<$view field="description"/>`), then Compared with and Case studies when present, Docs, Tutorials, Neighbor graph |
 
@@ -118,7 +122,8 @@ Index tiddlers carry `neighbors` too: the home links each category and
 type index, a category links the home and its members (`rel` is the
 member's type, or `other` when it has none), and a type index links the
 home and its members (`rel` is the member's category, or `other`). A
-tiddler with no neighbors has no graph section.
+tiddler with no neighbors has no graph section. A category or type
+index's text is one line of counts; its members are in its graph.
 
 `$:/topicwiki/map` holds what the full map draws: `nodes` (`t` title,
 `x`, `y`, `s` size, `c` category, `k` type), `edges` as pairs of node

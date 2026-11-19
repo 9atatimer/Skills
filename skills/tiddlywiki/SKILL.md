@@ -137,7 +137,9 @@ text; `references/topic-graph.md` has the format.
 The home tiddler starts with the full map: every topic at its place,
 coloured by category and sized by weight, every link drawn faintly. A
 topic grows, shows its name and lights its links under the pointer; a
-click opens it; drag pans; the toolbar zooms and hides a category.
+click opens it; drag pans; the mouse wheel over a drawing zooms it
+about the pointer instead of scrolling the page; the toolbar zooms and
+hides a category.
 When the source publishes its own layout, sizes and colours, carry them
 into the topic graph (`x`, `y`, `size`, `palette`) so the map looks like
 the source; otherwise the builder lays the topics out by category and
@@ -147,10 +149,11 @@ Every category, type index and topic that has neighbors ends with a
 Neighbor graph section, after Docs and Tutorials: its
 direct links drawn around it, each neighbor in its map colour and size,
 each link in its relation's colour, incoming links dashed. A click on a node opens that tiddler;
-on a touch screen, a crowded graph's first tap shows the name. A topic
-also links its category and its type index, or the home tiddler when it
-has neither, and every index links the home tiddler, so any topic is at
-most two steps from the root. Both widgets are in `topicgraph.js` in this
+on a touch screen, a crowded graph's first tap shows the name. A topic's
+graph also includes its category and its type index, or the home tiddler
+when it has neither, and every index's graph includes the home tiddler,
+so any topic is at most two steps from the root. A category or type
+index shows its members only in its graph, not as a list. Both widgets are in `topicgraph.js` in this
 skill's directory; `build.mjs` embeds it, so the HTML stays one file
 with no network dependency. Check the map and one hub topic's graph in
 the browser when you verify a build.

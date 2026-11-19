@@ -64,14 +64,6 @@ test("missing docs and tutorials say so instead of leaving an empty section", ()
   assert.match(c.text, /!! Tutorials\nNone recorded in the source\./);
 });
 
-test("category and type index tiddlers list their members", () => {
-  const ts = toTiddlers(graph());
-  const compute = find(ts, "Compute");
-  assert.match(compute.text, /!! Feature index \(1\)\n\* \[\[Cron Triggers\]\]/);
-  assert.match(compute.text, /!! Product index \(1\)\n\* \[\[Workers\]\]/);
-  assert.match(find(ts, "Product index").text, /\* \[\[Workers\]\]\n\* \[\[Workers KV\]\]/);
-});
-
 test("the home tiddler is the default and links categories and AI access", () => {
   const ts = toTiddlers(graph());
   assert.equal(find(ts, "$:/DefaultTiddlers").text, "[[Example]]");
@@ -183,7 +175,7 @@ test("source text is shown through a text widget whose delimiter it cannot close
   assert.match(find(ts, "Ex ''ample''").text, /^<\$topicmap\/>\n\n<\$text text='a"""<\$button\/> "c"'\/>/);
   assert.equal(find(ts, "$:/SiteSubtitle").text, `<$text text="''x'' <$list/>"/>`);
   assert.equal(find(ts, "$:/SiteTitle").text, `<$text text="Ex ''ample''"/>`);
-  assert.match(find(ts, "Comp <$list/>").text, /^Every <\$text text="Ex ''ample''"\/> topic in the <\$text text="Comp <\$list\/>"\/> category/);
+  assert.match(find(ts, "Comp <$list/>").text, /^1 <\$text text="Ex ''ample''"\/> topics in the <\$text text="Comp <\$list\/>"\/> category/);
 });
 
 test("quoteAttr picks a delimiter the text does not contain, or none", () => {
@@ -277,13 +269,13 @@ const neighbors = (t) => JSON.parse(t.neighbors);
 test("a topic's neighbors are its links out and in, and its category", () => {
   const ts = toTiddlers(graph());
   assert.deepEqual(neighbors(find(ts, "Workers")), [
-    { title: "Workers KV", rel: "binds to", dir: "out" },
+    { title: "Workers KV", rel: "binds to", dir: "out", label: "KV binding", evidence: ["https://example.com/e1", "https://example.com/e2"] },
     { title: "Cron Triggers", rel: "has feature", dir: "out" },
     { title: "Compute", rel: "in category", dir: "out" },
     { title: "Product index", rel: "of type", dir: "out" },
   ]);
   assert.deepEqual(neighbors(find(ts, "Workers KV")), [
-    { title: "Workers", rel: "binds to", dir: "in" },
+    { title: "Workers", rel: "binds to", dir: "in", label: "KV binding", evidence: ["https://example.com/e1", "https://example.com/e2"] },
     { title: "Storage", rel: "in category", dir: "out" },
     { title: "Product index", rel: "of type", dir: "out" },
   ]);
@@ -398,6 +390,7 @@ class FakeEl {
   get firstChild() { return this.children[0] || null; }
   addEventListener(t, f) { (this.listeners[t] ||= []).push(f); }
   classes() { return `${this.className} ${this.attrs.class || ""}`.split(" ").filter(Boolean); }
+  getBoundingClientRect() { return { left: 0, top: 0, width: this.clientWidth || 0, height: this.clientHeight || 0 }; }
   closest(sel) { for (let e = this; e; e = e.parentNode) if (e.classes().includes(sel.slice(1))) return e; return null; }
   all(cls) { return [...(this.classes().includes(cls) ? [this] : []), ...this.children.flatMap((c) => c.all(cls))]; }
   fire(type, e) { for (const f of this.listeners[type] || []) f({ currentTarget: this, ...e }); }
@@ -812,8 +805,8 @@ test("a subject tiddler reads: explanation, compared with, case studies, docs, t
 
 test("the explanation links topics by title and shows everything else as plain text", () => {
   const text = find(toTiddlers(written()), "Workers").text;
-  assert.ok(text.startsWith('<$text text="Workers runs your code near users. It reads data from "/>[[Workers KV]]<$text text=" and runs on a schedule with "/>[[cron jobs|Cron Triggers]]<$text text="."/>'), text.slice(0, 260));
-  assert.match(text, /\n\n<\$text text="Second paragraph, with ''no markup'' and a <\$button\/>\."\/>/);
+  assert.ok(text.startsWith('<p><$text text="Workers runs your code near users. It reads data from "/>[[Workers KV]]<$text text=" and runs on a schedule with "/>[[cron jobs|Cron Triggers]]<$text text="."/></p>'), text.slice(0, 260));
+  assert.match(text, /\n\n<p><\$text text="Second paragraph, with ''no markup'' and a <\$button\/>\."\/><\/p>/);
 });
 
 test("comparisons link the other topic; case studies link out with a plain summary", () => {
@@ -830,13 +823,13 @@ test("a topic with nothing written shows its description and no empty sections",
 
 test("validate rejects written content that links nowhere or cannot be shown safely", () => {
   const cases = [
-    [(g) => { g.nodes[0].explanation = "See [[Nowhere]]."; }, /nodes\[0\]: explanation links "Nowhere", which is not a tiddler/],
-    [(g) => { g.nodes[0].explanation = "See [[a|b|Workers KV]]."; }, /nodes\[0\]: explanation has a link it cannot read/],
-    [(g) => { g.nodes[0].explanation = `it's "x"`; }, /nodes\[0\]: explanation cannot be quoted/],
-    [(g) => { g.nodes[0].compare = [{ title: "Nowhere", text: "x" }]; }, /nodes\[0\]\.compare\[0\]: "Nowhere" is not a topic/],
-    [(g) => { g.nodes[0].compare = "x"; }, /nodes\[0\]\.compare: not a list/],
-    [(g) => { g.nodes[0].cases = [{ title: "T", url: "ftp://x" }]; }, /nodes\[0\]\.cases\[0\]: url is not an http\(s\) URL/],
-    [(g) => { g.nodes[0].cases = [{ title: "a|b", url: "https://x.example" }]; }, /nodes\[0\]\.cases\[0\]: title missing or unsafe/],
+    [(g) => { g.nodes[0].explanation = "See [[Nowhere]]."; }, /nodes\[0\] \(workers\): explanation links "Nowhere", which is not a tiddler/],
+    [(g) => { g.nodes[0].explanation = "See [[a|b|Workers KV]]."; }, /nodes\[0\] \(workers\): explanation has a link it cannot read/],
+    [(g) => { g.nodes[0].explanation = `it's "x"`; }, /nodes\[0\] \(workers\): explanation cannot be quoted/],
+    [(g) => { g.nodes[0].compare = [{ title: "Nowhere", text: "x" }]; }, /nodes\[0\] \(workers\)\.compare\[0\]: "Nowhere" is not a topic/],
+    [(g) => { g.nodes[0].compare = "x"; }, /nodes\[0\] \(workers\)\.compare: not a list/],
+    [(g) => { g.nodes[0].cases = [{ title: "T", url: "ftp://x" }]; }, /nodes\[0\] \(workers\)\.cases\[0\]: url is not an http\(s\) URL/],
+    [(g) => { g.nodes[0].cases = [{ title: "a|b", url: "https://x.example" }]; }, /nodes\[0\] \(workers\)\.cases\[0\]: title missing or unsafe/],
   ];
   for (const [mutate, re] of cases) {
     const g = graph();
@@ -851,4 +844,89 @@ test("written content is kept in its own file and merged by topic id", () => {
   assert.equal(graph().nodes[0].explanation, undefined, "the graph itself is not changed");
   assert.throws(() => withContent(graph(), { nope: { explanation: "x" } }), /content: "nope" is not a topic id/);
   assert.throws(() => withContent(graph(), { workers: { label: "x" } }), /content\.workers: "label" is not a written field/);
+});
+
+// --- mouse-wheel zoom over a visualization ---
+
+test("zooming about a point keeps that point under the pointer, within limits", () => {
+  const ctx = loadWidget();
+  const zoomAround = vm.runInContext("zoomAround", ctx);
+  const home = { x: -100, y: -100, w: 200, h: 200 };
+  const v = zoomAround({ ...home, home }, 0.5, { x: 50, y: 20 });
+  assert.deepEqual([v.x, v.y, v.w, v.h], [-25, -40, 100, 100]);
+  assert.equal(zoomAround({ ...home, home }, 1000, { x: 0, y: 0 }).w, home.w * 4, "zoom out stops at 4x the whole view");
+  assert.equal(zoomAround({ ...home, home }, 0.0001, { x: 0, y: 0 }).w, home.w / 40, "zoom in stops at 40x");
+});
+
+test("the wheel over a graph zooms it and does not scroll the page", () => {
+  for (const kind of ["topicgraph", "topicmap"]) {
+    const field = JSON.stringify([{ title: "T0", rel: "uses", dir: "out" }]);
+    const { svg, w } = renderGraph(kind === "topicgraph" ? field : undefined, { clientWidth: 400, clientHeight: 400 }, kind);
+    const before = w.view.w;
+    let prevented = false;
+    svg.fire("wheel", { deltaY: -100, clientX: 200, clientY: 200, preventDefault: () => { prevented = true; } });
+    assert.ok(prevented, `${kind}: the page does not scroll`);
+    assert.ok(w.view.w < before, `${kind}: wheel up zooms in`);
+    svg.fire("wheel", { deltaY: 300, clientX: 200, clientY: 200, preventDefault() {} });
+    assert.ok(w.view.w > before * 0.9, `${kind}: wheel down zooms out`);
+  }
+});
+
+// --- review fixes for the subject tiddler ---
+
+test("every paragraph of an explanation is its own paragraph, links or not", () => {
+  const g = graph();
+  g.nodes[0].explanation = "One plain.\n\nTwo plain.\n\nThree [[Workers KV]].";
+  const text = find(toTiddlers(g), "Workers").text;
+  assert.ok(text.startsWith('<p><$text text="One plain."/></p>\n\n<p><$text text="Two plain."/></p>\n\n<p><$text text="Three "/>[[Workers KV]]<$text text="."/></p>'), text.slice(0, 200));
+});
+
+test("a comparison stays one bullet even when its text has blank lines", () => {
+  const g = graph();
+  g.nodes[0].compare = [{ title: "Workers KV", text: "p1 plain\n\np2 [[Cron Triggers]]" }, { title: "Cron Triggers", text: "next" }];
+  const text = find(toTiddlers(g), "Workers").text;
+  assert.match(text, /!! Compared with\n\* \[\[Workers KV\]\]: <\$text text="p1 plain p2 "\/>\[\[Cron Triggers\]\]\n\* \[\[Cron Triggers\]\]: <\$text text="next"\/>\n/);
+});
+
+test("validate rejects empty written text and names the topic id; stray brackets are named", () => {
+  const cases = [
+    [(g) => { g.nodes[0].explanation = "   \n "; }, /nodes\[0\] \(workers\): explanation is empty/],
+    [(g) => { g.nodes[0].compare = [{ title: "Workers KV", text: " " }]; }, /nodes\[0\] \(workers\)\.compare\[0\]: text is empty/],
+    [(g) => { g.nodes[0].explanation = "an arr[a[0]] index"; }, /nodes\[0\] \(workers\): explanation has \[\[ or \]\] outside a link/],
+  ];
+  for (const [mutate, re] of cases) {
+    const g = graph();
+    mutate(g);
+    assert.throws(() => validate(g), re);
+  }
+});
+
+test("a malformed content file gets a message, and prototype names stay plain ids", () => {
+  assert.throws(() => withContent(graph(), null), /content: not an object/);
+  assert.throws(() => withContent(graph(), { workers: null }), /content\.workers: not an object/);
+  assert.throws(() => withContent(graph(), JSON.parse('{"__proto__": {"explanation": "x"}}')), /content: "__proto__" is not a topic id/);
+  const g = graph();
+  g.nodes[1].id = "constructor";
+  const merged = withContent(g, { workers: { explanation: "Hi." } });
+  assert.equal(merged.nodes[1].explanation, undefined, "an id named constructor gets no inherited content");
+  assert.equal(withContent(g, { constructor: { explanation: "Mine." } }).nodes[1].explanation, "Mine.");
+  assert.equal(Object.prototype.explanation, undefined);
+});
+
+test("each neighbor keeps the relation's note and evidence, and the agent is told to cite them", () => {
+  const ts = toTiddlers(graph(), { store: "/s.json" });
+  const kv = neighbors(find(ts, "Workers")).find((n) => n.title === "Workers KV");
+  assert.deepEqual(kv, { title: "Workers KV", rel: "binds to", dir: "out", label: "KV binding", evidence: ["https://example.com/e1", "https://example.com/e2"] });
+  const line = find(ts, "$:/config/topicwiki/command").text;
+  assert.match(line, /neighbors field/);
+  assert.match(line, /evidence/);
+});
+
+test("index pages show their members only in the graph, not as a list", () => {
+  const ts = toTiddlers(graph());
+  for (const t of ["Compute", "Product index"]) {
+    const text = find(ts, t).text;
+    assert.ok(!/^\* \[\[/m.test(text), `${t}: ${text}`);
+    assert.ok(text.endsWith("<$topicgraph/>"));
+  }
 });
