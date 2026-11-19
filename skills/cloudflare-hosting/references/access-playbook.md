@@ -49,8 +49,13 @@ they implement.
   laptop-only (the infra-credentials skill).
 - **Sign-in** is Cloudflare's built-in One-Time PIN. No identity
   provider is configured for a plain gate; nobody needs an account.
+  When the app behind the hostname keys accounts by the asserted email,
+  every application sets `allowed_idps` to the One-Time PIN provider's
+  id: unset, it accepts every identity provider on the account, and one
+  that asserts an email it does not control takes over that account.
 - **An OIDC SaaS application** is added only when a downstream service
-  (Supabase, an app with its own session store) must receive a token.
+  that cannot read the Access assertion (a third-party app with its own
+  session store) must receive a token.
   A Worker that verifies the Access JWT on its hostname needs no OIDC
   layer. The SaaS app admits its own `members` group, listed by
   address, and `allowed_idps` pins it to the OTP provider.

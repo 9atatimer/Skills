@@ -131,7 +131,9 @@ reads the pack's status instead of guessing.
   (`table_group_ids`); it never re-lists the emails. Same people, attach
   the group; one address different, a new group. Dropping an id
   detaches it on the next apply.
-- Sign-in is the built-in One-Time PIN; no identity provider. An OIDC
+- Sign-in is the built-in One-Time PIN; no identity provider. An
+  application in front of an app that keys accounts by email pins
+  `allowed_idps` to it. An OIDC
   SaaS app is added only when a downstream service must receive a
   token. A Worker that verifies the Access JWT itself needs none.
 - Requires a custom domain on a Cloudflare-managed zone. Access cannot
@@ -162,7 +164,7 @@ reads the pack's status instead of guessing.
 
 The app's `nuxt.config.ts` reads `nitro.preset` from `NITRO_PRESET` so
 local dev stays `node-server` and the deploy sets the preset at build
-time. Runtime config baked at BUILD time (a Supabase URL, an API base)
+time. Runtime config baked at BUILD time (an API base, an Access AUD tag)
 selects the stage by which vault env-file the build ran under, not by a
 runtime flag; getting it wrong ships a worker pointed at the other
 stage's data with no error. A check script pins each env-file to its
