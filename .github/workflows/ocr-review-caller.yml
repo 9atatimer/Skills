@@ -52,11 +52,15 @@ jobs:
       model: ${{ github.event_name == 'workflow_dispatch' && inputs.model || '' }}
       backend: ${{ github.event_name == 'workflow_dispatch' && inputs.backend || '' }}
       tools_ref: '183e6da968f9e28ba638a61496130574a3b721b9'
-      # This repository is public, so it is never on the runner pool and
-      # its reviews run GitHub-hosted. The default 9 minutes leaves the
-      # review step 7, which the gateway's model cannot finish in even on
-      # a small PR (tds-utils Issue#787); 40 is the hosted budget the
-      # tds-utils runbook (docs/ops/ocr-review.md) gives a caller off the pool.
-      review_timeout_minutes: 40
+      # The review job's runner and time limit, planned by the reusable
+      # workflow (Issue#776, Issue#787): a PR of 25 files or more, or more
+      # than 800 lines, runs on CI_RUNS_ON_LONG for 115 minutes; on the
+      # runner pool (CI_RUNS_ON set), every other PR runs on
+      # CI_RUNS_ON_DOCKER for 19. Only otherwise does the timeout below
+      # apply: 9 on the pool, 40 on GitHub-hosted runners.
+      # OCR_REVIEW_RUNS_ON and OCR_REVIEW_TIMEOUT_MINUTES override the plan
+      # (runbook, A review's length).
+      review_runs_on: ${{ vars.OCR_REVIEW_RUNS_ON || '' }}
+      review_timeout_minutes: ${{ fromJSON(vars.OCR_REVIEW_TIMEOUT_MINUTES || (vars.CI_RUNS_ON && '9' || '40')) }}
     secrets:
       OLLAMA_GATEWAY_OP_SA_TOKEN: ${{ secrets.OLLAMA_GATEWAY_OP_SA_TOKEN }}
