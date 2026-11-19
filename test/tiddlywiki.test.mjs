@@ -64,12 +64,12 @@ test("missing docs and tutorials say so instead of leaving an empty section", ()
   assert.match(c.text, /!! Tutorials\nNone recorded in the source\./);
 });
 
-test("the home tiddler is the default and links categories and AI access", () => {
+test("the home tiddler is the default and links categories", () => {
   const ts = toTiddlers(graph());
   assert.equal(find(ts, "$:/DefaultTiddlers").text, "[[Example]]");
   const home = find(ts, "Example");
   assert.match(home.text, /\* \[\[Compute\]\] \(2\)/);
-  assert.match(home.text, /\[\[AI access\]\]/);
+  assert.ok(!home.text.includes("AI access"), "the agent link is in the sidebar, not the landing page");
   assert.match(home.text, /\[\[the map\|https:\/\/example\.com\/map\]\], fetched 2026-11-18/);
 });
 
@@ -993,4 +993,12 @@ test("the builder records the store's file name, never its path", () => {
   const ts = toTiddlers(graph(), { storeName: "example.tiddlers.json" });
   assert.equal(find(ts, "$:/config/topicwiki/store-name").text, "example.tiddlers.json");
   assert.throws(() => toTiddlers(graph(), { storeName: "/abs/example.tiddlers.json" }), /storeName must be a file name/);
+});
+
+test("the link for AI agents sits in the right-hand sidebar, below the page controls", () => {
+  const ts = toTiddlers(graph());
+  const seg = find(ts, "$:/topicwiki/SideBar/ai-access");
+  assert.equal(seg.tags, "$:/tags/SideBarSegment");
+  assert.equal(seg["list-after"], "$:/core/ui/SideBarSegments/page-controls");
+  assert.match(seg.text, /\[\[AI access\]\]/);
 });

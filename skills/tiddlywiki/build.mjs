@@ -613,9 +613,6 @@ function homeTiddler(g, cats, types, top) {
     "",
     "!! Most connected",
     bulletList(top, ([n, d]) => `* [[${n.label}]] (${d})`),
-    "",
-    "!! For agents",
-    `[[${AI_ACCESS}]]`,
   ].join("\n");
   const near = [...cats.map((c) => neighbor(c, "category", "out")), ...types.map((ty) => neighbor(TYPE_INDEX(ty), "type", "out"))];
   return { title: g.title, text, neighbors: JSON.stringify(near) };
@@ -659,6 +656,14 @@ function agentTiddlers(g, agent) {
     { title: "$:/config/topicwiki/command", text: `${agent} '${shEsc(`${head}Start at the tiddler titled ${g.title}.${tail}`)}'` },
     { title: "$:/config/topicwiki/command-prefix", text: `${agent} '${shEsc(`${head}Start at the tiddler whose topic_id is `)}` },
     { title: "$:/config/topicwiki/command-suffix", text: `${shEsc(`.${tail}`)}'` },
+    // The link for agents lives in the right-hand sidebar, on every page,
+    // not in the landing page's text.
+    {
+      title: "$:/topicwiki/SideBar/ai-access",
+      tags: "$:/tags/SideBarSegment",
+      "list-after": "$:/core/ui/SideBarSegments/page-controls",
+      text: `<div class="tc-sidebar-header tw-ai-access">For AI agents: [[${AI_ACCESS}]]</div>`,
+    },
     {
       title: "$:/topicwiki/ViewTemplate/agent",
       tags: tagList(["$:/tags/ViewTemplate"]),

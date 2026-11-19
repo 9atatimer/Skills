@@ -162,7 +162,8 @@ the browser when you verify a build.
 
 Each topic tiddler shows a command that starts an agent session at that
 topic over the store; the `AI access` tiddler shows the same command
-for the whole wiki. The prompt tells the agent to query the store with
+for the whole wiki. The link to `AI access` sits in the right-hand
+sidebar on every page, not in the landing page's text. The prompt tells the agent to query the store with
 `jq` by `title` or `topic_id`, because a large store does not fit in
 one read.
 
