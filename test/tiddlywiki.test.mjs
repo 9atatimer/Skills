@@ -970,3 +970,27 @@ test("locating the wiki changes nothing that would be saved", () => {
   assert.ok(Object.keys(at).length >= 3);
   assert.ok(Object.keys(at).every((t) => t.startsWith("$:/temp/")), Object.keys(at).join(", "));
 });
+
+test("locating the store copes with odd addresses instead of failing or guessing", () => {
+  const ts = toTiddlers(graph(), { storeName: "example.tiddlers.json" });
+  const store = (href) => locateAt(ts, href)["$:/temp/topicwiki/store"];
+  assert.equal(store("file:///tmp/a%E0.html"), "/tmp/a%E0.tiddlers.json", "a malformed escape is kept, not thrown");
+  assert.equal(store("file:///tmp/x%0Ay%00.html"), "/tmp/x%0Ay%00.tiddlers.json", "no control character reaches the line");
+  assert.equal(store("file://server/share/wiki.html"), "//server/share/wiki.tiddlers.json", "a network share keeps its server");
+  assert.equal(store("https://host/"), "https://host/example.tiddlers.json", "served at a folder: the built store name");
+  assert.equal(store("https://host/docs/"), "https://host/docs/example.tiddlers.json");
+  assert.match(store("data:text/html,x"), /cannot tell where its store is/);
+  assert.match(locateAt(ts, "blob:http://a/b")["$:/temp/topicwiki/command"], /Read the topic wiki at the \.tiddlers\.json file beside this wiki/);
+});
+
+test("locate runs before the story is built, so the first render has the agent lines", () => {
+  const ctx = vm.createContext({ exports: {}, window: {}, $tw: {}, URL });
+  vm.runInContext(readFileSync(LOCATE_FILE, "utf8"), ctx);
+  assert.deepEqual([[...ctx.exports.after], [...ctx.exports.before]], [["startup"], ["story"]]);
+});
+
+test("the builder records the store's file name, never its path", () => {
+  const ts = toTiddlers(graph(), { storeName: "example.tiddlers.json" });
+  assert.equal(find(ts, "$:/config/topicwiki/store-name").text, "example.tiddlers.json");
+  assert.throws(() => toTiddlers(graph(), { storeName: "/abs/example.tiddlers.json" }), /storeName must be a file name/);
+});

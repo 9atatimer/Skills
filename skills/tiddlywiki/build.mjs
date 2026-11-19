@@ -11,7 +11,7 @@
 import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync, copyFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { homedir, tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const TIDDLYWIKI = "tiddlywiki@5.4.1";
@@ -680,6 +680,8 @@ function agentTiddlers(g, agent) {
 /**
  * Map a validated topic graph to an array of tiddlers, sorted by title.
  * opts.agent: the agent CLI the copy-paste line starts (default "claude").
+ * opts.storeName: the store's file name (not its path), for a wiki served
+ * at a folder address.
  * opts.landing, opts.pageview, opts.locate: the sources of the startup and
  * story-view modules, embedded when given.
  * opts.widget: the source of topicgraph.js; without it the graph sections
@@ -702,6 +704,7 @@ export function toTiddlers(g, opts = {}) {
     ...types.map((ty) => typeTiddler(g, ty)),
     homeTiddler(g, cats, types, top),
     ...agentTiddlers(g, opts.agent || "claude"),
+    ...storeNameTiddler(opts.storeName),
     { title: "$:/SiteTitle", text: txt(g.title) },
     { title: "$:/SiteSubtitle", text: txt(g.subtitle || "a topic wiki") },
     { title: "$:/DefaultTiddlers", text: `[[${g.title}]]` },
@@ -713,6 +716,17 @@ export function toTiddlers(g, opts = {}) {
 }
 
 /** The graph widget's module and stylesheet tiddlers, when its source is given. */
+/**
+ * The store's file name, for a wiki served at a folder address, where the
+ * page's own name is not in the address. A name, never a path: the built
+ * files hold no path of the machine that built them.
+ */
+function storeNameTiddler(name) {
+  if (name === undefined) return [];
+  if (!isStr(name) || !name || /[/\\]/.test(name)) throw new Error("storeName must be a file name, not a path");
+  return [{ title: "$:/config/topicwiki/store-name", text: name }];
+}
+
 /** The modules a wiki embeds: option name -> [tiddler title, TiddlyWiki module-type]. */
 const MODULES = {
   widget: ["$:/plugins/topicwiki/topicgraph.js", "widget"],
@@ -756,7 +770,7 @@ function main(argv) {
   const html = resolve(args.out || join(defaultOutDir(), `${slugOf(graph.title)}.html`));
   const store = html.replace(/\.html$/, "") + ".tiddlers.json";
   const modules = { widget: WIDGET_FILE, landing: LANDING_FILE, pageview: PAGEVIEW_FILE, locate: LOCATE_FILE };
-  const tiddlers = toTiddlers(graph, { agent: args.agent, ...Object.fromEntries(Object.entries(modules).map(([k, f]) => [k, readFileSync(f, "utf8")])) });
+  const tiddlers = toTiddlers(graph, { agent: args.agent, storeName: basename(store), ...Object.fromEntries(Object.entries(modules).map(([k, f]) => [k, readFileSync(f, "utf8")])) });
   mkdirSync(dirname(html), { recursive: true });
   writeFileSync(store, JSON.stringify(tiddlers, null, 1) + "\n");
 

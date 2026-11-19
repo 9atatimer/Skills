@@ -169,7 +169,9 @@ one read.
 The wiki finds its store itself: when it opens, `locate.js` reads the
 page's own address and takes the file beside it with the same name and
 the extension `.tiddlers.json` -- a path when opened from disk, a URL
-when served. The built files hold no path of the machine that built
+when served. A wiki served at a folder address (`https://host/`) has no
+page name to go by, so it uses the store's file name, which the build
+records; an address it cannot read says so in place of a path. The built files hold no path of the machine that built
 them, so the HTML and its store can be moved or copied together, and
 renamed together, without a rebuild. Keep them side by side.
 
