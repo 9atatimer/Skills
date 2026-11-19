@@ -15,6 +15,24 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const TIDDLYWIKI = "tiddlywiki@5.4.1";
+/** The <$topicgraph/> widget, embedded in the wiki as a module tiddler. */
+export const WIDGET_FILE = fileURLToPath(new URL("./topicgraph.js", import.meta.url));
+const GRAPH_SECTION = "\n\n!! Neighbor graph\n\n<$topicgraph/>";
+const GRAPH_CSS = `.tw-topicgraph { margin: 0.5em 0 1em; border: 1px solid #ddd; border-radius: 6px; background: #fcfcfd; }
+.tw-tg-toolbar { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px; border-bottom: 1px solid #eee; font-size: 0.85em; }
+.tw-tg-toolbar button { border: 1px solid #ccc; border-radius: 4px; background: #fff; padding: 1px 7px; cursor: pointer; }
+.tw-tg-chip.tw-tg-off { opacity: 0.4; text-decoration: line-through; }
+.tw-tg-swatch { display: inline-block; width: 9px; height: 9px; border-radius: 50%; }
+.tw-tg-svg { display: block; width: 100%; cursor: grab; user-select: none; touch-action: none; }
+.tw-tg-edge { stroke-width: 1.2; opacity: 0.45; }
+.tw-tg-in { stroke-dasharray: 4 3; }
+.tw-tg-node { cursor: pointer; }
+.tw-tg-node:hover circle { stroke: #111; stroke-width: 2; }
+.tw-tg-label { font-size: 11px; fill: #333; paint-order: stroke; stroke: #fcfcfd; stroke-width: 3px; }
+.tw-tg-hover { display: none; }
+.tw-tg-node:hover .tw-tg-hover { display: inline; }
+.tw-tg-centre circle { fill: #111; }
+.tw-tg-centre-label { font-size: 13px; font-weight: bold; }`;
 
 const FORBIDDEN_IN_TITLE = ["[[", "]]", "{{", "}}", "|", "\n"];
 const TYPE_INDEX = (type) => `${type[0].toUpperCase()}${type.slice(1)} index`;
@@ -277,13 +295,27 @@ function membersList(nodes) {
   return nodes.length ? [...nodes].sort(byLabel).map((n) => `* [[${n.label}]]`).join("\n") : "None.";
 }
 
+/** One entry of a tiddler's neighbors field. */
+const neighbor = (title, rel, dir) => ({ title, rel, dir });
+
+/** A topic's neighbors: every link out and in, then its category. */
+function topicNeighbors(n, out, inn, byId) {
+  const list = [
+    ...sortEdges(out, "target", byId).map((e) => neighbor(byId.get(e.target).label, human(e.type), "out")),
+    ...sortEdges(inn, "source", byId).map((e) => neighbor(byId.get(e.source).label, human(e.type), "in")),
+  ];
+  if (n.category) list.push(neighbor(n.category, "in category", "out"));
+  return list;
+}
+
 /** One topic's tiddler: its fields, tags and text. */
 function topicTiddler(n, out, inn, byId) {
   const t = {
     title: n.label,
     tags: tagList([n.category, n.type && TYPE_INDEX(n.type)].filter(Boolean)),
     topic_id: n.id,
-    text: topicText(n, out, inn, byId),
+    text: topicText(n, out, inn, byId) + GRAPH_SECTION,
+    neighbors: JSON.stringify(topicNeighbors(n, out, inn, byId)),
   };
   const fields = { description: n.description, topic_type: n.type, category: n.category, docs_url: n.docs, status: n.status };
   for (const [k, v] of Object.entries(fields)) if (v) t[k] = v;
@@ -302,14 +334,17 @@ function categoryTiddler(g, c, types) {
   }
   const untyped = members.filter((n) => !n.type);
   if (untyped.length) parts.push("", `!! Other (${untyped.length})`, membersList(untyped));
-  return { title: c, tags: tagList([g.title]), text: parts.join("\n") };
+  const near = [neighbor(g.title, "category", "in"), ...[...members].sort(byLabel).map((n) => neighbor(n.label, n.type || "other", "out"))];
+  return { title: c, tags: tagList([g.title]), text: parts.join("\n") + GRAPH_SECTION, neighbors: JSON.stringify(near) };
 }
 
 /** A type's index tiddler: every topic of that type. */
 function typeTiddler(g, ty) {
   const m = g.nodes.filter((n) => n.type === ty);
+  const near = [neighbor(g.title, "type", "in"), ...[...m].sort(byLabel).map((n) => neighbor(n.label, n.category || "other", "out"))];
   return { title: TYPE_INDEX(ty), tags: tagList([g.title]),
-    text: `Every ${txt(g.title)} topic of type ${ty} (${m.length}).\n\n${membersList(m)}` };
+    text: `Every ${txt(g.title)} topic of type ${ty} (${m.length}).\n\n${membersList(m)}${GRAPH_SECTION}`,
+    neighbors: JSON.stringify(near) };
 }
 
 /** The source line on the home tiddler, or "" when the graph names none. */
@@ -344,8 +379,9 @@ function homeTiddler(g, cats, types, top) {
     "",
     "!! For agents",
     `[[${AI_ACCESS}]]`,
-  ].join("\n");
-  return { title: g.title, text };
+  ].join("\n") + GRAPH_SECTION;
+  const near = [...cats.map((c) => neighbor(c, "category", "out")), ...types.map((ty) => neighbor(TYPE_INDEX(ty), "type", "out"))];
+  return { title: g.title, text, neighbors: JSON.stringify(near) };
 }
 
 /**
@@ -373,7 +409,8 @@ function agentTiddlers(g, store, agent) {
         "* `description` -- one or two plain sentences",
         "* `docs_url` -- the public documentation",
         "* `links_out`, `links_in` -- how many direct links it has",
-        "* `text` -- TiddlyWiki markup: sections Docs, Tutorials, Links from here, Links to here",
+        "* `neighbors` -- JSON list of `{title, rel, dir}`: each direct link and the topic's category",
+        "* `text` -- TiddlyWiki markup: sections Docs, Tutorials, Links from here, Links to here, Neighbor graph",
         "",
         "Start a session over the whole wiki with:",
         "",
@@ -408,6 +445,8 @@ function agentTiddlers(g, store, agent) {
  * Map a validated topic graph to an array of tiddlers, sorted by title.
  * opts.store: absolute path of the .tiddlers.json an agent reads.
  * opts.agent: the agent CLI the copy-paste line starts (default "claude").
+ * opts.widget: the source of topicgraph.js; without it the graph sections
+ * render nothing, which is how the unit tests build.
  */
 export function toTiddlers(g, opts = {}) {
   validate(g);
@@ -429,8 +468,18 @@ export function toTiddlers(g, opts = {}) {
     { title: "$:/SiteTitle", text: txt(g.title) },
     { title: "$:/SiteSubtitle", text: txt(g.subtitle || "a topic wiki") },
     { title: "$:/DefaultTiddlers", text: `[[${g.title}]]` },
+    ...widgetTiddlers(opts.widget),
   ];
   return tiddlers.sort((a, b) => (a.title < b.title ? -1 : a.title > b.title ? 1 : 0));
+}
+
+/** The graph widget's module and stylesheet tiddlers, when its source is given. */
+function widgetTiddlers(source) {
+  if (!source) return [];
+  return [
+    { title: "$:/plugins/topicwiki/topicgraph.js", type: "application/javascript", "module-type": "widget", text: source },
+    { title: "$:/plugins/topicwiki/topicgraph.css", tags: "$:/tags/Stylesheet", type: "text/css", text: GRAPH_CSS },
+  ];
 }
 
 /** TiddlyWiki's tags field: space-separated, titles with spaces in [[ ]]. */
@@ -457,7 +506,7 @@ function main(argv) {
   const graph = validate(JSON.parse(readFileSync(args._[0], "utf8")));
   const html = resolve(args.out || join(defaultOutDir(), `${slugOf(graph.title)}.html`));
   const store = html.replace(/\.html$/, "") + ".tiddlers.json";
-  const tiddlers = toTiddlers(graph, { store, agent: args.agent });
+  const tiddlers = toTiddlers(graph, { store, agent: args.agent, widget: readFileSync(WIDGET_FILE, "utf8") });
   mkdirSync(dirname(html), { recursive: true });
   writeFileSync(store, JSON.stringify(tiddlers, null, 1) + "\n");
 

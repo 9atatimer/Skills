@@ -269,3 +269,92 @@ test("validate rejects titles that a [[link]] would read as another title or a U
   ok.nodes[2].label = "Note: cron triggers";
   assert.doesNotThrow(() => validate(ok));
 });
+
+// --- neighbor graph ---
+
+import { readFileSync } from "node:fs";
+import vm from "node:vm";
+import { WIDGET_FILE } from "../skills/tiddlywiki/build.mjs";
+
+const neighbors = (t) => JSON.parse(t.neighbors);
+
+test("a topic's neighbors are its links out and in, and its category", () => {
+  const ts = toTiddlers(graph());
+  assert.deepEqual(neighbors(find(ts, "Workers")), [
+    { title: "Workers KV", rel: "binds to", dir: "out" },
+    { title: "Cron Triggers", rel: "has feature", dir: "out" },
+    { title: "Compute", rel: "in category", dir: "out" },
+  ]);
+  assert.deepEqual(neighbors(find(ts, "Workers KV")), [
+    { title: "Workers", rel: "binds to", dir: "in" },
+    { title: "Storage", rel: "in category", dir: "out" },
+  ]);
+});
+
+test("index tiddlers link the root to its categories and types, and down to members", () => {
+  const ts = toTiddlers(graph());
+  assert.deepEqual(neighbors(find(ts, "Example")), [
+    { title: "Compute", rel: "category", dir: "out" },
+    { title: "Storage", rel: "category", dir: "out" },
+    { title: "Feature index", rel: "type", dir: "out" },
+    { title: "Product index", rel: "type", dir: "out" },
+  ]);
+  assert.deepEqual(neighbors(find(ts, "Compute")), [
+    { title: "Example", rel: "category", dir: "in" },
+    { title: "Cron Triggers", rel: "feature", dir: "out" },
+    { title: "Workers", rel: "product", dir: "out" },
+  ]);
+  assert.deepEqual(neighbors(find(ts, "Product index"))[0], { title: "Example", rel: "type", dir: "in" });
+});
+
+test("every neighbor names a tiddler in the wiki", () => {
+  const ts = toTiddlers(graph());
+  const titles = new Set(ts.map((t) => t.title));
+  for (const t of ts.filter((x) => x.neighbors)) {
+    for (const n of neighbors(t)) assert.ok(titles.has(n.title), `${t.title} -> ${n.title}`);
+  }
+});
+
+test("the neighbor graph is the last section, after docs, tutorials and the link lists", () => {
+  const ts = toTiddlers(graph());
+  const text = find(ts, "Workers").text;
+  const at = (s) => text.indexOf(s);
+  assert.ok(at("!! Docs") < at("!! Tutorials") && at("!! Tutorials") < at("!! Links to here"));
+  assert.ok(text.endsWith("!! Neighbor graph\n\n<$topicgraph/>"), text.slice(-80));
+  for (const title of ["Example", "Compute", "Product index"]) {
+    assert.ok(find(ts, title).text.endsWith("!! Neighbor graph\n\n<$topicgraph/>"), title);
+  }
+});
+
+test("the widget and its stylesheet ship as tiddlers when the builder is given the widget", () => {
+  const ts = toTiddlers(graph(), { widget: "exports.topicgraph = 1;" });
+  const w = find(ts, "$:/plugins/topicwiki/topicgraph.js");
+  assert.equal(w.type, "application/javascript");
+  assert.equal(w["module-type"], "widget");
+  assert.equal(w.text, "exports.topicgraph = 1;");
+  assert.equal(find(ts, "$:/plugins/topicwiki/topicgraph.css").tags, "$:/tags/Stylesheet");
+});
+
+/** Load topicgraph.js the way TiddlyWiki does, with a stub widget base. */
+function loadWidget() {
+  const ctx = vm.createContext({ exports: {}, require: () => ({ widget: function Widget() {} }) });
+  vm.runInContext(readFileSync(WIDGET_FILE, "utf8"), ctx);
+  return ctx;
+}
+
+test("the widget module exports only the topicgraph widget", () => {
+  assert.deepEqual(Object.keys(loadWidget().exports), ["topicgraph"]);
+});
+
+test("layout puts every neighbor at its own place, one relation per sector", () => {
+  const layout = vm.runInContext("layout", loadWidget());
+  for (const count of [1, 5, 40, 230]) {
+    const input = Array.from({ length: count }, (_, i) => ({ title: `t${i}`, rel: i % 3 ? "uses" : "binds to", dir: i % 2 ? "in" : "out" }));
+    const { nodes, radius } = layout(input);
+    assert.equal(nodes.length, count);
+    assert.equal(new Set(nodes.map((n) => `${n.x},${n.y}`)).size, count, `overlap at ${count}`);
+    for (const n of nodes) assert.ok(Math.hypot(n.x, n.y) <= radius + 1);
+    const rels = nodes.map((n) => n.rel);
+    assert.equal(rels.filter((r, i) => i && r !== rels[i - 1]).length, Math.min(1, new Set(rels).size - 1), "relations interleave");
+  }
+});

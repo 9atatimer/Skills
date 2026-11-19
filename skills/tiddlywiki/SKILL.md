@@ -83,6 +83,18 @@ Follow the steps in this order; each needs the one before.
 - Report the two paths, the topic and link counts, and what the source
   did not cover (for example, how many topics have no tutorials).
 
+## Neighbor graph
+
+Every topic, category, type index and the home tiddler ends with a
+Neighbor graph section, after Docs, Tutorials and the link lists: its
+direct links drawn around it, one colour per relation, incoming links
+dashed. A click on a node opens that tiddler. A topic also links its
+category and a category links the home tiddler, so every graph reaches
+the root in two steps. The widget is `topicgraph.js` in this skill's
+directory; `build.mjs` embeds it, so the HTML stays one file with no
+network dependency. Check one hub topic's graph in the browser when you
+verify a build.
+
 ## AI access
 
 Each topic tiddler shows a command that starts an agent session at that
