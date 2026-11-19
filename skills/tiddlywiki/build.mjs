@@ -54,7 +54,17 @@ const shEsc = (s) => s.replace(/'/g, "'\\''");
 
 const isStr = (x) => typeof x === "string";
 const isObj = (x) => x !== null && typeof x === "object" && !Array.isArray(x);
-const badTitle = (t) => FORBIDDEN_IN_TITLE.find((s) => t.includes(s)) || (t.startsWith("$:/") && "$:/");
+// A title must survive a [[link]] unchanged: TiddlyWiki's link rule stops
+// at the first "]]", does not cross a line break, trims spaces, and treats
+// a URL-shaped target as an external link.
+const URLISH = /^[a-z][a-z0-9+.-]*:\S*$/i;
+const badTitle = (t) =>
+  (FORBIDDEN_IN_TITLE.find((s) => t.includes(s)) && `contains ${JSON.stringify(FORBIDDEN_IN_TITLE.find((s) => t.includes(s)))}`) ||
+  (t.startsWith("$:/") && 'contains "$:/"') ||
+  (/[\r\u2028\u2029\u0085]/.test(t) && "contains a line break") ||
+  (t.endsWith("]") && 'ends in "]"') ||
+  (t !== t.trim() && "starts or ends with a space") ||
+  (URLISH.test(t) && "reads as a URL");
 const badUrl = (u) => !isStr(u) || !/^https?:\/\/[^\s|\]]+$/.test(u);
 
 /** Throw one Error listing every problem with the graph; return it if valid. */
@@ -64,7 +74,7 @@ export function validate(g) {
   const title = (at, t) => {
     if (!isStr(t) || !t) return errs.push(`${at}: missing`), false;
     const bad = badTitle(t);
-    if (bad) return errs.push(`${at} ${JSON.stringify(t)} contains ${JSON.stringify(bad)}`), false;
+    if (bad) return errs.push(`${at} ${JSON.stringify(t)} ${bad}`), false;
     return true;
   };
   const quotable = (at, s) => {
@@ -78,7 +88,10 @@ export function validate(g) {
     return x;
   };
 
-  if (title("title", g.title) && !slugOf(g.title)) errs.push("title has no letters or digits");
+  if (title("title", g.title)) {
+    if (!slugOf(g.title)) errs.push("title has no letters or digits");
+    if (quoteAttr(g.title) === null) errs.push("title cannot be quoted: it holds ', \" and \"\"\" (or ends in \")");
+  }
   quotable("subtitle", g.subtitle);
   quotable("description", g.description);
   if (g.source !== undefined) {
@@ -310,7 +323,9 @@ export function toTiddlers(g, opts = {}) {
       "<$list filter=\"[all[current]has[topic_id]]\" variable=\"ignore\">",
       "<details><summary>Ask an agent about this topic</summary>",
       "",
-      "<$codeblock code=`${ [{$:/config/topicwiki/command-prefix}] }$${ [all[current]get[topic_id]] }$${ [{$:/config/topicwiki/command-suffix}] }$`/>",
+      // A filtered attribute, not a substituted one: TiddlyWiki expands
+      // $(var)$ inside a substituted attribute, and the store path is text.
+      "<$codeblock code={{{ [all[current]get[topic_id]addprefix{$:/config/topicwiki/command-prefix}addsuffix{$:/config/topicwiki/command-suffix}] }}}/>",
       "",
       "</details>",
       "</$list>",

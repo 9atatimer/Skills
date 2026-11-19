@@ -54,8 +54,8 @@ node <skill dir>/build.mjs <graph.json> [--out <file.html>] [--agent codex]
 It prints the HTML path, the store path and the tiddler count. A
 validation error lists every problem in the graph at once: a duplicate
 id, a title used twice (topics, categories, type indexes, the home and
-`AI access` share one title space), a title with `[[`, `]]`, `|`, `{{`
-or `}}` in it, a type that is not a lowercase word, an edge to an
+`AI access` share one title space), a title a link would misread (`[[`, `]]`, `|`, `{{`, `}}`,
+a trailing `]`, a URL shape), a type that is not a lowercase word, an edge to an
 unknown id, a URL that is not http(s). Fix the graph, not the builder.
 
 `--agent` sets the command in the copy-paste line (default `claude`).

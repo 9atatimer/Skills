@@ -40,11 +40,11 @@ One JSON object. `build.mjs` rejects a graph that breaks a rule below.
 
 | Field | Required | Rule |
 |---|---|---|
-| `title` | yes | the subject; becomes the home tiddler and the site title. A title: no `[[`, `]]`, `{{`, `}}`, `|` or newline, not starting `$:/`, with at least one letter or digit (it names the output file) |
+| `title` | yes | the subject; becomes the home tiddler and the site title. A title: no `[[`, `]]`, `{{`, `}}`, `|` or line break, not starting `$:/`, not ending in `]`, without a leading or trailing space, and not shaped like a URL (`mailto:x`), with at least one letter or digit (it names the output file) |
 | `subtitle`, `description` | no | shown as plain text in the header and on the home tiddler |
 | `source` | no, but give it | `name` (a title), `url` (http(s)), `fetched` (`YYYY-MM-DD`); shown on the home tiddler |
 | `nodes[].id` | yes | a lowercase slug, unique; agents address a topic by it |
-| `nodes[].label` | yes | the tiddler title: unique, no `[[`, `]]`, `{{`, `}}`, `|` or newline, not starting `$:/` |
+| `nodes[].label` | yes | the tiddler title: unique, no `[[`, `]]`, `{{`, `}}`, `|` or line break, not starting `$:/`, not ending in `]`, without a leading or trailing space, and not shaped like a URL (`mailto:x`) |
 | `nodes[].type` | no | the kind of topic, one lowercase word (`product`, `sub-product`); each type gets an index tiddler `<Type> index` |
 | `nodes[].category` | no | the grouping, a title; each category gets an index tiddler with that name |
 | `nodes[].description` | no | plain text; shown as text, never parsed as markup |

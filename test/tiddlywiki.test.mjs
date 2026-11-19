@@ -91,7 +91,6 @@ test("the agent line names the store and the agent command", () => {
   assert.match(find(ts, "AI access").text, /<\$codeblock code=\{\{\$:\/config\/topicwiki\/command\}\}\/>/);
   const vt = find(ts, "$:/topicwiki/ViewTemplate/agent");
   assert.equal(vt.tags, "$:/tags/ViewTemplate");
-  assert.match(vt.text, /\$\{ \[\{\$:\/config\/topicwiki\/command-prefix\}\] \}\$\$\{ \[all\[current\]get\[topic_id\]\] \}\$/);
 });
 
 test("every [[link]] in the output names a tiddler that exists", () => {
@@ -242,4 +241,31 @@ test("validate reports malformed input instead of crashing", () => {
     mutate(g);
     assert.throws(() => validate(g), (e) => !(e instanceof TypeError) && re.test(e.message));
   }
+});
+
+test("the per-topic agent line uses no substituted attribute, so $(var)$ in the path is never expanded", () => {
+  const ts = toTiddlers(graph(), { store: "/tmp/$(currentTiddler)$/x.tiddlers.json" });
+  const vt = find(ts, "$:/topicwiki/ViewTemplate/agent").text;
+  assert.ok(!vt.includes("code=`"), vt);
+  assert.match(vt, /<\$codeblock code=\{\{\{ \[all\[current\]get\[topic_id\]addprefix\{\$:\/config\/topicwiki\/command-prefix\}addsuffix\{\$:\/config\/topicwiki\/command-suffix\}\] \}\}\}\/>/);
+});
+
+test("validate rejects titles that a [[link]] would read as another title or a URL", () => {
+  const cases = [
+    [(g) => { g.nodes[2].label = "Workers]"; }, /ends in "\]"/],
+    [(g) => { g.nodes[2].label = "a\rb"; }, /contains a line break/],
+    [(g) => { g.nodes[2].label = "a b"; }, /contains a line break/],
+    [(g) => { g.nodes[2].label = " Cron"; }, /starts or ends with a space/],
+    [(g) => { g.nodes[2].label = "mailto:x@y"; }, /reads as a URL/],
+    [(g) => { g.nodes[2].category = "data:x"; }, /reads as a URL/],
+    [(g) => { g.title = `it's "x"`; }, /title cannot be quoted/],
+  ];
+  for (const [mutate, re] of cases) {
+    const g = graph();
+    mutate(g);
+    assert.throws(() => validate(g), re);
+  }
+  const ok = graph();
+  ok.nodes[2].label = "Note: cron triggers";
+  assert.doesNotThrow(() => validate(ok));
 });
