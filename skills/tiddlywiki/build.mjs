@@ -175,13 +175,15 @@ function paletteErrors(palette) {
 }
 
 const isNum = (x) => typeof x === "number" && Number.isFinite(x);
+const coordOk = (v) => isNum(v) && Math.abs(v) <= MAX_COORD;
+const sizeOk = (v) => isNum(v) && v > 0 && v <= MAX_SIZE;
+const ownKey = (table, k) => Boolean(table) && Object.prototype.hasOwnProperty.call(table, k);
 
 /** The layout is all or nothing: every node has finite x and y, or none has either. */
 function layoutErrors(nodes) {
   const placed = nodes.filter((n) => isObj(n) && (n.x !== undefined || n.y !== undefined));
   if (!placed.length) return [];
-  const inRange = (v) => isNum(v) && Math.abs(v) <= MAX_COORD;
-  const bad = nodes.findIndex((n) => !isObj(n) || !inRange(n.x) || !inRange(n.y));
+  const bad = nodes.findIndex((n) => !isObj(n) || !coordOk(n.x) || !coordOk(n.y));
   return bad === -1 ? [] : [`nodes[${bad}]: x and y must be finite numbers within ${MAX_COORD} of 0 when any node has a layout`];
 }
 
@@ -211,7 +213,7 @@ function fieldErrors(n, at) {
     if (n[key] !== undefined && !isStr(n[key])) errs.push(`${at}: ${key} is not a string`);
   }
   if (n.docs !== undefined && badUrl(n.docs)) errs.push(`${at}: docs is not an http(s) URL`);
-  if (n.size !== undefined && !(isNum(n.size) && n.size > 0 && n.size <= MAX_SIZE)) errs.push(`${at}: size is not a positive number up to ${MAX_SIZE}`);
+  if (n.size !== undefined && !sizeOk(n.size)) errs.push(`${at}: size is not a positive number up to ${MAX_SIZE}`);
   return errs;
 }
 
@@ -449,10 +451,9 @@ export function fallbackLayout(nodes, sizes) {
  * "__proto__" is a name and not an inherited member.
  */
 function colourTable(names, given) {
-  const has = (k) => given && Object.prototype.hasOwnProperty.call(given, k);
   const entries = [];
   let next = 0;
-  for (const name of names) entries.push([name, has(name) ? given[name] : PALETTE[next++ % PALETTE.length]]);
+  for (const name of names) entries.push([name, ownKey(given, name) ? given[name] : PALETTE[next++ % PALETTE.length]]);
   return Object.fromEntries(entries);
 }
 

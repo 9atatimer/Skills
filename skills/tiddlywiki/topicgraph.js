@@ -63,6 +63,9 @@ let mapCache = { text: null, map: null };
 const isNum = (x) => typeof x === "number" && Number.isFinite(x);
 const mapNodeOk = (n) => n !== null && typeof n === "object" && typeof n.t === "string" && isNum(n.x) && isNum(n.y) && isNum(n.s);
 const tableOk = (t) => t !== null && typeof t === "object" && !Array.isArray(t);
+/** An edge end: the index of a node in a list of `count` nodes. */
+const indexIn = (i, count) => Number.isInteger(i) && i >= 0 && i < count;
+const edgeOk = (e, count) => Array.isArray(e) && indexIn(e[0], count) && indexIn(e[1], count);
 
 /** Why parsed map data cannot be drawn, or "" when it can. */
 function mapShapeError(m) {
@@ -70,8 +73,7 @@ function mapShapeError(m) {
   if (!tableOk(m.categories) || !tableOk(m.relations)) return "The map tiddler needs categories and relations tables.";
   const badNode = m.nodes.findIndex((n) => !mapNodeOk(n));
   if (badNode !== -1) return `Map node ${badNode} needs a title t and numbers x, y and s.`;
-  const inRange = (i) => Number.isInteger(i) && i >= 0 && i < m.nodes.length;
-  const badEdge = m.edges.findIndex((e) => !Array.isArray(e) || !inRange(e[0]) || !inRange(e[1]));
+  const badEdge = m.edges.findIndex((e) => !edgeOk(e, m.nodes.length));
   return badEdge === -1 ? "" : `Map edge ${badEdge} does not name two map nodes.`;
 }
 
