@@ -58,110 +58,152 @@ const isObj = (x) => x !== null && typeof x === "object" && !Array.isArray(x);
 // at the first "]]", does not cross a line break, trims spaces, and treats
 // a URL-shaped target as an external link.
 const URLISH = /^[a-z][a-z0-9+.-]*:\S*$/i;
-const badTitle = (t) =>
-  (FORBIDDEN_IN_TITLE.find((s) => t.includes(s)) && `contains ${JSON.stringify(FORBIDDEN_IN_TITLE.find((s) => t.includes(s)))}`) ||
-  (t.startsWith("$:/") && 'contains "$:/"') ||
-  (/[\r\u2028\u2029\u0085]/.test(t) && "contains a line break") ||
-  (t.endsWith("]") && 'ends in "]"') ||
-  (t !== t.trim() && "starts or ends with a space") ||
-  (URLISH.test(t) && "reads as a URL");
+function badTitle(t) {
+  const forbidden = FORBIDDEN_IN_TITLE.find((s) => t.includes(s));
+  if (forbidden) return `contains ${JSON.stringify(forbidden)}`;
+  if (t.startsWith("$:/")) return 'contains "$:/"';
+  if (/[\r\u2028\u2029\u0085]/.test(t)) return "contains a line break";
+  if (t.endsWith("]")) return 'ends in "]"';
+  if (t !== t.trim()) return "starts or ends with a space";
+  if (URLISH.test(t)) return "reads as a URL";
+  return "";
+}
 const badUrl = (u) => !isStr(u) || !/^https?:\/\/[^\s|\]]+$/.test(u);
+const QUOTE_HELP = `cannot be quoted: it holds ', " and """ (or ends in ")`;
+const listOf = (x) => (Array.isArray(x) ? x : []);
+
+/** Problems with a title-valued field; [] when it is safe. */
+function titleErrors(at, t) {
+  if (!isStr(t) || !t) return [`${at}: missing`];
+  const bad = badTitle(t);
+  return bad ? [`${at} ${JSON.stringify(t)} ${bad}`] : [];
+}
+
+/** Problems with an optional free-text field that txt() shows. */
+function textErrors(at, s) {
+  if (s === undefined) return [];
+  if (!isStr(s)) return [`${at} is not a string`];
+  return quoteAttr(s) === null ? [`${at} ${QUOTE_HELP}`] : [];
+}
+
+/** A problem when an optional field is present and is not a list. */
+function listErrors(at, x) {
+  return x === undefined || Array.isArray(x) ? [] : [`${at}: not a list`];
+}
+
+function sourceErrors(src) {
+  if (src === undefined) return [];
+  if (!isObj(src)) return ["source: not an object"];
+  const errs = [];
+  if (src.name !== undefined) errs.push(...titleErrors("source.name", src.name));
+  if (src.url !== undefined && badUrl(src.url)) errs.push("source.url is not an http(s) URL");
+  if (src.fetched !== undefined && !(isStr(src.fetched) && DATE_RE.test(src.fetched))) {
+    errs.push("source.fetched is not a YYYY-MM-DD date");
+  }
+  return errs;
+}
+
+/** Problems with the graph's own fields, before its nodes and edges. */
+function graphErrors(g) {
+  const errs = titleErrors("title", g.title);
+  if (!errs.length) {
+    if (!slugOf(g.title)) errs.push("title has no letters or digits");
+    if (quoteAttr(g.title) === null) errs.push(`title ${QUOTE_HELP}`);
+  }
+  errs.push(...textErrors("subtitle", g.subtitle), ...textErrors("description", g.description));
+  errs.push(...sourceErrors(g.source));
+  if (!Array.isArray(g.nodes) || g.nodes.length === 0) errs.push("nodes: missing or empty");
+  if (!Array.isArray(g.edges)) errs.push("edges: missing");
+  return errs;
+}
+
+/** Problems with one node, given the ids and labels of the nodes before it. */
+function nodeErrors(n, at, ids, labels) {
+  if (!isObj(n)) return [`${at}: not an object`];
+  const errs = [];
+  if (!isStr(n.id) || !ID_RE.test(n.id)) errs.push(`${at}: id ${JSON.stringify(n.id)} is not a lowercase slug`);
+  else if (ids.has(n.id)) errs.push(`${at}: duplicate id ${n.id}`);
+  if (!isStr(n.label) || !n.label) errs.push(`${at}: label missing`);
+  else {
+    errs.push(...titleErrors(`${at}: label`, n.label));
+    if (labels.has(n.label)) errs.push(`${at}: duplicate label ${n.label}`);
+  }
+  if (n.type !== undefined && !(isStr(n.type) && NODE_TYPE_RE.test(n.type))) {
+    errs.push(`${at}: type ${JSON.stringify(n.type)} is not a lowercase word`);
+  }
+  if (n.category !== undefined) {
+    const bad = titleErrors(`${at}: category`, n.category);
+    errs.push(...bad);
+    if (!bad.length && quoteAttr(n.category) === null) errs.push(`${at}: category ${QUOTE_HELP}`);
+  }
+  for (const key of ["description", "status"]) {
+    if (n[key] !== undefined && !isStr(n[key])) errs.push(`${at}: ${key} is not a string`);
+  }
+  if (n.docs !== undefined && badUrl(n.docs)) errs.push(`${at}: docs is not an http(s) URL`);
+  for (const key of ["links", "tutorials"]) {
+    errs.push(...listErrors(`${at}.${key}`, n[key]));
+    for (const [j, l] of listOf(n[key]).entries()) {
+      if (!isObj(l) || !isStr(l.title) || !l.title || badTitle(l.title)) errs.push(`${at}.${key}[${j}]: title missing or unsafe`);
+      if (!isObj(l) || badUrl(l.url)) errs.push(`${at}.${key}[${j}]: url is not an http(s) URL`);
+    }
+  }
+  return errs;
+}
+
+/** Problems with one edge, given every node id. */
+function edgeErrors(e, at, ids) {
+  if (!isObj(e)) return [`${at}: not an object`];
+  const errs = [];
+  if (!ids.has(e.source)) errs.push(`${at}: unknown source ${e.source}`);
+  if (!ids.has(e.target)) errs.push(`${at}: unknown target ${e.target}`);
+  if (!isStr(e.type) || !EDGE_TYPE_RE.test(e.type)) errs.push(`${at}: type ${JSON.stringify(e.type)} is not snake_case`);
+  if (e.label !== "") errs.push(...textErrors(`${at}: label`, e.label));
+  errs.push(...listErrors(`${at}.evidence`, e.evidence));
+  for (const u of listOf(e.evidence)) if (badUrl(u)) errs.push(`${at}: evidence ${JSON.stringify(u)} is not an http(s) URL`);
+  return errs;
+}
+
+/**
+ * Topics, indexes, the home and AI access share one title space; a title
+ * used twice would merge two tiddlers into one. entries: [title, what].
+ */
+function titleClashes(entries) {
+  const seen = new Map();
+  const errs = [];
+  for (const [t, what] of entries) {
+    if (seen.has(t)) errs.push(`"${t}" is used twice: ${seen.get(t)} and ${what}`);
+    else seen.set(t, what);
+  }
+  return errs;
+}
 
 /** Throw one Error listing every problem with the graph; return it if valid. */
 export function validate(g) {
   if (!isObj(g)) throw new Error("graph: not an object");
+  const head = graphErrors(g);
+  if (head.length) throw new Error(head.join("\n"));
+
   const errs = [];
-  const title = (at, t) => {
-    if (!isStr(t) || !t) return errs.push(`${at}: missing`), false;
-    const bad = badTitle(t);
-    if (bad) return errs.push(`${at} ${JSON.stringify(t)} ${bad}`), false;
-    return true;
-  };
-  const quotable = (at, s) => {
-    if (s === undefined) return;
-    if (!isStr(s)) errs.push(`${at} is not a string`);
-    else if (quoteAttr(s) === null) errs.push(`${at} cannot be quoted: it holds ', " and """ (or ends in ")`);
-  };
-  const list = (at, x) => {
-    if (x === undefined) return [];
-    if (!Array.isArray(x)) return errs.push(`${at}: not a list`), [];
-    return x;
-  };
-
-  if (title("title", g.title)) {
-    if (!slugOf(g.title)) errs.push("title has no letters or digits");
-    if (quoteAttr(g.title) === null) errs.push("title cannot be quoted: it holds ', \" and \"\"\" (or ends in \")");
-  }
-  quotable("subtitle", g.subtitle);
-  quotable("description", g.description);
-  if (g.source !== undefined) {
-    if (!isObj(g.source)) errs.push("source: not an object");
-    else {
-      if (g.source.name !== undefined) title("source.name", g.source.name);
-      if (g.source.url !== undefined && badUrl(g.source.url)) errs.push("source.url is not an http(s) URL");
-      if (g.source.fetched !== undefined && !(isStr(g.source.fetched) && DATE_RE.test(g.source.fetched))) {
-        errs.push("source.fetched is not a YYYY-MM-DD date");
-      }
-    }
-  }
-  if (!Array.isArray(g.nodes) || g.nodes.length === 0) errs.push("nodes: missing or empty");
-  if (!Array.isArray(g.edges)) errs.push("edges: missing");
-  if (errs.length) throw new Error(errs.join("\n"));
-
   const ids = new Set();
   const labels = new Set();
   const cats = new Set();
   const types = new Set();
   for (const [i, n] of g.nodes.entries()) {
-    const at = `nodes[${i}]`;
-    if (!isObj(n)) { errs.push(`${at}: not an object`); continue; }
-    if (!isStr(n.id) || !ID_RE.test(n.id)) errs.push(`${at}: id ${JSON.stringify(n.id)} is not a lowercase slug`);
-    else if (ids.has(n.id)) errs.push(`${at}: duplicate id ${n.id}`);
+    errs.push(...nodeErrors(n, `nodes[${i}]`, ids, labels));
+    if (!isObj(n)) continue;
     ids.add(n.id);
-    if (!isStr(n.label) || !n.label) errs.push(`${at}: label missing`);
-    else if (title(`${at}: label`, n.label)) {
-      if (labels.has(n.label)) errs.push(`${at}: duplicate label ${n.label}`);
-      labels.add(n.label);
-    }
-    if (n.type !== undefined) {
-      if (!isStr(n.type) || !NODE_TYPE_RE.test(n.type)) errs.push(`${at}: type ${JSON.stringify(n.type)} is not a lowercase word`);
-      else types.add(n.type);
-    }
-    if (n.category !== undefined && title(`${at}: category`, n.category)) {
-      if (quoteAttr(n.category) === null) errs.push(`${at}: category cannot be quoted`);
-      else cats.add(n.category);
-    }
-    if (n.description !== undefined && !isStr(n.description)) errs.push(`${at}: description is not a string`);
-    if (n.status !== undefined && !isStr(n.status)) errs.push(`${at}: status is not a string`);
-    if (n.docs !== undefined && badUrl(n.docs)) errs.push(`${at}: docs is not an http(s) URL`);
-    for (const key of ["links", "tutorials"]) {
-      for (const [j, l] of list(`${at}.${key}`, n[key]).entries()) {
-        if (!isObj(l) || !isStr(l.title) || !l.title || badTitle(l.title)) errs.push(`${at}.${key}[${j}]: title missing or unsafe`);
-        if (!isObj(l) || badUrl(l.url)) errs.push(`${at}.${key}[${j}]: url is not an http(s) URL`);
-      }
-    }
+    if (isStr(n.label) && n.label) labels.add(n.label);
+    if (isStr(n.category) && n.category) cats.add(n.category);
+    if (isStr(n.type) && NODE_TYPE_RE.test(n.type)) types.add(n.type);
   }
-  for (const [i, e] of g.edges.entries()) {
-    const at = `edges[${i}]`;
-    if (!isObj(e)) { errs.push(`${at}: not an object`); continue; }
-    if (!ids.has(e.source)) errs.push(`${at}: unknown source ${e.source}`);
-    if (!ids.has(e.target)) errs.push(`${at}: unknown target ${e.target}`);
-    if (!isStr(e.type) || !EDGE_TYPE_RE.test(e.type)) errs.push(`${at}: type ${JSON.stringify(e.type)} is not snake_case`);
-    if (e.label !== undefined && e.label !== "") quotable(`${at}: label`, e.label);
-    for (const u of list(`${at}.evidence`, e.evidence)) if (badUrl(u)) errs.push(`${at}: evidence ${JSON.stringify(u)} is not an http(s) URL`);
-  }
-  // Topics, indexes, the home and AI access share one title space; a title
-  // used twice would merge two tiddlers into one.
-  const seen = new Map();
-  const claim = (t, what) => {
-    if (seen.has(t)) errs.push(`"${t}" is used twice: ${seen.get(t)} and ${what}`);
-    else seen.set(t, what);
-  };
-  claim(g.title, "the home tiddler");
-  claim(AI_ACCESS, "the AI access tiddler");
-  for (const c of cats) claim(c, "a category");
-  for (const ty of types) claim(TYPE_INDEX(ty), "a type index");
-  for (const l of labels) claim(l, "a node label");
+  for (const [i, e] of g.edges.entries()) errs.push(...edgeErrors(e, `edges[${i}]`, ids));
+  errs.push(...titleClashes([
+    [g.title, "the home tiddler"],
+    [AI_ACCESS, "the AI access tiddler"],
+    ...[...cats].map((c) => [c, "a category"]),
+    ...[...types].map((ty) => [TYPE_INDEX(ty), "a type index"]),
+    ...[...labels].map((l) => [l, "a node label"]),
+  ]));
   if (errs.length) throw new Error(errs.join("\n"));
   return g;
 }
@@ -169,6 +211,29 @@ export function validate(g) {
 const byLabel = (a, b) => a.label.localeCompare(b.label);
 const human = (type) => type.replace(/_/g, " ");
 const link = (title, url) => `[[${title}|${url}]]`;
+
+/** Text after a link: the edge label, shown as plain text. */
+const edgeNote = (e) => (e.label ? ` -- ${txt(e.label)}` : "");
+
+/** Edges ordered by relation, then by the label of the node at `end`. */
+function sortEdges(edges, end, byId) {
+  return [...edges].sort((a, b) => a.type.localeCompare(b.type) || byLabel(byId.get(a[end]), byId.get(b[end])));
+}
+
+/** A heading and its lines, or the heading and "None.". */
+function edgeSection(heading, lines) {
+  return ["", heading, ...(lines.length ? lines : ["None."])];
+}
+
+/** How many direct links a node has, out and in. */
+function degreeOf(n, out, inn) {
+  return out.get(n.id).length + inn.get(n.id).length;
+}
+
+/** Run the pinned TiddlyWiki CLI through npx. */
+function tiddlywiki(...args) {
+  execFileSync("npx", ["-y", TIDDLYWIKI, ...args], { stdio: ["ignore", "ignore", "inherit"] });
+}
 
 function evidence(e) {
   const ev = e.evidence || [];
@@ -185,17 +250,10 @@ function topicText(n, out, inn, byId) {
   lines.push("", "!! Tutorials");
   if ((n.tutorials || []).length) for (const l of n.tutorials) lines.push(`* ${link(l.title, l.url)}`);
   else lines.push("None recorded in the source.");
-  const section = (heading, edges, fmt) => {
-    lines.push("", heading);
-    if (!edges.length) return lines.push("None.");
-    for (const e of edges) lines.push(fmt(e));
-  };
-  const note = (e) => (e.label ? ` -- ${txt(e.label)}` : "");
-  const sortBy = (key) => (a, b) => a.type.localeCompare(b.type) || byLabel(byId.get(a[key]), byId.get(b[key]));
-  section("!! Links from here", [...out].sort(sortBy("target")),
-    (e) => `* ${human(e.type)} [[${byId.get(e.target).label}]]${note(e)}${evidence(e)}`);
-  section("!! Links to here", [...inn].sort(sortBy("source")),
-    (e) => `* [[${byId.get(e.source).label}]] ${human(e.type)} this${note(e)}${evidence(e)}`);
+  lines.push(...edgeSection("!! Links from here", sortEdges(out, "target", byId).map(
+    (e) => `* ${human(e.type)} [[${byId.get(e.target).label}]]${edgeNote(e)}${evidence(e)}`)));
+  lines.push(...edgeSection("!! Links to here", sortEdges(inn, "source", byId).map(
+    (e) => `* [[${byId.get(e.source).label}]] ${human(e.type)} this${edgeNote(e)}${evidence(e)}`)));
   return lines.join("\n");
 }
 
@@ -216,7 +274,6 @@ export function toTiddlers(g, opts = {}) {
   const out = new Map(g.nodes.map((n) => [n.id, []]));
   const inn = new Map(g.nodes.map((n) => [n.id, []]));
   for (const e of g.edges) { out.get(e.source).push(e); inn.get(e.target).push(e); }
-  const degree = (n) => out.get(n.id).length + inn.get(n.id).length;
   const tiddlers = [];
 
   for (const n of g.nodes) {
@@ -255,7 +312,7 @@ export function toTiddlers(g, opts = {}) {
       text: `Every ${txt(g.title)} topic of type ${ty} (${m.length}).\n\n${membersList(m)}` });
   }
 
-  const top = [...g.nodes].sort((a, b) => degree(b) - degree(a) || byLabel(a, b)).slice(0, 25);
+  const top = [...g.nodes].sort((a, b) => degreeOf(b, out, inn) - degreeOf(a, out, inn) || byLabel(a, b)).slice(0, 25);
   const src = g.source || {};
   const home = [
     g.description ? txt(g.description) : "",
@@ -271,7 +328,7 @@ export function toTiddlers(g, opts = {}) {
     types.length ? types.map((ty) => `* [[${TYPE_INDEX(ty)}]]`).join("\n") : "None.",
     "",
     "!! Most connected",
-    top.map((n) => `* [[${n.label}]] (${degree(n)})`).join("\n"),
+    top.map((n) => `* [[${n.label}]] (${degreeOf(n, out, inn)})`).join("\n"),
     "",
     "!! For agents",
     "[[AI access]]",
@@ -368,9 +425,8 @@ function main(argv) {
 
   const tmp = mkdtempSync(join(tmpdir(), "topicwiki-"));
   try {
-    const tw = (...a) => execFileSync("npx", ["-y", TIDDLYWIKI, ...a], { stdio: ["ignore", "ignore", "inherit"] });
-    tw(join(tmp, "wiki"), "--init", "empty");
-    tw(join(tmp, "wiki"), "--load", store, "--output", tmp, "--render", "$:/core/save/all", "out.html", "text/plain");
+    tiddlywiki(join(tmp, "wiki"), "--init", "empty");
+    tiddlywiki(join(tmp, "wiki"), "--load", store, "--output", tmp, "--render", "$:/core/save/all", "out.html", "text/plain");
     copyFileSync(join(tmp, "out.html"), html);
   } finally {
     rmSync(tmp, { recursive: true, force: true });

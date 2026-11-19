@@ -254,7 +254,7 @@ test("validate rejects titles that a [[link]] would read as another title or a U
   const cases = [
     [(g) => { g.nodes[2].label = "Workers]"; }, /ends in "\]"/],
     [(g) => { g.nodes[2].label = "a\rb"; }, /contains a line break/],
-    [(g) => { g.nodes[2].label = "a b"; }, /contains a line break/],
+    [(g) => { g.nodes[2].label = "a\u2028b"; }, /contains a line break/],
     [(g) => { g.nodes[2].label = " Cron"; }, /starts or ends with a space/],
     [(g) => { g.nodes[2].label = "mailto:x@y"; }, /reads as a URL/],
     [(g) => { g.nodes[2].category = "data:x"; }, /reads as a URL/],
