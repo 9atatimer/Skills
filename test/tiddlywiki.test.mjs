@@ -183,7 +183,7 @@ test("source text is shown through a text widget whose delimiter it cannot close
   g.edges[0].label = 'ends "q"';
   g.nodes[0].category = "Comp <$list/>";
   const ts = toTiddlers(g);
-  assert.match(find(ts, "Ex ''ample''").text, /^<\$text text='a"""<\$button\/> "c"'\/>/);
+  assert.match(find(ts, "Ex ''ample''").text, /^<\$topicmap\/>\n\n<\$text text='a"""<\$button\/> "c"'\/>/);
   assert.match(find(ts, "Workers").text, /-- <\$text text='ends "q"'\/>/);
   assert.equal(find(ts, "$:/SiteSubtitle").text, `<$text text="''x'' <$list/>"/>`);
   assert.equal(find(ts, "$:/SiteTitle").text, `<$text text="Ex ''ample''"/>`);
@@ -323,7 +323,7 @@ test("the neighbor graph is the last section, after docs, tutorials and the link
   const at = (s) => text.indexOf(s);
   assert.ok(at("!! Docs") < at("!! Tutorials") && at("!! Tutorials") < at("!! Links to here"));
   assert.ok(text.endsWith("!! Neighbor graph\n\n<$topicgraph/>"), text.slice(-80));
-  for (const title of ["Example", "Compute", "Product index"]) {
+  for (const title of ["Compute", "Product index"]) {
     assert.ok(find(ts, title).text.endsWith("!! Neighbor graph\n\n<$topicgraph/>"), title);
   }
 });
@@ -344,8 +344,8 @@ function loadWidget() {
   return ctx;
 }
 
-test("the widget module exports only the topicgraph widget", () => {
-  assert.deepEqual(Object.keys(loadWidget().exports), ["topicgraph"]);
+test("the widget module exports only the topicgraph and topicmap widgets", () => {
+  assert.deepEqual(Object.keys(loadWidget().exports), ["topicgraph", "topicmap"]);
 });
 
 test("layout puts every neighbor at its own place, one relation per sector", () => {
@@ -414,17 +414,23 @@ function fakeDocument() {
   return doc;
 }
 
-/** Render <$topicgraph/> for a tiddler whose neighbors field is `field`. */
-function renderGraph(field, size = { clientWidth: 900, clientHeight: 300 }) {
+const MAP = JSON.stringify({
+  categories: { Compute: "#f46021" }, relations: { uses: "#1570c8" },
+  nodes: [{ t: "T0", x: 0, y: 0, s: 20, c: "Compute", k: "product" }, { t: "T1", x: 50, y: 10, s: 4, c: "Compute", k: "feature" }, { t: "T2", x: -40, y: 30, s: 6 }],
+  edges: [[0, 1], [1, 2]],
+});
+
+/** Render a widget (topicgraph by default) for a tiddler whose neighbors field is `field`. */
+function renderGraph(field, size = { clientWidth: 900, clientHeight: 300 }, widget = "topicgraph", mapText = MAP) {
   const ctx = vm.createContext({ exports: {}, require: () => ({ widget: function Widget() {} }) });
   vm.runInContext(readFileSync(WIDGET_FILE, "utf8"), ctx);
-  const TopicGraph = ctx.exports.topicgraph;
+  const TopicGraph = ctx.exports[widget];
   const w = Object.create(TopicGraph.prototype);
   const doc = fakeDocument();
   const events = [];
   Object.assign(w, {
     document: doc, domNodes: [], events,
-    wiki: { getTiddler: () => ({ fields: { neighbors: field } }) },
+    wiki: { getTiddler: () => ({ fields: { neighbors: field } }), getTiddlerText: (t, d) => (t === "$:/topicwiki/map" ? mapText : d) },
     computeAttributes: () => ({}), getAttribute: (_, d) => d, getVariable: () => "Centre",
     dispatchEvent: (e) => events.push(e),
   });
@@ -486,4 +492,92 @@ test("a malformed neighbors field shows a message instead of breaking the tiddle
     assert.equal(parent.all("tw-tg-error").length, 1, field);
     assert.equal(parent.all("tw-tg-node").length, 0);
   }
+});
+
+// --- the full map, the shared styling, and page-like navigation ---
+
+test("the landing page opens with the full map and has no neighbor graph", () => {
+  const home = find(toTiddlers(graph()), "Example");
+  assert.ok(home.text.startsWith("<$topicmap/>\n"), home.text.slice(0, 40));
+  assert.ok(!home.text.includes("<$topicgraph/>"));
+});
+
+test("the map tiddler carries every topic, link and colour; the source layout wins", () => {
+  const g = graph();
+  g.palette = { categories: { Compute: "#f46021" }, relations: { binds_to: "#123456" } };
+  g.nodes.forEach((n, i) => Object.assign(n, { x: i * 10, y: -i * 5, size: 3 + i }));
+  const map = JSON.parse(find(toTiddlers(g), "$:/topicwiki/map").text);
+  assert.deepEqual(map.nodes[0], { t: "Workers", x: 0, y: 0, s: 3, c: "Compute", k: "product" });
+  assert.deepEqual(map.edges, [[0, 1], [0, 2]]);
+  assert.equal(map.categories.Compute, "#f46021");
+  assert.match(map.categories.Storage, /^#[0-9a-f]{6}$/);
+  assert.equal(map.relations["binds to"], "#123456");
+});
+
+test("without a source layout the map places every topic apart and sizes it by degree", () => {
+  const map = JSON.parse(find(toTiddlers(graph()), "$:/topicwiki/map").text);
+  assert.equal(new Set(map.nodes.map((n) => `${n.x},${n.y}`)).size, 3);
+  assert.equal(map.nodes[0].s, Math.round((2 + 2 * Math.sqrt(2)) * 100) / 100);
+});
+
+test("every tiddler is a page: the address bar names it and the history follows it", () => {
+  const ts = toTiddlers(graph());
+  assert.equal(find(ts, "$:/config/Navigation/UpdateAddressBar").text, "permalink");
+  assert.equal(find(ts, "$:/config/Navigation/UpdateHistory").text, "yes");
+  assert.equal(find(ts, "$:/view").text, "zoomin");
+});
+
+test("validate rejects a palette colour that is not #rrggbb and a partial layout", () => {
+  const cases = [
+    [(g) => { g.palette = { categories: { Compute: "red;}body{x" } }; }, /palette.categories.Compute: .* is not #rrggbb/],
+    [(g) => { g.palette = []; }, /palette: not an object/],
+    [(g) => { g.nodes[0].x = 1; g.nodes[0].y = 2; }, /nodes\[1\]: x and y must be finite numbers/],
+    [(g) => { g.nodes[0].size = -1; }, /nodes\[0\]: size is not a positive number/],
+  ];
+  for (const [mutate, re] of cases) {
+    const g = graph();
+    mutate(g);
+    assert.throws(() => validate(g), re);
+  }
+});
+
+test("a neighbor is drawn in its map colour and size; a relation in the map's colour", () => {
+  const field = JSON.stringify([{ title: "T0", rel: "uses", dir: "out" }, { title: "T1", rel: "uses", dir: "in" }, { title: "Compute", rel: "in category", dir: "out" }]);
+  const { parent } = renderGraph(field);
+  const dot = (t) => parent.all("tw-tg-node").find((n) => n.getAttribute("data-title") === t).children[0];
+  assert.equal(dot("T0").getAttribute("fill"), "#f46021");
+  assert.equal(dot("T0").getAttribute("r"), (3 + 20 * 0.35).toFixed(1));
+  assert.ok(Number(dot("T0").getAttribute("r")) > Number(dot("T1").getAttribute("r")));
+  assert.equal(dot("Compute").getAttribute("fill"), "#f46021");
+  const uses = parent.all("tw-tg-edge").map((l) => l.getAttribute("stroke"));
+  assert.ok(uses.includes("#1570c8"));
+});
+
+test("the full map draws every node and link, lights a hovered node's links, and opens it on click", () => {
+  const { parent, svg, events, w } = renderGraph(undefined, undefined, "topicmap");
+  const nodes = parent.all("tw-tm-node");
+  assert.deepEqual(nodes.map((n) => n.getAttribute("data-title")).sort(), ["T0", "T1", "T2"]);
+  assert.equal(parent.all("tw-tm-edge").length, 2);
+  const t1 = nodes.find((n) => n.getAttribute("data-title") === "T1");
+  svg.fire("pointerover", { target: t1.children[0] });
+  assert.ok(t1.getAttribute("class").includes("tw-tm-on"));
+  assert.equal(parent.all("tw-tm-lit").length, 2);
+  svg.fire("pointerleave", {});
+  assert.equal(parent.all("tw-tm-lit").length, 0);
+  svg.fire("pointerdown", { clientX: 0, clientY: 0, pointerType: "mouse" });
+  svg.fire("click", { target: t1.children[0] });
+  assert.deepEqual(events.map((e) => [e.type, e.navigateTo]), [["tm-navigate", "T1"]]);
+  assert.equal(w.nodeClass, "tw-tm-node");
+});
+
+test("a product is always named on the map; other topics on hover", () => {
+  const { parent } = renderGraph(undefined, undefined, "topicmap");
+  const label = (t) => parent.all("tw-tm-node").find((n) => n.getAttribute("data-title") === t).children[1].getAttribute("class");
+  assert.match(label("T0"), /tw-tm-product/);
+  assert.match(label("T1"), /tw-tg-hover/);
+});
+
+test("an unreadable map tiddler shows a message instead of breaking the page", () => {
+  const { parent } = renderGraph(undefined, undefined, "topicmap", "not json");
+  assert.equal(parent.all("tw-tg-error").length, 1);
 });

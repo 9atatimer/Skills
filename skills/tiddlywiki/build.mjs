@@ -34,7 +34,25 @@ const GRAPH_CSS = `.tw-topicgraph { margin: 0.5em 0 1em; border: 1px solid #ddd;
 .tw-tg-selected circle { stroke: #111; stroke-width: 2; }
 .tw-tg-error { color: #b91c1c; padding: 6px 8px; margin: 0; }
 .tw-tg-centre circle { fill: #111; }
-.tw-tg-centre-label { font-size: 13px; font-weight: bold; }`;
+.tw-tg-centre-label { font-size: 13px; font-weight: bold; }
+.tw-tm-svg { height: 640px; background: #fff; }
+.tw-tm-edge { stroke-width: 0.8; stroke-opacity: 0.3; }
+.tw-tm-edge.tw-tm-lit { stroke-width: 2.4; stroke-opacity: 0.95; }
+.tw-tm-node circle { stroke: #fff; stroke-width: 1; transform-box: fill-box; transform-origin: center; transition: transform 0.12s; }
+.tw-tm-node.tw-tm-on circle, .tw-tm-node.tw-tg-selected circle { transform: scale(1.9); stroke: #111; stroke-width: 1.5; }
+.tw-tm-label { font-size: 20px; fill: #707070; paint-order: stroke; stroke: #fff; stroke-width: 5px; pointer-events: none; }
+.tw-tm-product { font-size: 24px; fill: #292929; }
+.tw-tm-on .tw-tm-label, .tw-tg-selected .tw-tm-label { display: inline; font-size: 30px; fill: #111; }`;
+/** Colours the map uses when the graph gives no palette, in sorted-name order. */
+const PALETTE = ["#f46021", "#25855a", "#7559b8", "#d6409f", "#e5484d", "#1570c8", "#cf8500",
+  "#0f8b8d", "#a6a6a6", "#b45309", "#0d9488", "#9333ea"];
+const COLOUR_RE = /^#[0-9a-f]{6}$/i;
+/** Each tiddler is a page: the address bar names it and the browser history follows it. */
+const NAVIGATION = [
+  { title: "$:/config/Navigation/UpdateAddressBar", text: "permalink" },
+  { title: "$:/config/Navigation/UpdateHistory", text: "yes" },
+  { title: "$:/view", text: "zoomin" },
+];
 
 const FORBIDDEN_IN_TITLE = ["[[", "]]", "{{", "}}", "|", "\n"];
 const TYPE_INDEX = (type) => `${type[0].toUpperCase()}${type.slice(1)} index`;
@@ -131,10 +149,35 @@ function graphErrors(g) {
     if (quoteAttr(g.title) === null) errs.push(`title ${QUOTE_HELP}`);
   }
   errs.push(...textErrors("subtitle", g.subtitle), ...textErrors("description", g.description));
-  errs.push(...sourceErrors(g.source));
+  errs.push(...sourceErrors(g.source), ...paletteErrors(g.palette));
   if (!Array.isArray(g.nodes) || g.nodes.length === 0) errs.push("nodes: missing or empty");
+  else errs.push(...layoutErrors(g.nodes));
   if (!Array.isArray(g.edges)) errs.push("edges: missing");
   return errs;
+}
+
+/** Problems with the optional palette: {categories, relations}, each name -> #rrggbb. */
+function paletteErrors(palette) {
+  if (palette === undefined) return [];
+  if (!isObj(palette)) return ["palette: not an object"];
+  const errs = [];
+  for (const key of ["categories", "relations"]) {
+    const table = palette[key];
+    if (table === undefined) continue;
+    if (!isObj(table)) errs.push(`palette.${key}: not an object`);
+    else for (const [name, c] of Object.entries(table)) if (!isStr(c) || !COLOUR_RE.test(c)) errs.push(`palette.${key}.${name}: ${JSON.stringify(c)} is not #rrggbb`);
+  }
+  return errs;
+}
+
+const isNum = (x) => typeof x === "number" && Number.isFinite(x);
+
+/** The layout is all or nothing: every node has finite x and y, or none has either. */
+function layoutErrors(nodes) {
+  const placed = nodes.filter((n) => isObj(n) && (n.x !== undefined || n.y !== undefined));
+  if (!placed.length) return [];
+  const bad = nodes.findIndex((n) => !isObj(n) || !isNum(n.x) || !isNum(n.y));
+  return bad === -1 ? [] : [`nodes[${bad}]: x and y must be finite numbers when any node has a layout`];
 }
 
 /** Problems with a node's id and label, given the nodes before it. */
@@ -163,6 +206,7 @@ function fieldErrors(n, at) {
     if (n[key] !== undefined && !isStr(n[key])) errs.push(`${at}: ${key} is not a string`);
   }
   if (n.docs !== undefined && badUrl(n.docs)) errs.push(`${at}: docs is not an http(s) URL`);
+  if (n.size !== undefined && !(isNum(n.size) && n.size > 0)) errs.push(`${at}: size is not a positive number`);
   return errs;
 }
 
@@ -371,9 +415,62 @@ function bulletList(items, fmt) {
   return items.length ? items.map(fmt).join("\n") : "None.";
 }
 
+/**
+ * A layout for a graph that brings none: each category gets a sector of a
+ * circle, and its topics fill a sunflower spiral at the sector's centre,
+ * largest first. Deterministic. Returns [x, y] by node index.
+ */
+export function fallbackLayout(nodes, sizes) {
+  const cats = [...new Set(nodes.map((n) => n.category || ""))].sort();
+  const spread = 120 + 18 * Math.sqrt(nodes.length);
+  const at = new Array(nodes.length);
+  for (const [ci, c] of cats.entries()) {
+    const members = nodes.map((n, i) => i).filter((i) => (nodes[i].category || "") === c).sort((a, b) => sizes[b] - sizes[a]);
+    const angle = (2 * Math.PI * ci) / cats.length - Math.PI / 2;
+    const cx = cats.length > 1 ? spread * Math.cos(angle) : 0;
+    const cy = cats.length > 1 ? spread * Math.sin(angle) : 0;
+    for (const [k, i] of members.entries()) {
+      const rr = 14 * Math.sqrt(k);
+      const a = k * 2.39996;
+      at[i] = [Math.round((cx + rr * Math.cos(a)) * 10) / 10, Math.round((cy + rr * Math.sin(a)) * 10) / 10];
+    }
+  }
+  return at;
+}
+
+/** Name -> colour for names, from the palette where it has one, else PALETTE in order. */
+function colourTable(names, given) {
+  const table = {};
+  let next = 0;
+  for (const name of names) table[name] = (given && given[name]) || PALETTE[next++ % PALETTE.length];
+  return table;
+}
+
+/**
+ * The map data the widgets draw: every topic with its place, size,
+ * category and type, every link as a pair of node indexes, and the colours
+ * of categories and relations. Sizes default to 2 + 2 * sqrt(degree).
+ */
+function mapData(g, degrees) {
+  const sizes = g.nodes.map((n, i) => (isNum(n.size) ? n.size : 2 + 2 * Math.sqrt(degrees[i])));
+  const at = isNum(g.nodes[0].x) ? g.nodes.map((n) => [n.x, n.y]) : fallbackLayout(g.nodes, sizes);
+  const index = new Map(g.nodes.map((n, i) => [n.id, i]));
+  const palette = g.palette || {};
+  const relTypes = [...new Set(g.edges.map((e) => e.type))].sort();
+  const rels = colourTable(relTypes, palette.relations);
+  return {
+    categories: colourTable([...new Set(g.nodes.map((n) => n.category).filter(Boolean))].sort(), palette.categories),
+    relations: Object.fromEntries(relTypes.map((t) => [human(t), rels[t]])),
+    nodes: g.nodes.map((n, i) => ({ t: n.label, x: at[i][0], y: at[i][1], s: Math.round(sizes[i] * 100) / 100, c: n.category, k: n.type })),
+    edges: g.edges.filter((e) => e.source !== e.target).map((e) => [index.get(e.source), index.get(e.target)]),
+  };
+}
+
 /** The home tiddler: counts, source, categories, types, the most connected topics. */
 function homeTiddler(g, cats, types, top) {
   const text = [
+    "<$topicmap/>",
+    "",
     g.description ? txt(g.description) : "",
     "",
     `${g.nodes.length} topics and ${g.edges.length} direct links. Each topic tiddler has its docs, its tutorials, and every topic it links to or is linked from.`,
@@ -393,7 +490,7 @@ function homeTiddler(g, cats, types, top) {
     `[[${AI_ACCESS}]]`,
   ].join("\n");
   const near = [...cats.map((c) => neighbor(c, "category", "out")), ...types.map((ty) => neighbor(TYPE_INDEX(ty), "type", "out"))];
-  return { title: g.title, text: withGraph(text, near), neighbors: JSON.stringify(near) };
+  return { title: g.title, text, neighbors: JSON.stringify(near) };
 }
 
 /**
@@ -480,6 +577,8 @@ export function toTiddlers(g, opts = {}) {
     { title: "$:/SiteTitle", text: txt(g.title) },
     { title: "$:/SiteSubtitle", text: txt(g.subtitle || "a topic wiki") },
     { title: "$:/DefaultTiddlers", text: `[[${g.title}]]` },
+    { title: "$:/topicwiki/map", type: "application/json", text: JSON.stringify(mapData(g, g.nodes.map((n) => degreeOf(n, out, inn)))) },
+    ...NAVIGATION,
     ...widgetTiddlers(opts.widget),
   ];
   return tiddlers.sort((a, b) => (a.title < b.title ? -1 : a.title > b.title ? 1 : 0));

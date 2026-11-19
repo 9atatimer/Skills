@@ -49,7 +49,10 @@ One JSON object. `build.mjs` rejects a graph that breaks a rule below.
 | `nodes[].category` | no | the grouping, a title; each category gets an index tiddler with that name |
 | `nodes[].description` | no | plain text; shown as text, never parsed as markup |
 | `nodes[].docs` | no | the public documentation, http(s) |
+| `nodes[].x`, `nodes[].y` | no | the source's layout, finite numbers; give them for every node or for none |
+| `nodes[].size` | no | the source's weight for the node, a positive number; defaults to 2 + 2 * sqrt(number of links) |
 | `nodes[].links`, `nodes[].tutorials` | no | lists of `{title, url}`, http(s) |
+| `palette` | no | `{categories: {name: "#rrggbb"}, relations: {edge type: "#rrggbb"}}`; a name it leaves out gets a default colour |
 | `edges[].source`, `edges[].target` | yes | node ids that exist |
 | `edges[].type` | yes | a relation verb in lowercase snake_case (`binds_to`, `built_on`, `has_feature`); shown with spaces |
 | `edges[].label` | no | a short note on the relation, shown as plain text |
@@ -90,6 +93,11 @@ type index, a category links the home and its members (`rel` is the
 member's type, or `other` when it has none), and a type index links the
 home and its members (`rel` is the member's category, or `other`). A
 tiddler with no neighbors has no graph section.
+
+`$:/topicwiki/map` holds what the full map draws: `nodes` (`t` title,
+`x`, `y`, `s` size, `c` category, `k` type), `edges` as pairs of node
+indexes, and the `categories` and `relations` colours (relations keyed
+in words, `binds to`).
 
 The store also holds the home tiddler (titled `title`), one tiddler per
 category and per type index, `AI access`, and the `$:/` system tiddlers

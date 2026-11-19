@@ -38,6 +38,19 @@ tiddler is the topic's navigable neighbourhood.
   `--out` only for a place the human names. A wiki built from someone
   else's unlicensed material stays a local file: do not commit it to a
   public repository or publish it.
+- **A tiddler is a page.** Moving from one tiddler to another, by a
+  hyperlink or by a click on a map or a graph, behaves like moving from
+  page to page: one tiddler shows at a time, the address bar names it,
+  and the browser's back and forward buttons step through the tiddlers
+  visited. The builder sets this up; do not change the navigation
+  settings, and do not add a control that opens a tiddler without
+  `tm-navigate`, because only that message updates the history. Check
+  back and forward in the browser when you verify a build.
+- **The landing page shows the whole map; other pages show their
+  neighbors.** The home tiddler opens with the full map of the subject.
+  Every other tiddler ends with its nearest-neighbor graph. Both draw a
+  topic in the same colour and size, so a reader recognises it from
+  one view to the other.
 - **The agent reads the store, the human reads the HTML.** The
   `.tiddlers.json` beside the HTML is the agent interface. Its fields
   are listed in the wiki's `AI access` tiddler and in the reference.
@@ -83,19 +96,28 @@ Follow the steps in this order; each needs the one before.
 - Report the two paths, the topic and link counts, and what the source
   did not cover (for example, how many topics have no tutorials).
 
-## Neighbor graph
+## Map and neighbor graph
 
-Every topic, category, type index and the home tiddler that has
-neighbors ends with a Neighbor graph section, after Docs, Tutorials and
-the link lists: its direct links drawn around it, one colour per
-relation, incoming links dashed. A click on a node opens that tiddler;
+The home tiddler starts with the full map: every topic at its place,
+coloured by category and sized by weight, every link drawn faintly. A
+topic grows, shows its name and lights its links under the pointer; a
+click opens it; drag pans; the toolbar zooms and hides a category.
+When the source publishes its own layout, sizes and colours, carry them
+into the topic graph (`x`, `y`, `size`, `palette`) so the map looks like
+the source; otherwise the builder lays the topics out by category and
+sizes them by their number of links.
+
+Every category, type index and topic that has neighbors ends with a
+Neighbor graph section, after Docs, Tutorials and the link lists: its
+direct links drawn around it, each neighbor in its map colour and size,
+each link in its relation's colour, incoming links dashed. A click on a node opens that tiddler;
 on a touch screen, a crowded graph's first tap shows the name. A topic
 also links its category and its type index, or the home tiddler when it
 has neither, and every index links the home tiddler, so any topic is at
-most two steps from the root. The widget is `topicgraph.js` in this skill's
-directory; `build.mjs` embeds it, so the HTML stays one file with no
-network dependency. Check one hub topic's graph in the browser when you
-verify a build.
+most two steps from the root. Both widgets are in `topicgraph.js` in this
+skill's directory; `build.mjs` embeds it, so the HTML stays one file
+with no network dependency. Check the map and one hub topic's graph in
+the browser when you verify a build.
 
 ## AI access
 
