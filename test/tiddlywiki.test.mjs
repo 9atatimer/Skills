@@ -50,14 +50,11 @@ test("the description is shown through a view widget, never parsed as markup", (
   assert.ok(!w.text.includes("''quotes''"));
 });
 
-test("a topic links every direct neighbour out and in, with evidence", () => {
+test("a topic's text does not repeat its graph as link lists; the counts stay as fields", () => {
   const ts = toTiddlers(graph());
   const w = find(ts, "Workers");
-  assert.match(w.text, /!! Links from here\n\* binds to \[\[Workers KV\]\] -- <\$text text="KV binding"\/> <sup>\[\[1\|https:\/\/example\.com\/e1\]\] \[\[2\|https:\/\/example\.com\/e2\]\]<\/sup>\n\* has feature \[\[Cron Triggers\]\]/);
-  assert.match(w.text, /!! Links to here\nNone\./);
-  const kv = find(ts, "Workers KV");
-  assert.match(kv.text, /!! Links to here\n\* \[\[Workers\]\] binds to this/);
-  assert.equal(kv.links_in, "1");
+  assert.ok(!/Links from here|Links to here/.test(w.text), w.text);
+  assert.equal(find(ts, "Workers KV").links_in, "1");
   assert.equal(w.links_out, "2");
 });
 
@@ -184,7 +181,6 @@ test("source text is shown through a text widget whose delimiter it cannot close
   g.nodes[0].category = "Comp <$list/>";
   const ts = toTiddlers(g);
   assert.match(find(ts, "Ex ''ample''").text, /^<\$topicmap\/>\n\n<\$text text='a"""<\$button\/> "c"'\/>/);
-  assert.match(find(ts, "Workers").text, /-- <\$text text='ends "q"'\/>/);
   assert.equal(find(ts, "$:/SiteSubtitle").text, `<$text text="''x'' <$list/>"/>`);
   assert.equal(find(ts, "$:/SiteTitle").text, `<$text text="Ex ''ample''"/>`);
   assert.match(find(ts, "Comp <$list/>").text, /^Every <\$text text="Ex ''ample''"\/> topic in the <\$text text="Comp <\$list\/>"\/> category/);
@@ -321,7 +317,7 @@ test("the neighbor graph is the last section, after docs, tutorials and the link
   const ts = toTiddlers(graph());
   const text = find(ts, "Workers").text;
   const at = (s) => text.indexOf(s);
-  assert.ok(at("!! Docs") < at("!! Tutorials") && at("!! Tutorials") < at("!! Links to here"));
+  assert.ok(at("!! Docs") < at("!! Tutorials") && at("!! Tutorials") < at("!! Neighbor graph"));
   assert.ok(text.endsWith("!! Neighbor graph\n\n<$topicgraph/>"), text.slice(-80));
   for (const title of ["Compute", "Product index"]) {
     assert.ok(find(ts, title).text.endsWith("!! Neighbor graph\n\n<$topicgraph/>"), title);
@@ -791,4 +787,68 @@ test("a page brought back takes clicks again, and a page left mid-slide is hidde
   view.navigateTo({ title: "B" });
   assert.equal(els[1].style.display, "none", "A never finished sliding away; it is hidden now");
   assert.notEqual(els[0].style.display, "none", "Home is the page sliding out");
+});
+
+// --- a subject tiddler: explanation, comparisons, case studies, docs, tutorials ---
+
+import { withContent } from "../skills/tiddlywiki/build.mjs";
+
+/** The example graph with written content on Workers. */
+function written() {
+  const g = graph();
+  Object.assign(g.nodes[0], {
+    explanation: "Workers runs your code near users. It reads data from [[Workers KV]] and runs on a schedule with [[cron jobs|Cron Triggers]].\n\nSecond paragraph, with ''no markup'' and a <$button/>.",
+    compare: [{ title: "Workers KV", text: "KV stores data; Workers runs code that reads it from [[Cron Triggers]] too." }],
+    cases: [{ title: "Acme moves to the edge", url: "https://example.com/case/acme", summary: "Cut latency by half." }],
+  });
+  return g;
+}
+
+test("a subject tiddler reads: explanation, compared with, case studies, docs, tutorials, then the graph", () => {
+  const text = find(toTiddlers(written()), "Workers").text;
+  const order = ["Workers runs", "!! Compared with", "!! Case studies", "!! Docs", "!! Tutorials", "!! Neighbor graph"].map((h) => text.indexOf(h));
+  assert.ok(order.every((at, i) => at >= 0 && (i === 0 || at > order[i - 1])), `${order}\n${text}`);
+});
+
+test("the explanation links topics by title and shows everything else as plain text", () => {
+  const text = find(toTiddlers(written()), "Workers").text;
+  assert.ok(text.startsWith('<$text text="Workers runs your code near users. It reads data from "/>[[Workers KV]]<$text text=" and runs on a schedule with "/>[[cron jobs|Cron Triggers]]<$text text="."/>'), text.slice(0, 260));
+  assert.match(text, /\n\n<\$text text="Second paragraph, with ''no markup'' and a <\$button\/>\."\/>/);
+});
+
+test("comparisons link the other topic; case studies link out with a plain summary", () => {
+  const text = find(toTiddlers(written()), "Workers").text;
+  assert.match(text, /!! Compared with\n\* \[\[Workers KV\]\]: <\$text text="KV stores data; Workers runs code that reads it from "\/>\[\[Cron Triggers\]\]<\$text text=" too\."\/>/);
+  assert.match(text, /!! Case studies\n\* \[\[Acme moves to the edge\|https:\/\/example\.com\/case\/acme\]\] -- <\$text text="Cut latency by half\."\/>/);
+});
+
+test("a topic with nothing written shows its description and no empty sections", () => {
+  const text = find(toTiddlers(graph()), "Workers KV").text;
+  assert.ok(text.startsWith('<$view field="description"/>'));
+  assert.ok(!text.includes("!! Compared with") && !text.includes("!! Case studies"));
+});
+
+test("validate rejects written content that links nowhere or cannot be shown safely", () => {
+  const cases = [
+    [(g) => { g.nodes[0].explanation = "See [[Nowhere]]."; }, /nodes\[0\]: explanation links "Nowhere", which is not a tiddler/],
+    [(g) => { g.nodes[0].explanation = "See [[a|b|Workers KV]]."; }, /nodes\[0\]: explanation has a link it cannot read/],
+    [(g) => { g.nodes[0].explanation = `it's "x"`; }, /nodes\[0\]: explanation cannot be quoted/],
+    [(g) => { g.nodes[0].compare = [{ title: "Nowhere", text: "x" }]; }, /nodes\[0\]\.compare\[0\]: "Nowhere" is not a topic/],
+    [(g) => { g.nodes[0].compare = "x"; }, /nodes\[0\]\.compare: not a list/],
+    [(g) => { g.nodes[0].cases = [{ title: "T", url: "ftp://x" }]; }, /nodes\[0\]\.cases\[0\]: url is not an http\(s\) URL/],
+    [(g) => { g.nodes[0].cases = [{ title: "a|b", url: "https://x.example" }]; }, /nodes\[0\]\.cases\[0\]: title missing or unsafe/],
+  ];
+  for (const [mutate, re] of cases) {
+    const g = graph();
+    mutate(g);
+    assert.throws(() => validate(g), re);
+  }
+});
+
+test("written content is kept in its own file and merged by topic id", () => {
+  const merged = withContent(graph(), { workers: { explanation: "Hi.", cases: [] } });
+  assert.equal(merged.nodes[0].explanation, "Hi.");
+  assert.equal(graph().nodes[0].explanation, undefined, "the graph itself is not changed");
+  assert.throws(() => withContent(graph(), { nope: { explanation: "x" } }), /content: "nope" is not a topic id/);
+  assert.throws(() => withContent(graph(), { workers: { label: "x" } }), /content\.workers: "label" is not a written field/);
 });

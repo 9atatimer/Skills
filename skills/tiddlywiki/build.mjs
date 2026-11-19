@@ -2,7 +2,7 @@
 // build.mjs -- turn a topic graph (references/topic-graph.md) into a
 // single-file TiddlyWiki plus the plain JSON tiddler store an agent reads.
 //
-//   node build.mjs <graph.json> [--out <file.html>] [--agent <command>]
+//   node build.mjs <graph.json> [--content <content.json>] [--out <file.html>] [--agent <command>]
 //
 // The pure part (validate, toTiddlers) is exported for test/tiddlywiki.test.mjs;
 // main() is the shell: it reads the graph, writes <name>.tiddlers.json, and
@@ -286,6 +286,8 @@ export function validate(g) {
     if (isStr(n.type) && NODE_TYPE_RE.test(n.type)) types.add(n.type);
   }
   for (const [i, e] of g.edges.entries()) errs.push(...edgeErrors(e, `edges[${i}]`, ids));
+  const titles = new Set([g.title, AI_ACCESS, ...cats, ...[...types].map(TYPE_INDEX), ...labels]);
+  for (const [i, n] of g.nodes.entries()) errs.push(...writtenErrors(n, `nodes[${i}]`, titles, labels));
   errs.push(...titleClashes([
     [g.title, "the home tiddler"],
     [AI_ACCESS, "the AI access tiddler"],
@@ -297,21 +299,103 @@ export function validate(g) {
   return g;
 }
 
+/** A link in written text: [[Title]] or [[shown text|Title]]. */
+const LINK_RE = /\[\[([^\]]*?)\]\]/g;
+
+/**
+ * Written text split into plain text and links: [{text}] or [{link, shown}].
+ * A link with more than one "|" is returned as {bad}. Pure.
+ */
+export function linkedParts(s) {
+  const parts = [];
+  let last = 0;
+  for (const m of s.matchAll(LINK_RE)) {
+    if (m.index > last) parts.push({ text: s.slice(last, m.index) });
+    const bits = m[1].split("|");
+    parts.push(bits.length > 2 ? { bad: m[0] } : { link: bits[bits.length - 1].trim(), shown: bits.length === 2 ? bits[0].trim() : "" });
+    last = m.index + m[0].length;
+  }
+  if (last < s.length) parts.push({ text: s.slice(last) });
+  return parts;
+}
+
+/** One part of written text as wikitext: plain text quoted, a link as a link. */
+function partMarkup(p) {
+  if (p.text !== undefined) return txt(p.text);
+  return p.shown ? `[[${p.shown}|${p.link}]]` : `[[${p.link}]]`;
+}
+
+/** Written text as wikitext: paragraphs split on blank lines, links kept, the rest plain. */
+function linkedText(s) {
+  return s.split(/\n\s*\n/).map((para) => linkedParts(para.trim()).map(partMarkup).join("")).join("\n\n");
+}
+
+/** Why one part of written text cannot be shown, or "". */
+function partProblem(p, titles) {
+  if (p.bad) return "has a link it cannot read";
+  if (p.text !== undefined) return quoteAttr(p.text) === null || p.text.includes("[[") || p.text.includes("]]") ? "cannot be quoted" : "";
+  if (!titles.has(p.link)) return `links ${JSON.stringify(p.link)}, which is not a tiddler`;
+  return p.shown && badTitle(p.shown) ? "has link text it cannot show" : "";
+}
+
+/** Problems with a piece of written text: a string whose links all name tiddlers. */
+function linkedTextErrors(at, s, titles) {
+  if (!isStr(s)) return [`${at} is not a string`];
+  const problems = s.split(/\n\s*\n/).flatMap((para) => linkedParts(para.trim()).map((p) => partProblem(p, titles)));
+  return [...new Set(problems.filter(Boolean))].map((why) => `${at} ${why}`);
+}
+
+/** Problems with one case study: a safe title, an http(s) url, an optional plain summary. */
+function caseErrors(c, at) {
+  if (!isObj(c)) return [`${at}: not an object`];
+  const errs = [];
+  if (!isStr(c.title) || !c.title || badTitle(c.title)) errs.push(`${at}: title missing or unsafe`);
+  if (badUrl(c.url)) errs.push(`${at}: url is not an http(s) URL`);
+  return [...errs, ...textErrors(`${at}: summary`, c.summary)];
+}
+
+/** Problems with one comparison: another topic's title and written text about the difference. */
+function compareErrors(c, at, titles, labels) {
+  if (!isObj(c)) return [`${at}: not an object`];
+  const errs = labels.has(c.title) ? [] : [`${at}: ${JSON.stringify(c.title)} is not a topic`];
+  return [...errs, ...linkedTextErrors(`${at}: text`, c.text, titles)];
+}
+
+/** Problems with a node's written content: explanation, compare and cases. */
+function writtenErrors(n, at, titles, labels) {
+  if (!isObj(n)) return [];
+  const errs = n.explanation === undefined ? [] : linkedTextErrors(`${at}: explanation`, n.explanation, titles);
+  errs.push(...listErrors(`${at}.compare`, n.compare), ...listErrors(`${at}.cases`, n.cases));
+  for (const [j, c] of listOf(n.compare).entries()) errs.push(...compareErrors(c, `${at}.compare[${j}]`, titles, labels));
+  for (const [j, c] of listOf(n.cases).entries()) errs.push(...caseErrors(c, `${at}.cases[${j}]`));
+  return errs;
+}
+
+/** The fields a content file may set on a topic. */
+const WRITTEN = ["explanation", "compare", "cases"];
+
+/**
+ * The graph with written content merged in: `content` maps a topic id to
+ * {explanation, compare, cases}. The graph itself is not changed; an
+ * unknown id or field is an error, so a typo cannot drop content silently.
+ */
+export function withContent(g, content) {
+  const ids = new Set(g.nodes.map((n) => n.id));
+  for (const [id, fields] of Object.entries(content)) {
+    if (!ids.has(id)) throw new Error(`content: ${JSON.stringify(id)} is not a topic id`);
+    const bad = Object.keys(fields).find((k) => !WRITTEN.includes(k));
+    if (bad) throw new Error(`content.${id}: ${JSON.stringify(bad)} is not a written field`);
+  }
+  return { ...g, nodes: g.nodes.map((n) => (content[n.id] ? { ...n, ...content[n.id] } : n)) };
+}
+
 const byLabel = (a, b) => a.label.localeCompare(b.label);
 const human = (type) => type.replace(/_/g, " ");
 const link = (title, url) => `[[${title}|${url}]]`;
 
-/** Text after a link: the edge label, shown as plain text. */
-const edgeNote = (e) => (e.label ? ` -- ${txt(e.label)}` : "");
-
 /** Edges ordered by relation, then by the label of the node at `end`. */
 function sortEdges(edges, end, byId) {
   return [...edges].sort((a, b) => a.type.localeCompare(b.type) || byLabel(byId.get(a[end]), byId.get(b[end])));
-}
-
-/** A heading and its lines, or the heading and "None.". */
-function edgeSection(heading, lines) {
-  return ["", heading, ...(lines.length ? lines : ["None."])];
 }
 
 /** How many direct links a node has, out and in. */
@@ -324,26 +408,31 @@ function tiddlywiki(...args) {
   execFileSync("npx", ["-y", TIDDLYWIKI, ...args], { stdio: ["ignore", "ignore", "inherit"] });
 }
 
-function evidence(e) {
-  const ev = e.evidence || [];
-  return ev.length ? ` <sup>${ev.map((u, i) => link(String(i + 1), u)).join(" ")}</sup>` : "";
+/** Render one topic's text: docs, tutorials, then its direct links out and in. */
+/** A heading and its lines; nothing at all when there are no lines. */
+function optionalSection(heading, lines) {
+  return lines.length ? ["", heading, ...lines] : [];
 }
 
-/** Render one topic's text: docs, tutorials, then its direct links out and in. */
-function topicText(n, out, inn, byId) {
-  const lines = ["<$view field=\"description\"/>", ""];
-  lines.push("!! Docs");
-  if (n.docs) lines.push(`* ${link("Documentation", n.docs)}`);
-  for (const l of n.links || []) lines.push(`* ${link(l.title, l.url)}`);
-  if (!n.docs && !(n.links || []).length) lines.push("None recorded in the source.");
-  lines.push("", "!! Tutorials");
-  if ((n.tutorials || []).length) for (const l of n.tutorials) lines.push(`* ${link(l.title, l.url)}`);
-  else lines.push("None recorded in the source.");
-  lines.push(...edgeSection("!! Links from here", sortEdges(out, "target", byId).map(
-    (e) => `* ${human(e.type)} [[${byId.get(e.target).label}]]${edgeNote(e)}${evidence(e)}`)));
-  lines.push(...edgeSection("!! Links to here", sortEdges(inn, "source", byId).map(
-    (e) => `* [[${byId.get(e.source).label}]] ${human(e.type)} this${edgeNote(e)}${evidence(e)}`)));
-  return lines.join("\n");
+/** A heading and its lines, or the heading and a note that the source has none. */
+function recordedSection(heading, lines) {
+  return ["", heading, ...(lines.length ? lines : ["None recorded in the source."])];
+}
+
+/**
+ * A subject's text, in the order a reader needs it: the explanation (or
+ * the one-line description), how it compares with similar topics, case
+ * studies, docs, tutorials. The graph section is appended after this.
+ */
+function topicText(n) {
+  const docs = [...(n.docs ? [link("Documentation", n.docs)] : []), ...(n.links || []).map((l) => link(l.title, l.url))];
+  return [
+    n.explanation ? linkedText(n.explanation) : "<$view field=\"description\"/>",
+    ...optionalSection("!! Compared with", (n.compare || []).map((c) => `* [[${c.title}]]: ${linkedText(c.text)}`)),
+    ...optionalSection("!! Case studies", (n.cases || []).map((c) => `* ${link(c.title, c.url)}${c.summary ? ` -- ${txt(c.summary)}` : ""}`)),
+    ...recordedSection("!! Docs", docs.map((d) => `* ${d}`)),
+    ...recordedSection("!! Tutorials", (n.tutorials || []).map((l) => `* ${link(l.title, l.url)}`)),
+  ].join("\n");
 }
 
 function membersList(nodes) {
@@ -379,7 +468,7 @@ function topicTiddler(n, out, inn, byId, home) {
     title: n.label,
     tags: tagList([n.category, n.type && TYPE_INDEX(n.type)].filter(Boolean)),
     topic_id: n.id,
-    text: withGraph(topicText(n, out, inn, byId), near),
+    text: withGraph(topicText(n), near),
     neighbors: JSON.stringify(near),
   };
   const fields = { description: n.description, topic_type: n.type, category: n.category, docs_url: n.docs, status: n.status };
@@ -486,7 +575,7 @@ function homeTiddler(g, cats, types, top) {
     "",
     g.description ? txt(g.description) : "",
     "",
-    `${g.nodes.length} topics and ${g.edges.length} direct links. Each topic tiddler has its docs, its tutorials, and every topic it links to or is linked from.`,
+    `${g.nodes.length} topics and ${g.edges.length} direct links. Each topic tiddler explains the topic, compares it with similar topics, links its docs and tutorials, and ends with a graph of its links.`,
     "",
     sourceLine(g.source),
     "",
@@ -532,7 +621,7 @@ function agentTiddlers(g, store, agent) {
         "* `docs_url` -- the public documentation",
         "* `links_out`, `links_in` -- how many direct links it has",
         "* `neighbors` -- JSON list of `{title, rel, dir}` that the graph draws: each link to another topic (`dir` `out` or `in`, `rel` the relation in words), then the way up: `in category` and `of type`, or `part of` the home when the topic has neither",
-        "* `text` -- TiddlyWiki markup: sections Docs, Tutorials, Links from here, Links to here, Neighbor graph",
+        "* `text` -- TiddlyWiki markup: an explanation, then sections Compared with, Case studies, Docs, Tutorials, Neighbor graph",
         "",
         "Start a session over the whole wiki with:",
         "",
@@ -618,6 +707,7 @@ function parseArgs(argv) {
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === "--out") args.out = argv[++i];
     else if (argv[i] === "--agent") args.agent = argv[++i];
+    else if (argv[i] === "--content") args.content = argv[++i];
     else args._.push(argv[i]);
   }
   return args;
@@ -626,10 +716,11 @@ function parseArgs(argv) {
 function main(argv) {
   const args = parseArgs(argv);
   if (args._.length !== 1) {
-    console.error("usage: build.mjs <graph.json> [--out <file.html>] [--agent <command>]");
+    console.error("usage: build.mjs <graph.json> [--content <content.json>] [--out <file.html>] [--agent <command>]");
     return 2;
   }
-  const graph = validate(JSON.parse(readFileSync(args._[0], "utf8")));
+  const source = JSON.parse(readFileSync(args._[0], "utf8"));
+  const graph = validate(args.content ? withContent(source, JSON.parse(readFileSync(args.content, "utf8"))) : source);
   const html = resolve(args.out || join(defaultOutDir(), `${slugOf(graph.title)}.html`));
   const store = html.replace(/\.html$/, "") + ".tiddlers.json";
   const tiddlers = toTiddlers(graph, { store, agent: args.agent, widget: readFileSync(WIDGET_FILE, "utf8"), landing: readFileSync(LANDING_FILE, "utf8"), pageview: readFileSync(PAGEVIEW_FILE, "utf8") });

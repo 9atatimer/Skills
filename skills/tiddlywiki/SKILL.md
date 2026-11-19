@@ -1,15 +1,15 @@
 ---
 name: tiddlywiki
-description: "Building a single-file TiddlyWiki that is the one reference for a subject (a technology, a vendor's product line, a domain): one tiddler per topic, hyperlinked to every topic it relates to in both directions, with links to the public docs and tutorials, and a plain JSON tiddler store plus a copy-paste command that starts an agent session over it. Load when asked for a tiddlywiki, a topic wiki, or a navigable reference or map of a subject that a person and an agent can both browse. Skip for answering questions over uploaded documents (knowledge-base) and for diagrams of a repository's own code (architecture-views)."
+description: "Building a single-file TiddlyWiki that is the one reference for a subject (a technology, a vendor's product line, a domain): one tiddler per topic with a plain-English explanation, comparisons with similar topics, case studies, docs and tutorials, a full map of the subject and a graph of each topic's neighbors, and a plain JSON tiddler store plus a copy-paste command that starts an agent session over it. Load when asked for a tiddlywiki, a topic wiki, or a navigable reference or map of a subject that a person and an agent can both browse. Skip for answering questions over uploaded documents (knowledge-base) and for diagrams of a repository's own code (architecture-views)."
 ---
 
 # Topic wikis in TiddlyWiki
 
 A topic wiki is one HTML file a person opens in a browser and one JSON
-file an agent reads, both built from the same topic graph. Each topic
-is a tiddler. Each tiddler names its docs and tutorials and links every
-topic it has a direct relation with, outgoing and incoming, so the
-tiddler is the topic's navigable neighbourhood.
+file an agent reads, both built from the same topic graph and the
+content written for it. Each topic is a tiddler that explains the topic
+and points to where to learn more; its relations to other topics are
+drawn as a graph.
 
 ## Standing rules
 
@@ -53,6 +53,14 @@ tiddler is the topic's navigable neighbourhood.
   Every other tiddler ends with its nearest-neighbor graph. Both draw a
   topic in the same colour and size, so a reader recognises it from
   one view to the other.
+- **A subject tiddler explains; the graph shows relations.** A topic's
+  tiddler holds, in this order: a plain-English explanation of the
+  subject with links to the topics it mentions, a comparison with
+  similar topics (each linked), case studies when there are any, doc
+  links, tutorials, and last its neighbor graph. Do not restate the
+  graph in text: no lists of links in and out. The explanation,
+  comparisons and case studies are written content (Write the content,
+  below); a topic with none yet shows its one-line description.
 - **The agent reads the store, the human reads the HTML.** The
   `.tiddlers.json` beside the HTML is the agent interface. Its fields
   are listed in the wiki's `AI access` tiddler and in the reference.
@@ -63,7 +71,7 @@ Run the builder; it validates the graph, writes the store, and packs the
 HTML with the TiddlyWiki CLI it pins (`npx`, npm registry):
 
 ```sh
-node <skill dir>/build.mjs <graph.json> [--out <file.html>] [--agent codex]
+node <skill dir>/build.mjs <graph.json> [--content <content.json>] [--out <file.html>] [--agent codex]
 ```
 
 It prints the HTML path, the store path and the tiddler count. A
@@ -71,7 +79,8 @@ validation error lists every problem in the graph at once: a duplicate
 id, a title used twice (topics, categories, type indexes, the home and
 `AI access` share one title space), a title a link would misread (`[[`, `]]`, `|`, `{{`, `}}`,
 a trailing `]`, a URL shape), a type that is not a lowercase word, an edge to an
-unknown id, a URL that is not http(s). Fix the graph, not the builder.
+unknown id, a URL that is not http(s), written text that links a title
+no tiddler has. Fix the graph or the content, not the builder.
 
 `--agent` sets the command in the copy-paste line (default `claude`).
 The prompt after it is one single-quoted shell word, so nothing in the
@@ -88,15 +97,40 @@ Follow the steps in this order; each needs the one before.
   beside the output as `<name>.graph.json` so the wiki can be rebuilt.
 - Enrich: docs URLs, product pages as `links`, tutorials. Check each URL
   as the rules above say, in parallel, with a timeout.
-- Build.
+- Write the content, below, for the topics a reader meets first, and
+  keep it beside the graph as `<name>.content.json`.
+- Build, with `--content`.
 - Verify before you report. Open the HTML (serve its directory on
   localhost if the browser refuses `file://`), open one well-connected
-  topic, and check that its docs, tutorials and both link sections
-  render and its agent line names the right `topic_id`. Check that every
+  topic, and check that its explanation, comparisons, docs and tutorials
+  render, its graph comes last, and its agent line names the right
+  `topic_id`. Check that every
   `[[link]]` in the store names a tiddler in the store. Run the agent
   line once with a real question and read the answer.
-- Report the two paths, the topic and link counts, and what the source
-  did not cover (for example, how many topics have no tutorials).
+- Report the two paths, the topic and link counts, how many topics
+  have written content, and what the source did not cover (for example,
+  how many topics have no tutorials or case studies).
+
+## Write the content
+
+The source gives a topic a name, a category, links and a one-line
+description; a reader needs more. For each topic you write, put in
+`<name>.content.json`, keyed by topic id:
+
+- `explanation`: what the topic is, what it is for and when to use it,
+  in plain English, a short paragraph or two. Link the other topics you
+  mention as `[[Title]]` or `[[shown text|Title]]`.
+- `compare`: the similar topics a reader would weigh against this one,
+  each `{title, text}`, where `text` says when to pick which.
+- `cases`: published case studies, each `{title, url, summary}`.
+
+Write every sentence from a page you read for this topic -- the
+product's docs overview, a comparison page such as a vendor's storage
+options guide -- not from memory, and link only case studies whose page
+you opened. Keep the content in its own file, because the graph is
+regenerated from the source and the content is not. The builder rejects
+a link to a title that has no tiddler and text it cannot show as plain
+text; `references/topic-graph.md` has the format.
 
 ## Map and neighbor graph
 
@@ -110,7 +144,7 @@ the source; otherwise the builder lays the topics out by category and
 sizes them by their number of links.
 
 Every category, type index and topic that has neighbors ends with a
-Neighbor graph section, after Docs, Tutorials and the link lists: its
+Neighbor graph section, after Docs and Tutorials: its
 direct links drawn around it, each neighbor in its map colour and size,
 each link in its relation's colour, incoming links dashed. A click on a node opens that tiddler;
 on a touch screen, a crowded graph's first tap shows the name. A topic

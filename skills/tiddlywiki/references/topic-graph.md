@@ -67,9 +67,35 @@ shown with a text widget and is never parsed as markup. A string that
 holds `'`, `"` and `"""` together, or `'` and `"` and ends in `"`, cannot be
 quoted for that widget and is rejected; reword it.
 
-An edge is directed. The source topic lists it under Links from here as
-"binds to Target"; the target lists it under Links to here as "Source
-binds to this". Use one edge per fact; do not add the reverse edge.
+An edge is directed: the source topic's graph draws it outgoing, the
+target's draws it incoming (dashed). Use one edge per fact; do not add
+the reverse edge.
+
+## Input: written content
+
+`<name>.content.json` maps a topic id to the content written for it; the
+builder merges it with `--content`. An unknown id or field is an error.
+
+```json
+{
+  "kv": {
+    "explanation": "Workers KV is a global key-value store ... Code in [[Workers]] reads it.\n\nSecond paragraph.",
+    "compare": [{ "title": "D1", "text": "KV looks values up by key only. [[D1]] answers SQL queries." }],
+    "cases": [{ "title": "How Acme cut latency", "url": "https://...", "summary": "One plain sentence." }]
+  }
+}
+```
+
+| Field | Rule |
+|---|---|
+| `explanation` | plain text; paragraphs split on a blank line; links as `[[Title]]` or `[[shown text|Title]]`, each naming a tiddler |
+| `compare[].title` | another topic's title |
+| `compare[].text` | plain text with links, as `explanation` |
+| `cases[].title`, `cases[].url` | a title with no link characters, an http(s) URL you opened |
+| `cases[].summary` | optional plain text |
+
+Everything outside a link is shown as plain text, never parsed as
+markup. A plain-text run must be quotable (see free text above).
 
 ## Output: the tiddler store
 
@@ -86,7 +112,7 @@ has these fields:
 | `links_out`, `links_in` | edge counts, as strings |
 | `neighbors` | JSON list of `{title, rel, dir}` that the graph draws: each link to another topic (`dir` is `out` or `in`, `rel` the relation in words; a self-edge is left out), then the way up: `in category` and `of type` (`dir` `out`), or `part of` the home when the topic has neither |
 | `tags` | the category and the type index, TiddlyWiki tag syntax |
-| `text` | TiddlyWiki markup with sections Docs, Tutorials, Links from here, Links to here, Neighbor graph |
+| `text` | TiddlyWiki markup: the explanation (or `<$view field="description"/>`), then Compared with and Case studies when present, Docs, Tutorials, Neighbor graph |
 
 Index tiddlers carry `neighbors` too: the home links each category and
 type index, a category links the home and its members (`rel` is the
