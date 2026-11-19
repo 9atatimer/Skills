@@ -176,4 +176,28 @@ export const CASES = [
     "A review bot flagged my PR. Do I fix it or reject it on the thread?", // gates
     "Should this yes/no judgement be a rule, a classifier or an LLM call?", // decision-models
   ]),
+  ...yes("tiddlywiki", [
+    "Make me a tiddlywiki that covers every Cloudflare product.",
+    "Build a single-file reference wiki for Kubernetes where each concept links to the ones it depends on.",
+    "Turn this product graph JSON into a navigable wiki I can open in a browser.",
+    "I want one place to browse every AWS service with links to its docs and tutorials.",
+    "Create a topic wiki for Postgres extensions that an agent can also navigate.",
+    "Rebuild the Cloudflare tiddlywiki; the source map was updated.",
+    "Add the tutorials links to the topic wiki for Stripe.",
+    "Make a browsable map of the Rust async ecosystem, one page per crate, linked both ways.",
+    "Give me a copy-paste command that starts a Claude session over my topic wiki.",
+    "Why does the Workers tiddler in my wiki have no tutorials section?",
+  ]),
+  ...no("tiddlywiki", [
+    "Let users upload their PDFs and ask questions about them.", // knowledge-base
+    "Draw the layer graph of this repo as an HTML diagram.", // architecture-views
+    "Deploy this worker to Cloudflare.", // cloudflare-hosting
+    "Write a runbook for restoring the database.", // technical-writing
+    "Add a Think chat assistant to the product.", // cloudflare-think
+    "Write the as-built record for the API server.", // as-built
+    "Fix the broken links in this README.", // markdown
+    "Write a design doc for the wiki editing feature in our app.", // design
+    "Choose a vector store for retrieval over our docs.", // knowledge-base
+    "Should we adopt this new charting library?", // tech-radar
+  ]),
 ];

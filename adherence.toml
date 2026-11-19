@@ -14,5 +14,5 @@
 # Behavior-driven, Declared) judge the scripts and their tests.
 
 [layers]
-"composition root" = ["scripts/*.mjs", "evals/**/*.mjs", "evals/run.sh", ".husky/install.mjs"]
+"composition root" = ["scripts/*.mjs", "skills/tiddlywiki/build.mjs", "evals/**/*.mjs", "evals/run.sh", ".husky/install.mjs"]
 test = ["test/**", "evals/fixtures/**"]

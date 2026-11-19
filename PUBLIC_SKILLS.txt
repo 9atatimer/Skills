@@ -51,5 +51,6 @@ testing
 testing-node
 testing-nuxt
 testing-python
+tiddlywiki
 todo-plan
 wrapup

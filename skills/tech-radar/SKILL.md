@@ -106,6 +106,7 @@ proposal makes the choice reviewable, the landing keeps the file honest.
 | LLM tool-calling | **ai** (Vercel AI SDK v7) | Provider-agnostic tool/stream vocabulary; what `agents` composes against. |
 | LLM provider adapter | **@ai-sdk/openai** (v4) | OpenAI provider for the AI SDK. Model id stays an edge parameter, never a domain constant. |
 | Code review engine | **Open Code Review** (`@alibaba-group/open-code-review`, the `ocr` CLI) | Apache-2.0. The `ocr` adapter behind the self-review skill's ReviewEngine port; never called from anywhere else. Install by npm at an exact version, never by its install script; the exact pin is the machine's install, not this row. The self-review skill needs v1.12.5 or later (the `secret_exclude` exclusion reason) and was checked against v1.12.11. Run it with `OCR_NO_UPDATE=1`: its npm launcher otherwise checks the registry and upgrades itself, defeating the pin. Its postinstall downloads a platform binary checked only against a checksum from the same release, unless the platform package already supplies it. Telemetry is off unless `OCR_ENABLE_TELEMETRY=1`; leave it off. The endpoint behind it is the machine's binding, not a radar choice. Skips Markdown. |
+| Topic wikis | **TiddlyWiki** (`tiddlywiki` on npm, BSD) | The single-file wiki the tiddlywiki skill builds. Run only through that skill's `build.mjs`, which pins the exact version and calls it with `npx`; never vendor an `empty.html` fetched from a website. First consumer: the Cloudflare topic wiki. |
 
 ## Hold
 
