@@ -81,14 +81,15 @@ has these fields:
 | `description` | the node description |
 | `docs_url` | the node docs URL |
 | `links_out`, `links_in` | edge counts, as strings |
-| `neighbors` | JSON list of `{title, rel, dir}`: each direct link (`dir` is `out` or `in`, `rel` the relation in words) and the topic's category; the graph draws it |
+| `neighbors` | JSON list of `{title, rel, dir}` that the graph draws: each link to another topic (`dir` is `out` or `in`, `rel` the relation in words; a self-edge is left out), then the way up: `in category` and `of type` (`dir` `out`), or `part of` the home when the topic has neither |
 | `tags` | the category and the type index, TiddlyWiki tag syntax |
 | `text` | TiddlyWiki markup with sections Docs, Tutorials, Links from here, Links to here, Neighbor graph |
 
 Index tiddlers carry `neighbors` too: the home links each category and
 type index, a category links the home and its members (`rel` is the
-member's type), and a type index links the home and its members
-(`rel` is the member's category).
+member's type, or `other` when it has none), and a type index links the
+home and its members (`rel` is the member's category, or `other`). A
+tiddler with no neighbors has no graph section.
 
 The store also holds the home tiddler (titled `title`), one tiddler per
 category and per type index, `AI access`, and the `$:/` system tiddlers

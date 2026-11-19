@@ -85,12 +85,14 @@ Follow the steps in this order; each needs the one before.
 
 ## Neighbor graph
 
-Every topic, category, type index and the home tiddler ends with a
-Neighbor graph section, after Docs, Tutorials and the link lists: its
-direct links drawn around it, one colour per relation, incoming links
-dashed. A click on a node opens that tiddler. A topic also links its
-category and a category links the home tiddler, so every graph reaches
-the root in two steps. The widget is `topicgraph.js` in this skill's
+Every topic, category, type index and the home tiddler that has
+neighbors ends with a Neighbor graph section, after Docs, Tutorials and
+the link lists: its direct links drawn around it, one colour per
+relation, incoming links dashed. A click on a node opens that tiddler;
+on a touch screen, a crowded graph's first tap shows the name. A topic
+also links its category and its type index, or the home tiddler when it
+has neither, and every index links the home tiddler, so any topic is at
+most two steps from the root. The widget is `topicgraph.js` in this skill's
 directory; `build.mjs` embeds it, so the HTML stays one file with no
 network dependency. Check one hub topic's graph in the browser when you
 verify a build.

@@ -21,9 +21,25 @@ const LABEL_LIMIT = 36; // label every node when there are at most this many
 const LABEL_PAD = 110; // room around the outer ring when every node is labelled
 const HOVER_PAD = 40; // room around the outer ring when labels show on hover
 
-/** The neighbors field as a list; [] when the field is absent. */
+/** A neighbors entry the widget can draw. */
+const wellFormed = (n) => n !== null && typeof n === "object" && typeof n.title === "string" &&
+  typeof n.rel === "string" && (n.dir === "in" || n.dir === "out");
+
+/**
+ * The neighbors field as {list} or, when it cannot be drawn, {error}: a
+ * hand edit must cost the graph, not the whole tiddler.
+ */
 function parseNeighbors(text) {
-  return text ? JSON.parse(text) : [];
+  if (!text) return { list: [] };
+  let list;
+  try {
+    list = JSON.parse(text);
+  } catch (e) {
+    return { error: `The neighbors field is not valid JSON: ${e.message}` };
+  }
+  if (!Array.isArray(list)) return { error: "The neighbors field is not a list." };
+  const bad = list.find((n) => !wellFormed(n));
+  return bad === undefined ? { list } : { error: `A neighbors entry cannot be drawn: ${JSON.stringify(bad)}` };
 }
 
 /** Each relation, sorted, with its colour. */
@@ -172,10 +188,13 @@ function toolbar(widget, svg, colours, groups, neighbors) {
   return bar;
 }
 
-/** Drag to pan: move the view by the pointer's travel, in view units. */
+/**
+ * Drag to pan: move the view by the pointer's travel, in view units. The
+ * viewBox is square and drawn to fit, so the shorter side sets the scale.
+ */
 function panTo(widget, svg, e) {
   const d = widget.drag;
-  const scale = widget.view.w / (svg.clientWidth || widget.view.w);
+  const scale = widget.view.w / (Math.min(svg.clientWidth, svg.clientHeight) || widget.view.w);
   const dx = (e.clientX - d.x) * scale;
   const dy = (e.clientY - d.y) * scale;
   if (Math.abs(e.clientX - d.x) + Math.abs(e.clientY - d.y) > 4) d.moved = true;
@@ -184,20 +203,35 @@ function panTo(widget, svg, e) {
   svg.setAttribute("viewBox", viewBoxOf(widget.view));
 }
 
+/**
+ * On a touch screen a crowded graph has no hover, so the first tap on a
+ * node shows its name and only a second tap opens it. True when this tap
+ * only selected the node.
+ */
+function tapSelects(widget, node, touch) {
+  if (!touch || !widget.hoverLabels || node.getAttribute("class").includes("tw-tg-selected")) return false;
+  if (widget.selected) widget.selected.setAttribute("class", "tw-tg-node");
+  node.setAttribute("class", "tw-tg-node tw-tg-selected");
+  widget.selected = node;
+  return true;
+}
+
+/** A click on a node opens that tiddler, unless the pointer dragged. */
+function onGraphClick(widget, e) {
+  const node = e.target.closest(".tw-tg-node");
+  const drag = widget.drag || {};
+  widget.drag = null;
+  if (!node || drag.moved || tapSelects(widget, node, drag.touch)) return;
+  widget.dispatchEvent({ type: "tm-navigate", navigateTo: node.getAttribute("data-title"), navigateFromTitle: widget.target });
+}
+
 /** Pointer handlers: drag pans, a click on a node opens that tiddler. */
 function attachPointer(widget, svg) {
   svg.addEventListener("pointerdown", (e) => {
-    widget.drag = { x: e.clientX, y: e.clientY, vx: widget.view.x, vy: widget.view.y, moved: false };
+    widget.drag = { x: e.clientX, y: e.clientY, vx: widget.view.x, vy: widget.view.y, moved: false, touch: e.pointerType === "touch" };
   });
   svg.addEventListener("pointermove", (e) => { if (widget.drag && e.buttons) panTo(widget, svg, e); });
-  svg.addEventListener("click", (e) => {
-    const node = e.target.closest(".tw-tg-node");
-    const moved = widget.drag && widget.drag.moved;
-    widget.drag = null;
-    if (node && !moved) {
-      widget.dispatchEvent({ type: "tm-navigate", navigateTo: node.getAttribute("data-title"), navigateFromTitle: widget.target });
-    }
-  });
+  svg.addEventListener("click", (e) => onGraphClick(widget, e));
 }
 
 /** Build the toolbar and the graph into root. */
@@ -207,6 +241,7 @@ function buildGraph(widget, root, neighbors) {
   const placed = layout(neighbors);
   const size = 2 * (placed.radius + (neighbors.length <= LABEL_LIMIT ? LABEL_PAD : HOVER_PAD));
   widget.view = { x: -size / 2, y: -size / 2, w: size, h: size, size };
+  widget.hoverLabels = neighbors.length > LABEL_LIMIT;
   const svg = svgEl(doc, "svg", { class: "tw-tg-svg", viewBox: viewBoxOf(widget.view) });
   svg.style.height = `${Math.min(640, Math.max(340, 300 + neighbors.length))}px`;
   const groups = drawRelations(doc, svg, placed.nodes, colours);
@@ -232,9 +267,10 @@ TopicGraph.prototype.render = function render(parent, nextSibling) {
   this.computeAttributes();
   this.execute();
   const tiddler = this.wiki.getTiddler(this.target);
-  const neighbors = parseNeighbors(tiddler && tiddler.fields.neighbors);
+  const parsed = parseNeighbors(tiddler && tiddler.fields.neighbors);
   const root = htmlEl(this.document, "div", "tw-topicgraph");
-  if (neighbors.length) buildGraph(this, root, neighbors);
+  if (parsed.error) root.appendChild(htmlEl(this.document, "p", "tw-tg-error", parsed.error));
+  else if (parsed.list.length) buildGraph(this, root, parsed.list);
   parent.insertBefore(root, nextSibling);
   this.domNodes.push(root);
 };

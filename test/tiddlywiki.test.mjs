@@ -284,10 +284,12 @@ test("a topic's neighbors are its links out and in, and its category", () => {
     { title: "Workers KV", rel: "binds to", dir: "out" },
     { title: "Cron Triggers", rel: "has feature", dir: "out" },
     { title: "Compute", rel: "in category", dir: "out" },
+    { title: "Product index", rel: "of type", dir: "out" },
   ]);
   assert.deepEqual(neighbors(find(ts, "Workers KV")), [
     { title: "Workers", rel: "binds to", dir: "in" },
     { title: "Storage", rel: "in category", dir: "out" },
+    { title: "Product index", rel: "of type", dir: "out" },
   ]);
 });
 
@@ -356,5 +358,132 @@ test("layout puts every neighbor at its own place, one relation per sector", () 
     for (const n of nodes) assert.ok(Math.hypot(n.x, n.y) <= radius + 1);
     const rels = nodes.map((n) => n.rel);
     assert.equal(rels.filter((r, i) => i && r !== rels[i - 1]).length, Math.min(1, new Set(rels).size - 1), "relations interleave");
+  }
+});
+
+test("a topic with no category or type links the root; a self-edge is not its own neighbor", () => {
+  const g = graph();
+  delete g.nodes[2].category;
+  delete g.nodes[2].type;
+  g.edges.push({ source: "kv", target: "kv", type: "uses" });
+  const ts = toTiddlers(g);
+  assert.deepEqual(neighbors(find(ts, "Cron Triggers")), [
+    { title: "Workers", rel: "has feature", dir: "in" },
+    { title: "Example", rel: "part of", dir: "out" },
+  ]);
+  assert.ok(!neighbors(find(ts, "Workers KV")).some((n) => n.title === "Workers KV"));
+});
+
+test("a tiddler with no neighbors has no graph section", () => {
+  const g = graph();
+  for (const n of g.nodes) { delete n.category; delete n.type; }
+  const home = find(toTiddlers(g), "Example");
+  assert.ok(!home.text.includes("<$topicgraph/>"), home.text.slice(-60));
+});
+
+// --- the widget against a fake DOM that refuses innerHTML ---
+
+class FakeEl {
+  constructor(doc, tag) {
+    Object.assign(this, { doc, tagName: tag, children: [], attrs: {}, style: {}, listeners: {}, parentNode: null, own: "", className: "" });
+    doc.created.push(tag);
+    this.classList = {
+      toggle: (c, on) => { const s = new Set(this.className.split(" ").filter(Boolean)); if (on) s.add(c); else s.delete(c); this.className = [...s].join(" "); },
+      contains: (c) => this.className.split(" ").includes(c),
+    };
+  }
+  get textContent() { return this.own + this.children.map((c) => c.textContent).join(""); }
+  set textContent(v) { this.own = String(v); this.children = []; }
+  set innerHTML(_) { throw new Error("innerHTML used"); }
+  setAttribute(k, v) { this.attrs[k] = String(v); }
+  getAttribute(k) { return k in this.attrs ? this.attrs[k] : null; }
+  appendChild(c) { c.parentNode = this; this.children.push(c); return c; }
+  insertBefore(c, ref) { c.parentNode = this; const i = ref ? this.children.indexOf(ref) : -1; if (i < 0) this.children.push(c); else this.children.splice(i, 0, c); return c; }
+  get firstChild() { return this.children[0] || null; }
+  addEventListener(t, f) { (this.listeners[t] ||= []).push(f); }
+  classes() { return `${this.className} ${this.attrs.class || ""}`.split(" ").filter(Boolean); }
+  closest(sel) { for (let e = this; e; e = e.parentNode) if (e.classes().includes(sel.slice(1))) return e; return null; }
+  all(cls) { return [...(this.classes().includes(cls) ? [this] : []), ...this.children.flatMap((c) => c.all(cls))]; }
+  fire(type, e) { for (const f of this.listeners[type] || []) f({ currentTarget: this, ...e }); }
+}
+
+function fakeDocument() {
+  const doc = { created: [] };
+  doc.createElement = (tag) => new FakeEl(doc, tag);
+  doc.createElementNS = (_, tag) => new FakeEl(doc, tag);
+  return doc;
+}
+
+/** Render <$topicgraph/> for a tiddler whose neighbors field is `field`. */
+function renderGraph(field, size = { clientWidth: 900, clientHeight: 300 }) {
+  const ctx = vm.createContext({ exports: {}, require: () => ({ widget: function Widget() {} }) });
+  vm.runInContext(readFileSync(WIDGET_FILE, "utf8"), ctx);
+  const TopicGraph = ctx.exports.topicgraph;
+  const w = Object.create(TopicGraph.prototype);
+  const doc = fakeDocument();
+  const events = [];
+  Object.assign(w, {
+    document: doc, domNodes: [], events,
+    wiki: { getTiddler: () => ({ fields: { neighbors: field } }) },
+    computeAttributes: () => ({}), getAttribute: (_, d) => d, getVariable: () => "Centre",
+    dispatchEvent: (e) => events.push(e),
+  });
+  const parent = doc.createElement("div");
+  w.render(parent, null);
+  const svg = parent.all("tw-tg-svg")[0];
+  if (svg) Object.assign(svg, size);
+  return { w, doc, parent, svg, events };
+}
+
+const many = (n) => JSON.stringify(Array.from({ length: n }, (_, i) => ({ title: `T${i}`, rel: "uses", dir: "out" })));
+
+test("the widget draws every neighbor as text, never as markup", () => {
+  const field = JSON.stringify([
+    { title: "<img src=x onerror=alert(1)>", rel: "uses", dir: "out" },
+    { title: "Plain", rel: "<b>bold</b>", dir: "in" },
+  ]);
+  const { parent, doc } = renderGraph(field);
+  const nodes = parent.all("tw-tg-node");
+  assert.deepEqual(nodes.map((n) => n.getAttribute("data-title")).sort(), ["<img src=x onerror=alert(1)>", "Plain"]);
+  assert.ok(!doc.created.includes("img") && !doc.created.includes("b"));
+  assert.match(parent.textContent, /<b>bold<\/b> \(1\)/);
+});
+
+test("a click on a node opens that tiddler; a drag does not", () => {
+  const { svg, parent, events } = renderGraph(many(3));
+  const circle = parent.all("tw-tg-node")[0].children[0];
+  svg.fire("pointerdown", { clientX: 0, clientY: 0, pointerType: "mouse" });
+  svg.fire("click", { target: circle });
+  assert.deepEqual(events.map((e) => [e.type, e.navigateTo, e.navigateFromTitle]), [["tm-navigate", "T0", "Centre"]]);
+  svg.fire("pointerdown", { clientX: 0, clientY: 0, pointerType: "mouse" });
+  svg.fire("pointermove", { clientX: 40, clientY: 0, buttons: 1 });
+  svg.fire("click", { target: circle });
+  assert.equal(events.length, 1);
+});
+
+test("a drag pans the view as far as the pointer moved, at the drawn scale", () => {
+  const { svg, w } = renderGraph(many(3), { clientWidth: 900, clientHeight: 300 });
+  const { x, w: width } = w.view;
+  svg.fire("pointerdown", { clientX: 0, clientY: 0, pointerType: "mouse" });
+  svg.fire("pointermove", { clientX: 30, clientY: 0, buttons: 1 });
+  assert.equal(w.view.x, x - (30 * width) / 300);
+});
+
+test("on a touch screen, a crowded graph's first tap shows the name and the second opens it", () => {
+  const { svg, parent, events } = renderGraph(many(40));
+  const node = parent.all("tw-tg-node")[0];
+  const tap = () => { svg.fire("pointerdown", { clientX: 0, clientY: 0, pointerType: "touch" }); svg.fire("click", { target: node.children[0] }); };
+  tap();
+  assert.equal(events.length, 0);
+  assert.ok(node.classes().includes("tw-tg-selected"));
+  tap();
+  assert.equal(events.length, 1);
+});
+
+test("a malformed neighbors field shows a message instead of breaking the tiddler", () => {
+  for (const field of ["not json", "{}", JSON.stringify([{ title: "A" }])]) {
+    const { parent } = renderGraph(field);
+    assert.equal(parent.all("tw-tg-error").length, 1, field);
+    assert.equal(parent.all("tw-tg-node").length, 0);
   }
 });

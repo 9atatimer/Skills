@@ -23,14 +23,16 @@ const GRAPH_CSS = `.tw-topicgraph { margin: 0.5em 0 1em; border: 1px solid #ddd;
 .tw-tg-toolbar button { border: 1px solid #ccc; border-radius: 4px; background: #fff; padding: 1px 7px; cursor: pointer; }
 .tw-tg-chip.tw-tg-off { opacity: 0.4; text-decoration: line-through; }
 .tw-tg-swatch { display: inline-block; width: 9px; height: 9px; border-radius: 50%; }
-.tw-tg-svg { display: block; width: 100%; cursor: grab; user-select: none; touch-action: none; }
+.tw-tg-svg { display: block; width: 100%; cursor: grab; user-select: none; touch-action: pan-y pinch-zoom; }
 .tw-tg-edge { stroke-width: 1.2; opacity: 0.45; }
 .tw-tg-in { stroke-dasharray: 4 3; }
 .tw-tg-node { cursor: pointer; }
 .tw-tg-node:hover circle { stroke: #111; stroke-width: 2; }
 .tw-tg-label { font-size: 11px; fill: #333; paint-order: stroke; stroke: #fcfcfd; stroke-width: 3px; }
 .tw-tg-hover { display: none; }
-.tw-tg-node:hover .tw-tg-hover { display: inline; }
+.tw-tg-node:hover .tw-tg-hover, .tw-tg-selected .tw-tg-hover { display: inline; }
+.tw-tg-selected circle { stroke: #111; stroke-width: 2; }
+.tw-tg-error { color: #b91c1c; padding: 6px 8px; margin: 0; }
 .tw-tg-centre circle { fill: #111; }
 .tw-tg-centre-label { font-size: 13px; font-weight: bold; }`;
 
@@ -298,24 +300,34 @@ function membersList(nodes) {
 /** One entry of a tiddler's neighbors field. */
 const neighbor = (title, rel, dir) => ({ title, rel, dir });
 
-/** A topic's neighbors: every link out and in, then its category. */
-function topicNeighbors(n, out, inn, byId) {
+/**
+ * A topic's neighbors: every link out and in to another topic, then the
+ * way up -- its category and its type index, or the home tiddler when it
+ * has neither -- so every topic is at most two steps from the root.
+ */
+function topicNeighbors(n, out, inn, byId, home) {
   const list = [
-    ...sortEdges(out, "target", byId).map((e) => neighbor(byId.get(e.target).label, human(e.type), "out")),
-    ...sortEdges(inn, "source", byId).map((e) => neighbor(byId.get(e.source).label, human(e.type), "in")),
+    ...sortEdges(out.filter((e) => e.target !== n.id), "target", byId).map((e) => neighbor(byId.get(e.target).label, human(e.type), "out")),
+    ...sortEdges(inn.filter((e) => e.source !== n.id), "source", byId).map((e) => neighbor(byId.get(e.source).label, human(e.type), "in")),
   ];
   if (n.category) list.push(neighbor(n.category, "in category", "out"));
+  if (n.type) list.push(neighbor(TYPE_INDEX(n.type), "of type", "out"));
+  if (!n.category && !n.type) list.push(neighbor(home, "part of", "out"));
   return list;
 }
 
+/** A tiddler's text with the graph section, when it has neighbors to draw. */
+const withGraph = (text, near) => (near.length ? text + GRAPH_SECTION : text);
+
 /** One topic's tiddler: its fields, tags and text. */
-function topicTiddler(n, out, inn, byId) {
+function topicTiddler(n, out, inn, byId, home) {
+  const near = topicNeighbors(n, out, inn, byId, home);
   const t = {
     title: n.label,
     tags: tagList([n.category, n.type && TYPE_INDEX(n.type)].filter(Boolean)),
     topic_id: n.id,
-    text: topicText(n, out, inn, byId) + GRAPH_SECTION,
-    neighbors: JSON.stringify(topicNeighbors(n, out, inn, byId)),
+    text: withGraph(topicText(n, out, inn, byId), near),
+    neighbors: JSON.stringify(near),
   };
   const fields = { description: n.description, topic_type: n.type, category: n.category, docs_url: n.docs, status: n.status };
   for (const [k, v] of Object.entries(fields)) if (v) t[k] = v;
@@ -335,7 +347,7 @@ function categoryTiddler(g, c, types) {
   const untyped = members.filter((n) => !n.type);
   if (untyped.length) parts.push("", `!! Other (${untyped.length})`, membersList(untyped));
   const near = [neighbor(g.title, "category", "in"), ...[...members].sort(byLabel).map((n) => neighbor(n.label, n.type || "other", "out"))];
-  return { title: c, tags: tagList([g.title]), text: parts.join("\n") + GRAPH_SECTION, neighbors: JSON.stringify(near) };
+  return { title: c, tags: tagList([g.title]), text: withGraph(parts.join("\n"), near), neighbors: JSON.stringify(near) };
 }
 
 /** A type's index tiddler: every topic of that type. */
@@ -343,7 +355,7 @@ function typeTiddler(g, ty) {
   const m = g.nodes.filter((n) => n.type === ty);
   const near = [neighbor(g.title, "type", "in"), ...[...m].sort(byLabel).map((n) => neighbor(n.label, n.category || "other", "out"))];
   return { title: TYPE_INDEX(ty), tags: tagList([g.title]),
-    text: `Every ${txt(g.title)} topic of type ${ty} (${m.length}).\n\n${membersList(m)}${GRAPH_SECTION}`,
+    text: withGraph(`Every ${txt(g.title)} topic of type ${ty} (${m.length}).\n\n${membersList(m)}`, near),
     neighbors: JSON.stringify(near) };
 }
 
@@ -379,9 +391,9 @@ function homeTiddler(g, cats, types, top) {
     "",
     "!! For agents",
     `[[${AI_ACCESS}]]`,
-  ].join("\n") + GRAPH_SECTION;
+  ].join("\n");
   const near = [...cats.map((c) => neighbor(c, "category", "out")), ...types.map((ty) => neighbor(TYPE_INDEX(ty), "type", "out"))];
-  return { title: g.title, text, neighbors: JSON.stringify(near) };
+  return { title: g.title, text: withGraph(text, near), neighbors: JSON.stringify(near) };
 }
 
 /**
@@ -409,7 +421,7 @@ function agentTiddlers(g, store, agent) {
         "* `description` -- one or two plain sentences",
         "* `docs_url` -- the public documentation",
         "* `links_out`, `links_in` -- how many direct links it has",
-        "* `neighbors` -- JSON list of `{title, rel, dir}`: each direct link and the topic's category",
+        "* `neighbors` -- JSON list of `{title, rel, dir}` that the graph draws: each link to another topic (`dir` `out` or `in`, `rel` the relation in words), then the way up: `in category` and `of type`, or `part of` the home when the topic has neither",
         "* `text` -- TiddlyWiki markup: sections Docs, Tutorials, Links from here, Links to here, Neighbor graph",
         "",
         "Start a session over the whole wiki with:",
@@ -460,7 +472,7 @@ export function toTiddlers(g, opts = {}) {
     .sort((a, b) => b[1] - a[1] || byLabel(a[0], b[0])).slice(0, 25);
 
   const tiddlers = [
-    ...g.nodes.map((n) => topicTiddler(n, out.get(n.id), inn.get(n.id), byId)),
+    ...g.nodes.map((n) => topicTiddler(n, out.get(n.id), inn.get(n.id), byId, g.title)),
     ...cats.map((c) => categoryTiddler(g, c, types)),
     ...types.map((ty) => typeTiddler(g, ty)),
     homeTiddler(g, cats, types, top),
