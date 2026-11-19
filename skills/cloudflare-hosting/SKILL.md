@@ -1,6 +1,6 @@
 ---
 name: cloudflare-hosting
-description: "Hosting a product on Cloudflare: Workers (including Nuxt SSR through the Nitro preset), wrangler environments as stages, custom domains versus routes, bindings (KV, R2, D1, Durable Objects, service bindings, cron triggers), worker secrets from the vault, Cloudflare Access gating and service tokens, the wrangler/Terraform ownership split, deploy workflows with a preview-only CD posture, edge egress limits, and API token scopes. Load when a task deploys, configures, or debugs anything served from a Cloudflare account. Skip for the agent framework itself (cloudflare-think) and for Terraform authoring, state, and authority (iac)."
+description: "Hosting a product on Cloudflare: Workers (including Nuxt SSR through the Nitro preset), wrangler environments as stages, custom domains versus routes, bindings (KV, R2, D1, Durable Objects, service bindings, cron triggers), worker secrets from the vault, Cloudflare Access gating and service tokens, Access as the app's user identity (verifying the assertion, accounts keyed by email, D1 and R2 instead of Supabase), the wrangler/Terraform ownership split, deploy workflows with a preview-only CD posture, edge egress limits, and API token scopes. Load when a task deploys, configures, or debugs anything served from a Cloudflare account. Skip for the agent framework itself (cloudflare-think) and for Terraform authoring, state, and authority (iac)."
 ---
 
 # Cloudflare Hosting
@@ -145,6 +145,11 @@ groups and commands.
   public, public. Service tokens are an ACCOUNT-level resource; a
   zone-scoped Access token cannot mint one, however it is spelled.
   Minting is a credential-lifecycle module (the iac skill).
+- **Access is the app's only sign-in.** The Worker verifies `Cf-Access-Jwt-Assertion` on every request (team keys,
+  issuer, this hostname's AUD tag, expiry), fails closed, and takes the account from the normalized email; the app
+  has no login, session or Supabase auth. Every application in front of an email-keyed app pins `allowed_idps` to
+  One-Time PIN. Read `references/access-identity.md` before you build or change sign-in, accounts, roles or the
+  identity gate of an app on Cloudflare.
 - A `302` to the team domain on an unauthenticated probe is the gate WORKING.
 - **"Not reachable" is not a diagnosis.** Run the playbook's readiness ladder (DNS, TLS, certificate pack, gate) and
   report the rung with the raw response.
@@ -220,6 +225,8 @@ Terraform apply, certificate or API error.
 
 - `references/access-playbook.md`: the fleet's Access shape, the
   readiness ladder, the pre-apply checks and the hand-off
+- `references/access-identity.md`: the app's user identity from the
+  verified Access assertion, accounts, machine callers, local runs
 - the cloudflare-think skill: an agent worker on this platform
 - the lmde-tunnels skill: a laptop service reached through a tunnel and
   Access rather than served from a Worker
