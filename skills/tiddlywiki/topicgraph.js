@@ -60,12 +60,29 @@ function parseNeighbors(text) {
 
 let mapCache = { text: null, map: null };
 
-const isNum = (x) => typeof x === "number" && Number.isFinite(x);
-const mapNodeOk = (n) => n !== null && typeof n === "object" && typeof n.t === "string" && isNum(n.x) && isNum(n.y) && isNum(n.s);
-const tableOk = (t) => t !== null && typeof t === "object" && !Array.isArray(t);
+function isNum(x) {
+  return typeof x === "number" && Number.isFinite(x);
+}
+
+/** A map node the widgets can draw: a title and numbers x, y and s. */
+function mapNodeOk(n) {
+  return n !== null && typeof n === "object" && typeof n.t === "string" && isNum(n.x) && isNum(n.y) && isNum(n.s);
+}
+
+/** A plain JSON object, not an array. */
+function tableOk(t) {
+  return t !== null && typeof t === "object" && !Array.isArray(t);
+}
+
 /** An edge end: the index of a node in a list of `count` nodes. */
-const indexIn = (i, count) => Number.isInteger(i) && i >= 0 && i < count;
-const edgeOk = (e, count) => Array.isArray(e) && indexIn(e[0], count) && indexIn(e[1], count);
+function indexIn(i, count) {
+  return Number.isInteger(i) && i >= 0 && i < count;
+}
+
+/** A map edge: a pair of node indexes. */
+function edgeOk(e, count) {
+  return Array.isArray(e) && indexIn(e[0], count) && indexIn(e[1], count);
+}
 
 /** Why parsed map data cannot be drawn, or "" when it can. */
 function mapShapeError(m) {
@@ -277,16 +294,26 @@ function panTo(widget, svg, e) {
 }
 
 /**
- * On a touch screen a node whose name shows only on hover needs two taps:
- * the first selects it and shows the name, the second opens it. True when
- * this tap only selected the node.
+ * What a click does: "none" off a node or after a drag; "select" for the
+ * first tap on a touch screen when names show only on hover (the second
+ * tap opens it); else "open". Pure.
  */
-function tapSelects(widget, node, touch) {
-  if (!touch || !widget.hoverLabels || node.getAttribute("class").includes("tw-tg-selected")) return false;
+function clickAction(hit) {
+  if (!hit.node || hit.moved) return "none";
+  if (hit.touch && hit.hoverLabels && !hit.selected) return "select";
+  return "open";
+}
+
+/** Mark a node selected, so its name shows, and unmark the one before. */
+function selectNode(widget, node) {
   if (widget.selected) widget.selected.setAttribute("class", widget.nodeClass);
   node.setAttribute("class", `${widget.nodeClass} tw-tg-selected`);
   widget.selected = node;
-  return true;
+}
+
+/** Open a node's tiddler, as a link would. */
+function openNode(widget, node) {
+  widget.dispatchEvent({ type: "tm-navigate", navigateTo: node.getAttribute("data-title"), navigateFromTitle: widget.target });
 }
 
 /** A click on a node opens that tiddler, unless the pointer dragged. */
@@ -294,8 +321,12 @@ function onGraphClick(widget, e) {
   const node = e.target.closest(`.${widget.nodeClass}`);
   const drag = widget.drag || {};
   widget.drag = null;
-  if (!node || drag.moved || tapSelects(widget, node, drag.touch)) return;
-  widget.dispatchEvent({ type: "tm-navigate", navigateTo: node.getAttribute("data-title"), navigateFromTitle: widget.target });
+  const action = clickAction({
+    node, moved: drag.moved, touch: drag.touch, hoverLabels: widget.hoverLabels,
+    selected: Boolean(node) && node.getAttribute("class").includes("tw-tg-selected"),
+  });
+  if (action === "select") selectNode(widget, node);
+  if (action === "open") openNode(widget, node);
 }
 
 /** Pointer handlers: drag pans, a click on a node opens that tiddler. */
@@ -378,24 +409,31 @@ function lightMapNode(widget, node) {
   }
 }
 
+/** One toolbar chip per named category: [name, colour, count, group]. Pure. */
+function mapChips(groups, map) {
+  return [...groups].filter(([c]) => c)
+    .map(([c, g]) => [c, own(map.categories, c) || GREY, map.nodes.filter((n) => n.c === c).length, g]);
+}
+
+/** Hover lights a node and its links; leaving the map unlights it. */
+function attachMapHover(widget, svg) {
+  svg.addEventListener("pointerover", (e) => lightMapNode(widget, e.target.closest(".tw-tm-node")));
+  svg.addEventListener("pointerleave", () => lightMapNode(widget, null));
+}
+
 /** Build the whole map's toolbar and drawing into root. */
 function buildMap(widget, root, map) {
   const doc = widget.document;
-  const nodes = map.nodes;
-  const home = mapBounds(nodes);
-  widget.view = Object.assign({ home }, home);
-  widget.hoverLabels = true;
-  widget.nodeClass = "tw-tm-node";
+  const home = mapBounds(map.nodes);
+  Object.assign(widget, { view: Object.assign({ home }, home), hoverLabels: true, nodeClass: "tw-tm-node" });
   const svg = svgEl(doc, "svg", { class: "tw-tg-svg tw-tm-svg", viewBox: viewBoxOf(widget.view) });
-  widget.edgesByNode = drawMapEdges(doc, svg, map, nodes);
-  const groups = drawMapNodes(doc, svg, map, nodes);
-  const chips = [...groups].filter(([c]) => c).map(([c, g]) => [c, own(map.categories, c) || GREY, nodes.filter((n) => n.c === c).length, g]);
-  root.appendChild(toolbar(widget, svg, chips));
+  widget.edgesByNode = drawMapEdges(doc, svg, map, map.nodes);
+  const groups = drawMapNodes(doc, svg, map, map.nodes);
+  root.appendChild(toolbar(widget, svg, mapChips(groups, map)));
   root.appendChild(svg);
   if (typeof svg.addEventListener !== "function") return;
   attachPointer(widget, svg);
-  svg.addEventListener("pointerover", (e) => lightMapNode(widget, e.target.closest(".tw-tm-node")));
-  svg.addEventListener("pointerleave", () => lightMapNode(widget, null));
+  attachMapHover(widget, svg);
 }
 
 const Widget = require("$:/core/modules/widgets/widget.js").widget;
