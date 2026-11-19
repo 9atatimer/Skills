@@ -212,6 +212,21 @@ unit, evidence and provenance: the fix is read from the report.
   the pins, in that PR or in one before it: an exemption is the owner's
   act, proposed on the issue and landed by the owner. The engine refuses
   most of these on its own; the rest is the gates skill's law.
+  - A Complexity finding whose span runs far past the end of a short
+    function is the pinned lizard losing the function's end, not your
+    branching. Reproduce it with `uvx --from lizard==<the engine's pin>
+    lizard <file>` (tds-utils `adherence/uv.lock` names the pin) and write
+    the construct another way. In JavaScript the known triggers are a
+    template literal inside another, `${...}` with a call inside an object
+    literal, a `<` comparison inside an object literal, `//` inside a
+    template literal, and a regular expression ending in `\/`
+    (tds-utils Issue#837).
+  - A judged finding (LAW / Kind and the like) comes from a model and can
+    appear on a later run against code that passed before. Answer it as
+    you would any finding -- split the deciding from the doing -- rather
+    than arguing that the code did not change.
+  - Complete / Stub counts `setTimeout` as a sleep. Finish on an event
+    (`transitionend`, a promise) instead of a timer.
 - **Inconclusive.** A pass with named coverage. Read the coverage lines:
   an analyzer missing on the runner, the judge unbound, a judged-check
   budget spent, CI out of time, a base that could not be measured the same
@@ -223,7 +238,9 @@ unit, evidence and provenance: the fix is read from the report.
   language. Fix the declaration on its own PR or report the engine fault on
   tds-utils. A job that fails before any verdict because it found no base
   (a force push whose old tip is not fetched) needs `base` set, not a
-  retry.
+  retry. A judge that dies with `JSONDecodeError: Unterminated string`
+  read a raw U+2028 or U+2029 in a source file: write the character as an
+  escape (tds-utils Issue#824).
 - **Held or raised.** Pass. Raised names the findings removed.
 
 What differs between places: judged checks are coverage wherever no

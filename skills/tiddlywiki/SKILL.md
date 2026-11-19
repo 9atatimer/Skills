@@ -100,9 +100,13 @@ Follow the steps in this order; each needs the one before.
 - Write the content, below, for the topics a reader meets first, and
   keep it beside the graph as `<name>.content.json`.
 - Build, with `--content`.
-- Verify before you report. Open the HTML (serve its directory on
-  localhost if the browser refuses `file://`), open one well-connected
-  topic, and check that its explanation, comparisons, docs and tutorials
+- Verify before you report, from the file on disk: the wiki is a file,
+  and a localhost server proves something else and misleads the human
+  about what they have. If your browser tool refuses `file://`, run a
+  local Chrome headless on the file's `file://` URL with
+  `--virtual-time-budget` and `--dump-dom`, and read the rendered page.
+  Hand the human the file itself (`open <file>`), never a localhost URL.
+  Open one well-connected topic, and check that its explanation, comparisons, docs and tutorials
   render, its graph comes last, and its agent line names the right
   `topic_id`. Check that every
   `[[link]]` in the store names a tiddler in the store. Run the agent
