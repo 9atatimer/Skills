@@ -49,8 +49,8 @@ One JSON object. `build.mjs` rejects a graph that breaks a rule below.
 | `nodes[].category` | no | the grouping, a title; each category gets an index tiddler with that name |
 | `nodes[].description` | no | plain text; shown as text, never parsed as markup |
 | `nodes[].docs` | no | the public documentation, http(s) |
-| `nodes[].x`, `nodes[].y` | no | the source's layout, finite numbers; give them for every node or for none |
-| `nodes[].size` | no | the source's weight for the node, a positive number; defaults to 2 + 2 * sqrt(number of links) |
+| `nodes[].x`, `nodes[].y` | no | the source's layout, numbers within 1e6 of 0; give them for every node or for none |
+| `nodes[].size` | no | the source's weight for the node, a positive number up to 1e4; defaults to 2 + 2 * sqrt(number of links); the map and every neighbor graph draw it at the same radius |
 | `nodes[].links`, `nodes[].tutorials` | no | lists of `{title, url}`, http(s) |
 | `palette` | no | `{categories: {name: "#rrggbb"}, relations: {edge type: "#rrggbb"}}`; a name it leaves out gets a default colour |
 | `edges[].source`, `edges[].target` | yes | node ids that exist |

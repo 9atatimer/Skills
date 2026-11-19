@@ -29,6 +29,12 @@ const LABEL_PAD = 110; // room around the outer ring when every node is labelled
 const HOVER_PAD = 40; // room around the outer ring when labels show on hover
 const MAP_PAD = 60;
 
+/** A topic's radius from its weight: one function for the map and every neighbor graph. */
+const radiusOf = (s) => s * 0.9;
+
+/** An own property of a table built from JSON, never an inherited one. */
+const own = (table, key) => (Object.prototype.hasOwnProperty.call(table, key) ? table[key] : undefined);
+
 /** A neighbors entry the widget can draw. */
 const wellFormed = (n) => n !== null && typeof n === "object" && typeof n.title === "string" &&
   typeof n.rel === "string" && (n.dir === "in" || n.dir === "out");
@@ -54,6 +60,21 @@ function parseNeighbors(text) {
 
 let mapCache = { text: null, map: null };
 
+const isNum = (x) => typeof x === "number" && Number.isFinite(x);
+const mapNodeOk = (n) => n !== null && typeof n === "object" && typeof n.t === "string" && isNum(n.x) && isNum(n.y) && isNum(n.s);
+const tableOk = (t) => t !== null && typeof t === "object" && !Array.isArray(t);
+
+/** Why parsed map data cannot be drawn, or "" when it can. */
+function mapShapeError(m) {
+  if (!tableOk(m) || !Array.isArray(m.nodes) || !Array.isArray(m.edges)) return "The map tiddler needs nodes and edges lists.";
+  if (!tableOk(m.categories) || !tableOk(m.relations)) return "The map tiddler needs categories and relations tables.";
+  const badNode = m.nodes.findIndex((n) => !mapNodeOk(n));
+  if (badNode !== -1) return `Map node ${badNode} needs a title t and numbers x, y and s.`;
+  const inRange = (i) => Number.isInteger(i) && i >= 0 && i < m.nodes.length;
+  const badEdge = m.edges.findIndex((e) => !Array.isArray(e) || !inRange(e[0]) || !inRange(e[1]));
+  return badEdge === -1 ? "" : `Map edge ${badEdge} does not name two map nodes.`;
+}
+
 /**
  * The map data, parsed once per text, with a title index. {} when the wiki
  * has no map tiddler; {error} when it cannot be read.
@@ -61,9 +82,10 @@ let mapCache = { text: null, map: null };
 function loadMap(wiki) {
   const text = wiki.getTiddlerText(MAP_TITLE, "");
   if (text === mapCache.text) return mapCache.map;
-  const parsed = text ? parseJson(text, "map tiddler") : { value: {} };
-  const map = parsed.error ? { error: parsed.error } : Object.assign({ categories: {}, relations: {}, nodes: [], edges: [] }, parsed.value);
-  map.byTitle = new Map((map.nodes || []).map((n, i) => [n.t, Object.assign({ i }, n)]));
+  const parsed = text ? parseJson(text, "map tiddler") : { value: { categories: {}, relations: {}, nodes: [], edges: [] } };
+  const shape = parsed.error || mapShapeError(parsed.value);
+  const map = shape ? { error: shape, categories: {}, relations: {}, nodes: [], edges: [] } : parsed.value;
+  map.byTitle = new Map(map.nodes.map((n, i) => [n.t, Object.assign({ i }, n)]));
   mapCache = { text, map };
   return map;
 }
@@ -71,15 +93,15 @@ function loadMap(wiki) {
 /** A neighbor's fill and radius, as the map draws that tiddler. */
 function styleOf(map, title) {
   const node = map.byTitle.get(title);
-  if (node) return { fill: map.categories[node.c] || GREY, r: 3 + node.s * 0.35 };
-  if (map.categories[title]) return { fill: map.categories[title], r: 8 };
+  if (node) return { fill: own(map.categories, node.c) || GREY, r: radiusOf(node.s) };
+  if (own(map.categories, title)) return { fill: own(map.categories, title), r: 8 };
   return { fill: GREY, r: 6 };
 }
 
 /** Each relation present, sorted, with the map's colour for it. */
 function relationColours(map, neighbors) {
   const rels = [...new Set(neighbors.map((n) => n.rel))].sort();
-  return new Map(rels.map((r) => [r, map.relations[r] || EDGE_GREY]));
+  return new Map(rels.map((r) => [r, own(map.relations, r) || EDGE_GREY]));
 }
 
 /** Neighbors in drawing order: by relation, then direction, then title. */
@@ -88,25 +110,28 @@ function drawingOrder(neighbors) {
     a.rel.localeCompare(b.rel) || a.dir.localeCompare(b.dir) || a.title.localeCompare(b.title));
 }
 
-/** How many rings n nodes need so that nodes on one ring stay SPACING apart. */
-function ringCount(n) {
-  return Math.max(1, Math.ceil((n * SPACING) / (2 * Math.PI * FIRST_RING)));
+/** How many rings n nodes need so that nodes on one ring stay `spacing` apart. */
+function ringCount(n, spacing) {
+  return Math.max(1, Math.ceil((n * spacing) / (2 * Math.PI * FIRST_RING)));
 }
 
 /**
  * Place neighbors around the origin. Each node gets an angle by its place
  * in drawing order, so a relation forms one sector; consecutive nodes
- * alternate between rings so a crowded sector stays readable. Pure.
+ * alternate between rings so a crowded sector stays readable. Nodes and
+ * rings sit far enough apart for the largest radius, maxR. Pure.
  */
-function layout(neighbors) {
+function layout(neighbors, maxR = 0) {
+  const spacing = Math.max(SPACING, 2 * maxR + 4);
+  const gap = Math.max(RING_GAP, 2 * maxR + 4);
   const ordered = drawingOrder(neighbors);
-  const rings = ringCount(ordered.length);
+  const rings = ringCount(ordered.length, spacing);
   const nodes = ordered.map((n, i) => {
     const angle = -Math.PI / 2 + (2 * Math.PI * i) / ordered.length;
-    const r = FIRST_RING + (i % rings) * RING_GAP;
+    const r = FIRST_RING + (i % rings) * gap;
     return { ...n, x: Math.round(r * Math.cos(angle)), y: Math.round(r * Math.sin(angle)) };
   });
-  return { nodes, radius: FIRST_RING + (rings - 1) * RING_GAP };
+  return { nodes, radius: FIRST_RING + (rings - 1) * gap + maxR };
 }
 
 /** The square view that holds every map node, with room for labels. Pure. */
@@ -284,8 +309,8 @@ function attachPointer(widget, svg) {
 function buildGraph(widget, root, neighbors) {
   const doc = widget.document;
   const map = loadMap(widget.wiki);
-  const colours = relationColours(map.error ? { relations: {} } : map, neighbors);
-  const placed = layout(neighbors);
+  const colours = relationColours(map, neighbors);
+  const placed = layout(neighbors, Math.max(...neighbors.map((n) => styleOf(map, n.title).r)));
   const size = 2 * (placed.radius + (neighbors.length <= LABEL_LIMIT ? LABEL_PAD : HOVER_PAD));
   const home = { x: -size / 2, y: -size / 2, w: size, h: size };
   widget.view = Object.assign({ home }, home);
@@ -293,7 +318,7 @@ function buildGraph(widget, root, neighbors) {
   widget.nodeClass = "tw-tg-node";
   const svg = svgEl(doc, "svg", { class: "tw-tg-svg", viewBox: viewBoxOf(widget.view) });
   svg.style.height = `${Math.min(640, Math.max(340, 300 + neighbors.length))}px`;
-  const groups = drawRelations(doc, svg, placed.nodes, colours, map.error ? { byTitle: new Map(), categories: {} } : map);
+  const groups = drawRelations(doc, svg, placed.nodes, colours, map);
   drawCentre(doc, svg, widget.target);
   const chips = [...colours].map(([rel, colour]) => [rel, colour, neighbors.filter((n) => n.rel === rel).length, groups.get(rel)]);
   root.appendChild(toolbar(widget, svg, chips));
@@ -303,7 +328,7 @@ function buildGraph(widget, root, neighbors) {
 
 /** One map node: its dot and its label (always for a product, else on hover). */
 function drawMapNode(doc, g, n, colour) {
-  const r = n.s * 0.9;
+  const r = radiusOf(n.s);
   const node = svgEl(doc, "g", { class: "tw-tm-node", "data-title": n.t, "data-i": n.i, transform: `translate(${n.x},${n.y})` });
   node.appendChild(dotEl(doc, r, colour, n.k ? `${n.t} (${n.c || "no category"}, ${n.k})` : n.t));
   node.appendChild(labelEl(doc, n.t, 1, r + 4, n.k === "product" ? "tw-tm-label tw-tm-product" : "tw-tm-label tw-tg-hover"));
@@ -317,7 +342,7 @@ function drawMapEdges(doc, svg, map, nodes) {
   for (const [s, t] of map.edges) {
     const a = nodes[s];
     const b = nodes[t];
-    const line = svgEl(doc, "line", { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: map.categories[a.c] || GREY, class: "tw-tm-edge" });
+    const line = svgEl(doc, "line", { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: own(map.categories, a.c) || GREY, class: "tw-tm-edge" });
     g.appendChild(line);
     byNode[s].push(line);
     byNode[t].push(line);
@@ -331,7 +356,7 @@ function drawMapNodes(doc, svg, map, nodes) {
   const cats = [...new Set(nodes.map((n) => n.c || ""))].sort();
   const groups = new Map(cats.map((c) => [c, svgEl(doc, "g", { "data-cat": c })]));
   const order = nodes.map((n, i) => Object.assign({ i }, n)).sort((a, b) => a.s - b.s);
-  for (const n of order) drawMapNode(doc, groups.get(n.c || ""), n, map.categories[n.c] || GREY);
+  for (const n of order) drawMapNode(doc, groups.get(n.c || ""), n, own(map.categories, n.c) || GREY);
   for (const g of groups.values()) svg.appendChild(g);
   return groups;
 }
@@ -362,7 +387,7 @@ function buildMap(widget, root, map) {
   const svg = svgEl(doc, "svg", { class: "tw-tg-svg tw-tm-svg", viewBox: viewBoxOf(widget.view) });
   widget.edgesByNode = drawMapEdges(doc, svg, map, nodes);
   const groups = drawMapNodes(doc, svg, map, nodes);
-  const chips = [...groups].filter(([c]) => c).map(([c, g]) => [c, map.categories[c] || GREY, nodes.filter((n) => n.c === c).length, g]);
+  const chips = [...groups].filter(([c]) => c).map(([c, g]) => [c, own(map.categories, c) || GREY, nodes.filter((n) => n.c === c).length, g]);
   root.appendChild(toolbar(widget, svg, chips));
   root.appendChild(svg);
   if (typeof svg.addEventListener !== "function") return;
@@ -406,7 +431,8 @@ TopicGraph.prototype.render = function render(parent, nextSibling) {
   const tiddler = this.wiki.getTiddler(this.target);
   const parsed = parseNeighbors(tiddler && tiddler.fields.neighbors);
   const root = htmlEl(this.document, "div", "tw-topicgraph");
-  if (parsed.error) root.appendChild(htmlEl(this.document, "p", "tw-tg-error", parsed.error));
+  const error = parsed.error || (parsed.list.length && loadMap(this.wiki).error);
+  if (error) root.appendChild(htmlEl(this.document, "p", "tw-tg-error", error));
   else if (parsed.list.length) buildGraph(this, root, parsed.list);
   mount(this, parent, nextSibling, root);
 };

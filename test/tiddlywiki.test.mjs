@@ -546,7 +546,7 @@ test("a neighbor is drawn in its map colour and size; a relation in the map's co
   const { parent } = renderGraph(field);
   const dot = (t) => parent.all("tw-tg-node").find((n) => n.getAttribute("data-title") === t).children[0];
   assert.equal(dot("T0").getAttribute("fill"), "#f46021");
-  assert.equal(dot("T0").getAttribute("r"), (3 + 20 * 0.35).toFixed(1));
+  assert.equal(dot("T0").getAttribute("r"), (20 * 0.9).toFixed(1));
   assert.ok(Number(dot("T0").getAttribute("r")) > Number(dot("T1").getAttribute("r")));
   assert.equal(dot("Compute").getAttribute("fill"), "#f46021");
   const uses = parent.all("tw-tg-edge").map((l) => l.getAttribute("stroke"));
@@ -580,4 +580,75 @@ test("a product is always named on the map; other topics on hover", () => {
 test("an unreadable map tiddler shows a message instead of breaking the page", () => {
   const { parent } = renderGraph(undefined, undefined, "topicmap", "not json");
   assert.equal(parent.all("tw-tg-error").length, 1);
+});
+
+// --- review fixes for the map ---
+
+import { LANDING_FILE } from "../skills/tiddlywiki/build.mjs";
+
+test("a topic has the same radius on the map and in a neighbor graph", () => {
+  const map = renderGraph(undefined, undefined, "topicmap").parent;
+  const graphView = renderGraph(JSON.stringify([{ title: "T0", rel: "uses", dir: "out" }, { title: "T1", rel: "uses", dir: "out" }])).parent;
+  const r = (root, cls, t) => root.all(cls).find((n) => n.getAttribute("data-title") === t).children[0].getAttribute("r");
+  for (const t of ["T0", "T1"]) assert.equal(r(graphView, "tw-tg-node", t), r(map, "tw-tm-node", t), t);
+});
+
+test("a neighbor graph spaces its rings for its largest node", () => {
+  const layout = vm.runInContext("layout", loadWidget());
+  const { nodes } = layout(Array.from({ length: 12 }, (_, i) => ({ title: `t${i}`, rel: "uses", dir: "out" })), 30);
+  const gaps = nodes.map((a, i) => Math.hypot(a.x - nodes[(i + 1) % nodes.length].x, a.y - nodes[(i + 1) % nodes.length].y));
+  assert.ok(Math.min(...gaps) >= 2 * 30, Math.min(...gaps));
+});
+
+test("a category or relation named like an Object member keeps its colour", () => {
+  for (const name of ["constructor", "__proto__", "toString"]) {
+    const g = graph();
+    g.palette = { categories: {}, relations: {} };
+    g.nodes[0].category = name;
+    g.edges[0].type = name === "__proto__" ? "proto" : name.toLowerCase();
+    const map = JSON.parse(find(toTiddlers(g), "$:/topicwiki/map").text);
+    assert.match(map.categories[name], /^#[0-9a-f]{6}$/, name);
+    assert.ok(Object.values(map.relations).every((c) => /^#[0-9a-f]{6}$/.test(c)));
+  }
+});
+
+test("validate bounds the layout and the sizes", () => {
+  const cases = [
+    [(g) => { g.nodes.forEach((n) => Object.assign(n, { x: 0, y: 0 })); g.nodes[1].x = 1e308; }, /nodes\[1\]: x and y must be finite numbers within/],
+    [(g) => { g.nodes[0].size = 1e308; }, /nodes\[0\]: size is not a positive number up to/],
+  ];
+  for (const [mutate, re] of cases) {
+    const g = graph();
+    mutate(g);
+    assert.throws(() => validate(g), re);
+  }
+});
+
+test("a map tiddler of the wrong shape shows a message on every widget instead of throwing", () => {
+  const bad = [JSON.stringify({ nodes: {} }), JSON.stringify({ nodes: [{ t: "A", x: 0, y: 0, s: 1 }], edges: [[0, 5]] }),
+    JSON.stringify({ nodes: [{ t: "A", x: "0", y: 0, s: 1 }], edges: [] })];
+  for (const text of bad) {
+    assert.equal(renderGraph(undefined, undefined, "topicmap", text).parent.all("tw-tg-error").length, 1, text);
+    const field = JSON.stringify([{ title: "A", rel: "uses", dir: "out" }]);
+    assert.equal(renderGraph(field, undefined, "topicgraph", text).parent.all("tw-tg-error").length, 1, text);
+  }
+});
+
+/** Run the landing startup module against a fake browser; return what it did. */
+function runLanding(hash, defaults = "[[Example]]") {
+  const calls = [];
+  const tw = { locationHash: hash || "#", wiki: { getTiddlerText: () => defaults, filterTiddlers: (f) => (f ? [f.replace(/^\[\[|\]\]$/g, "")] : []) } };
+  const window = { location: { hash }, history: { state: null, replaceState: (...a) => calls.push(a) } };
+  const ctx = vm.createContext({ exports: {}, window, $tw: tw });
+  vm.runInContext(readFileSync(LANDING_FILE, "utf8"), ctx);
+  ctx.exports.startup();
+  return { calls, tw, exports: ctx.exports };
+}
+
+test("opening the file with no address names the landing page without a new history entry", () => {
+  const { calls, tw, exports } = runLanding("");
+  assert.deepEqual(calls.map((c) => c[2]), ["#Example"]);
+  assert.equal(tw.locationHash, "#Example");
+  assert.deepEqual([[...exports.after], [...exports.before]], [["startup"], ["story"]]);
+  assert.equal(runLanding("#Workers").calls.length, 0);
 });
