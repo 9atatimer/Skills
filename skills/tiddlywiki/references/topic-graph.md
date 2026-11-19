@@ -40,20 +40,29 @@ One JSON object. `build.mjs` rejects a graph that breaks a rule below.
 
 | Field | Required | Rule |
 |---|---|---|
-| `title` | yes | the subject; becomes the home tiddler and the site title |
-| `subtitle`, `description` | no | shown in the header and on the home tiddler |
-| `source` | no, but give it | `name`, `url`, `fetched` (a date); shown on the home tiddler |
+| `title` | yes | the subject; becomes the home tiddler and the site title. A title: no `[[`, `]]`, `{{`, `}}`, `|` or newline, not starting `$:/`, with at least one letter or digit (it names the output file) |
+| `subtitle`, `description` | no | shown as plain text in the header and on the home tiddler |
+| `source` | no, but give it | `name` (a title), `url` (http(s)), `fetched` (`YYYY-MM-DD`); shown on the home tiddler |
 | `nodes[].id` | yes | a lowercase slug, unique; agents address a topic by it |
-| `nodes[].label` | yes | the tiddler title: unique, no `[[ ]] { } |`, not starting `$:/`, not equal to a category, a type index or `AI access` |
-| `nodes[].type` | no | the kind of topic; each type gets an index tiddler `<Type> index` |
-| `nodes[].category` | no | the grouping; each category gets an index tiddler with that name |
+| `nodes[].label` | yes | the tiddler title: unique, no `[[`, `]]`, `{{`, `}}`, `|` or newline, not starting `$:/` |
+| `nodes[].type` | no | the kind of topic, one lowercase word (`product`, `sub-product`); each type gets an index tiddler `<Type> index` |
+| `nodes[].category` | no | the grouping, a title; each category gets an index tiddler with that name |
 | `nodes[].description` | no | plain text; shown as text, never parsed as markup |
 | `nodes[].docs` | no | the public documentation, http(s) |
 | `nodes[].links`, `nodes[].tutorials` | no | lists of `{title, url}`, http(s) |
 | `edges[].source`, `edges[].target` | yes | node ids that exist |
-| `edges[].type` | yes | a relation verb in snake_case (`binds_to`, `built_on`, `has_feature`); shown with spaces |
-| `edges[].label` | no | a short note on the relation, without `"""` |
+| `edges[].type` | yes | a relation verb in lowercase snake_case (`binds_to`, `built_on`, `has_feature`); shown with spaces |
+| `edges[].label` | no | a short note on the relation, shown as plain text |
 | `edges[].evidence` | no | http(s) URLs that state the relation |
+
+Every tiddler title comes from one space: the home `title`, `AI access`,
+each category, each `<Type> index` and each label. A title used twice
+is rejected, because the two tiddlers would merge into one.
+
+Free text (`subtitle`, `description`, `category`, `edges[].label`) is
+shown with a text widget and is never parsed as markup. A string that
+holds `'`, `"` and `"""` together, or `'` and `"` and ends in `"`, cannot be
+quoted for that widget and is rejected; reword it.
 
 An edge is directed. The source topic lists it under Links from here as
 "binds to Target"; the target lists it under Links to here as "Source

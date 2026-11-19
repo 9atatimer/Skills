@@ -7,7 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { join, dirname, relative, isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";
-import { toTiddlers, validate, defaultOutDir, tagList } from "../skills/tiddlywiki/build.mjs";
+import { toTiddlers, validate, defaultOutDir, tagList, quoteAttr } from "../skills/tiddlywiki/build.mjs";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -53,7 +53,7 @@ test("the description is shown through a view widget, never parsed as markup", (
 test("a topic links every direct neighbour out and in, with evidence", () => {
   const ts = toTiddlers(graph());
   const w = find(ts, "Workers");
-  assert.match(w.text, /!! Links from here\n\* binds to \[\[Workers KV\]\] -- <\$text text="""KV binding"""\/> <sup>\[\[1\|https:\/\/example\.com\/e1\]\] \[\[2\|https:\/\/example\.com\/e2\]\]<\/sup>\n\* has feature \[\[Cron Triggers\]\]/);
+  assert.match(w.text, /!! Links from here\n\* binds to \[\[Workers KV\]\] -- <\$text text="KV binding"\/> <sup>\[\[1\|https:\/\/example\.com\/e1\]\] \[\[2\|https:\/\/example\.com\/e2\]\]<\/sup>\n\* has feature \[\[Cron Triggers\]\]/);
   assert.match(w.text, /!! Links to here\nNone\./);
   const kv = find(ts, "Workers KV");
   assert.match(kv.text, /!! Links to here\n\* \[\[Workers\]\] binds to this/);
@@ -86,20 +86,12 @@ test("the home tiddler is the default and links categories and AI access", () =>
 
 test("the agent line names the store and the agent command", () => {
   const ts = toTiddlers(graph(), { store: "/data/example.tiddlers.json", agent: "codex" });
-  const ai = find(ts, "AI access");
-  assert.match(ai.text, /<\$codeblock code="""codex "Read the topic wiki at \/data\/example\.tiddlers\.json/);
+  assert.match(find(ts, "$:/config/topicwiki/command").text, /^codex 'Read the topic wiki at \/data\/example\.tiddlers\.json:/);
+  assert.match(find(ts, "$:/config/topicwiki/command-prefix").text, /^codex 'Read .* topic_id is $/);
+  assert.match(find(ts, "AI access").text, /<\$codeblock code=\{\{\$:\/config\/topicwiki\/command\}\}\/>/);
   const vt = find(ts, "$:/topicwiki/ViewTemplate/agent");
   assert.equal(vt.tags, "$:/tags/ViewTemplate");
-  assert.match(vt.text, /topic_id is \$\{ \[all\[current\]get\[topic_id\]\] \}\$/);
-  assert.equal(find(ts, "$:/config/topicwiki/agent-command").text, "codex");
-});
-
-test("the agent prompt is one shell word: no double quote inside the quoted prompt", () => {
-  const ts = toTiddlers(graph(), { store: "/data/example.tiddlers.json" });
-  for (const title of ["AI access", "$:/topicwiki/ViewTemplate/agent"]) {
-    const prompt = find(ts, title).text.match(/(?:claude|\}\$) "(.*?)" ?(?:"""|`)/)[1];
-    assert.ok(!prompt.includes('"'), `${title}: ${prompt}`);
-  }
+  assert.match(vt.text, /\$\{ \[\{\$:\/config\/topicwiki\/command-prefix\}\] \}\$\$\{ \[all\[current\]get\[topic_id\]\] \}\$/);
 });
 
 test("every [[link]] in the output names a tiddler that exists", () => {
@@ -128,9 +120,8 @@ test("validate rejects what would break links or merge tiddlers", () => {
     [(g) => { g.edges[0].target = "nope"; }, /unknown target nope/],
     [(g) => { g.nodes[0].docs = "javascript:alert(1)"; }, /docs is not an http\(s\) URL/],
     [(g) => { g.edges[0].evidence = ["ftp://x"]; }, /evidence "ftp:\/\/x"/],
-    [(g) => { g.nodes[2].label = "Compute"; }, /index tiddler "Compute" collides/],
-    [(g) => { g.nodes[2].label = "AI access"; }, /index tiddler "AI access" collides/],
-    [(g) => { g.edges[0].label = 'a"""b'; }, /label contains """/],
+    [(g) => { g.nodes[2].label = "Compute"; }, /"Compute" is used twice/],
+    [(g) => { g.nodes[2].label = "AI access"; }, /"AI access" is used twice/],
   ];
   for (const [mutate, re] of cases) {
     const g = graph();
@@ -150,4 +141,105 @@ test("the default output directory is per-user data, never inside this checkout"
     assert.ok(rel.startsWith("..") || isAbsolute(rel), `${out} is inside the repo`);
   }
   assert.equal(defaultOutDir({ XDG_DATA_HOME: "/tmp/xdg" }), "/tmp/xdg/topicwiki");
+});
+
+// --- hostile input (self-review findings on PR#240) ---
+
+import { execFileSync } from "node:child_process";
+
+/** Run a shell line with `echo` as the agent; return what it printed. */
+function runAgentLine(line) {
+  return execFileSync("sh", ["-c", line], { encoding: "utf8" });
+}
+
+test("the whole-wiki agent line passes the prompt as one literal argument, whatever the title and path", () => {
+  const g = graph();
+  g.title = `Acme "Pro" $HOME \`id\` it's \\ $(echo pwned)`;
+  const store = "/tmp/a b/$(echo pwned)`id`'q\"/x.tiddlers.json";
+  const ts = toTiddlers(g, { store, agent: "printf %s" });
+  const line = find(ts, "$:/config/topicwiki/command").text;
+  const out = runAgentLine(line);
+  assert.ok(out.startsWith(`Read the topic wiki at ${store}:`), out);
+  assert.ok(out.includes(`titled ${g.title}.`), out);
+  assert.ok(!out.includes("pwned\n") && !/uid=/.test(out));
+});
+
+test("the per-topic agent line is the same literal argument, with the topic_id", () => {
+  const store = "/tmp/$(echo pwned)`id`'q/x.tiddlers.json";
+  const ts = toTiddlers(graph(), { store, agent: "printf %s" });
+  const prefix = find(ts, "$:/config/topicwiki/command-prefix").text;
+  const suffix = find(ts, "$:/config/topicwiki/command-suffix").text;
+  const out = runAgentLine(prefix + "workers" + suffix);
+  assert.ok(out.startsWith(`Read the topic wiki at ${store}:`), out);
+  assert.match(out, /topic_id is workers\./);
+  const vt = find(ts, "$:/topicwiki/ViewTemplate/agent").text;
+  assert.ok(!vt.includes(store), "the store path must not be spliced into markup");
+});
+
+test("source text is shown through a text widget whose delimiter it cannot close", () => {
+  const g = graph();
+  g.title = "Ex ''ample''";
+  g.description = 'a"""<$button/> "c"';
+  g.subtitle = "''x'' <$list/>";
+  g.edges[0].label = 'ends "q"';
+  g.nodes[0].category = "Comp <$list/>";
+  const ts = toTiddlers(g);
+  assert.match(find(ts, "Ex ''ample''").text, /^<\$text text='a"""<\$button\/> "c"'\/>/);
+  assert.match(find(ts, "Workers").text, /-- <\$text text='ends "q"'\/>/);
+  assert.equal(find(ts, "$:/SiteSubtitle").text, `<$text text="''x'' <$list/>"/>`);
+  assert.equal(find(ts, "$:/SiteTitle").text, `<$text text="Ex ''ample''"/>`);
+  assert.match(find(ts, "Comp <$list/>").text, /^Every <\$text text="Ex ''ample''"\/> topic in the <\$text text="Comp <\$list\/>"\/> category/);
+});
+
+test("quoteAttr picks a delimiter the text does not contain, or none", () => {
+  assert.equal(quoteAttr("plain"), '"plain"');
+  assert.equal(quoteAttr('say "hi"'), `'say "hi"'`);
+  assert.equal(quoteAttr(`it's "x" y`), `"""it's "x" y"""`);
+  assert.equal(quoteAttr(`it's "x"`), null);
+  assert.equal(quoteAttr(`a"""b'c`), null);
+});
+
+test("validate rejects source text no delimiter can quote", () => {
+  const g = graph();
+  g.edges[0].label = `a"""b'c"`;
+  assert.throws(() => validate(g), /edges\[0\]: label cannot be quoted/);
+});
+
+test("validate rejects unsafe or colliding category, type, title and source fields", () => {
+  const cases = [
+    [(g) => { g.nodes[0].category = "$:/SiteTitle"; }, /category "\$:\/SiteTitle"/],
+    [(g) => { g.nodes[0].category = "a]]b"; }, /category "a\]\]b"/],
+    [(g) => { g.nodes[0].category = "AI access"; }, /"AI access" is used twice/],
+    [(g) => { g.nodes[0].category = "Example"; }, /"Example" is used twice/],
+    [(g) => { g.nodes[0].category = "Product index"; }, /"Product index" is used twice/],
+    [(g) => { g.nodes[0].type = ""; }, /type "" is not a lowercase word/],
+    [(g) => { g.nodes[0].type = "<$x/>"; }, /type .* is not a lowercase word/],
+    [(g) => { g.edges[0].type = "{{$:/x}} <$list/>"; }, /edges\[0\]: type .* is not snake_case/],
+    [(g) => { g.title = "a|b"; }, /title "a\|b" contains/],
+    [(g) => { g.title = "!!!"; }, /title has no letters or digits/],
+    [(g) => { g.source.url = "data:text/html,x"; }, /source.url is not an http\(s\) URL/],
+    [(g) => { g.source.name = "n]]x"; }, /source.name/],
+    [(g) => { g.source.fetched = "<$x/>"; }, /source.fetched is not a YYYY-MM-DD date/],
+  ];
+  for (const [mutate, re] of cases) {
+    const g = graph();
+    mutate(g);
+    assert.throws(() => validate(g), re);
+  }
+});
+
+test("validate reports malformed input instead of crashing", () => {
+  const cases = [
+    [(g) => { g.nodes.push(null); }, /nodes\[3\]: not an object/],
+    [(g) => { g.nodes[0].label = 7; }, /nodes\[0\]: label missing/],
+    [(g) => { g.nodes[0].links = "x"; }, /nodes\[0\]\.links: not a list/],
+    [(g) => { g.edges[0].evidence = 3; }, /edges\[0\]\.evidence: not a list/],
+    [(g) => { g.edges[0].label = 3; }, /edges\[0\]: label is not a string/],
+    [(g) => { delete g.title; }, /title: missing/],
+  ];
+  for (const [mutate, re] of cases) {
+    const g = graph();
+    mutate(g);
+    assert.throws(() => validate(g), (e) => !(e instanceof TypeError) && re.test(e.message));
+  }
 });
