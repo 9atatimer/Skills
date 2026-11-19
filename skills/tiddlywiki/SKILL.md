@@ -166,6 +166,13 @@ for the whole wiki. The prompt tells the agent to query the store with
 `jq` by `title` or `topic_id`, because a large store does not fit in
 one read.
 
+The wiki finds its store itself: when it opens, `locate.js` reads the
+page's own address and takes the file beside it with the same name and
+the extension `.tiddlers.json` -- a path when opened from disk, a URL
+when served. The built files hold no path of the machine that built
+them, so the HTML and its store can be moved or copied together, and
+renamed together, without a rebuild. Keep them side by side.
+
 An MCP server that serves a topic wiki to an agent, and an Emacs
 frontend that navigates one, belong in tds-utils, not in this skill.
 When they exist, this skill names the command that starts each.

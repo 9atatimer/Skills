@@ -19,6 +19,10 @@ export const TIDDLYWIKI = "tiddlywiki@5.4.1";
 export const WIDGET_FILE = fileURLToPath(new URL("./topicgraph.js", import.meta.url));
 /** The startup module that names the landing page in an empty address. */
 export const LANDING_FILE = fileURLToPath(new URL("./landing.js", import.meta.url));
+/** The startup module that finds the store from the wiki's own address. */
+export const LOCATE_FILE = fileURLToPath(new URL("./locate.js", import.meta.url));
+/** Where the store goes in an agent-line template; locate.js fills it in the browser. */
+const STORE_MARK = "{{topicwiki-store}}";
 /** The "page" story view: one tiddler at a time; back moves opposite to forward. */
 export const PAGEVIEW_FILE = fileURLToPath(new URL("./pageview.js", import.meta.url));
 const MAX_COORD = 1e6;
@@ -623,17 +627,17 @@ function homeTiddler(g, cats, types, top) {
  * path is expanded. It reaches the wiki only through config tiddlers that a
  * codeblock shows verbatim; it is never spliced into markup.
  */
-function agentTiddlers(g, store, agent) {
-  const head = `Read the topic wiki at ${store}: a JSON array of tiddlers, one per topic, whose fields are described in its tiddler titled ${AI_ACCESS}; a topic's neighbors field lists every topic it relates to, with the relation, a note and evidence URLs. Query it with jq by title or topic_id rather than reading it whole. `;
+function agentTiddlers(g, agent) {
+  const head = `Read the topic wiki at ${STORE_MARK}: a JSON array of tiddlers, one per topic, whose fields are described in its tiddler titled ${AI_ACCESS}; a topic's neighbors field lists every topic it relates to, with the relation, a note and evidence URLs. Query it with jq by title or topic_id rather than reading it whole. `;
   const tail = " Then help me navigate it: answer from the tiddlers, follow their neighbors, and cite docs_url and the evidence URLs.";
   return [
     {
       title: AI_ACCESS,
       tags: tagList([g.title]),
       text: [
-        "An agent reads this wiki from its plain tiddler store, not from the HTML:",
+        "An agent reads this wiki from its plain tiddler store, not from the HTML. The store is the file beside this one with the same name and the extension `.tiddlers.json`; keep the two together. This copy of the wiki finds it here:",
         "",
-        "<$codeblock code={{$:/config/topicwiki/store}}/>",
+        "<$codeblock code={{$:/temp/topicwiki/store}}/>",
         "",
         "It is a JSON array with one object per tiddler. A topic tiddler carries these fields:",
         "",
@@ -647,7 +651,7 @@ function agentTiddlers(g, store, agent) {
         "",
         "Start a session over the whole wiki with:",
         "",
-        "<$codeblock code={{$:/config/topicwiki/command}}/>",
+        "<$codeblock code={{$:/temp/topicwiki/command}}/>",
         "",
         "Every topic tiddler shows the same line, started at that topic.",
       ].join("\n"),
@@ -655,7 +659,6 @@ function agentTiddlers(g, store, agent) {
     { title: "$:/config/topicwiki/command", text: `${agent} '${shEsc(`${head}Start at the tiddler titled ${g.title}.${tail}`)}'` },
     { title: "$:/config/topicwiki/command-prefix", text: `${agent} '${shEsc(`${head}Start at the tiddler whose topic_id is `)}` },
     { title: "$:/config/topicwiki/command-suffix", text: `${shEsc(`.${tail}`)}'` },
-    { title: "$:/config/topicwiki/store", text: store },
     {
       title: "$:/topicwiki/ViewTemplate/agent",
       tags: tagList(["$:/tags/ViewTemplate"]),
@@ -665,7 +668,7 @@ function agentTiddlers(g, store, agent) {
         "<$list filter=\"[all[current]has[topic_id]]\" variable=\"ignore\">",
         "<details><summary>Ask an agent about this topic</summary>",
         "",
-        "<$codeblock code={{{ [all[current]get[topic_id]addprefix{$:/config/topicwiki/command-prefix}addsuffix{$:/config/topicwiki/command-suffix}] }}}/>",
+        "<$codeblock code={{{ [all[current]get[topic_id]addprefix{$:/temp/topicwiki/command-prefix}addsuffix{$:/config/topicwiki/command-suffix}] }}}/>",
         "",
         "</details>",
         "</$list>",
@@ -676,8 +679,9 @@ function agentTiddlers(g, store, agent) {
 
 /**
  * Map a validated topic graph to an array of tiddlers, sorted by title.
- * opts.store: absolute path of the .tiddlers.json an agent reads.
  * opts.agent: the agent CLI the copy-paste line starts (default "claude").
+ * opts.landing, opts.pageview, opts.locate: the sources of the startup and
+ * story-view modules, embedded when given.
  * opts.widget: the source of topicgraph.js; without it the graph sections
  * render nothing, which is how the unit tests build.
  */
@@ -697,26 +701,32 @@ export function toTiddlers(g, opts = {}) {
     ...cats.map((c) => categoryTiddler(g, c, types)),
     ...types.map((ty) => typeTiddler(g, ty)),
     homeTiddler(g, cats, types, top),
-    ...agentTiddlers(g, opts.store || "<path to the .tiddlers.json>", opts.agent || "claude"),
+    ...agentTiddlers(g, opts.agent || "claude"),
     { title: "$:/SiteTitle", text: txt(g.title) },
     { title: "$:/SiteSubtitle", text: txt(g.subtitle || "a topic wiki") },
     { title: "$:/DefaultTiddlers", text: `[[${g.title}]]` },
     { title: "$:/topicwiki/map", type: "application/json", text: JSON.stringify(mapData(g, g.nodes.map((n) => degreeOf(n, out, inn)))) },
     ...NAVIGATION,
-    ...widgetTiddlers(opts.widget, opts.landing, opts.pageview),
+    ...widgetTiddlers(opts),
   ];
   return tiddlers.sort((a, b) => (a.title < b.title ? -1 : a.title > b.title ? 1 : 0));
 }
 
 /** The graph widget's module and stylesheet tiddlers, when its source is given. */
-function widgetTiddlers(source, landing, pageview) {
-  if (!source) return [];
-  return [
-    { title: "$:/plugins/topicwiki/topicgraph.js", type: "application/javascript", "module-type": "widget", text: source },
-    ...(landing ? [{ title: "$:/plugins/topicwiki/landing.js", type: "application/javascript", "module-type": "startup", text: landing }] : []),
-    ...(pageview ? [{ title: "$:/plugins/topicwiki/pageview.js", type: "application/javascript", "module-type": "storyview", text: pageview }] : []),
-    { title: "$:/plugins/topicwiki/topicgraph.css", tags: "$:/tags/Stylesheet", type: "text/css", text: GRAPH_CSS },
-  ];
+/** The modules a wiki embeds: option name -> [tiddler title, TiddlyWiki module-type]. */
+const MODULES = {
+  widget: ["$:/plugins/topicwiki/topicgraph.js", "widget"],
+  landing: ["$:/plugins/topicwiki/landing.js", "startup"],
+  pageview: ["$:/plugins/topicwiki/pageview.js", "storyview"],
+  locate: ["$:/plugins/topicwiki/locate.js", "startup"],
+};
+
+/** The embedded module tiddlers given in opts, and the stylesheet; none without the widget. */
+function widgetTiddlers(opts) {
+  if (!opts.widget) return [];
+  const modules = Object.entries(MODULES).filter(([key]) => opts[key])
+    .map(([key, [title, kind]]) => ({ title, type: "application/javascript", "module-type": kind, text: opts[key] }));
+  return [...modules, { title: "$:/plugins/topicwiki/topicgraph.css", tags: "$:/tags/Stylesheet", type: "text/css", text: GRAPH_CSS }];
 }
 
 /** TiddlyWiki's tags field: space-separated, titles with spaces in [[ ]]. */
@@ -745,7 +755,8 @@ function main(argv) {
   const graph = validate(args.content ? withContent(source, JSON.parse(readFileSync(args.content, "utf8"))) : source);
   const html = resolve(args.out || join(defaultOutDir(), `${slugOf(graph.title)}.html`));
   const store = html.replace(/\.html$/, "") + ".tiddlers.json";
-  const tiddlers = toTiddlers(graph, { store, agent: args.agent, widget: readFileSync(WIDGET_FILE, "utf8"), landing: readFileSync(LANDING_FILE, "utf8"), pageview: readFileSync(PAGEVIEW_FILE, "utf8") });
+  const modules = { widget: WIDGET_FILE, landing: LANDING_FILE, pageview: PAGEVIEW_FILE, locate: LOCATE_FILE };
+  const tiddlers = toTiddlers(graph, { agent: args.agent, ...Object.fromEntries(Object.entries(modules).map(([k, f]) => [k, readFileSync(f, "utf8")])) });
   mkdirSync(dirname(html), { recursive: true });
   writeFileSync(store, JSON.stringify(tiddlers, null, 1) + "\n");
 
