@@ -19,6 +19,8 @@ export const TIDDLYWIKI = "tiddlywiki@5.4.1";
 export const WIDGET_FILE = fileURLToPath(new URL("./topicgraph.js", import.meta.url));
 /** The startup module that names the landing page in an empty address. */
 export const LANDING_FILE = fileURLToPath(new URL("./landing.js", import.meta.url));
+/** The "page" story view: one tiddler at a time; back moves opposite to forward. */
+export const PAGEVIEW_FILE = fileURLToPath(new URL("./pageview.js", import.meta.url));
 const MAX_COORD = 1e6;
 const MAX_SIZE = 1e4;
 const GRAPH_SECTION = "\n\n!! Neighbor graph\n\n<$topicgraph/>";
@@ -55,7 +57,7 @@ const COLOUR_RE = /^#[0-9a-f]{6}$/i;
 const NAVIGATION = [
   { title: "$:/config/Navigation/UpdateAddressBar", text: "permalink" },
   { title: "$:/config/Navigation/UpdateHistory", text: "yes" },
-  { title: "$:/view", text: "zoomin" },
+  { title: "$:/view", text: "page" },
 ];
 
 const FORBIDDEN_IN_TITLE = ["[[", "]]", "{{", "}}", "|", "\n"];
@@ -590,17 +592,18 @@ export function toTiddlers(g, opts = {}) {
     { title: "$:/DefaultTiddlers", text: `[[${g.title}]]` },
     { title: "$:/topicwiki/map", type: "application/json", text: JSON.stringify(mapData(g, g.nodes.map((n) => degreeOf(n, out, inn)))) },
     ...NAVIGATION,
-    ...widgetTiddlers(opts.widget, opts.landing),
+    ...widgetTiddlers(opts.widget, opts.landing, opts.pageview),
   ];
   return tiddlers.sort((a, b) => (a.title < b.title ? -1 : a.title > b.title ? 1 : 0));
 }
 
 /** The graph widget's module and stylesheet tiddlers, when its source is given. */
-function widgetTiddlers(source, landing) {
+function widgetTiddlers(source, landing, pageview) {
   if (!source) return [];
   return [
     { title: "$:/plugins/topicwiki/topicgraph.js", type: "application/javascript", "module-type": "widget", text: source },
     ...(landing ? [{ title: "$:/plugins/topicwiki/landing.js", type: "application/javascript", "module-type": "startup", text: landing }] : []),
+    ...(pageview ? [{ title: "$:/plugins/topicwiki/pageview.js", type: "application/javascript", "module-type": "storyview", text: pageview }] : []),
     { title: "$:/plugins/topicwiki/topicgraph.css", tags: "$:/tags/Stylesheet", type: "text/css", text: GRAPH_CSS },
   ];
 }
@@ -629,7 +632,7 @@ function main(argv) {
   const graph = validate(JSON.parse(readFileSync(args._[0], "utf8")));
   const html = resolve(args.out || join(defaultOutDir(), `${slugOf(graph.title)}.html`));
   const store = html.replace(/\.html$/, "") + ".tiddlers.json";
-  const tiddlers = toTiddlers(graph, { store, agent: args.agent, widget: readFileSync(WIDGET_FILE, "utf8"), landing: readFileSync(LANDING_FILE, "utf8") });
+  const tiddlers = toTiddlers(graph, { store, agent: args.agent, widget: readFileSync(WIDGET_FILE, "utf8"), landing: readFileSync(LANDING_FILE, "utf8"), pageview: readFileSync(PAGEVIEW_FILE, "utf8") });
   mkdirSync(dirname(html), { recursive: true });
   writeFileSync(store, JSON.stringify(tiddlers, null, 1) + "\n");
 

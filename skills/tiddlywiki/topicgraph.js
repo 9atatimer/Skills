@@ -55,7 +55,7 @@ function parseNeighbors(text) {
   if (parsed.error) return parsed;
   if (!Array.isArray(parsed.value)) return { error: "The neighbors field is not a list." };
   const bad = parsed.value.find((n) => !wellFormed(n));
-  return bad === undefined ? { list: parsed.value } : { error: `A neighbors entry cannot be drawn: ${JSON.stringify(bad)}` };
+  return bad === undefined ? { list: parsed.value } : { error: "A neighbors entry cannot be drawn: " + JSON.stringify(bad) };
 }
 
 let mapCache = { text: null, map: null };

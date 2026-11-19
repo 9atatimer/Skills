@@ -42,7 +42,9 @@ tiddler is the topic's navigable neighbourhood.
   hyperlink or by a click on a map or a graph, behaves like moving from
   page to page: one tiddler shows at a time, the address bar names it,
   and the browser's back and forward buttons step through the tiddlers
-  visited. The builder sets this up; do not change the navigation
+  visited. A step forward moves the page one way and a step back moves it
+  the opposite way, as pages do. The builder sets this up (the `page` story
+  view in `pageview.js`); do not change the navigation
   settings, and do not add a control that opens a tiddler without
   `tm-navigate`, because only that message updates the history. Check
   back and forward in the browser when you verify a build.

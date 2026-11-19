@@ -524,7 +524,7 @@ test("every tiddler is a page: the address bar names it and the history follows 
   const ts = toTiddlers(graph());
   assert.equal(find(ts, "$:/config/Navigation/UpdateAddressBar").text, "permalink");
   assert.equal(find(ts, "$:/config/Navigation/UpdateHistory").text, "yes");
-  assert.equal(find(ts, "$:/view").text, "zoomin");
+  assert.equal(find(ts, "$:/view").text, "page");
 });
 
 test("validate rejects a palette colour that is not #rrggbb and a partial layout", () => {
@@ -651,4 +651,61 @@ test("opening the file with no address names the landing page without a new hist
   assert.equal(tw.locationHash, "#Example");
   assert.deepEqual([[...exports.after], [...exports.before]], [["startup"], ["story"]]);
   assert.equal(runLanding("#Workers").calls.length, 0);
+});
+
+// --- the page story view ---
+
+import { PAGEVIEW_FILE } from "../skills/tiddlywiki/build.mjs";
+
+/** Load pageview.js with a fake page; return its context. */
+function loadPageView() {
+  const timers = [];
+  const ctx = vm.createContext({
+    exports: {}, setTimeout: (f) => timers.push(f), window: { scrollTo: () => {} },
+    $tw: { utils: { getAnimationDuration: () => 400 } },
+  });
+  vm.runInContext(readFileSync(PAGEVIEW_FILE, "utf8"), ctx);
+  ctx.timers = timers;
+  return ctx;
+}
+
+test("the trail says a step to the previous entry is back and anything else is forward", () => {
+  const step = vm.runInContext("stepTrail", loadPageView());
+  let t = { list: [], at: -1 };
+  const go = (title) => { const s = step(t, title); t = s.trail; return s.back; };
+  assert.deepEqual(["Home", "A", "B"].map(go), [false, false, false]);
+  assert.equal(go("A"), true);
+  assert.equal(go("Home"), true);
+  assert.equal(go("A"), false);
+  assert.equal(go("C"), false);
+  assert.deepEqual([...t.list], ["Home", "A", "C"]);
+});
+
+/** A list widget with one fake element per title; the history top is `top`. */
+function fakeList(titles, top) {
+  const els = titles.map((t) => ({ nodeType: 1, title: t, style: {}, offsetWidth: 1, classList: { add() {} } }));
+  return {
+    els,
+    widget: {
+      wiki: { getTiddlerDataCached: () => [{ title: top }] }, historyTitle: "$:/HistoryList",
+      children: els.map((el, i) => ({ findFirstDomNode: () => el, parseTreeNode: { itemTitle: titles[i] } })),
+      findListItem: (_, title) => titles.indexOf(title),
+    },
+  };
+}
+
+test("a forward step moves the pages ESE and a step back moves them WNW", () => {
+  const ctx = loadPageView();
+  const { els, widget } = fakeList(["Home", "A"], "Home");
+  const view = new ctx.exports.page(widget);
+  assert.deepEqual(els.map((e) => e.style.display), ["block", "none"]);
+  const starts = [];
+  const record = (el) => { const set = el.style; el.style = new Proxy(set, { set(o, k, v) { if (k === "transform" && v.startsWith("translate")) starts.push([el.title, v]); o[k] = v; return true; } }); };
+  els.forEach(record);
+  view.navigateTo({ title: "A" });
+  assert.deepEqual(starts.splice(0), [["A", "translate(-48px, -18px)"], ["Home", "translate(48px, 18px)"]]);
+  view.navigateTo({ title: "Home" });
+  assert.deepEqual(starts.splice(0), [["Home", "translate(48px, 18px)"], ["A", "translate(-48px, -18px)"]]);
+  ctx.timers.forEach((f) => f());
+  assert.equal(els.find((e) => e.title === "A").style.display, "none");
 });
