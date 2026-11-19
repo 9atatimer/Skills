@@ -64,22 +64,55 @@ test("missing docs and tutorials say so instead of leaving an empty section", ()
   assert.match(c.text, /!! Tutorials\nNone recorded in the source\./);
 });
 
-test("the home tiddler is the default and links categories and AI access", () => {
+test("the home tiddler is the default and links categories", () => {
   const ts = toTiddlers(graph());
   assert.equal(find(ts, "$:/DefaultTiddlers").text, "[[Example]]");
   const home = find(ts, "Example");
   assert.match(home.text, /\* \[\[Compute\]\] \(2\)/);
-  assert.match(home.text, /\[\[AI access\]\]/);
+  assert.ok(!home.text.includes("AI access"), "the agent link is in the sidebar, not the landing page");
   assert.match(home.text, /\[\[the map\|https:\/\/example\.com\/map\]\], fetched 2026-11-18/);
 });
 
-test("the agent line names the store and the agent command", () => {
-  const ts = toTiddlers(graph(), { store: "/data/example.tiddlers.json", agent: "codex" });
-  assert.match(find(ts, "$:/config/topicwiki/command").text, /^codex 'Read the topic wiki at \/data\/example\.tiddlers\.json:/);
-  assert.match(find(ts, "$:/config/topicwiki/command-prefix").text, /^codex 'Read .* topic_id is $/);
-  assert.match(find(ts, "AI access").text, /<\$codeblock code=\{\{\$:\/config\/topicwiki\/command\}\}\/>/);
+import { LOCATE_FILE } from "../skills/tiddlywiki/build.mjs";
+
+/**
+ * Run locate.js as the browser would for a wiki opened at `href`, over the
+ * built tiddlers `ts`; return the tiddlers it wrote, by title.
+ */
+function locateAt(ts, href) {
+  const written = {};
+  const wiki = { getTiddlerText: (t, d) => (ts.find((x) => x.title === t) || { text: d }).text, addTiddler: (t) => { written[t.title] = t.text; } };
+  const ctx = vm.createContext({ exports: {}, window: { location: { href } }, $tw: { wiki }, URL });
+  vm.runInContext(readFileSync(LOCATE_FILE, "utf8"), ctx);
+  ctx.exports.startup();
+  return written;
+}
+
+test("the agent line is built where the wiki is opened, for the store beside it", () => {
+  const ts = toTiddlers(graph(), { agent: "codex" });
+  const at = locateAt(ts, "file:///data/example.html#Workers");
+  assert.equal(at["$:/temp/topicwiki/store"], "/data/example.tiddlers.json");
+  assert.match(at["$:/temp/topicwiki/command"], /^codex 'Read the topic wiki at \/data\/example\.tiddlers\.json:/);
+  assert.match(at["$:/temp/topicwiki/command-prefix"], /^codex 'Read .* topic_id is $/);
+  assert.match(find(ts, "AI access").text, /<\$codeblock code=\{\{\$:\/temp\/topicwiki\/command\}\}\/>/);
+  assert.match(find(ts, "AI access").text, /<\$codeblock code=\{\{\$:\/temp\/topicwiki\/store\}\}\/>/);
   const vt = find(ts, "$:/topicwiki/ViewTemplate/agent");
   assert.equal(vt.tags, "$:/tags/ViewTemplate");
+});
+
+test("the built wiki holds no path of the machine that built it", () => {
+  const ts = toTiddlers(graph(), { store: "/home/builder/secret/x.tiddlers.json" });
+  assert.ok(!JSON.stringify(ts).includes("/home/builder"), "no build-time path in any tiddler");
+  assert.match(find(ts, "$:/config/topicwiki/command").text, /\{\{topicwiki-store\}\}/);
+});
+
+test("the store is found beside the wiki: on disk as a path, on the web as a URL", () => {
+  const ts = toTiddlers(graph());
+  const store = (href) => locateAt(ts, href)["$:/temp/topicwiki/store"];
+  assert.equal(store("file:///Users/me/Documents/topicwiki/cloudflare.html"), "/Users/me/Documents/topicwiki/cloudflare.tiddlers.json");
+  assert.equal(store("file:///Users/me/My%20Wikis/a%27b.html#X"), "/Users/me/My Wikis/a'b.tiddlers.json");
+  assert.equal(store("file:///C:/Users/me/wiki.htm"), "C:/Users/me/wiki.tiddlers.json");
+  assert.equal(store("https://example.com/wikis/cloudflare.html?x=1#Workers"), "https://example.com/wikis/cloudflare.tiddlers.json");
 });
 
 test("every [[link]] in the output names a tiddler that exists", () => {
@@ -144,8 +177,8 @@ test("the whole-wiki agent line passes the prompt as one literal argument, whate
   const g = graph();
   g.title = `Acme "Pro" $HOME \`id\` it's \\ $(echo pwned)`;
   const store = "/tmp/a b/$(echo pwned)`id`'q\"/x.tiddlers.json";
-  const ts = toTiddlers(g, { store, agent: "printf %s" });
-  const line = find(ts, "$:/config/topicwiki/command").text;
+  const ts = toTiddlers(g, { agent: "printf %s" });
+  const line = locateAt(ts, "file://" + encodeURI(store.replace(/\.tiddlers\.json$/, ".html")).replace(/'/g, "%27").replace(/\$/g, "%24").replace(/`/g, "%60"))["$:/temp/topicwiki/command"];
   const out = runAgentLine(line);
   assert.ok(out.startsWith(`Read the topic wiki at ${store}:`), out);
   assert.ok(out.includes(`titled ${g.title}.`), out);
@@ -154,8 +187,9 @@ test("the whole-wiki agent line passes the prompt as one literal argument, whate
 
 test("the per-topic agent line is the same literal argument, with the topic_id", () => {
   const store = "/tmp/$(echo pwned)`id`'q/x.tiddlers.json";
-  const ts = toTiddlers(graph(), { store, agent: "printf %s" });
-  const prefix = find(ts, "$:/config/topicwiki/command-prefix").text;
+  const ts = toTiddlers(graph(), { agent: "printf %s" });
+  const at = locateAt(ts, "file://" + encodeURI(store.replace(/\.tiddlers\.json$/, ".html")).replace(/'/g, "%27").replace(/\$/g, "%24").replace(/`/g, "%60"));
+  const prefix = at["$:/temp/topicwiki/command-prefix"];
   const suffix = find(ts, "$:/config/topicwiki/command-suffix").text;
   const out = runAgentLine(prefix + "workers" + suffix);
   assert.ok(out.startsWith(`Read the topic wiki at ${store}:`), out);
@@ -235,7 +269,7 @@ test("the per-topic agent line uses no substituted attribute, so $(var)$ in the 
   const ts = toTiddlers(graph(), { store: "/tmp/$(currentTiddler)$/x.tiddlers.json" });
   const vt = find(ts, "$:/topicwiki/ViewTemplate/agent").text;
   assert.ok(!vt.includes("code=`"), vt);
-  assert.match(vt, /<\$codeblock code=\{\{\{ \[all\[current\]get\[topic_id\]addprefix\{\$:\/config\/topicwiki\/command-prefix\}addsuffix\{\$:\/config\/topicwiki\/command-suffix\}\] \}\}\}\/>/);
+  assert.match(vt, /<\$codeblock code=\{\{\{ \[all\[current\]get\[topic_id\]addprefix\{\$:\/temp\/topicwiki\/command-prefix\}addsuffix\{\$:\/config\/topicwiki\/command-suffix\}\] \}\}\}\/>/);
 });
 
 test("validate rejects titles that a [[link]] would read as another title or a URL", () => {
@@ -914,7 +948,7 @@ test("a malformed content file gets a message, and prototype names stay plain id
 });
 
 test("each neighbor keeps the relation's note and evidence, and the agent is told to cite them", () => {
-  const ts = toTiddlers(graph(), { store: "/s.json" });
+  const ts = toTiddlers(graph());
   const kv = neighbors(find(ts, "Workers")).find((n) => n.title === "Workers KV");
   assert.deepEqual(kv, { title: "Workers KV", rel: "binds to", dir: "out", label: "KV binding", evidence: ["https://example.com/e1", "https://example.com/e2"] });
   const line = find(ts, "$:/config/topicwiki/command").text;
@@ -929,4 +963,42 @@ test("index pages show their members only in the graph, not as a list", () => {
     assert.ok(!/^\* \[\[/m.test(text), `${t}: ${text}`);
     assert.ok(text.endsWith("<$topicgraph/>"));
   }
+});
+
+test("locating the wiki changes nothing that would be saved", () => {
+  const at = locateAt(toTiddlers(graph()), "file:///w/x.html");
+  assert.ok(Object.keys(at).length >= 3);
+  assert.ok(Object.keys(at).every((t) => t.startsWith("$:/temp/")), Object.keys(at).join(", "));
+});
+
+test("locating the store copes with odd addresses instead of failing or guessing", () => {
+  const ts = toTiddlers(graph(), { storeName: "example.tiddlers.json" });
+  const store = (href) => locateAt(ts, href)["$:/temp/topicwiki/store"];
+  assert.equal(store("file:///tmp/a%E0.html"), "/tmp/a%E0.tiddlers.json", "a malformed escape is kept, not thrown");
+  assert.equal(store("file:///tmp/x%0Ay%00.html"), "/tmp/x%0Ay%00.tiddlers.json", "no control character reaches the line");
+  assert.equal(store("file://server/share/wiki.html"), "//server/share/wiki.tiddlers.json", "a network share keeps its server");
+  assert.equal(store("https://host/"), "https://host/example.tiddlers.json", "served at a folder: the built store name");
+  assert.equal(store("https://host/docs/"), "https://host/docs/example.tiddlers.json");
+  assert.match(store("data:text/html,x"), /cannot tell where its store is/);
+  assert.match(locateAt(ts, "blob:http://a/b")["$:/temp/topicwiki/command"], /Read the topic wiki at the \.tiddlers\.json file beside this wiki/);
+});
+
+test("locate runs before the story is built, so the first render has the agent lines", () => {
+  const ctx = vm.createContext({ exports: {}, window: {}, $tw: {}, URL });
+  vm.runInContext(readFileSync(LOCATE_FILE, "utf8"), ctx);
+  assert.deepEqual([[...ctx.exports.after], [...ctx.exports.before]], [["startup"], ["story"]]);
+});
+
+test("the builder records the store's file name, never its path", () => {
+  const ts = toTiddlers(graph(), { storeName: "example.tiddlers.json" });
+  assert.equal(find(ts, "$:/config/topicwiki/store-name").text, "example.tiddlers.json");
+  assert.throws(() => toTiddlers(graph(), { storeName: "/abs/example.tiddlers.json" }), /storeName must be a file name/);
+});
+
+test("the link for AI agents sits in the right-hand sidebar, below the page controls", () => {
+  const ts = toTiddlers(graph());
+  const seg = find(ts, "$:/topicwiki/SideBar/ai-access");
+  assert.equal(seg.tags, "$:/tags/SideBarSegment");
+  assert.equal(seg["list-after"], "$:/core/ui/SideBarSegments/page-controls");
+  assert.match(seg.text, /\[\[AI access\]\]/);
 });

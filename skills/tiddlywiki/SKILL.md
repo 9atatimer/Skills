@@ -162,9 +162,19 @@ the browser when you verify a build.
 
 Each topic tiddler shows a command that starts an agent session at that
 topic over the store; the `AI access` tiddler shows the same command
-for the whole wiki. The prompt tells the agent to query the store with
+for the whole wiki. The link to `AI access` sits in the right-hand
+sidebar on every page, not in the landing page's text. The prompt tells the agent to query the store with
 `jq` by `title` or `topic_id`, because a large store does not fit in
 one read.
+
+The wiki finds its store itself: when it opens, `locate.js` reads the
+page's own address and takes the file beside it with the same name and
+the extension `.tiddlers.json` -- a path when opened from disk, a URL
+when served. A wiki served at a folder address (`https://host/`) has no
+page name to go by, so it uses the store's file name, which the build
+records; an address it cannot read says so in place of a path. The built files hold no path of the machine that built
+them, so the HTML and its store can be moved or copied together, and
+renamed together, without a rebuild. Keep them side by side.
 
 An MCP server that serves a topic wiki to an agent, and an Emacs
 frontend that navigates one, belong in tds-utils, not in this skill.
