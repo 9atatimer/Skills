@@ -657,55 +657,138 @@ test("opening the file with no address names the landing page without a new hist
 
 import { PAGEVIEW_FILE } from "../skills/tiddlywiki/build.mjs";
 
-/** Load pageview.js with a fake page; return its context. */
-function loadPageView() {
-  const timers = [];
-  const ctx = vm.createContext({
-    exports: {}, setTimeout: (f) => timers.push(f), window: { scrollTo: () => {} },
-    $tw: { utils: { getAnimationDuration: () => 400 } },
-  });
-  vm.runInContext(readFileSync(PAGEVIEW_FILE, "utf8"), ctx);
-  ctx.timers = timers;
-  return ctx;
+/** A fake browser: history entries with state, and the events the view listens to. */
+function fakeBrowser(initialState = null) {
+  const handlers = {};
+  const win = {
+    history: { state: initialState, replaceState(st) { this.state = st; } },
+    addEventListener: (type, f) => { (handlers[type] ||= []).push(f); },
+    scrollTo: () => {},
+  };
+  /** The browser moves to an entry (state null for a new one) and fires its events. */
+  win.go = (state) => { win.history.state = state; for (const t of ["popstate", "hashchange"]) for (const f of handlers[t] || []) f({}); };
+  return win;
 }
 
-test("the trail says a step to the previous entry is back and anything else is forward", () => {
-  const step = vm.runInContext("stepTrail", loadPageView());
-  let t = { list: [], at: -1 };
-  const go = (title) => { const s = step(t, title); t = s.trail; return s.back; };
-  assert.deepEqual(["Home", "A", "B"].map(go), [false, false, false]);
-  assert.equal(go("A"), true);
-  assert.equal(go("Home"), true);
-  assert.equal(go("A"), false);
-  assert.equal(go("C"), false);
-  assert.deepEqual([...t.list], ["Home", "A", "C"]);
+/** Load pageview.js against a fake browser; return its context. */
+function loadPageView(win = fakeBrowser()) {
+  const ctx = vm.createContext({ exports: {}, window: win, $tw: { utils: { getAnimationDuration: () => 400 } } });
+  vm.runInContext(readFileSync(PAGEVIEW_FILE, "utf8"), ctx);
+  return Object.assign(ctx, { win });
+}
+
+test("a history step is back only when the browser returns to a lower step number", () => {
+  const traverse = vm.runInContext("traverse", loadPageView());
+  const plain = (o) => JSON.parse(JSON.stringify(o));
+  assert.deepEqual(plain(traverse(undefined, null)), { position: 0, back: false, stamp: true });
+  assert.deepEqual(plain(traverse(undefined, 3)), { position: 4, back: false, stamp: true });
+  assert.deepEqual(plain(traverse(2, 4)), { position: 2, back: true, stamp: false });
+  assert.deepEqual(plain(traverse(5, 4)), { position: 5, back: false, stamp: false });
 });
 
-/** A list widget with one fake element per title; the history top is `top`. */
+/** A list widget whose items render fake elements; the history top is `top`. */
 function fakeList(titles, top) {
-  const els = titles.map((t) => ({ nodeType: 1, title: t, style: {}, offsetWidth: 1, classList: { add() {} } }));
+  const els = titles.map((t) => {
+    const on = {};
+    return {
+      nodeType: 1, title: t, style: {}, offsetWidth: 1, classList: { add() {} },
+      addEventListener: (type, f) => { on[type] = f; }, removeEventListener: (type) => { delete on[type]; },
+      /** The browser ends this element's transition (or a child's, with `fromChild`). */
+      settle(fromChild) { const f = on.transitionend; if (f) f({ target: fromChild ? {} : this, currentTarget: this }); },
+    };
+  });
+  const children = els.map((el, i) => ({ findFirstDomNode: () => el, parseTreeNode: { itemTitle: titles[i] }, removeChildDomNodes() {} }));
+  children.forEach((c, i) => Object.assign(c, { previousSibling: () => children[i - 1], nextSibling: () => children[i + 1] }));
   return {
-    els,
-    widget: {
-      wiki: { getTiddlerDataCached: () => [{ title: top }] }, historyTitle: "$:/HistoryList",
-      children: els.map((el, i) => ({ findFirstDomNode: () => el, parseTreeNode: { itemTitle: titles[i] } })),
-      findListItem: (_, title) => titles.indexOf(title),
-    },
+    els, children,
+    widget: { wiki: { getTiddlerDataCached: () => [{ title: top }] }, historyTitle: "$:/HistoryList", children, findListItem: (_, t) => titles.indexOf(t) },
   };
 }
 
-test("a forward step moves the pages ESE and a step back moves them WNW", () => {
+/** Navigate and return the transform the incoming page starts from. */
+function startOf(view, els, title) {
+  const el = els.find((e) => e.title === title);
+  let start;
+  el.style = new Proxy(el.style, { set(o, k, v) { if (k === "transform" && start === undefined) start = v; o[k] = v; return true; } });
+  view.navigateTo({ title });
+  return start;
+}
+
+const ESE = "translate(-48px, -18px)"; // starts WNW of rest, moves ESE
+const WNW = "translate(48px, 18px)"; // starts ESE of rest, moves WNW
+
+test("forward moves ESE and the browser's back moves WNW, even to the page just left", () => {
   const ctx = loadPageView();
-  const { els, widget } = fakeList(["Home", "A"], "Home");
+  const { els, widget } = fakeList(["Home", "A", "B"], "Home");
   const view = new ctx.exports.page(widget);
-  assert.deepEqual(els.map((e) => e.style.display), ["block", "none"]);
-  const starts = [];
-  const record = (el) => { const set = el.style; el.style = new Proxy(set, { set(o, k, v) { if (k === "transform" && v.startsWith("translate")) starts.push([el.title, v]); o[k] = v; return true; } }); };
-  els.forEach(record);
+  assert.equal(ctx.win.history.state.topicwikiStep, 0);
+  assert.equal(startOf(view, els, "A"), ESE);
+  ctx.win.go(null);
+  assert.equal(startOf(view, els, "B"), ESE);
+  ctx.win.go(null);
+  assert.equal(startOf(view, els, "A"), ESE, "a link to the page just left is a step forward");
+  ctx.win.go(null);
+  ctx.win.go({ topicwikiStep: 2 });
+  assert.equal(startOf(view, els, "B"), WNW, "the browser's back button");
+  ctx.win.go({ topicwikiStep: 3 });
+  assert.equal(startOf(view, els, "A"), ESE, "the browser's forward button");
+});
+
+test("after a reload the step number on the entry still tells back from forward", () => {
+  const ctx = loadPageView(fakeBrowser({ topicwikiStep: 5 }));
+  const { els, widget } = fakeList(["Home", "A"], "A");
+  const view = new ctx.exports.page(widget);
+  ctx.win.go({ topicwikiStep: 4 });
+  assert.equal(startOf(view, els, "Home"), WNW);
+  ctx.win.go({ topicwikiStep: 5 });
+  assert.equal(startOf(view, els, "A"), ESE);
+});
+
+test("closing the shown tiddler shows its neighbour instead of a blank page", () => {
+  const ctx = loadPageView();
+  const { els, children, widget } = fakeList(["Home", "A"], "A");
+  const view = new ctx.exports.page(widget);
+  view.remove(children[1]);
+  assert.equal(els[0].style.display, "block");
+  assert.equal(view.current, els[0]);
+});
+
+test("a quick second step leaves the page it passed through hidden, not snapped back", () => {
+  const ctx = loadPageView();
+  const { els, widget } = fakeList(["Home", "A", "B"], "Home");
+  const view = new ctx.exports.page(widget);
   view.navigateTo({ title: "A" });
-  assert.deepEqual(starts.splice(0), [["A", "translate(-48px, -18px)"], ["Home", "translate(48px, 18px)"]]);
+  view.navigateTo({ title: "B" });
+  const a = els.find((e) => e.title === "A");
+  a.settle(true);
+  assert.notEqual(a.style.display, "none", "a child's transition does not finish the page");
+  a.settle();
+  els.forEach((e) => e.settle());
+  assert.equal(a.style.display, "none");
+  assert.equal(a.style.opacity, "0");
+  assert.equal(a.style.pointerEvents, "none");
+});
+
+test("a page that slides away stops taking clicks, and the first page shown is the history top", () => {
+  const ctx = loadPageView();
+  const { els, widget } = fakeList(["Home", "A"], "Missing");
+  const view = new ctx.exports.page(widget);
+  assert.equal(view.current, els[0], "a history top not in the story falls back to the first page");
+  view.navigateTo({ title: "A" });
+  assert.equal(els[0].style.pointerEvents, "none");
+  assert.equal(els[1].style.pointerEvents, "");
+});
+
+test("a page brought back takes clicks again, and a page left mid-slide is hidden at the next step", () => {
+  const ctx = loadPageView();
+  const { els, widget } = fakeList(["Home", "A", "B"], "Home");
+  const view = new ctx.exports.page(widget);
+  view.navigateTo({ title: "A" });
+  ctx.win.go(null);
+  ctx.win.go({ topicwikiStep: 0 });
   view.navigateTo({ title: "Home" });
-  assert.deepEqual(starts.splice(0), [["Home", "translate(48px, 18px)"], ["A", "translate(-48px, -18px)"]]);
-  ctx.timers.forEach((f) => f());
-  assert.equal(els.find((e) => e.title === "A").style.display, "none");
+  assert.equal(els[0].style.pointerEvents, "", "Home was sent away, and takes clicks once it is back");
+  view.navigateTo({ title: "B" });
+  assert.equal(els[1].style.display, "none", "A never finished sliding away; it is hidden now");
+  assert.notEqual(els[0].style.display, "none", "Home is the page sliding out");
 });
