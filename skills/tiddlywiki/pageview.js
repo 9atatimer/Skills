@@ -22,7 +22,6 @@ const STATE_KEY = "topicwikiStep";
 
 let position = null; // this entry's step number, once known
 let pendingBack = false; // the browser has stepped back; the next navigateTo slides WNW
-let watching = false;
 
 /**
  * The step after a history event: `restored` is the step number on the
@@ -49,20 +48,30 @@ function stamp(step) {
   window.history.replaceState(Object.assign({}, window.history.state, { [STATE_KEY]: step }), "");
 }
 
-/** On popstate or hashchange: note the browser's step, and number a new entry. */
-function onHistoryEvent() {
-  const restored = storedStep();
-  if (restored === position && position !== null) return;
-  const step = traverse(restored, position);
+/** The step a history event makes, or null when the entry is the one already known. Pure. */
+function nextStep(restored, current) {
+  return restored === current && current !== null ? null : traverse(restored, current);
+}
+
+/** Record a step: the new position, whether it went back, and the entry's number. */
+function applyStep(step) {
   position = step.position;
   pendingBack = step.back;
   if (step.stamp) stamp(position);
 }
 
-/** Start following the browser history, once per page load. */
+/** On popstate or hashchange: note the browser's step, and number a new entry. */
+function onHistoryEvent() {
+  const step = nextStep(storedStep(), position);
+  if (step) applyStep(step);
+}
+
+/**
+ * Follow the browser history. Safe to call again: a repeated
+ * addEventListener with the same function adds nothing, and a repeated
+ * onHistoryEvent on the same entry changes nothing.
+ */
 function watchHistory() {
-  if (watching) return;
-  watching = true;
   onHistoryEvent();
   window.addEventListener("popstate", onHistoryEvent);
   window.addEventListener("hashchange", onHistoryEvent);
