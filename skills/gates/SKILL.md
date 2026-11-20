@@ -246,7 +246,8 @@ A PR review is **iterative, not one-shot**. Start the loop by default
 after opening any PR, except a documentation-only PR (no agentic reviewer,
 no loop). It runs against the active reviewer (OCR by default), on events,
 never on a timer you set yourself; polling runs only on a schedule the
-human started. It stops when the PR merges or closes, when the active
+human started. With no events tool, the event source is a background
+webhook watch (`references/review-loop.md`, Transport). It stops when the PR merges or closes, when the active
 reviewer is done and quiet, when the per-reviewer turn cap fires (the
 remaining feedback becomes `pr-todo` issues), on a pass whose actions were
 all rejections or all hygiene, or when a comment needs the human's design
