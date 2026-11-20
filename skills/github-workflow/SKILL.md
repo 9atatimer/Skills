@@ -259,6 +259,10 @@ open PRs, comment and `/land` as the fleet's machine account
 - Run `gh api user --jq .login` before the first push of a session. If it
   is not `9atatimer-bot`, stop and switch identity; never push "just this
   once".
+- One exception: creating, forwarding or deleting a repo or org webhook
+  (`gh webhook forward`, the `/hooks` API) runs as the owner, because the
+  bot has no admin rights. Nothing else rides on it: the webhook's events
+  are only read, and every action taken on them goes through `asbot`.
 - Never use the inline form `op run --env-file <(claude-as-bot
   --print-env) -- <cmd>`. When the launcher fails, the process
   substitution's exit status is lost, `op run` gets an empty env file,

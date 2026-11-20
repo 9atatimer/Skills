@@ -52,6 +52,16 @@ applies:
    blocks, the call is idempotent, and the subscription is auto-removed
    on merge/close. Other agents: their equivalent subscription tool.
 
+- **Webhook watch (push)** -- with no events tool, forward the repo's
+   webhook to the session: `gh webhook forward --repo <owner>/<repo>
+   --events pull_request_review,pull_request_review_comment,issue_comment
+   --url http://localhost:<port>`
+   into a local listener, run in the background as one command that exits
+   on the first event for this PR. It runs as the owner (the
+   github-workflow skill, "Act as the bot identity, never the owner"); the
+   replies to what it reports go through `asbot`. Waiting on a reviewer
+   means starting this watch, not ending the turn and hoping.
+
 - **Polling -- ONLY on a human-started schedule.**
    Polling exists solely for environments with no event delivery. It
    uses whatever scheduling primitive the agent offers (in Claude Code,
