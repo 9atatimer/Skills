@@ -13,6 +13,7 @@ cdp-browser
 chrome-mcp
 clai
 cloudflare-hosting
+cloudflare-one-devices
 cloudflare-think
 coding
 concept
