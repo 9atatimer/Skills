@@ -240,8 +240,7 @@ renames or removes a consumer updates the registry in the same change
 set. A consumer absent from the registry is a finding, not a formality.
 A provider credential that no root mints and no row names is unregistered,
 not unused: before deleting one, find its consumer. Cloudflare's "last
-used" date never counts R2 S3 calls, and a mirror token deleted on that
-evidence alone broke a disaster-recovery mirror (2026-11-21).
+used" date never counts R2 S3 calls, so it is not evidence of disuse.
 
 ## What an agent may and may not do
 
