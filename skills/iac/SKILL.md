@@ -130,7 +130,16 @@ Rules that hold across all three:
   `force-unlock` run only on the laptop, on every root.
 - On the laptop path, run `plan -out=tfplan`, read it, and hand the
   human the `op run ... terraform apply tfplan` line to run where its
-  output lands in the conversation.
+  output lands in the conversation. In a harness where the human runs a
+  command inside the session (Claude Code's `!` prefix), that command
+  has no terminal for a `yes`, and the human expects a block, not one
+  line per step. For a minting root the human plans too. Hand two
+  blocks: one that inits and runs `plan -input=false -out=tfplan` for
+  every root in the change, and, after the plans are read against the
+  expected diff, one that runs `apply -input=false tfplan` per root in
+  dependency order, stops at the first failure, and then runs the
+  follow-ups (re-seeding a secret, pointing a consumer at a new item).
+  Applying a saved plan applies only what was read.
 - Production naming follows the repo's deploy authority: "apply it"
   never means production; a request that does not name the tier is a
   request for preview.

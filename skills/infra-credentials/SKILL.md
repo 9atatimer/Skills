@@ -70,7 +70,12 @@ description: "Provisioning and governing the credentials infrastructure needs: t
 - Least privilege per purpose: a deploy token (scripts, routes, KV), a
   terraform token (Access, DNS), a bucket-scoped storage token, a
   service account per workload per tier. Two purposes, two tokens, even
-  when one account could hold both.
+  when one account could hold both. The exception is a token that adds
+  no boundary: when every holder of a second token already holds a
+  credential that does its job (an account-wide storage token beside a
+  bucket-scoped one, both read by one service account), the second is
+  a wasted slot under the provider's token cap (Cloudflare: 50 per user),
+  not least privilege.
 - The minted value lands in a 1Password item, never directly in a
   GitHub secret, never in a file in any repo, never in a chat or an
   issue. The module writes it there and outputs the `op://` path.
@@ -233,6 +238,10 @@ and every GitHub secret and variable each repo's workflows read, with
 the item each resolves to. Names only. A change in any repo that adds,
 renames or removes a consumer updates the registry in the same change
 set. A consumer absent from the registry is a finding, not a formality.
+A provider credential that no root mints and no row names is unregistered,
+not unused: before deleting one, find its consumer. Cloudflare's "last
+used" date never counts R2 S3 calls, and a mirror token deleted on that
+evidence alone broke a disaster-recovery mirror (2026-11-21).
 
 ## What an agent may and may not do
 
