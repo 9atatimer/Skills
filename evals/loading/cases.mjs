@@ -152,6 +152,30 @@ export const CASES = [
     "Sandbox the local inference server so it cannot read my home directory.", // lmde-daemons
     "Wire a Think chat assistant into the product's worker.", // cloudflare-think
   ]),
+  ...yes("cloudflare-one-devices", [
+    "Tailscale on my Mac is stuck at starting since I enrolled it in our Zero Trust org with WARP.",
+    "Move this laptop's WARP client from one Cloudflare One organization to another.",
+    "Add Tailscale's DERP relays to the WARP split-tunnel exclude list.",
+    "MagicDNS names stop resolving whenever WARP is connected. What do I add?",
+    "warp-cli says Account type: Free after I enrolled. Why isn't it in the team?",
+    "I changed the default device profile's split tunnel but my phone still has the old list.",
+    "Which IP range does Gateway hand out for a private hostname route to my cloudflared tunnel?",
+    "Should I delete the onboarding device profile the dashboard created?",
+    "tailscale netcheck shows UDP false while Cloudflare WARP is on.",
+    "Write the terraform for the WARP device profile's local domain fallback list.",
+  ]),
+  ...no("cloudflare-one-devices", [
+    "Publish the laptop's webhook receiver to the internet through cloudflared behind Access.", // lmde-tunnels
+    "Put the staging marketplace Worker behind a Cloudflare Access login.", // cloudflare-hosting
+    "Bind a D1 database to my Worker and deploy it to preview.", // cloudflare-hosting
+    "Split this terraform root into one directory per tier.", // iac
+    "Create a scoped Cloudflare token for the Access terraform root.", // infra-credentials
+    "Keep the cloudflared connector on my laptop running after a reboot.", // lmde-daemons
+    "Import the hand-made DNS record into terraform without recreating it.", // iac
+    "Read the signed-in user's email from the Access JWT inside the Worker.", // cloudflare-hosting
+    "Allow only the /health path through the laptop tunnel's ingress.", // lmde-tunnels
+    "Seed the 1Password service-account token as a GitHub environment secret.", // infra-credentials
+  ]),
   ...yes("agent-instructions", [
     "Write a new skill for running database migrations.",
     "Our AGENT.md is 700 lines. Trim it.",
