@@ -157,6 +157,11 @@ reader; keep it legible to a human.
 - Each claimed platform smokes the **published artifact** in CI. A
   `py3-none-any` wheel packed into a shiv `.pyz` carried the build
   runner's compiled deps and could not start on macOS.
+- A test that runs inside a monorepo proves nothing about the published
+  package: it resolves sibling packages the install will not have. Pack
+  the package and its dependencies, install the tarballs into a scratch
+  prefix the way the consumer's installer does, and run the entry point
+  from there. This holds for a package that ships only scripts.
 - No CI smoke on a platform = unsupported. Say so.
 - Consumers move by pin. Never re-publish or move an installed version;
   roll forward or move the pin back. Where a merge reaches the fleet with
@@ -258,6 +263,10 @@ repo -> the iac skill.
 - Proven: deploy run URL and green smoke cited in the PR or release
   record; for a scheduled path, the unattended run's own output.
 - What the class owes is merged; `docs/arch/` updated at 7a.
+- Rolled out: where consumers install by pin, a tag or a publish
+  reaches no one until the pin names the new version and that pin is
+  itself published. Confirm with the consumer's own installer (its
+  check mode, or the installed `--version`), not with the registry.
 
 **An unattended path is live only once it has run.** A hand run proves
 the code, not the deployment: the interactive shell carries direnv
