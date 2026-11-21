@@ -54,6 +54,19 @@ description: "Provisioning and governing the credentials infrastructure needs: t
   cannot edit an SA's grants after creation: a wrong grant means a new
   SA, so name the vault and the `read_items` scope on the create line
   and nothing more.
+- **Create a service account piped into its item.** `op service-account
+  create` prints the token once, to the terminal and so into any
+  transcript that sees that terminal. Pipe it straight into the
+  1Password item so it is never displayed:
+
+  ```
+  op service-account create <name> --vault <vault>:read_items --raw \
+    | jq -Rn '{title:"Service Account - OP - <name>", category:"API_CREDENTIAL", fields:[{id:"credential",type:"CONCEALED",label:"credential",value:input}]}' \
+    | op item create --vault Development
+  ```
+
+  A token that was displayed is exposed: revoke that service account in
+  the 1Password console and create a new one the piped way.
 
 ## Minting
 
@@ -133,6 +146,17 @@ description: "Provisioning and governing the credentials infrastructure needs: t
   production deployable from no branch (2026-11-14: a reviewer request
   failed with the 422 above and stranded two repos). Apply that change
   alone, and finish a partial apply at once.
+- **Declare the Environment before any workflow names it.** The first
+  time a job names an Environment that does not exist, GitHub creates
+  it with no branch rule, and it then releases its secret to any branch.
+  Apply the infra repo root that declares the Environment and its branch
+  rule before merging the workflow; an Environment that already exists
+  is imported into that root, never trusted. Prove the rule, not the
+  Environment's existence: `gh api
+  repos/<owner>/<repo>/environments/<env> --jq .deployment_branch_policy`
+  shows `custom_branch_policies: true`, and `gh api
+  repos/<owner>/<repo>/environments/<env>/deployment-branch-policies`
+  lists the allowed branch.
 - Non-secret identifiers -- account ids, project refs, AUDs, team
   domains, hostnames, role ARNs -- are repository VARIABLES. They show
   in logs, can be checked, and do not count against a secret budget.
@@ -176,6 +200,14 @@ description: "Provisioning and governing the credentials infrastructure needs: t
   next auth.
 - Deleting an item is a rotation you did not plan. Before deleting,
   grep for its ID and title across the fleet.
+- **Find a provider token's consumer before it is deleted.** Its
+  last-used date and its name are not evidence that nothing uses it:
+  Cloudflare records neither R2 S3-API use nor AI Gateway use there, so
+  a live R2 or gateway token reads "never". Look for the root that mints
+  it, its registry row, and any 1Password item or git config that holds
+  an S3 key pair derived from it. Deleting a token revokes every R2 key
+  pair derived from it (the aws-ops skill). A token whose consumer you
+  cannot find goes to the owner to decide, with what you searched.
 
 **A service-account token is rotated by the infra repo's rotator, run by
 the human**, never by hand and never by an agent. It is one generic tool,
@@ -233,6 +265,9 @@ and every GitHub secret and variable each repo's workflows read, with
 the item each resolves to. Names only. A change in any repo that adds,
 renames or removes a consumer updates the registry in the same change
 set. A consumer absent from the registry is a finding, not a formality.
+Every provider token that has a consumer has a row, a token made by hand
+outside any root included, because a token audit sees a consumer only
+through the registry.
 
 ## What an agent may and may not do
 
@@ -242,6 +277,11 @@ set. A consumer absent from the registry is a finding, not a formality.
 | verify a token read-only against the provider's verify endpoint | mint, seed, rotate, or delete |
 | write workflow wiring, `.env.op` references, the registry | widen an SA's grant to make a job pass |
 | diagnose from the step header (`***` present, blank empty) | approve a deployment or look for a route around a gate |
+
+The human runs every mint, seed, revoke and delete. When an agent
+prepares such a command, it hands the human one step at a time as a `!`
+line and reads that step's evidence before it hands over the next,
+because each step's result decides whether the next one is safe.
 
 ## Related
 

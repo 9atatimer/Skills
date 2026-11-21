@@ -214,6 +214,12 @@ groups (the dashboard shows Write as "Edit").
 A scoped token that fails `auth.forbidden` on an account-level resource is scoped to a zone; re-scoping does not
 help, the resource is not zonal. Read `references/cloudflare-detail.md`, "API token scope table", before you mint or choose a token for a job.
 
+A Cloudflare user holds at most 50 user API tokens, and one app's tokens and state roots mint about four. Before you
+plan a root that mints user tokens, have the human count the existing ones; past the cap the apply fails with error
+1001, "Quota limit exceeded". When the apply would pass the cap, the owner chooses which tokens to free, or the root
+mints account-owned tokens instead. Free a slot only by the infra-credentials skill, Rotation: a token's last-used
+date is not evidence that it is unused.
+
 ## Verification and diagnosis
 
 A `302` to the team domain is Access working; a green probe with a dead feature never exercised the
