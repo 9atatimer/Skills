@@ -85,7 +85,10 @@ Read `references/cloudflare-detail.md`, "Route before Custom Domain" and "Certif
 - **KV** for a value that must be rewritten from inside the isolate (a
   rotating credential). Worker secrets are write-only in-isolate.
 - **R2** for bytes too big for a Durable Object SQLite row. Lifecycle
-  rules do the expiring.
+  rules do the expiring; a bucket lock makes a ledger append-only, which
+  no token permission can. Read `references/cloudflare-detail.md`, "R2
+  credentials and the token cap", before you mint, merge or delete an R2
+  token or lock a bucket.
 - **Durable Objects** with `new_sqlite_classes` migrations, tagged, and
   never edited after they ship.
 - **Cron** via `triggers.crons`, one secret to the route it pokes, no

@@ -83,7 +83,12 @@ description: "Provisioning and governing the credentials infrastructure needs: t
 - Least privilege per purpose: a deploy token (scripts, routes, KV), a
   terraform token (Access, DNS), a bucket-scoped storage token, a
   service account per workload per tier. Two purposes, two tokens, even
-  when one account could hold both.
+  when one account could hold both. The exception is a token that adds
+  no boundary: when every holder of a second token already holds a
+  credential that does its job (an account-wide storage token beside a
+  bucket-scoped one, both read by one service account), the second is
+  a wasted slot under the provider's token cap (Cloudflare: 50 per user),
+  not least privilege.
 - The minted value lands in a 1Password item, never directly in a
   GitHub secret, never in a file in any repo, never in a chat or an
   issue. The module writes it there and outputs the `op://` path.
@@ -206,7 +211,8 @@ description: "Provisioning and governing the credentials infrastructure needs: t
   a live R2 or gateway token reads "never". Look for the root that mints
   it, its registry row, and any 1Password item or git config that holds
   an S3 key pair derived from it. Deleting a token revokes every R2 key
-  pair derived from it (the aws-ops skill). A token whose consumer you
+  pair derived from it (the cloudflare-hosting skill, "R2 credentials
+  and the token cap"). A token whose consumer you
   cannot find goes to the owner to decide, with what you searched.
 
 **A service-account token is rotated by the infra repo's rotator, run by
@@ -267,7 +273,8 @@ renames or removes a consumer updates the registry in the same change
 set. A consumer absent from the registry is a finding, not a formality.
 Every provider token that has a consumer has a row, a token made by hand
 outside any root included, because a token audit sees a consumer only
-through the registry.
+through the registry. A credential that no root mints and no row names is
+unregistered, not unused: find its consumer before deleting it (Rotation).
 
 ## What an agent may and may not do
 

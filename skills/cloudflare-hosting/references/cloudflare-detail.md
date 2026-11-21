@@ -6,6 +6,7 @@ Detail moved out of this skill's SKILL.md. Each section here is named there with
 
 - Verification and diagnosis table (Verification and diagnosis)
 - API token scope table (API token scopes)
+- R2 credentials and the token cap (API token scopes)
 - Certificates by hostname mechanism (Hostnames: custom domain versus route)
 - Static assets over a service binding (Bindings)
 - WorkerEntrypoint RPC exposure (Bindings)
@@ -60,10 +61,45 @@ blaming the deploy tool.
 | mint Access service tokens (Terraform) | Access: Service Tokens Write, account scope (a zone-scoped Access grant cannot; the resource is not zonal) | |
 | mint API tokens | the human's Global API Key, laptop only (the iac skill's credential-minting posture) | |
 | R2 state backend | an R2 API token scoped to the state bucket; S3-compatible key pair | |
+| R2 objects in named buckets | Workers R2 Storage Bucket Item Read / Write, scope `com.cloudflare.edge.r2.bucket`, one resource per bucket | |
 
 A scoped token that fails `auth.forbidden` on an account-level resource
 is scoped to a zone; re-scoping it does not help, the resource is not
 zonal.
+
+## R2 credentials and the token cap
+
+- **The S3 pair is derived from an API token**: access key id = the
+  token's id, secret = SHA-256 of the token's value. Deleting the token
+  revokes the pair at once, wherever it was copied.
+- **Account-level `Workers R2 Storage Read` or `Write` opens every
+  bucket.** The S3 pair derived from it reads (or writes) any bucket on
+  the account, the Terraform state bucket included. A bucket-scoped token
+  beside it, read by the same holder, adds no boundary. Only the
+  bucket-scoped `Bucket Item Read` / `Write` groups stop at the named
+  buckets, and those cannot manage a bucket (create it, refresh it in
+  Terraform, set its lock).
+- **One bucket-scoped token can name several buckets.** Use one token
+  for buckets whose holders are the same, or whose cross-access the
+  owner has accepted; it saves a slot under the cap.
+- **No token permission allows a put and refuses a delete.** `Bucket
+  Item Write` puts, overwrites and deletes. For a write-once bucket (a
+  ledger, an archive), add an R2 bucket lock: rule `Indefinite` (or an
+  age) on every prefix. R2 then answers an overwrite or a delete
+  `ObjectLockedByBucketPolicy`, for every caller, Worker bindings
+  included. Changing the lock needs account-level R2 rights, so an
+  item-scoped holder cannot remove it. Terraform:
+  `cloudflare_r2_bucket_lock`, provider v5 only, and Terraform cannot
+  destroy it. Writers must tolerate the refusal: a retry or replay that
+  rewrites its own key now fails.
+- **A token's "last used" date never counts S3 calls.** Every R2 token
+  reads "never" however busy it is. It is not evidence of disuse.
+- **User API tokens are capped at 50 per user.** At the cap, a create
+  fails `Quota limit exceeded ... (1001)`. Free a slot by consolidating
+  tokens that add no boundary (above), never by deleting one on its
+  last-used date: find the root that mints it, or its row in the
+  credential registry (the infra-credentials skill); a token in neither
+  is unregistered, not unused.
 
 ## Certificates by hostname mechanism
 
