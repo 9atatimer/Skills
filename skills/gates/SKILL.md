@@ -26,6 +26,24 @@ expensive:
 **A red gate is a diagnosis prompt, not an obstacle.** The laws below
 govern every rung, and neither has an agent-accessible exception.
 
+**Never re-run a failed `/land` unchanged.** A red staging build after a
+green PR head or a green `/try` has three usual causes: the base moved, the
+merge with the base broke something, or tedium changed the tree (the
+double-bar gate). Rule out the last one before you comment `/land` again:
+
+- Tell the stage: when `git rev-parse <staging-sha>:.github/workflows`
+  equals `git rev-parse origin/<default>:.github/workflows` but the PR
+  changes `.github/workflows/`, the failed build was stage 1, with the
+  base's workflows grafted in. Take `<staging-sha>` from tedium's comment.
+- Compare it with the green `/try` commit: `git diff --stat <try-sha>
+  <staging-sha>`. When the two have the same parents and only
+  `.github/workflows/` differs, the graft caused the failure.
+- For a graft failure, the github-workflow skill, "Landing via tedium",
+  has the remedy. For any other cause, read the job log and fix the
+  cause.
+- A second identical failure on the same head means stop: report the
+  diagnosis to the human, or fix the cause, and do not queue a third.
+
 ## ci.magic (rung 3)
 
 Repos with `ci.magic` files carry natural-language assertions judged by a
