@@ -21,6 +21,28 @@ walk for drift and no Key Decisions to append. Do
 the lessons and discovered-issues sections, confirm `docs/ops/<tool>.md`
 matches what shipped, and stop.
 
+**A retrospective saves tokens; it must not burn them.** Its only
+product is what the next session cannot derive for itself: what the
+session learned, what the owner ruled, what is still open and why. A
+next session can read the code, git history, issues and records; anything
+it could re-derive there when it becomes salient is not this phase's
+work. So:
+
+- **Write the session's knowledge first**, before any walk: lessons,
+  owner rulings not yet on disk, open decisions, and the next step. If
+  the session ends mid-retro, that much must already be committed.
+- **Walk for drift only where the session knows it exists**: rulings it
+  made that a record does not hold, rules it knows it bent, things it
+  chose not to build. Do not re-derive the whole design against the
+  code; file what you already know, in one line of evidence each.
+- **The as-built takes facts the code does not state plainly**: tuned
+  values, constraints, the reason for a shape. Do not transcribe
+  signatures, file lists or component inventories the code already
+  holds. A gap you leave is a line in the plan, not a sub-agent.
+- **No fan-out.** Do not spawn agents to walk records or rewrite
+  as-builts; the session that did the work already holds the context,
+  and a fresh agent pays to rebuild it.
+
 This phase used to live inside the design skill, where the freeze rule
 told implementers not to be. That is why it was skipped: the one checklist
 that closes the loop was hidden behind the rule that kept you out of it.
@@ -35,9 +57,11 @@ not get read, and that is exactly how unreviewed decisions ship.
 
 ### Cut drift issues
 
-Walk the design doc section by section against the code. Every divergence
-gets an issue, with `file:line` and a concrete consequence. Cross-link them
-so the set is reviewable together.
+Every divergence the session knows of gets an issue, with `file:line`
+and a concrete consequence; cross-link them so the set is reviewable
+together. Walk the design section by section only where the session
+changed it or ruled on it, never as an audit of the whole record (see
+the spend rule above).
 
 | Kind | Example | Action |
 |---|---|---|
