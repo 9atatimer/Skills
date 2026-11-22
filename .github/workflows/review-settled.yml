@@ -64,12 +64,12 @@ jobs:
     if: >-
       (github.event_name != 'issue_comment' || github.event.issue.pull_request != null)
       && (github.event.pull_request == null || github.event.pull_request.head.repo.full_name == github.repository)
-    uses: 9atatimer/tds-utils/.github/workflows/review-settled.yml@7643b92adc42e8a0f40d5da1470a2aebe3d91796
+    uses: 9atatimer/workflows/.github/workflows/review-settled.yml@51ea745049374ca3bac4ffcd03a7c50d740f0275
     permissions:
       statuses: write
       pull-requests: read
       contents: read
     with:
       reviewers: copilot-pull-request-reviewer
-      tools_ref: 7643b92adc42e8a0f40d5da1470a2aebe3d91796
+      tools_ref: 51ea745049374ca3bac4ffcd03a7c50d740f0275
       pr: ${{ github.event.pull_request.number || github.event.issue.number || inputs.pr }}
