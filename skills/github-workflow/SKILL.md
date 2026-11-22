@@ -170,6 +170,22 @@ tedium landing does not close issues; close them by hand. On a repo
 without `tedium.toml`, an agent never merges and never comments
 `/land`.
 
+**A PR that changes `.github/workflows/` builds twice on `/land` and once
+on `/try`.** Stage 1 runs the merged code with the base's workflows
+grafted in. A test in the PR that reads or runs a changed workflow file
+sees the OLD file there and fails, while `/try` passes (template-tools
+Issue#1109). Before `/land`, check whether the PR touches a workflow AND a
+test that reads one. If it does, fix the shape first:
+
+- Move the logic that a test runs into a script outside
+  `.github/workflows/`, and have the workflow call it. The test runs the
+  script, so the test and the fix still land together.
+- Write a guard over workflow text so that it holds for the base form and
+  the head form. Tighten it in a later PR.
+- Prove stage 1 locally: `git checkout origin/<default> -- .github/workflows`,
+  run the suites that read workflows, then restore with `git checkout HEAD --
+  .github/workflows` (commit first, or the restore discards your edits).
+
 Read `references/landing-forks-and-tools.md`, "Landing via tedium (merge bot)", for the full preconditions and the commands tedium parses, before you comment `/land`.
 
 ### PR Template (both workflows)
