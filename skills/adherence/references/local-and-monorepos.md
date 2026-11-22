@@ -4,8 +4,10 @@ Detail moved out of this skill's SKILL.md. Each section here is named there with
 
 ## Running it locally
 
-Run the engine from a tds-utils checkout at the commit the repository
-pins, so the verdict is the one CI will reach. `bin/adhere` needs `uv`.
+Run the engine from a clone of `9atatimer/workflows` at the commit the
+repository pins, so the verdict is the one CI will reach. That commit is
+not a tds-utils commit: a tds-utils checkout at the pinned SHA does not
+exist. `bin/adhere` needs `uv`.
 `--stage` comes before the verb.
 
 - `bin/adhere declaration check --root <repo>`: reads every

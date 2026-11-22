@@ -112,7 +112,12 @@ places and renaming later touches all of them.
   real request. Make a check refuse to deploy while a sentinel remains,
   test first.
 - **Pins.** The OCR caller names a reusable workflow and a `tools_ref` by
-  commit; both must be the same real commit. Prove it resolves.
+  commit; both must be the same real commit. Prove it resolves. Call every
+  shared workflow (OCR, adherence, review-settled) from
+  `9atatimer/workflows`, never from `9atatimer/tds-utils`: tds-utils is
+  private, and GitHub refuses a call into a private repository from
+  another account. tds-utils's own docs (`docs/ocr-review-caller.yml`)
+  are the templates.
 - **Tag-pinned actions.** The template's ci.magic workflow pins some
   actions by tag; pin each by SHA and prove it resolves (the release
   skill, Supply chain).

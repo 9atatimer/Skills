@@ -2,7 +2,8 @@
 
 Worked shapes for the adoption steps in the adherence skill. Each is
 copied from a live caller; the reusable workflow's header comment
-(tds-utils `.github/workflows/adherence.yml`) is the authority on its
+(tds-utils `.github/workflows/adherence.yml`, published to
+`9atatimer/workflows`) is the authority on its
 inputs, secrets and permissions, and the architecture record's
 Operability table on the rollout.
 
@@ -17,7 +18,7 @@ the job carries no `if:` and runs on every event.
 
 ```yaml
   adherence:
-    uses: 9atatimer/tds-utils/.github/workflows/adherence.yml@<sha>
+    uses: 9atatimer/workflows/.github/workflows/adherence.yml@<sha>
     permissions:
       contents: read
       pull-requests: read
@@ -37,7 +38,7 @@ first parent there too.
   adherence:
     needs: changes
     if: needs.changes.outputs.adherence == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-    uses: 9atatimer/tds-utils/.github/workflows/adherence.yml@<sha>
+    uses: 9atatimer/workflows/.github/workflows/adherence.yml@<sha>
     permissions:
       contents: read
       pull-requests: read
@@ -47,8 +48,8 @@ first parent there too.
       timeout_minutes: 9
 ```
 
-- `<sha>` is one full tds-utils commit on `master`, the same in both
-  places. tds-utils itself calls `./.github/workflows/adherence.yml` with
+- `<sha>` is one full `9atatimer/workflows` commit on `main`, the same
+  in both places. tds-utils itself calls `./.github/workflows/adherence.yml` with
   `tools_ref` set to the PR's own head, so the engine judges itself.
 - An empty `base` is the merge-base with the PR's base, or on a push the
   tip it replaced. tedium force-pushes its staging branches, so the
