@@ -136,6 +136,11 @@ them (9atatimer/tds-utils PR#808, 2026-11-15).
 
 ## GitHub Tool Usage
 
+To find every repository that uses something (a workflow, a pin, a URL),
+list the owner's repositories (`gh repo list <owner>`) and read the files
+in each. Never rely on GitHub code search for a complete answer: its index
+drops files and repositories without saying so.
+
 In token-frugal preference order:
 
 - `gadmin` (`@nine-at-a-time-media/admin`, from template-tools
