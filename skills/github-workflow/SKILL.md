@@ -14,6 +14,10 @@ gates skill.
 
 Ask the repo. A hand-maintained identity file goes stale silently.
 
+To find every repo or file that uses something (a workflow, a pin, a
+URL), list the owner's repos (`gh repo list`) and read each file; never
+rely on code search, whose index silently drops repos and files.
+
 Pin `gh` to the origin URL: a bare `gh repo view` resolves a remote named
 `upstream` ahead of `origin`, so in a fork checkout it reports the parent
 and the fork looks like a direct origin (`gh repo view "$(git remote get-url origin)"
