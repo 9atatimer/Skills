@@ -61,6 +61,11 @@ applies:
    github-workflow skill, "Act as the bot identity, never the owner"); the
    replies to what it reports go through `asbot`. Waiting on a reviewer
    means starting this watch, not ending the turn and hoping.
+   Stopping `gh webhook forward` leaves its extension child running with
+   the webhook still registered: stop the child too (`pkill -P <pid>`).
+   A forwarder can drop without notice, so when a watch ends or the owner
+   asks, re-read the PR's state from the API rather than trusting the
+   watch.
 
 - **Polling -- ONLY on a human-started schedule.**
    Polling exists solely for environments with no event delivery. It
