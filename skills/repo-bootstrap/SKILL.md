@@ -46,6 +46,15 @@ places and renaming later touches all of them.
   secret seeding, the repository variable that turns deploys on.
 - Verify each rung against the live system; an unattended path is live
   only after it has run (the release skill).
+- Check a bootstrap step by step from evidence, never from memory or a
+  handed-over command: a step is done when its proof has been read, and
+  the next human act is handed over only then (the infra-credentials
+  skill, What an agent may and may not do). When you pick up a bootstrap
+  someone else started, establish where it stands from the same
+  evidence before handing over anything.
+- Read `references/cloudflare-preview-stage.md` before you stand up,
+  resume or check the preview stage of an app on Cloudflare: it has the
+  order of the human acts and the evidence for each.
 
 ## Rungs
 
@@ -56,9 +65,10 @@ places and renaming later touches all of them.
 | Gate scope | the repo's `.github/ci-scope.table` and the two calls in its gate workflow: `ci-scope select` in the first job, `ci-scope verdict` in the required one | none in the repo: `ci-scope` comes with a runner provisioned from the acquire rail, never as a dependency (the sdlc skill, Fleet tooling -- look first, build once, depend never). Confirm the command answers on the runner the gate uses before the gate depends on it; a GitHub-hosted runner does not have it | `ci-scope check` passes; a docs-only PR skips the suites and stays green; a PR touching the table or the gate workflow runs every suite |
 | ci.magic | the repo's workflow and root `ci.magic` | add the repo to the org secret's repository list, or seed the secret per repo for a user account | the PR comment is a verdict, not "skipped: missing credential" |
 | OCR on Demand | the repo's caller workflow, pinned to one reusable-workflow commit | add the repo to the org secret and variable lists, or seed them per repo | `/ocr` on a PR posts a review |
-| Cloudflare tokens | the infra repo's minting root, one token per tier | laptop apply under the human's root credential | `op read` of each written item, a read-only token verify |
+| Cloudflare tokens | the infra repo's minting root, one token per tier | laptop apply under the human's root credential, after the user-token count is checked against the cap (the cloudflare-hosting skill, API token scopes) | `op item get` of each written item lists its field labels, a read-only token verify |
 | State | one bucket and scoped key per tier, minted by a root | laptop apply | the deploy's `terraform init` reads and locks it |
 | Access gate | the infra repo's Access root | apply it BEFORE the first deploy of the tier | the unauthenticated probe returns the gate's login; the AUD output is pasted into the project's tier literal |
+| Environment | the infra repo's GitHub root: the tier's Environment and its branch rule | apply it alone, before the workflow that names the Environment merges | `gh api` shows the branch policy (the infra-credentials skill, GitHub secrets and variables) |
 | Deploy | the repo's tier roots and workflows, inert until a repository variable says otherwise | vaults, service accounts, Environment secrets, the enabling variable | a `workflow_dispatch` of preview goes green, then the probe |
 
 - Load the skill that owns the rung before touching it: gates (landing,
