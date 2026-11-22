@@ -182,9 +182,14 @@ test that reads one. If it does, fix the shape first:
   script, so the test and the fix still land together.
 - Write a guard over workflow text so that it holds for the base form and
   the head form. Tighten it in a later PR.
-- Prove stage 1 locally: `git checkout origin/<default> -- .github/workflows`,
-  run the suites that read workflows, then restore with `git checkout HEAD --
-  .github/workflows` (commit first, or the restore discards your edits).
+- Prove stage 1 locally. Commit first, and merge `origin/<default>` into
+  the branch if the branch is behind it, because stage 1 builds the merge.
+  Then run `git restore --source=origin/<default> --staged --worktree --
+  .github/workflows`, run the suites that read workflows, and put the
+  branch's workflows back with `git restore --source=HEAD --staged
+  --worktree -- .github/workflows`. Use `git restore`, not `git checkout
+  <ref> -- <dir>`: checkout only overlays, so it keeps a workflow file the
+  PR added, which stage 1 removes.
 
 Read `references/landing-forks-and-tools.md`, "Landing via tedium (merge bot)", for the full preconditions and the commands tedium parses, before you comment `/land`.
 

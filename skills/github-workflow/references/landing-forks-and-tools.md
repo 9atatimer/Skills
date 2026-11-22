@@ -110,8 +110,7 @@ workflows grafted in, and runs the PR's own workflows only once that
 passes (template-tools `docs/design/DESIGN.TEDIUM.md`, the double-bar
 extension). A test in the same PR that asserts the new workflow -- a scan
 of the workflow file, or a CI-only check that the new step took effect --
-fails that first build by design. Land the workflow change first and its
-guard tests in a PR after it: iae PR#338 failed its staging `gate` this
+fails that first build by design. iae PR#338 failed its staging `gate` this
 way on 2026-10-16, and tds-utils PR#780 twice on 2026-11-12. Do not count
 on `tedium dryrun` to catch it: the try build does not graft the base's
 workflows, so it passed PR#780 and its landing build failed
@@ -121,9 +120,11 @@ because the failure comment did not name the stage (template-tools
 Issue#1172). Check the PR yourself: if it changes a file under
 `.github/workflows/` and a test that reads that file, fix the shape
 before `/land`. Move the logic the test runs into a script outside
-`.github/workflows/` (flashcard `scripts/ci/secret-scan.sh`), make a
-guard on workflow text accept the base and head forms, or split the PR.
-A script keeps the fix and its test in one commit, so prefer it to a split.
+`.github/workflows/` (flashcard `scripts/ci/secret-scan.sh`), or make a
+guard on workflow text accept the base and head forms. When neither fits,
+land the workflow change, then open the guard test in a new PR after it
+merges. Never open the two PRs at the same time. A script keeps the fix and
+its test in one commit, so prefer it.
 
 **A tedium landing does not close issues.** `Closes #N` in the PR body or
 the commit message links the issue but leaves it open when tedium merges

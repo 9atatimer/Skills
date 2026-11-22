@@ -27,17 +27,20 @@ expensive:
 govern every rung, and neither has an agent-accessible exception.
 
 **Never re-run a failed `/land` unchanged.** A red staging build after a
-green PR head, or after a green `/try`, means tedium built a different
-tree. It is not a flake. Before you comment `/land` again:
+green PR head or a green `/try` has three usual causes: the base moved, the
+merge with the base broke something, or tedium changed the tree (the
+double-bar gate). Rule out the last one before you comment `/land` again:
 
-- Diff the trees: `git diff --stat <green-sha> <staging-sha>`, using the
-  staging commit from tedium's comment. Same parents with a different
-  tree means tedium changed the tree.
-- If the PR changes `.github/workflows/`, the cause is the double-bar
-  gate until shown otherwise. Stage 1 grafts the base's workflows, so a
-  test in the PR that reads or runs a changed workflow fails, and `/try`
-  does not graft. The github-workflow skill, "Landing via tedium", has
-  the remedy.
+- Tell the stage: when `git rev-parse <staging-sha>:.github/workflows`
+  equals `git rev-parse origin/<default>:.github/workflows` but the PR
+  changes `.github/workflows/`, the failed build was stage 1, with the
+  base's workflows grafted in. Take `<staging-sha>` from tedium's comment.
+- Compare it with the green `/try` commit: `git diff --stat <try-sha>
+  <staging-sha>`. When the two have the same parents and only
+  `.github/workflows/` differs, the graft caused the failure.
+- For a graft failure, the github-workflow skill, "Landing via tedium",
+  has the remedy. For any other cause, read the job log and fix the
+  cause.
 - A second identical failure on the same head means stop: report the
   diagnosis to the human, or fix the cause, and do not queue a third.
 
