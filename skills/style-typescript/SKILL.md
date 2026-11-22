@@ -28,6 +28,10 @@ description: "Writing or modifying TypeScript/Vue/Nuxt: toolchain and style conv
   - The `+sha512` suffix on `packageManager` is not verified by pnpm's
     own version switch (only corepack checks it); the pin is exact by
     version, the download integrity-checked like any dependency.
+  - A global pnpm on `PATH` (nvm installs one per Node version) shadows
+    the `packageManager` pin, and plain `corepack pnpm` runs that same
+    copy; an install then fails with `ERR_PNPM_LOCKFILE_BREAKING_CHANGE`.
+    Name the pinned version: `corepack pnpm@<version> install`.
   - Never point `PNPM_HOME` inside a repo: pnpm self-installs the pinned
     version from there, finds the repo's `package.json`, and switches
     again, without bound.
