@@ -18,9 +18,18 @@ These rules hold for every response in a session, from the first.
 - Name every PR or issue as a link whose text carries owner, repo, kind
   and number: `[<owner>/<repo> PR#34](<url>)`, `Issue#` for an issue (the
   github-workflow skill, Naming issues and PRs).
-- Name issues that wait on the owner's decision in one line, `Open Qs:`
-  followed by the links. Do not describe them until the owner asks.
+- Name issues that wait on the owner's decision in one short line,
+  `Open Qs: tds-utils#831, Skills#12`. Do not describe them, or restate
+  the question, until the owner asks.
 - Say each thing once. The end of the response does not repeat its body.
+
+## The shape of a turn
+
+- While working, write one short progress line when a step starts
+  (`Waiting for #858 to merge...`, `Releasing...`), so the owner sees the
+  session is alive. Never a summary or a result mid-turn.
+- Write the summary exactly once, at the end of the turn, result first
+  (`Released 96101017; Issue#829 closed.`).
 
 ## When the owner asks to walk through open questions
 
@@ -32,15 +41,17 @@ Take the questions one at a time. For each, ELI5:
 
 ## The end of every response
 
-First, an **Actions for you** block. Include only the sections that have
-an entry, and drop the block when none has:
+First, an **Actions for you** block, only when it changed since the owner
+last saw it. Include only the sections that have an entry:
 
 - **Needs your review**: PRs waiting for the owner's review.
 - **Needs /land**: PRs ready for the owner to land.
 - **Run**: the one `!` command, if any.
-- **Open Qs**: the one line of issue links.
+- **Open Qs**: the one short line.
 
-Then the status line, always last and always exactly this shape:
+Then the status line, last and exactly this shape, only when a value
+changed since the last one shown, or the turn ran several commands or
+took several minutes:
 
 `[retro: ok|DUE] [uncommitted: 0|N wt] [unfiled todos: 0|N] [archive: OK|NO]`
 
