@@ -129,9 +129,12 @@ The caller shapes, scope lines and CODEOWNERS lines are in
   declaration covers is measured at the next base, so its flaws are
   existing, not introduced.
 - **Add the caller job** that calls
-  `9atatimer/tds-utils/.github/workflows/adherence.yml@<sha>` with
-  `tools_ref: <sha>`. The two pins name one tds-utils commit, always move
-  together, and only to a commit on tds-utils `master`. Grant
+  `9atatimer/workflows/.github/workflows/adherence.yml@<sha>` with
+  `tools_ref: <sha>`. `9atatimer/workflows` is the public release of the
+  workflow and its engine; tds-utils itself is private, and GitHub refuses
+  a call into a private repository from another account. The two pins
+  name one `9atatimer/workflows` commit, always move together, and only to
+  a commit on its `main`. Grant
   `contents: read` and `pull-requests: read`, nothing more. Set `base` for
   tedium's staging pushes (the staging commit's first parent, since the
   replaced tip is not fetched) and, where the repository dispatches the
@@ -167,7 +170,7 @@ The caller shapes, scope lines and CODEOWNERS lines are in
   `dist-ci.yml`, template-tools `gate.yml`), it carries the scope and the
   fork guard in `if:`.
 - **Bump pins by PR**, both lines in one commit, only to a commit on
-  tds-utils master. An adopter's branch cut before a bump keeps the old
+  `9atatimer/workflows` `main`. An adopter's branch cut before a bump keeps the old
   pair, so its workflow and engine still agree. Only tds-utils itself
   fetches the engine at the PR head (`dist-ci.yml` passes the head sha as
   `tools_ref`), so there, and only there, a branch cut before an engine
@@ -253,8 +256,8 @@ CI's or run the `ci` stage locally.
 
 ## Running it locally
 
-Run the engine from a tds-utils checkout at the commit the repository
-pins, so the verdict is the one CI will reach; `bin/adhere` needs `uv`
+Run the engine from a clone of `9atatimer/workflows` at the commit the
+repository pins, so the verdict is the one CI will reach; `bin/adhere` needs `uv`
 and `--stage` comes before the verb. Run `bin/adhere declaration check
 --root <repo>` after every declaration edit, before committing, and
 `bin/adhere judge` on your branch against its merge-base before opening
