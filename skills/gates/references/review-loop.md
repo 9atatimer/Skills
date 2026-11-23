@@ -423,6 +423,13 @@ anything; if it already has a test, say which. Round two of a review is
 usually round one's collateral damage, and it is invisible to a suite that
 only describes what the fix was supposed to add.
 
+**Reply in a batch you can rerun.** GitHub refuses review replies posted
+in a quick burst: a secondary rate limit answers HTTP 422 with
+`"code":"abuse"`, and on [g1n1 PR#111](https://github.com/9atatimer/g1n1/pull/111)
+it refused the 41st of 46 replies. Script the replies so a rerun skips
+every thread that already carries yours, and run it again later; never
+wait on a timer for the limit to lift.
+
 **Step 3: Reject the ones you disagree with** immediately, with reason:
 `gadmin github reply --repo <OWNER/REPO> --id <ID> --type reject --msg "Reason for disagreement"`
 
