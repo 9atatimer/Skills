@@ -33,10 +33,9 @@ merged code built with the base's workflows grafted in).
 
 - Read tedium's failure comment. When the merge changes
   `.github/workflows/`, it names the stage that failed.
-- Run `/try` on the same head. It builds the same stages as `/land`,
-  against the current base. If it is red, its comment names the stage.
-  If it is green after a red `/land`, the base moved between the two:
-  merge the default branch into the PR branch and run `/try` again.
+- Run `/try` on the same head; its failure comment names the stage. If
+  it is green after a red `/land`, the base moved between the two: merge
+  the default branch into the PR branch and run `/try` again.
 - A stage-1 failure on a PR that changes a workflow and a test that reads
   it is by design. The github-workflow skill, "Landing via tedium", says
   how to fix the PR.

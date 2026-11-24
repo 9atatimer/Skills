@@ -81,8 +81,7 @@ its own PR only when all eight hold on the current head:
   self-approval: that PR is human-merged, and no `land` will change it;
 - no `hold` label is on the PR;
 - the self-review epilogue is posted on the PR and names the head, or a
-  range ending at it (the self-review skill, The epilogue). A prose-only
-  PR needs it too: for that PR it is the whole review;
+  range ending at it (the self-review skill, The epilogue);
 - the PR adds or changes no design or architecture record
   (`docs/design/DESIGN.*.md`, `docs/design/ARCHITECTURE.*.md`). Merging
   one is its approval (the design skill, Lifecycle is metadata), so a human
@@ -92,7 +91,8 @@ Anything short of all eight is not "almost". A red `review-settled` that the
 repo requires means a review is owed on this head: re-request the reviewer
 if the latest push carries a load-bearing fix, resolve every thread, post
 the self-review epilogue, then wait for the status. A head red only from a
-hygiene-only tail, or a documentation-only PR, goes to the human to land.
+hygiene-only tail, or a documentation-only PR, goes to the human to land
+once its epilogue is posted.
 A human with write access may comment `tedium land` at any time; that is
 the human merge decision. `tedium dryrun` is unrestricted: it builds on
 `tedium/try` and lands nothing. Never add `tedium/*` to protected-branch
@@ -132,8 +132,9 @@ ways, in order of preference:
 - Land the workflow change, then open the guard test in a new PR after
   the first merges. Never open the two PRs at the same time.
 
-To check stage 1 before you push, commit, merge `origin/<default>` into
-the branch if it is behind, and swap the base's workflows in:
+To check stage 1 before you push, commit first. If the branch is behind
+the default branch, merge `origin/<default>` into it. Then swap the
+base's workflows in:
 
 ```bash
 git restore --source=origin/<default> --staged --worktree -- .github/workflows

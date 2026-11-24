@@ -9,6 +9,7 @@ Contents:
 - The round-2 brief
 - The panelist brief
 - The judge brief
+- The prose pass
 - The prose brief
 - The epilogue
 - Measuring the binding
@@ -82,6 +83,26 @@ check out, switch, stash, reset or commit) or run the repo's own test and
 lint commands. Rule once: upheld or dropped, and why. Cite path:line or
 command output.
 ```
+
+## The prose pass
+
+A documentation-only change gets one of two passes:
+
+- **An agent instruction file gets one fresh reviewer.** Brief one
+  reviewer on a cheaper model than the session's with "The prose brief",
+  below. The author wrote the text from session context the reader will
+  not have, so the author's own read misses history, incident narration
+  and doubled rules (the agent-instructions skill).
+- **Other prose gets the author's read.** Read the change once yourself,
+  skeptically, against the technical-writing skill: each sentence is
+  true, says one specific thing its reader can act on, in plain words,
+  and nothing is vague or doubled. Hand it to a fresh reviewer when the
+  change is large or you are too close to it.
+
+Then fix each finding or reject it with a reason, and post the epilogue.
+For a prose pass the epilogue names the base and head, who reviewed (the
+author, or the fresh reviewer and its model), each finding with its
+disposition, and the checks run.
 
 ## The prose brief
 

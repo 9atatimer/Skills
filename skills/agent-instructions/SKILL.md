@@ -218,10 +218,10 @@ short rule that applies whatever the case in the summary itself.
 - **Reread when the model changes.** A caution written for an older
   model can make a newer one over-correct. Remove cautions whose reason
   no longer holds.
-- A human reads every change to an instruction file before it lands.
-  Before that, one fresh reviewer on a cheaper model checks it against
-  this skill, and the epilogue is on the PR (the self-review skill,
-  Documentation-only changes).
+- A human reads every change to an instruction file before it lands. A
+  fresh reviewer reads it first for correctness, readability and
+  specificity, and the epilogue is posted on the PR (the self-review
+  skill, Documentation-only changes).
 
 ## Before committing
 
