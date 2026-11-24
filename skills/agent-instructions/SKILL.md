@@ -219,9 +219,9 @@ short rule that applies whatever the case in the summary itself.
   model can make a newer one over-correct. Remove cautions whose reason
   no longer holds.
 - A human reads every change to an instruction file before it lands.
-  Its self-review is the prose review (the self-review skill,
-  Documentation-only changes): correctness, readability and specificity,
-  no panel.
+  Before that, one fresh reviewer on a cheaper model checks it against
+  this skill, and the epilogue is on the PR (the self-review skill,
+  Documentation-only changes).
 
 ## Before committing
 

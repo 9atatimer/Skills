@@ -51,7 +51,7 @@ forms behind the trigger: `tedium land`, `tedium r+`, `tedium try`. A bare
 case-sensitive. Write `/land`.
 
 On an enrolled repo, an agent may comment `/land` (or `tedium land`) on
-its own PR only when all seven hold on the current head:
+its own PR only when all eight hold on the current head:
 
 - tedium is enabled: `tedium.toml` on the default branch, and the agent
   instruction file says so;
@@ -80,12 +80,15 @@ its own PR only when all seven hold on the current head:
   owner is the PR's author can never clear this, because GitHub refuses
   self-approval: that PR is human-merged, and no `land` will change it;
 - no `hold` label is on the PR;
+- the self-review epilogue is posted on the PR and names the head, or a
+  range ending at it (the self-review skill, The epilogue). A prose-only
+  PR needs it too: for that PR it is the whole review;
 - the PR adds or changes no design or architecture record
   (`docs/design/DESIGN.*.md`, `docs/design/ARCHITECTURE.*.md`). Merging
   one is its approval (the design skill, Lifecycle is metadata), so a human
   lands it.
 
-Anything short of all seven is not "almost". A red `review-settled` that the
+Anything short of all eight is not "almost". A red `review-settled` that the
 repo requires means a review is owed on this head: re-request the reviewer
 if the latest push carries a load-bearing fix, resolve every thread, post
 the self-review epilogue, then wait for the status. A head red only from a
@@ -104,28 +107,47 @@ standing designation is the human authorization Zero Unreviewed Code
 requires, and it holds only while `gate` actually checks that pipeline's
 output.
 
-**A workflow change lands in two builds.** When a batch changes
+**A workflow change builds in two stages.** When the merge changes
 `.github/workflows/`, tedium first builds the merged code with the base's
-workflows grafted in, and runs the PR's own workflows only once that
-passes (template-tools `docs/design/DESIGN.TEDIUM.md`, the double-bar
-extension). `/try` (`tedium dryrun`) builds the same two stages, so it is
-the check to run, and its comment names the stage that failed
-(template-tools Issue#1109). A test in the same PR that asserts the new
-workflow -- a scan of the workflow file, or a CI-only check that the new
-step took effect -- fails stage 1 by design, on `/try` and `/land` alike.
-iae PR#338, tds-utils PR#780, template-tools PR#1082, bubbas-gold PR#1 and
-flashcard PR#270 each failed a landing this way before `/try` built both
-stages. `/land` now refuses a PR that changes a workflow and a file that
-mentions `.github/workflows` until a `/try` on its current head has passed;
-a PR that changes only workflow files is not gated (template-tools
-Issue#1083). A refusal names the reason and asks for `/try` on the head;
-a push needs a new `/try`. To fix the shape, move the logic the test runs
-into a script outside `.github/workflows/` (flashcard
-`scripts/ci/secret-scan.sh`), or make a guard on workflow text accept the
-base and head forms. When neither fits, land the workflow change, then
-open the guard test in a new PR after it merges. Never open the two PRs at
-the same time. A script keeps the fix and its test in one commit, so
-prefer it.
+workflows grafted in (stage 1), and builds the PR's own workflows only
+once that passes (stage 2). `/try` (`tedium dryrun`) builds the same two
+stages as `/land`, against the current base, and its failure comment
+names the stage that failed.
+
+`/land` refuses a PR that changes a workflow and a file that mentions
+`.github/workflows` until a `/try` on its current head has passed. A PR
+that changes only workflow files is not gated. A push after the `/try`
+needs a new `/try`.
+
+A test that asserts the new workflow -- a scan of the workflow file, or a
+CI-only check that the new step took effect -- fails stage 1 by design,
+because it sees the base's workflow there. Fix the PR in one of these
+ways, in order of preference:
+
+- Move the logic the test runs into a script outside
+  `.github/workflows/`, and have the workflow call it. The test runs the
+  script, so the fix and its test still land in one commit.
+- Write a guard over workflow text that holds for the base form and the
+  head form, and tighten it in a later PR.
+- Land the workflow change, then open the guard test in a new PR after
+  the first merges. Never open the two PRs at the same time.
+
+To check stage 1 before you push, commit, merge `origin/<default>` into
+the branch if it is behind, and swap the base's workflows in:
+
+```bash
+git restore --source=origin/<default> --staged --worktree -- .github/workflows
+```
+
+Run the suites that read workflows, then put the branch's workflows back:
+
+```bash
+git restore --source=HEAD --staged --worktree -- .github/workflows
+```
+
+Use `git restore`, not `git checkout <ref> -- <dir>`: checkout only
+overlays files, so it keeps a workflow file the PR added, which stage 1
+removes.
 
 **A tedium landing does not close issues.** `Closes #N` in the PR body or
 the commit message links the issue but leaves it open when tedium merges

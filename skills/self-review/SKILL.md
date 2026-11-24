@@ -154,7 +154,7 @@ that matches wins.
 | Touches gate configuration, a CI workflow, infrastructure or a credential path, at any size | 3 |
 | Code, over 100 lines | 3 |
 | Code, up to 100 lines | 2 |
-| Prose only, skills and `AGENT.md` included | no panel (Documentation-only changes, below) |
+| Prose only, skills and `AGENT.md` included | no panel; one fresh prose reviewer for agent instruction files (Documentation-only changes, below) |
 
 The panel is for code and for configuration a machine executes. More than
 three panelists buys correlated agreement, not coverage.
@@ -263,18 +263,28 @@ findings instead of converging.
 
 When every changed file is prose -- a README, a `docs/` runbook or
 as-built, `TODO_PLAN.md`, task files, a changelog, a comment-only edit to
-source, a skill, a persona, `AGENT.md`, a prompt -- no panel runs. Read
-the change once yourself, skeptically, for correctness, readability and
-specificity: each sentence is true, says one specific thing its reader
-can act on, in plain words, and nothing is vague or doubled. Your own
-read costs only the diff, because your context is already loaded; a
-fresh reviewer costs a whole new context. Hand the read to one fresh
-reviewer on a cheaper model than the session's only when the change is
-large or you are too close to it. Either way there is no verifier and no
-second round. Summon no OCR, ask no human to summon Copilot or Codex,
-and run no review-watch loop; the epilogue on the PR records that read
-and satisfies Zero Unreviewed Code (the gates skill, Documentation-only
-changes get no agentic reviewer).
+source, a skill, a persona, `AGENT.md`, a prompt -- no panel runs. There
+is no verifier and no second round. Summon no OCR, ask no human to summon
+Copilot or Codex, and run no review-watch loop. The pass depends on what
+the prose is:
+
+- **Agent instruction files get one fresh reviewer, every time.** A
+  change to a skill, a reference file, a persona, a repo's `AGENT.md`,
+  the global instruction file or a prompt goes to one fresh reviewer on a
+  cheaper model than the session's, briefed with `references/briefs.md`,
+  "The prose brief". The author wrote the text from session context the
+  reader will not have, so the author's own read misses history,
+  incident narration and doubled rules (the agent-instructions skill).
+- **Other prose gets the author's read.** Read the change once yourself,
+  skeptically, against the technical-writing skill: each sentence is
+  true, says one specific thing its reader can act on, in plain words,
+  and nothing is vague or doubled. Hand it to the same fresh reviewer
+  when the change is large or you are too close to it.
+- **Fix, then post the epilogue before you `/land`.** Fix each finding
+  or reject it with a reason, then post the epilogue (below). It records
+  the pass and satisfies Zero Unreviewed Code (the gates skill,
+  Documentation-only changes get no agentic reviewer). A prose PR with no
+  epilogue has not been reviewed.
 
 - **Phases 2 and 3 are the exception.** A design record under review or a
   phase-3 seam map gets the designomatic panel, not this pass and not
