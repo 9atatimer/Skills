@@ -124,6 +124,10 @@ ASCII can for a document whose whole job is to be looked at.
   on the ring it was proposed at. One that landed without a row is a
   finding for the retrospective, not something to quietly add.
 - **Record what the shape taught you**, if anything.
+- **Check quoted code mechanically.** Where the as-built quotes code -- an
+  interface, a port's signature, a table of adapters -- prefer a test that
+  parses the record and diffs it against the source. A careful reread
+  misses drift that a comparison finds at once.
 - **Record built-but-not-designed facts.** See below.
 
 ---

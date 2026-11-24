@@ -240,6 +240,12 @@ guard, mutate it both ways -- refuse all, accept all -- and confirm the suite
 goes red each time. Read `references/test-pitfalls.md`, "A guard needs an accept
 case", for the evidence before you write or review a guard's tests.
 
+### A guard asserts the parsed value
+
+Assert on the parsed value, not a substring, and revert each fix to see
+its test go red. Read `references/test-pitfalls.md`, "A guard asserts the
+parsed value", before writing a guard over a file.
+
 ### A fake cannot test a third-party tool's behavior
 
 A fake of an external CLI encodes your assumption about it. When a claim is

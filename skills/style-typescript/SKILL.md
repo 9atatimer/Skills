@@ -51,6 +51,29 @@ description: "Writing or modifying TypeScript/Vue/Nuxt: toolchain and style conv
 - Naming: PascalCase for components (`AppLayout.vue`)
 - Functions/variables: camelCase
 
+## Nuxt and Vue traps
+
+- A dynamic-param page is reused across navigations, so `setup()` does not
+  rerun: read the param as a `computed`, pass `{ watch: [param] }` to
+  `useAsyncData`, and give it a stable key, not one with the param in it.
+- Bind a composable's function in `<script setup>`; a name used only in the
+  template is undefined at run time.
+- Guard browser-only APIs with `import.meta.client`, and wrap them:
+  `localStorage` throws when storage is full, private or disabled.
+- Use `||`, not `??`, where a `NOT NULL` text column can hold `''`.
+- A caught error is `unknown`: read it through one helper that checks
+  `instanceof Error`, and wrap every composable call that can reject.
+- A null profile has two causes, signed out and row missing: branch on
+  `user` first, and show "profile missing" only for `user && !profile`.
+- Under `noUncheckedIndexedAccess`, destructure an index into a local and
+  guard it; a `.length` check does not narrow `arr[0]`.
+- A file input's `accept` is a hint: validate the extension, reset
+  `input.value` after reading, and add `@drop` and `@dragover.prevent`.
+- Normalize a lookup key (`trim().toLowerCase()`) before reading a map.
+- Truncate, do not round, a compact count (9,999 is not "10.0k"), and pin
+  `timeZone: 'UTC'` in a date format whose result must not depend on the
+  runner.
+
 ## Imports
 
 - Group: external libraries first, then local components/utils
