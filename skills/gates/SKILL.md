@@ -26,22 +26,21 @@ expensive:
 **A red gate is a diagnosis prompt, not an obstacle.** The laws below
 govern every rung, and neither has an agent-accessible exception.
 
-**Never re-run a failed `/land` unchanged.** A red staging build after a
-green PR head or a green `/try` has three usual causes: the base moved, the
-merge with the base broke something, or tedium changed the tree (the
-double-bar gate). Rule out the last one before you comment `/land` again:
+**Diagnose a failed `/land` before you comment `/land` again.** A red
+`/land` build after a green PR head has three usual causes: the base
+moved, the merge with the base broke something, or stage 1 failed (the
+merged code built with the base's workflows grafted in).
 
-- Tell the stage: when `git rev-parse <staging-sha>:.github/workflows`
-  equals `git rev-parse origin/<default>:.github/workflows` but the PR
-  changes `.github/workflows/`, the failed build was stage 1, with the
-  base's workflows grafted in. Take `<staging-sha>` from tedium's comment.
-- Compare it with the green `/try` commit: `git diff --stat <try-sha>
-  <staging-sha>`. When the two have the same parents and only
-  `.github/workflows/` differs, the graft caused the failure.
-- For a graft failure, the github-workflow skill, "Landing via tedium",
-  has the remedy. For any other cause, read the job log and fix the
-  cause.
-- A second identical failure on the same head means stop: report the
+- Read tedium's failure comment. When the merge changes
+  `.github/workflows/`, it names the stage that failed.
+- Run `/try` on the same head; its failure comment names the stage. If
+  it is green after a red `/land`, the base moved between the two: merge
+  the default branch into the PR branch and run `/try` again.
+- A stage-1 failure on a PR that changes a workflow and a test that reads
+  it is by design. The github-workflow skill, "Landing via tedium", says
+  how to fix the PR.
+- For any other cause, read the job log and fix the cause.
+- After a second identical failure on the same head, stop: report the
   diagnosis to the human, or fix the cause, and do not queue a third.
 
 ## ci.magic (rung 3)

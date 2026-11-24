@@ -163,35 +163,24 @@ On an enrolled repo an agent comments `/land` on its own PR only when
 every precondition holds on the current head: `gate` green, the review
 settled by a reviewer that is not your own self-review, no turn cap
 fired and no open `pr-todo` issue, every CODEOWNERS path approved, no
-`hold` label, and no design or architecture record added or changed by
-the PR (a human lands those). Anything short of all of them goes to the
+`hold` label, the self-review epilogue posted on the PR for this head,
+and no design or architecture record added or changed by the PR (a human
+lands those). Anything short of all of them goes to the
 human. A
 tedium landing does not close issues; close them by hand. On a repo
 without `tedium.toml`, an agent never merges and never comments
 `/land`.
 
-**A PR that changes `.github/workflows/` builds twice on `/land` and once
-on `/try`.** Stage 1 runs the merged code with the base's workflows
-grafted in. A test in the PR that reads or runs a changed workflow file
-sees the OLD file there and fails, while `/try` passes (template-tools
-Issue#1109). Before `/land`, check whether the PR touches a workflow AND a
-test that reads one. If it does, fix the shape first:
+**A PR that changes `.github/workflows/` builds in two stages, on `/try`
+and on `/land`.** Stage 1 runs the merged code with the base's workflows
+grafted in, so a test in the PR that reads or runs a changed workflow
+file sees the old file there and fails. `/land` refuses a PR that changes
+a workflow and a file that mentions `.github/workflows` until a `/try` on
+its current head has passed, and a push after the `/try` needs a new one.
+Run `/try` first. When stage 1 fails, read the reference below for how to
+fix the PR.
 
-- Move the logic that a test runs into a script outside
-  `.github/workflows/`, and have the workflow call it. The test runs the
-  script, so the test and the fix still land together.
-- Write a guard over workflow text so that it holds for the base form and
-  the head form. Tighten it in a later PR.
-- Prove stage 1 locally. Commit first, and merge `origin/<default>` into
-  the branch if the branch is behind it, because stage 1 builds the merge.
-  Then run `git restore --source=origin/<default> --staged --worktree --
-  .github/workflows`, run the suites that read workflows, and put the
-  branch's workflows back with `git restore --source=HEAD --staged
-  --worktree -- .github/workflows`. Use `git restore`, not `git checkout
-  <ref> -- <dir>`: checkout only overlays, so it keeps a workflow file the
-  PR added, which stage 1 removes.
-
-Read `references/landing-forks-and-tools.md`, "Landing via tedium (merge bot)", for the full preconditions and the commands tedium parses, before you comment `/land`.
+Read `references/landing-forks-and-tools.md`, "Landing via tedium (merge bot)", for the full preconditions, the commands tedium parses and how to fix a PR whose stage 1 fails, before you comment `/land`.
 
 ### PR Template (both workflows)
 

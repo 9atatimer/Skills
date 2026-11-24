@@ -263,18 +263,16 @@ findings instead of converging.
 
 When every changed file is prose -- a README, a `docs/` runbook or
 as-built, `TODO_PLAN.md`, task files, a changelog, a comment-only edit to
-source, a skill, a persona, `AGENT.md`, a prompt -- no panel runs. Read
-the change once yourself, skeptically, for correctness, readability and
-specificity: each sentence is true, says one specific thing its reader
-can act on, in plain words, and nothing is vague or doubled. Your own
-read costs only the diff, because your context is already loaded; a
-fresh reviewer costs a whole new context. Hand the read to one fresh
-reviewer on a cheaper model than the session's only when the change is
-large or you are too close to it. Either way there is no verifier and no
-second round. Summon no OCR, ask no human to summon Copilot or Codex,
-and run no review-watch loop; the epilogue on the PR records that read
-and satisfies Zero Unreviewed Code (the gates skill, Documentation-only
-changes get no agentic reviewer).
+source, a skill, a persona, `AGENT.md`, a prompt -- no panel runs, and no
+verifier, second round, OCR or review-watch loop either. A change to an
+agent instruction file (a skill, a reference file, a persona, a repo's
+`AGENT.md`, the global instruction file, a prompt) goes to one fresh
+reviewer on a cheaper model than the session's; other prose gets the
+author's read. Fix or reject each finding, then post the epilogue before
+the PR is landed, whoever lands it. It records the pass and satisfies
+Zero Unreviewed Code (the gates skill, Documentation-only changes get no
+agentic reviewer). Read `references/briefs.md`, "The prose pass", before
+you review any documentation-only change.
 
 - **Phases 2 and 3 are the exception.** A design record under review or a
   phase-3 seam map gets the designomatic panel, not this pass and not

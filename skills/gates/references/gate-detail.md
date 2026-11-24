@@ -118,10 +118,11 @@ semgrep`, then `semgrep --config=p/default --config=p/security-audit
   agentic reviewer -> the designomatic skill.
 - **Prose that agents follow is reviewed as prose.** A PR whose every
   changed file is prose -- skills, personas, `AGENT.md`/`CLAUDE.md` and
-  prompts included -- gets the author's own read for correctness,
-  readability and specificity, no panel, and the human review (the
-  self-review skill, Documentation-only changes). CI workflows and gate
-  configuration are code: a PR touching them takes the full ladder.
+  prompts included -- gets no panel: an agent instruction file goes to
+  one fresh reviewer, other prose to the author's read, the epilogue is
+  posted, and the human review is still owed (the self-review skill,
+  Documentation-only changes). CI workflows and gate configuration are
+  code: a PR touching them takes the full ladder.
 - **A PR that mixes documentation with anything else is not
   documentation-only.**
 - **A pin bump gets no agentic reviewer either.** A PR whose only change
