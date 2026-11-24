@@ -1,9 +1,8 @@
 # [Name] -- architecture
 
-> **Status:** DRAFT
 > **Date:** YYYY-MM-DD
 > **Authors:** [Names]
-> **Implements:** [DESIGN.name.md](./DESIGN.name.md) (status: APPROVED)
+> **Implements:** [DESIGN.name.md](./DESIGN.name.md)
 > **As-built read:** `docs/arch/...` as of YYYY-MM-DD, or "none yet"
 
 ---
@@ -92,9 +91,9 @@ No values here. The as-built holds them.
 
 ## Radar proposals
 
-| Dependency | Ring proposed | Why |
-|---|---|---|
-| | | |
+| Dependency or platform feature | Ring proposed | Tier needed, checked against | Why |
+|---|---|---|---|
+| | | | |
 
 ---
 

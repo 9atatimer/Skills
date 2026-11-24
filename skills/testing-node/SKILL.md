@@ -45,19 +45,10 @@ on sight.
 
 ## 2. Toolchain
 
-| Tool | Purpose |
-|------|---------|
-| vitest | Default test runner for all TS/JS code in this repo |
-| `@vitest/coverage-v8` | Smoke-level coverage measurement only |
-| `@stryker-mutator/core` + `@stryker-mutator/vitest-runner` | Mutation testing on critical modules (the JS equivalent of Python's `mutmut`) |
-| fast-check | Property-based testing for pure functions and validators |
-| vitest snapshots (`toMatchSnapshot` / `toMatchFileSnapshot`) | Snapshot testing for CLI output and rendered text only |
-| `@sinonjs/fake-timers` (or `vi.useFakeTimers()`) | Time travel for integration tests only (prefer DI of a Clock) |
-| testcontainers (npm) | Real Postgres / Redis / etc. in Docker for integration tests |
-| fishery | Test data factories for ORM / constrained model objects |
-| `@faker-js/faker` | Randomized fake data for factories (seeded per suite) |
-| miniflare / `@cloudflare/vitest-pool-workers` | In-process Workers runtime for Cloudflare Worker tests |
-| msw | HTTP boundary fakes for contract-tested external adapters only |
+Toolchain: vitest, `@vitest/coverage-v8` (smoke only), Stryker, fast-check, vitest snapshots, fake timers
+(integration only; prefer a DI Clock), testcontainers, fishery + seeded faker, `@cloudflare/vitest-pool-workers`,
+msw (contract-tested external adapters only).
+Read `references/node-detail.md`, "Toolchain table", when you pick a tool for a purpose not named here.
 
 **Banned:**
 
@@ -123,19 +114,10 @@ integration tests with the unit-test default timeout.
 There is no `conftest.py` in Vitest. The equivalent is a `tests/_helpers/`
 folder and `setupFiles` in `vitest.config.ts`. Keep both thin.
 
-`setupFiles` contains:
-
-- Global matchers registration (e.g. `expect.extend(...)`)
-- Runtime configuration that must apply to every test file (e.g.
-  `process.env.NODE_ENV = "test"`)
-
-`setupFiles` does **not** contain:
-
-- Domain factories -- those live in `tests/_factories.ts` and are
-  imported explicitly
-- Ambient `beforeEach` hooks that mutate module state across all tests
-  (that is the same mistake as a fat `conftest.py`)
-- "Helpful" globals on `globalThis`
+`setupFiles` holds only global matcher registration and runtime configuration every test file needs (e.g.
+`process.env.NODE_ENV = "test"`). It never holds domain factories (those live in `tests/_factories.ts`, imported
+explicitly), ambient `beforeEach` hooks that mutate module state, or "helpful" globals on `globalThis`.
+Read `references/node-detail.md`, "setupFiles contents", for the full list.
 
 Explicit imports beat magic. A reader should be able to follow every
 fixture a test uses via `import`, not by knowing which setup files ran.
@@ -155,17 +137,8 @@ per-test wiring.
 database, message bus, KV / R2 / D1 binding, clock, randomness source --
 all of them.
 
-```ts
-// ports/clock.ts
-export interface Clock { now(): Date }
-
-// tests/_fakes/FakeClock.ts
-export class FakeClock implements Clock {
-  constructor(private t: Date) {}
-  now() { return this.t }
-  advance(ms: number) { this.t = new Date(this.t.getTime() + ms) }
-}
-```
+Example: a `Clock` port (`now(): Date`) and a `FakeClock` that implements it with `advance(ms)`.
+Read `references/node-detail.md`, "Fake example", for the code.
 
 ### Mocks are last resort
 
@@ -180,29 +153,17 @@ Mocking your own modules pins tests to implementation. If you find
 yourself mocking a function in your own package, the design is wrong:
 extract the dependency behind a port (interface) and inject a fake.
 
-`vi.mock` against first-party modules is also brittle in a way that
-bites silently: it hoists above imports, it replaces the *module
-binding* not the symbol, and it behaves differently under ESM vs CJS.
-Tests pass locally, fail in production, or vice versa. Dependency
-injection has no such failure mode.
+`vi.mock` against first-party modules is also brittle: it hoists above imports, replaces the module binding not the
+symbol, and behaves differently under ESM and CJS. Dependency injection has no such failure mode.
 
 ### Dependency injection is mandatory for testability
 
 Every flow function takes its dependencies as parameters (or via an
 options object / constructor). No global singletons. No module-level
 instantiation of clients. The test constructs the function with fakes;
-production constructs it with real adapters.
-
-```ts
-// Yes
-export function makeHandler(deps: { db: Db; clock: Clock; logger: Logger }) {
-  return async (req: Request) => { /* ... */ }
-}
-
-// No
-import { db } from "./singletons"
-export async function handler(req: Request) { /* reaches into singleton */ }
-```
+production constructs it with real adapters. Pass deps in
+(`makeHandler(deps: { db; clock; logger })`); never import a singleton into a handler.
+Read `references/node-detail.md`, "Dependency injection example", for the snippet.
 
 ### Contract tests pin fakes to real adapters
 
@@ -212,24 +173,16 @@ tests miss production bugs.
 
 For every port that has both a fake and a real adapter, write the test
 suite once and parametrize over both implementations with
-`describe.each`:
-
-```ts
-describe.each<{ name: string; make: () => Promise<Store> }>([
-  { name: "FakeStore",     make: async () => new FakeStore() },
-  { name: "PostgresStore", make: async () => await PostgresStore.connect(testcontainerUrl) },
-])("Store contract -- $name", ({ make }) => {
-  let store: Store
-  beforeEach(async () => { store = await make() })
-
-  it("round-trip returns input", async () => { /* ... */ })
-  it("missing key raises NotFound", async () => { /* ... */ })
-})
-```
+`describe.each`, one `it` per contract rule.
+Read `references/node-detail.md`, "Contract test example", before you write a contract suite.
 
 If the fake passes contract tests but the real adapter does not (or
 vice versa), the fake has lied to your unit tests. Contract tests
 make that impossible to ship.
+
+A port leaves some rules implicit (what a collision does, result order, how a malformed id fails, who the caller
+is). Before an adapter family is called done, write a contract case for each implicit rule; unstated rules are
+where adapters disagree.
 
 ### HTTP boundaries: MSW, not nock
 
@@ -253,56 +206,17 @@ the real adapter.
 
 ### Stryker configuration sketch
 
-`stryker.conf.json` at the package root:
-
-```json
-{
-  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
-  "testRunner": "vitest",
-  "coverageAnalysis": "perTest",
-  "mutate": ["src/domain/**/*.ts", "src/ports/**/*.ts"],
-  "thresholds": { "high": 90, "low": 80, "break": 80 }
-}
-```
-
-Stryker is the canonical JS/TS equivalent of Python's `mutmut`. Every
-language in this repo uses a mutation-testing tool of the same class:
-
-| Language | Tool |
-|----------|------|
-| Python   | `mutmut` (primary), `cosmic-ray` (alt) -- see the testing-python skill |
-| Node / TS / JS | `@stryker-mutator/core` + `@stryker-mutator/vitest-runner` |
-| Nuxt / Vue | Stryker (same as above) -- see the testing-nuxt skill, Section 13 |
+Stryker is the JS/TS equivalent of Python's `mutmut` (Nuxt/Vue: the testing-nuxt skill, Section 13). Config uses
+`testRunner: "vitest"`, `coverageAnalysis: "perTest"`, `mutate` over `src/domain/**` and `src/ports/**`, thresholds
+`high 90`, `low 80`, `break 80`.
+Read `references/node-detail.md`, "Stryker configuration sketch", before you write `stryker.conf.json`.
 
 ---
 
 ## 8. Property-Based Testing
 
-Every pure function, parser, and validator gets at least one
-`fast-check` test. Property-based tests find edge cases that
-example-based tests cannot.
-
-Required properties to consider:
-
-- Round-trip (parse then serialize equals original)
-- Idempotence (apply twice equals apply once)
-- Invariants (output always satisfies type or range constraint)
-- Equivalence (two implementations agree on all inputs)
-
-```ts
-import fc from "fast-check"
-
-test("parse then stringify is identity for all valid configs", () => {
-  fc.assert(fc.property(configArbitrary, (cfg) => {
-    expect(parse(stringify(cfg))).toEqual(cfg)
-  }))
-})
-```
-
-Arbitrary definitions live next to the production code:
-`src/foo/arbitraries.ts` exports `fast-check` arbitraries that test
-files import.
-
+Every pure function, parser, and validator gets at least one `fast-check` test. Properties to consider: round-trip, idempotence, invariants, equivalence. Arbitraries live next to production code in `src/foo/arbitraries.ts`.
+Read `references/node-detail.md`, "Property-based testing, full section", before you write a property test.
 ---
 
 ## 9. Async Tests
@@ -327,15 +241,7 @@ files import.
 one with `advance(ms)`. This eliminates an entire class of flaky
 tests.
 
-```ts
-interface Clock { now(): Date }
-
-class FakeClock implements Clock {
-  constructor(private t: Date) {}
-  now() { return this.t }
-  advance(ms: number) { this.t = new Date(this.t.getTime() + ms) }
-}
-```
+The `Clock` port is `{ now(): Date }`; the `FakeClock` has `advance(ms)` (same shape as in Section 6).
 
 For integration tests where DI is impractical, use Vitest's fake
 timers (`vi.useFakeTimers()` + `vi.setSystemTime(...)`), which wraps
@@ -345,110 +251,26 @@ timers (`vi.useFakeTimers()` + `vi.setSystemTime(...)`), which wraps
 
 ## 11. CLI Tests
 
-Test CLIs through the framework's programmatic entrypoint (e.g.
-`commander`'s `program.parseAsync(argv)`, `yargs`'s `.parse(argv)`,
-`oclif`'s `Command.run`). Capture stdout/stderr by swapping in a fake
-writer passed via DI, **not** by intercepting `process.stdout.write`.
-
-Never test CLIs via `child_process.spawn` / `exec` / `execa` in unit
-tests. Subprocess is slow, hides exceptions, breaks coverage, and
-causes flakes on CI runners. E2E tests (Section 3) can spawn the real
-binary.
-
-For CLI output assertions, capture the fake writer's buffer and match
-it with a vitest snapshot (see Section 12).
-
+Test CLIs through the framework's programmatic entrypoint (`program.parseAsync(argv)`, `.parse(argv)`, `Command.run`), capturing output with a fake writer passed via DI, not by intercepting `process.stdout.write`. Never test CLIs via `child_process.spawn` / `exec` / `execa` in unit tests; E2E tests (Section 3) can spawn the real binary. Match captured output with a snapshot (Section 12).
+Read `references/node-detail.md`, "CLI tests, full section", for the rationale.
 ---
 
 ## 12. Snapshot Tests
 
-Vitest's `toMatchSnapshot` / `toMatchFileSnapshot` for snapshots. Use
-snapshots for:
-
-- CLI stdout / stderr
-- Rendered template output (HTML, Markdown, generated SQL)
-- Generated file contents
-
-Do not use snapshots for:
-
-- Object shapes (use explicit `expect(...).toEqual(...)`)
-- Anything where a stale snapshot could mask a regression
-- Anything containing timestamps, UUIDs, or other nondeterministic
-  values (normalize first, then snapshot)
-
-Snapshots get reviewed in PRs like any other code change. A diff-only
-"update snapshots" commit with no explanation is a red flag in review.
-
+Use vitest snapshots only for CLI stdout / stderr, rendered template output and generated file contents. Never use them for object shapes (use `toEqual`), where a stale snapshot could mask a regression, or on nondeterministic values (normalize first). Snapshots get reviewed in PRs like any other code change; a diff-only "update snapshots" commit with no explanation is a red flag in review.
+Read `references/node-detail.md`, "Snapshot use list", before you add a snapshot.
 ---
 
 ## 13. Log Assertions
 
-Use a structured logger (`pino` is the repo default) and capture logs
-via a **test transport**, not by intercepting `console.log`.
-
-Assert on **structured fields**, never on message strings.
-
-```ts
-// Yes
-const logs = captureLogs(() => handler(req))
-expect(logs).toContainEqual(expect.objectContaining({
-  event: "user.created",
-  userId: 42,
-}))
-
-// No
-expect(stdout).toContain("User 42 was created")  // typo waiting to happen
-```
-
-Capture helper sketch:
-
-```ts
-import { pino } from "pino"
-import { Writable } from "node:stream"
-
-export function makeTestLogger() {
-  const records: Record<string, unknown>[] = []
-  const sink = new Writable({
-    write(chunk, _enc, cb) { records.push(JSON.parse(String(chunk))); cb() },
-  })
-  return { logger: pino(sink), records }
-}
-```
-
-The test logger is injected via DI (Section 6), not imported from a
-global.
-
+Use a structured logger (`pino` is the repo default) and capture logs via a test transport, not by intercepting `console.log`. Assert on structured fields, never on message strings. The test logger is injected via DI (Section 6), not imported from a global.
+Read `references/node-detail.md`, "Log assertions, full section", before you write a log assertion.
 ---
 
 ## 14. Test Data
 
-For plain TypeScript types and DTOs, use builder functions in
-`tests/_factories.ts`:
-
-```ts
-export function makeUser(overrides: Partial<User> = {}): User {
-  return { id: "u_1", name: "Alice", age: 30, ...overrides }
-}
-```
-
-For ORM models (Prisma, Drizzle, TypeORM) or non-trivial constrained
-types (branded IDs, regex-validated fields, discriminated unions),
-use `fishery` with seeded `@faker-js/faker`:
-
-```ts
-import { Factory } from "fishery"
-import { faker } from "@faker-js/faker"
-
-export const userFactory = Factory.define<User>(({ sequence }) => ({
-  id: `u_${sequence}`,
-  name: faker.person.firstName(),
-  age: faker.number.int({ min: 18, max: 99 }),
-}))
-```
-
-Seed `faker` per test file (`faker.seed(1)`) so factory output is
-reproducible across runs.
-
+Builder functions in `tests/_factories.ts` for plain types; `fishery` with seeded `@faker-js/faker` for ORM models and constrained types; seed `faker` per test file.
+Read `references/node-detail.md`, "Test data, full section", before you write a factory.
 ---
 
 ## 15. Skips and Expected Failures
@@ -468,18 +290,10 @@ Every skip / todo / fails requires:
 - A reason string passed to the modifier
 - A comment with a tracking issue link
 
-```ts
-// Skip: flaky on macOS arm64; see issue #142
-it.skip("decodes on all platforms", async () => { /* ... */ })
+Pass the reason string and put the tracker link in a comment above the modifier.
+Read `references/node-detail.md`, "Skip and fails examples", for the snippet.
 
-it.fails("should round-trip NaN -- see issue #203", async () => { /* ... */ })
-```
-
-A skip, todo, or fails without a reason and a tracker link fails
-review. Packages that adopt `eslint-plugin-vitest` should enable
-`vitest/no-disabled-tests` to surface bare `.skip` / `.todo` usage,
-but the reason-and-tracker requirement is enforced in review, not by
-the lint rule.
+A skip, todo, or fails without a reason and a tracker link fails review (enforced in review, not by lint).
 
 **Skip and `.fails` are not interchangeable.** Skip means the test
 does not run. `.fails` means it runs and is allowed to fail. If a
@@ -489,94 +303,30 @@ test might hang, skip it -- `.fails` does not save you from a hang.
 
 ## 16. Naming and JSDoc
 
-Test names follow the Given-When-Then form inside a `describe` /
-`it` pair:
-
-```ts
-describe("publish", () => {
-  it("returns zero when the topic has no subscribers", async () => {
-    // Given a topic with no subscribers,
-    // When publish is called,
-    // Then it returns 0.
-  })
-})
-```
-
-Prefer `it(...)` to `test(...)` so test names read as
-specifications ("it returns zero when..."). One of the forms is fine;
-pick one per package and stick to it.
-
-If the test file exports helpers, every exported helper has a
-one-line JSDoc. Tests themselves do not need JSDoc -- the `it` name
-**is** the contract.
-
+Name tests `describe("<unit>") / it("<behavior>")` with Given/When/Then comments; every exported test helper has a one-line JSDoc.
+Read `references/node-detail.md`, "Test naming example", for the example.
 ---
 
 ## 17. Performance Budgets
 
-- Unit test suite: total wall-clock under 30 seconds (per package)
-- Integration suite: total wall-clock under 5 minutes (per package)
-- Any individual unit test over 10ms on modern dev hardware (M1 or
-  newer) is suspicious -- a true unit test (in-memory, no I/O) should
-  finish in single-digit milliseconds. Investigate before accepting
-- Any individual unit test over 1 second fails CI (hard limit, kept
-  generous so CI runners on slower hardware do not flake)
-- Any individual integration test over 30 seconds fails CI
-
-Performance regressions in the test suite are bugs, not annoyances.
-
-Use `vitest --reporter=verbose --reporter=hanging-process` when
-investigating hangs.
-
+Unit suite under 30 s and integration suite under 5 min per package; a unit test over 1 s or an integration test over 30 s fails CI. Any unit test over 10ms on modern dev hardware is suspicious: investigate before accepting it. Performance regressions are bugs.
+Read `references/node-detail.md`, "Performance budget detail", when investigating a slow or hanging test.
 ---
 
 ## 18. Local Execution Notes (macOS / zsh)
 
-The local development environment is an Apple Silicon Mac running
-zsh. A few practical gotchas:
-
-- **Vitest's default pool is `threads`.** If a test hits the Node
-  filesystem in a way that does not like worker threads, switch to
-  `pool: "forks"` for that project rather than disabling parallelism
-  globally.
-- **`process.cwd()` in tests** is the package root, not the repo
-  root, because we run `npm -C packages/foo test`. Use
-  `import.meta.url` + `fileURLToPath` for deterministic paths.
-- **Docker Desktop is required for integration tests** that use
-  `testcontainers`. CI runs in Linux containers natively; local runs
-  go through Docker Desktop's VM. Expect 2-3x slower container
-  startup locally vs. CI -- this is normal, not a bug.
-- **Cloudflare Worker tests** use
-  `@cloudflare/vitest-pool-workers`, not bare miniflare, so that
-  bindings (KV, R2, D1, queues) use the same runtime in tests as in
-  production. Do not hand-roll a miniflare instance inside a test
+- **Cloudflare Worker tests** use `@cloudflare/vitest-pool-workers`, not bare miniflare, so that bindings (KV, R2,
+  D1, queues) use the same runtime in tests as in production. Do not hand-roll a miniflare instance inside a test
   file.
-- **Quote glob patterns** when invoking vitest to dodge zsh's "no
-  matches found" error: `vitest 'tests/unit/**/*.test.ts'` works;
-  unquoted breaks if zsh expansion finds zero matches.
+- **Quote glob patterns** when invoking vitest: `vitest 'tests/unit/**/*.test.ts'`.
+- Pool, `process.cwd()` and Docker Desktop notes: read `references/node-detail.md`, "Local execution notes", when a
+  test fails only locally.
 
 ---
 
 ## 19. Quick Checklist
 
-Before merging:
-
-- [ ] Test written FIRST (Red-Green-Refactor cycle)
-- [ ] Test asserts on observable behavior, not internal calls
-- [ ] Test name reads as a specification (`it("returns X when Y")`)
-- [ ] Test function and all helpers fully type-annotated (no `any`)
-- [ ] No real `setTimeout`/`setInterval` sleeps anywhere
-- [ ] No `vi.mock("./local-module", ...)` against first-party code
-- [ ] Per-test fixtures unless wider scope is justified with a comment
-- [ ] Test survives `vitest --sequence.shuffle` and default parallelism
-- [ ] Pure functions have at least one `fast-check` test
-- [ ] Every port has a contract test suite (`describe.each`) covering
-      both fake and real adapter
-- [ ] `.skip` / `.todo` / `.fails` all have reason + tracker link
-- [ ] Coverage above 70% repo-wide; Stryker mutation score above 80%
-      on `domain/` and `ports/`
-- [ ] Suite total wall-clock budgets respected
-
+Before merging, check the rules in this skill against the diff. Read `references/node-detail.md`, "Quick checklist", for the checkbox form before you mark a PR ready.
 ---
 
 ## 20. The One-Sentence Test

@@ -28,7 +28,8 @@ and is the one to load first when unsure:
 
 `github-workflow`, `markdown`, `tech-radar`, `wrapup` (the session
 epilogue, typically invoked as `/wrapup`), and the tool skills
-(`chrome-mcp`, `decision-models`, `knowledge-base`, `lmde-dashboards`) are not phases -- they
+(`architecture-views`, `chrome-mcp`, `clai`, `decision-models`, `knowledge-base`,
+`lmde-dashboards`, `tiddlywiki`) are not phases -- they
 are loaded whenever their subject comes up.
 
 Neither are the platform skills. `iac` is the umbrella for declared
@@ -42,7 +43,10 @@ whoever is coding the assistant (phase 5). Three more hang under `iac`:
 `infra-credentials` carries provisioning and governing credentials (the
 `release` skill carries consuming them). `infra-handoff` is the
 `/infra-handoff` command that ends an infra change with the block the
-human applies from.
+human applies from. `cloudflare-one-devices` carries devices enrolled in a
+Zero Trust organization with the WARP client: device profiles, the split
+tunnel and fallback domains, private hostname routes, and running
+Tailscale beside WARP.
 
 The laptop has two platform skills of its own. `lmde-daemons` carries a
 long-lived LMDE service under launchd: supervision, the Keychain as a

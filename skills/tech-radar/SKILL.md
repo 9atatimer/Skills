@@ -93,9 +93,12 @@ proposal makes the choice reviewable, the landing keeps the file honest.
 | LLM access | **OpenAI-compatible endpoints** (Cloudflare Workers AI / AI Gateway, Groq, Z.ai/GLM, Ollama) | Via the `openai-compat` adapter; one adapter covers the family by config. |
 | LLM access | **claude-cli provider** | Drives Claude Code on a Pro/Max plan instead of a metered key. |
 | Serverless runtime | **Cloudflare Workers** | First consumer: tedium (merge bot). Fetch-based, WebCrypto, no node:crypto. |
-| Serverless deploy | **wrangler** | Worker deploys via `cfwdeploy` (naatm-deploy); owns worker secrets + DO migrations. |
+| Serverless deploy | **wrangler** | Worker deploys via `cfwdeploy` (naatm-deploy); owns per-Worker secrets + DO migrations. |
 | Serverless state | **Durable Objects** | Serialized per-entity state + alarms. One DO per repo in tedium. |
 | Serverless object store | **Cloudflare R2** | Bytes too big for a DO SQLite row. A DO row cannot hold a multi-MB value, and `@cloudflare/shell`'s `Workspace` spills to R2 at or above `inlineThreshold` (default 1_500_000 bytes, decimal) -- without the binding it stores the row inline and warns its way into a SQLite row-limit failure. First consumer: quillmap session upload tray. Lifecycle rules do the expiring; do not hand-roll retention against it. |
+| Serverless relational store | **Cloudflare D1** | One database per stage, created by Terraform and bound by wrangler; `node:sqlite` behind the same statement API for local runs and contract tests. The store of record for an app on Workers. First consumer: quillmap. |
+| App sign-in | **Cloudflare Access** (the verified assertion as the user identity) | The app runs no auth of its own; the cloudflare-hosting skill, Cloudflare Access, has the rules. First consumer: quillmap. |
+| Serverless secrets | **Cloudflare Secrets Store** | One account-level store. A secret's scopes name the services that may read it (Workers, Containers, AI Gateway), never a script: any Worker or container in the account can bind it, and deploy rights are the only per-app bulkhead. Use it for a value several Workers or containers share, or a provider key AI Gateway reads; a secret only one Worker may see stays a per-Worker `wrangler secret`. The stage goes in each secret's name, and no secret is shared across stages. It holds operator secrets, never one value per end user, and never a key only one Worker may use: a key that wraps per-user secrets belongs to that Worker alone, which the store's account-wide binding cannot promise. Seeding and the vault rules: the cloudflare-hosting skill, Secrets. The vendor's limits are small and beta; check them before sizing. First consumer: none yet. g1n1 keeps its Root Keys in a KeyRing Durable Object instead (g1n1 ARCHITECTURE.AUTH, AD9). |
 | Python: S3 client | **boto3** | The S3 API from Python, R2 included (the aws-ops skill). Import it only in the adapter that talks to the bucket, never in domain or workflow code; take endpoint, region and credentials from a named AWS profile, not from code. Build clients lazily (aws-ops: `credential_process` runs at client build). First consumer: GammaGo art-render archive. |
 | TS/JS: package manager | **pnpm** | Content-addressed store; a per-repo store shared by every worktree makes a worktree install link instead of copy. Pin it with `packageManager` (exact version). First consumer: GammaGo. |
 | TS/JS: worker tests | **@cloudflare/vitest-pool-workers** | Workers-runtime vitest pool; never hand-roll miniflare (testing-node skill). |
@@ -105,6 +108,7 @@ proposal makes the choice reviewable, the landing keeps the file honest.
 | LLM tool-calling | **ai** (Vercel AI SDK v7) | Provider-agnostic tool/stream vocabulary; what `agents` composes against. |
 | LLM provider adapter | **@ai-sdk/openai** (v4) | OpenAI provider for the AI SDK. Model id stays an edge parameter, never a domain constant. |
 | Code review engine | **Open Code Review** (`@alibaba-group/open-code-review`, the `ocr` CLI) | Apache-2.0. The `ocr` adapter behind the self-review skill's ReviewEngine port; never called from anywhere else. Install by npm at an exact version, never by its install script; the exact pin is the machine's install, not this row. The self-review skill needs v1.12.5 or later (the `secret_exclude` exclusion reason) and was checked against v1.12.11. Run it with `OCR_NO_UPDATE=1`: its npm launcher otherwise checks the registry and upgrades itself, defeating the pin. Its postinstall downloads a platform binary checked only against a checksum from the same release, unless the platform package already supplies it. Telemetry is off unless `OCR_ENABLE_TELEMETRY=1`; leave it off. The endpoint behind it is the machine's binding, not a radar choice. Skips Markdown. |
+| Topic wikis | **TiddlyWiki** (`tiddlywiki` on npm, BSD) | The single-file wiki the tiddlywiki skill builds. Run only through that skill's `build.mjs`, which pins the exact version and calls it with `npx`; never vendor an `empty.html` fetched from a website. First consumer: the Cloudflare topic wiki. |
 
 ## Hold
 
@@ -114,6 +118,7 @@ proposal makes the choice reviewable, the landing keeps the file honest.
 | TS/JS: E2E tests | **Cypress** | Superseded by Playwright. Migrate existing suites; no new `*.cy.ts`. |
 | Python deps | **Pinned `==` or fully unpinned deps** | Use `>=` with a minimum version. |
 | Inheritance for reuse | **Deep class inheritance** | Prefer composition + dependency injection. |
+| Backend platform | **Supabase** (Postgres, Auth, Storage) | For an app on Workers use D1, R2 and Access as the identity (the cloudflare-hosting skill, Cloudflare Access); migrate away when you touch it. |
 
 ## Verboten
 

@@ -66,30 +66,15 @@ Decide placement in this order; the first rule that applies wins.
 
 ## Root module per concern; the tier is a directory
 
-- One root module per concern (`ops/terraform/<concern>/`), each with
-  its own providers, variables, README, and state. Do not grow one root
-  into a whole account: blast radius and authority differ per concern,
-  and a token loaded for one concern should not be loaded for another.
-- **A tier is the directory you run in, not a flag you pass.** For
-  anything with its own credentials, identities, or failure metrics per
-  tier, lay out `<concern>/modules/<shared>/`, `<concern>/nonprod/`,
-  `<concern>/prod/`; each root has its own state, its own gitignored
-  `terraform.tfvars`, its own `.terraform/`. There is no `-var stage=`
-  and no workspace to select, because both are things you can get wrong
-  silently. To touch production you change directory, and that is the
-  whole gate. Run with `-chdir` so the scrollback records the tier and a
-  later command cannot inherit a directory you forgot.
-- The tier-defining values (service name, secret id, metric name) are
-  LITERALS in each root's `main.tf`, deliberately not variables. A tier
-  you can repoint from a gitignored tfvars is a tier you can repoint by
-  accident.
-- A single cheap resource per stage inside one root (a route, a
-  namespace) may use `count` on a boolean. The boolean is a committed
-  DEFAULT, never a `-var` at the command line: with the flag supplied
-  ephemerally, the next bare apply sees it false and DESTROYS the
-  production resource with nobody having asked.
-- Say what the tiers still share (a project, an image digest, an
-  upstream) in the README before an incident rather than during one.
+One root module per concern, each with its own providers, variables,
+README and state. A tier is the directory you run in, not a flag you
+pass: no `-var stage=` and no workspace; run with `-chdir`. Tier-defining
+values are literals in each root's `main.tf`, not variables. A `count`
+boolean is a committed default, never a `-var` at the command line.
+
+Read `references/root-layout.md`, "Root module per concern; the tier is
+a directory", before you create a root module, add a tier, or add a
+per-stage resource to one.
 
 ## Ownership split
 
@@ -127,9 +112,37 @@ Rules that hold across all three:
   the human the exact `apply` line. `terraform apply` from an agent
   session is the canonical thing the sre persona refuses, and a cloud
   session has neither the laptop credentials nor the standing to do it.
+  The one apply route an agent may have is two plan/apply-server comment
+  commands, `atlantis plan` and `atlantis apply -p <project>`, and only where the infra repo's `AGENT.md` grants
+  them; no other server command. For every other root, hand the human
+  the line.
+- **The plan/apply server is the first path.** A root the infra repo's
+  authority table marks as served by the server plans on the PR, and the
+  human applies by commenting `atlantis apply -p <project>` there.
+  Apply before landing: a `/land` before the apply merges configuration
+  that is not live.
+- A routine-apply root that runs on the laptop only because the server
+  cannot serve it yet is a candidate to move: say so in the PR, and
+  enable it only by the infra repo's runbook (a server-side workflow and
+  its token, not only an `atlantis.yaml` entry). A root that is
+  laptop-only by decision (a human's own token, local state, ADC,
+  credential minting) stays there. `import`, `state mv`, `destroy` and
+  `force-unlock` run only on the laptop, on every root.
+- On the laptop path, run `plan -out=tfplan`, read it, and hand the
+  human the `op run ... terraform apply tfplan` line to run where its
+  output lands in the conversation. In a harness where the human runs a
+  command inside the session (Claude Code's `!` prefix), that command
+  has no terminal for a `yes`, and the human expects a block, not one
+  line per step. For a minting root the human plans too. Hand two
+  blocks: one that inits and runs `plan -input=false -out=tfplan` for
+  every root in the change, and, after the plans are read against the
+  expected diff, one that runs `apply -input=false tfplan` per root in
+  dependency order, stops at the first failure, and then runs the
+  follow-ups (re-seeding a secret, pointing a consumer at a new item).
+  Applying a saved plan applies only what was read.
 - Production naming follows the repo's deploy authority: "apply it"
   never means production; a request that does not name the tier is a
-  request for nonprod.
+  request for preview.
 - Separate root modules keep the high-authority credential loaded only
   for token lifecycle; the routine module runs under the scoped token
   the minting module created.
@@ -139,102 +152,59 @@ Rules that hold across all three:
 
 ## State
 
-- **State contains secrets and identifiers.** Access application ids,
-  policy emails, minted token values, project numbers. It is never
-  committed; `*.tfstate`, `*.tfstate.*`, `tfplan` and `*.tfplan` (a plan
-  file embeds the prior state snapshot) are gitignored in every repo
-  that holds a module.
+- **State contains secrets and identifiers.** It is never committed;
+  `*.tfstate`, `*.tfstate.*`, `tfplan` and `*.tfplan` are gitignored in
+  every repo that holds a module. The lock file
+  (`.terraform.lock.hcl`) IS committed; `.terraform/` is not.
 - **The state home is per module and stated in its README.** Local
-  state means one machine applies, ever, and no lock; say so. A remote
-  backend (an R2 bucket over the S3 backend, a GCS bucket) means a
-  credential for the backend that is separate from the provider token,
-  injected the same way.
-- The fleet-wide state home is an open question tracked in the private
-  ops repo; a module does not settle it alone. Until it is settled, do
-  not apply a local-state module from more than one machine.
-- A module that has NEVER been applied against its remote backend may
-  bootstrap with a gitignored `backend_override.tf` declaring
-  `backend "local" {}`; Terraform's `_override.tf` merge takes it.
-  Delete the override and run `init -migrate-state` once the credential
-  exists; the issue that owns minting it is named in the README. A
-  module whose remote state already holds resources gets no such
-  escape: an empty local state has no snapshot of them, and the plan it
-  produces recreates what exists. Restore backend access first, and if
-  the remote state is unreachable, that module is blocked, not local.
-- A backend's argument set depends on the Terraform version: the plural
-  `endpoints {}` block needs a newer Terraform than the singular
-  `endpoint`, and a repo pinned below it fails to parse outright. The
-  config must parse under the pinned toolchain, not the newest one.
-- The lock file (`.terraform.lock.hcl`) IS committed; it pins provider
-  hashes. `.terraform/` is not.
+  state means one machine applies, ever, and no lock; do not apply a
+  local-state module from more than one machine.
+- **Which checkout runs a root follows its state.** A remote-backend
+  root runs from any checkout; a local-state root runs only in the
+  checkout that holds its state file.
+- **Gitignored inputs are referenced, never copied.** A worktree points
+  at the shared clone's env file, backend config and `terraform.tfvars`.
+- **Never pass `terraform.tfvars` as `-var-file`.**
+
+Read `references/state.md`, "State", before you choose or change a
+module's state home, bootstrap a backend, run a root from a worktree, or
+write a `terraform.tfvars`.
 
 ## Secrets and references
 
-- `op run --env-file=<name>.env -- terraform <cmd>`. The env-file holds
-  only `op://` references (vault by UUID with a comment naming it; item
-  by id when the title contains `@` or `:`; field by the item's
-  category). Whether the env-file is committed is the repo's rule: an
-  app repo may commit `.env.op` because it is references only; the
-  private ops repo gitignores `*.env` so a new module cannot fall
-  outside a literal list.
-- **A reference that was never resolved is a to-do, not
-  configuration.** Resolve every `op://` reference against the live
-  vault (`op read`, or `op run -- env | grep`) before committing it. A
-  module whose backend credential item never existed sat unrunnable for
-  months, and every Access change in that period was a dashboard change
-  Terraform did not know about.
-- The provider reads its credential from the environment; there is no
-  token variable and no default. A literal in a file is a leak with a
-  commit hash.
-- `terraform.tfvars` is gitignored when it carries identifiers, and
-  there is deliberately no committed example when every value in it is
-  an account, application, or vault identifier; `variables.tf` documents
-  what each one is instead.
-- When a module writes a credential into the vault, the item category
-  decides which fields the provider emits: a LOGIN item carries
-  `username` plus `password`; a PASSWORD item drops the username on the
-  floor; the semantically right API_CREDENTIAL category is one the
-  provider cannot create. `password` is the canonical token field
-  everywhere, and consumers reference the item, never the state.
-- Seeding a secret value into a runtime store pipes it: `op read ... |
-  tr -d '\n' | <tool> --data-file=-`. Never an argument, never a file.
-  The newline strip is load-bearing: a stored value one byte longer than
-  what every caller holds fails a length check on EVERY request and logs
-  nothing more useful than "bad key".
+Run Terraform as `op run --env-file=<name>.env -- terraform <cmd>`; the
+env-file holds only `op://` references. A reference never resolved is a
+to-do, not configuration: resolve every one against the live vault
+before committing it. The provider reads its credential from the
+environment; a literal secret in a file is a leak with a commit hash.
+Seed a secret value into a runtime store by piping it, with the newline
+stripped: never an argument, never a file.
+
+Read `references/secrets-and-pins.md`, "Secrets and references", before
+you write an env-file, have a module write a credential into the vault,
+or seed a secret value into a runtime store.
 
 ## Pins
 
-- Terraform version pinned by a `.terraform-version` file (tfenv) and
-  `required_version`; provider versions pinned per module with `~>`,
-  and major versions never mixed within a module family (a v4 and a v5
-  Cloudflare provider disagree on resource names and argument shapes; a
-  resource that exists only in v5 gets its own root module with its own
-  pin). The Cloudflare v5 provider rewrote the API-token resource:
-  `policies` is an attribute list, `resources` is `jsonencode(...)`, and
-  permission groups come from the
-  `cloudflare_api_token_permission_groups_list` data source. v4-style
-  examples plan against nothing; `terraform validate` against the real
-  provider is the check.
-- Container images referenced by DIGEST, not tag; only a digest makes a
-  rollback deterministic.
-- Deploy parameters that are decisions (instance caps, concurrency,
-  timeouts, ingress) are literals with a stated reason, not tfvars;
-  changing one is a design change.
+Pin Terraform by `.terraform-version` and `required_version`, and
+provider versions per module with `~>`; never mix major provider
+versions within a module family. Set `TFENV_TERRAFORM_VERSION` to the
+pin for every `-chdir` invocation, the `!` line handed to the human
+included. Reference container images by digest, not tag.
+
+Read `references/secrets-and-pins.md`, "Pins", before you add or change
+a version pin, write an API-token resource, or run `-chdir` from outside
+the root's directory.
 
 ## The README every module carries
 
-- A resource table: resource address, what it is, one note.
-- The ownership split for this concern: Terraform, the pipeline, the
-  human.
-- The authority model (which of the three postures) and the exact
-  `op run` and `terraform -chdir` lines, tier set first.
-- The state home, and the issue that owns changing it.
-- Prerequisites a human does once (seed the secret, create the channel)
-  and the loud failure that proves they were not done (a data source
-  that fails the plan).
-- Verify-after-apply: the read-only command that proves the resource is
-  live, and what its output must contain.
-- Rollback: the command, and what it does not roll back.
+Every module's README carries: a resource table, the ownership split,
+the authority posture with the exact `op run` and `terraform -chdir`
+lines (tier set first), the state home and its owning issue,
+prerequisites a human does once, verify-after-apply, and rollback.
+
+Read `references/module-readme-and-moves.md`, "The README every module
+carries", before you write or change a module's README.
 
 ## Plan, apply, verify
 
@@ -253,9 +223,9 @@ Rules that hold across all three:
 - **Verify against the live system, not against the state.** An
   unauthenticated probe that returns the gate's own refusal, a
   `terraform plan` that reports no unexplained drift, an `op read` of
-  every reference the module wrote. A status line in a plan document
-  written an hour BEFORE the apply reads as current for days; record the
-  verification and its date.
+  every reference the module wrote. A plan document that says what is
+  live, written an hour BEFORE the apply, reads as current for days;
+  record the verification and its date, never a status line.
 - **Scaffolding is not intent.** A commented-out backend block, an
   example file, a sibling module inherited from a template and never
   applied are not evidence of a decision. When scaffolding and the
@@ -268,21 +238,15 @@ Rules that hold across all three:
 
 ## Moves and refactors
 
-- A rename, a move between directories or repos, a module split, or a
-  provider upgrade must produce an EMPTY plan when the human runs it. A
-  move that plans a create or a destroy is an outage with a commit
-  message.
-- Keep `.tf` files and the lock file byte-identical across a move
-  wherever the tooling allows; edit only README, scripts and comments
-  for the new paths, and paste the `diff -r` proof in the PR.
-- State files travel with the module, by the human, on the laptop, and
-  BEFORE the app repo pulls the deletion: they were never committed, so
-  `git show` recovers config only, and a `git clean` after the merge is
-  the loss path. Copy out first, `init` in the new home, confirm `No
-  changes.`, then delete the old copy.
-- A backend block is never edited as a side effect of a move; changing
-  it is a state migration with its own issue and its own empty-plan
-  proof. The old location gets a tombstone README naming the new home.
+A rename, a move between directories or repos, a module split, or a
+provider upgrade must produce an EMPTY plan when the human runs it; a
+move that plans a create or a destroy is an outage with a commit
+message. State files travel with the module, by the human, before the
+app repo pulls the deletion. A backend block is never edited as a side
+effect of a move.
+
+Read `references/module-readme-and-moves.md`, "Moves and refactors",
+before you rename, move or split a module, or upgrade a provider.
 
 ## Related
 

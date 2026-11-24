@@ -36,27 +36,28 @@ PRs land through the tedium merge bot; the rules are in `tedium.toml` on
 
 - **Required checks.** `gate` (the `ci.yml` job that needs every other
   job) must be green on the PR head AND on the staging commit tedium
-  builds on `tedium/merge` (`status` in `tedium.toml`). `review-settled`
-  (the commit status from `.github/workflows/review-settled.yml`:
-  the gate reviewer's newest review is on the head and every thread is
-  resolved) still posts on the PR head, but since 2026-09-26 neither
-  `pr_status` nor the `main` ruleset requires it: Copilot has no quota,
-  and until the quota fail-open it could never go green. The ruleset requires `gate` and a PR; only
-  the tedium App may bypass it. Tedium therefore lands a green PR on a
-  reviewer's `r+` with no review at all; restore `review-settled` in
-  `pr_status` when Copilot reviews again. A PR from a fork runs with a
+  builds on `tedium/merge` (`status` in `tedium.toml`). The ruleset
+  requires `gate` and a PR; only the tedium App may bypass it. Tedium
+  lands a green PR on a reviewer's `/land`. A PR from a fork runs with a
   read-only token and is human-merge.
-- **Copilot is the gate reviewer; Codex is human-summoned only.**
-  `.github/workflows/review-settled.yml` lists `copilot-pull-request-reviewer`
-  as the reviewer whose newest review must sit on the head. The reusable
-  checker requires every listed login, so it cannot express "Copilot or
-  Codex"; when Copilot answers with its quota notice the status fails
-  open (`FAIL-OPEN: ... is out of quota`, threads still required; the
-  gates skill), and it no longer blocks anything either way. An agent
-  never posts `@codex review` (the gates skill, Reviewer Selection);
-  Copilot is the only reviewer an agent may summon.
-  The checker is pinned by commit (`uses:` and `tools_ref:` carry the
-  same tds-utils sha); bump both together.
+- **`adherence` is in `gate`'s needs.** The job calls tds-utils'
+  reusable `adherence.yml` and judges the change against `adherence.toml`
+  in the ci stage; a `lowered` or `not run` verdict fails it and blocks
+  the landing, `inconclusive` passes. A new code file in no declared
+  layer is `lowered` (the Covered check), so widen `[layers]` in the same
+  PR. The declaration in force is the newest landed `adherence.toml` the
+  owner approved or merged (CODEOWNERS names it). Pinned by commit
+  (`uses:` and `tools_ref` carry the same tds-utils sha); bump both
+  together.
+- **`review-settled` is off: always green (owner ruling, 2026-10-18).**
+  `.github/workflows/review-settled.yml` still posts the status on every
+  non-fork head, but the pinned tds-utils checker (7643b92, tds-utils
+  PR#571) no longer judges reviews or threads and never waits. Neither
+  `pr_status` nor the ruleset requires it. An agent summons only OCR on
+  Demand (`/ocr`); Copilot and Codex review only when the human fires
+  the trigger (the gates skill, Reviewer Selection). The checker is
+  pinned by commit (`uses:` and `tools_ref:` carry the same tds-utils
+  sha); bump both together.
 - **Prose is scanned for ASCII at commit time.** The publicity guard
   refuses any byte over 0x7F in markdown under `skills/`, `agents/`, and
   the repo root. Law 12 says it up front; the guard is what makes it
@@ -67,11 +68,10 @@ PRs land through the tedium merge bot; the rules are in `tedium.toml` on
 - **One PR per batch** (`max_batch_size = 1`): each landing is a publish.
 - **`hold` label** keeps a PR out of the queue. `tedium dryrun` builds it
   on `tedium/try` without publishing anything.
-- **CODEOWNERS** covers the merge rules themselves (`tedium.toml`,
-  `CODEOWNERS`, `.github/workflows/`) and the executable payload every
-  agent in the fleet loads and runs (`skills/`, `agents/`, `mcp/`,
-  `scripts/publicity-guard.mjs`); a PR touching any of it needs a human
-  owner's approval before tedium lands it.
+- **CODEOWNERS** covers every path (`*`): every
+  landing needs a human owner's approval before tedium lands it. Agents
+  open PRs as `9atatimer-bot` so the owner can approve; a PR the owner
+  authored can never clear the check and is merged by hand.
 - **`tedium/merge` and `tedium/try` are the bot's build branches**: never
   protect them, never commit to them, never base work on them.
 - Second repo in the go-live rollout, after tds-utils.
@@ -111,14 +111,35 @@ the hour, contradicting each other. Before landing a skill PR, read what
 merged to `main` since its base for the same nouns (`git log
 <base>..origin/main -- skills/`) and reconcile.
 
+**A section rewrite is audited by its deletions, not its additions.**
+Replacing a skill section heading-to-heading drops every rule in it that
+the new text does not restate, and nothing mechanical notices: the lint
+checks citations, not content. In
+[Skills PR#165](https://github.com/9atatimer/Skills/pull/165) the Reviewer
+Selection rewrite lost "a bot finding is a bug report, not a verdict" and
+the turn-budget rule, and only the self-review verifier caught it. Before
+committing a rewrite, read `git diff -U0 | grep '^-'` for the old section
+and name where each removed rule now lives.
+
+**A fleet rule has copies outside this repo.** The reviewer policy is
+restated in each repo's `AGENT.md`, in tds-utils `clai.d/AGENT.global.md`
+(the machine-global file every agent on a laptop loads) and in tds-utils
+`docs/ops/ocr-review.md`. The 2026-11-02 change swept the four `AGENT.md`
+files and missed the global file, which still told every agent to request
+Copilot once quota returned. Changing a rule here is done when
+`git grep -i <noun>` across the consumer repos and `clai.d/` is clean.
+
 ## Testing
 
 `npm test` runs `test/*.test.mjs` under `node --test` (zero dependencies).
 That includes the skill lint (`scripts/skill-lint.mjs`, also in the husky
 pre-commit): every "the X skill" must name a skill, every cited section
-must name a heading in that skill, plus frontmatter, ordered lists and a
+must name a heading or a bold term in that skill, plus frontmatter, ordered lists and a
 per-SKILL.md word budget, counted as `wc -w` counts. Its `WORD_BUDGET` is
 a ratchet: lower it when a skill moves detail into reference files, never
-raise it to fit a file.
+raise it to fit a file. A citation can resolve through a bold term rather
+than a heading, so moving a section to a reference can break a citation
+whose heading stayed: run `npm test` after every move, and repoint a
+broken citation at the heading or section number.
 `npm run guard` runs the publicity guard over the full tree; `npm run
 evals` runs the skill evals under `evals/`.

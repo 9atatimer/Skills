@@ -28,6 +28,10 @@ description: "Writing or modifying TypeScript/Vue/Nuxt: toolchain and style conv
   - The `+sha512` suffix on `packageManager` is not verified by pnpm's
     own version switch (only corepack checks it); the pin is exact by
     version, the download integrity-checked like any dependency.
+  - A global pnpm on `PATH` (nvm installs one per Node version) shadows
+    the `packageManager` pin, and plain `corepack pnpm` runs that same
+    copy; an install then fails with `ERR_PNPM_LOCKFILE_BREAKING_CHANGE`.
+    Name the pinned version: `corepack pnpm@<version> install`.
   - Never point `PNPM_HOME` inside a repo: pnpm self-installs the pinned
     version from there, finds the repo's `package.json`, and switches
     again, without bound.
@@ -46,6 +50,29 @@ description: "Writing or modifying TypeScript/Vue/Nuxt: toolchain and style conv
 - Structure: Template first, then script, then style
 - Naming: PascalCase for components (`AppLayout.vue`)
 - Functions/variables: camelCase
+
+## Nuxt and Vue traps
+
+- A dynamic-param page is reused across navigations, so `setup()` does not
+  rerun: read the param as a `computed`, pass `{ watch: [param] }` to
+  `useAsyncData`, and give it a stable key, not one with the param in it.
+- Bind a composable's function in `<script setup>`; a name used only in the
+  template is undefined at run time.
+- Guard browser-only APIs with `import.meta.client`, and wrap them:
+  `localStorage` throws when storage is full, private or disabled.
+- Use `||`, not `??`, where a `NOT NULL` text column can hold `''`.
+- A caught error is `unknown`: read it through one helper that checks
+  `instanceof Error`, and wrap every composable call that can reject.
+- A null profile has two causes, signed out and row missing: branch on
+  `user` first, and show "profile missing" only for `user && !profile`.
+- Under `noUncheckedIndexedAccess`, destructure an index into a local and
+  guard it; a `.length` check does not narrow `arr[0]`.
+- A file input's `accept` is a hint: validate the extension, reset
+  `input.value` after reading, and add `@drop` and `@dragover.prevent`.
+- Normalize a lookup key (`trim().toLowerCase()`) before reading a map.
+- Truncate, do not round, a compact count (9,999 is not "10.0k"), and pin
+  `timeZone: 'UTC'` in a date format whose result must not depend on the
+  runner.
 
 ## Imports
 

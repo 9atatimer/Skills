@@ -129,119 +129,64 @@ Rules that keep the core stable:
   turn for a dispatched job) before it; `/health` at the worker root is
   reachable only un-routed (see the cloudflare-hosting skill for why).
 
-`wrangler.jsonc` essentials, with the cloudflare-hosting skill owning the
-rest:
-
-```jsonc
-{
-  "main": "src/index.ts",
-  "compatibility_flags": ["nodejs_compat"],
-  "workers_dev": false,
-  "observability": { "enabled": true },
-  "durable_objects": { "bindings": [{ "name": "MyAgent", "class_name": "MyAgent" }] },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["MyAgent"] }],
-  "env": {
-    "preview":    { "durable_objects": { /* REPEATED */ }, "vars": { /* REPEATED */ } },
-    "production": { "durable_objects": { /* REPEATED */ }, "vars": { /* REPEATED */ } }
-  }
-}
-```
-
-`durable_objects`, `vars`, `kv_namespaces`, `services`, `r2_buckets` and
-`triggers` do NOT inherit into named environments. Repeat them in every
-stage or the stage ships without them, with no error anywhere.
+`wrangler.jsonc` needs `nodejs_compat`, the Durable Object binding and
+a `new_sqlite_classes` migration. `durable_objects`, `vars`,
+`kv_namespaces`, `services`, `r2_buckets` and `triggers` do NOT inherit
+into named environments. Repeat them in every stage or the stage ships
+without them, with no error anywhere. Read `references/think-worker.md`,
+"wrangler.jsonc essentials", before you write or change a worker's
+`wrangler.jsonc`.
 
 ## The Think subclass is a composition root
 
-It composes; it decides nothing. Every decision (which credential, which
-tools this stage may see, whether a path is admissible) lives in an
-SDK-free module the tests can load (see Testing). The subclass is the
-wiring a type error would catch.
+The subclass composes; it decides nothing. Every decision (which
+credential, which tools this stage may see, whether a path is
+admissible) lives in an SDK-free module the tests can load (see
+Testing); the subclass is the wiring a type error would catch.
+`getModel()` is synchronous, runs on every turn and must always answer;
+it must never quietly answer with a metered credential the stage did not
+select. Resolve the credential and build the model per turn in
+`beforeTurn`. Never put a secret or a capability in synced state.
 
-| Override | Contract as shipped | The trap |
-|---|---|---|
-| `getModel()` | SYNCHRONOUS. Called on EVERY turn to assemble the turn context, before `beforeTurn` can override it. Also used for out-of-turn side calls | Anything thrown here kills the turn ahead of the override. It must always answer; it must never quietly answer with a metered credential the stage did not select |
-| `beforeTurn(ctx)` | async; returns `TurnConfig` overrides (`model`, `activeTools`, `instructions`, `maxSteps`, `stopWhen`, `headers`, `providerOptions`, ...) | This is where a credential is resolved and a model built per turn, so a token that expired between turns refreshes before the turn rather than dying at step 7 of 12 |
-| `getSystemPrompt()` / `configureContext()` | the legacy prompt string, or context blocks (`agents/context`) | `getSystemPrompt()` is ignored once any context block is configured. Only advertise tools the stage actually registered |
-| `getTools()` | an AI SDK `ToolSet`; Think merges workspace, context, MCP, and client tools on top | Return the factory's output only. Keep the product's tool surface small for a small model |
-| `activeTools` (via `beforeTurn`) | a FILTER over the merged set | A name pinned over a tool that was never assembled is a silent no-op. Compute the list from the bindings that exist, never from a constant |
-| `workspaceBash`, `maxSteps` | class fields; bash tool on, ten steps by default | Turn the sandboxed bash off for a narrow assistant; it only distracts the model. Pin `maxSteps` deliberately |
-| `fetchTools` | `false`, or a config with `bindings` (allowlist REQUIRED per binding target) and top-level `maxBytes` / `maxModelChars` | Re-read on every turn. A config with neither a public allowlist nor a binding THROWS, so an optional binding wrapped in a config kills every turn on a stage that never bound it: build the union `false | config` from the binding, and as a field initializer, not a getter (the base constructor assigns `this.fetchTools = false`, and an own property shadows an accessor) |
-| `initialState` / `setState` | state syncs to every connected client, WHOLESALE, on every inbound state frame | Never put a secret or a capability in state. A server-owned key must be restored in `onStateChanged` after every client frame, and the hook must RETURN its promise (the SDK runs it under `waitUntil`) |
-| `workspace` | a `Workspace({ sql, r2, r2Prefix, name, inlineThreshold })` | Override as a field to get R2 spill; `name` is a thunk because `this.name` is unset at field-initializer time; two Workspaces over one storage must be constructed identically or the constructor throws |
-| `onRequest(request)` | your HTTP routes | Chain UNDER `super.onRequest`: Think's constructor wraps the method and answers its own routes first; claim only what is yours |
-| `onStart(props)` | startup | `await super.onStart(props)` first; the workspace is live after that. Best-effort work goes in a try/catch so a sweep cannot take the session down |
-| `runTurn({ mode: "wait", input })` | a blocking programmatic turn that resolves at quiescence | Experimental: pin the mode explicitly so a default change cannot turn a blocking run into fire-and-forget |
-| `submitMessages(msgs, { idempotencyKey })` | a durable, idempotent, non-blocking turn | The right primitive for webhooks and schedulers that must return fast |
-| hooks | `beforeStep`, `beforeToolCall` (allow / block / substitute), `afterToolCall`, `onStepFinish`, `onChatError`, `onChatRecovery` | Read the shipped `docs/lifecycle-hooks.md`; the context field names have been renamed between minors |
-
-A subclass field initializer runs after `super()` returns, so `this.env`
-and `this.ctx` are available there; `this.name` is not.
+Read `references/think-subclass.md`, "The Think subclass is a
+composition root", before you write, change or debug any Think subclass
+override or hook: it holds the table of every override with its contract
+as shipped and its trap.
 
 ## Tools: contract, factory, forwarding
 
 - **Factory, not hand-written tools.** One function takes the domain
-  contract plus edge configuration (`baseUrl`, the shared secret, the
-  actor getter, the navigation effect, an injectable `fetch`) and returns
-  AI SDK `tool()`s built with `jsonSchema(...)` from the domain's plain
-  schemas. A different engine composes the same contract through its own
-  factory.
-- **Reachability is the binding; authority is the secret.** The deployed
-  app sits behind Cloudflare Access, which gates the whole hostname, tool
-  route included. A public fetch from the worker carries the secret and
-  no Access credential, so every tool receives a login page. A service
-  binding is a worker-to-worker call that never re-enters the edge, and
-  it is the only shape that reaches the route on a deployed stage. The
-  binding does not replace the secret: the secret still gates the route
-  against anything else that reaches it.
+  contract plus edge configuration and returns AI SDK `tool()`s built
+  with `jsonSchema(...)` from the domain's plain schemas.
+- **Reachability is the binding; authority is the secret.** A tool call
+  reaches an Access-gated app only through a service binding, and the
+  shared secret still gates the route. Fail closed: unconfigured `503`,
+  mismatch `401`, before any store access.
 - **Refuse the misconfiguration at construction.** No binding plus a
-  loopback base URL is `wrangler dev` on a laptop (global fetch is
-  right). No binding plus a REMOTE base URL is a mistake: throw, naming
-  the missing binding, rather than let Access turn every tool into a
-  `302`.
-- **The secret is one half of a pair.** The worker presents it; the app
-  verifies it from server-only config. Both deploy workflows read the
-  same vault field, which is what keeps them in agreement. Fail closed:
-  unconfigured `503`, mismatch `401`, before any store access.
+  remote base URL is a mistake: throw, naming the missing binding.
 - **Attribution crosses the seam, and the client is not its source.**
-  The actor the tool route records must come from a verified identity:
-  the Access assertion on the WebSocket upgrade (the `cf-access-jwt-`
-  `assertion` header, validated against the team's certificates), or a
-  server-minted session credential. A user id the client seeds into
-  synced state is client-asserted, and since clients replace state
-  wholesale, any authenticated caller could name another user. The
-  worked example shipped that way as a recorded PoC compromise with a
-  blocking issue; it is not the pattern. A headless run carries a per-run
-  capability instead of the standing secret, in a private instance field
-  for the length of one turn and never in synced state, and the route
-  reads the actor from the run record.
-- **The prompt tells the model what a tool does to the world**: a
-  "create" that lands as a draft, an "update" that files a proposal and
-  changes nothing live. The model repeats what the prompt says, so the
-  prompt must say the true thing.
+  The actor a tool route records must come from a verified identity,
+  never from a user id the client seeds into synced state.
+- **The prompt tells the model what a tool does to the world**, and it
+  must say the true thing.
+
+Read `references/think-tools.md`, "Tools: contract, factory,
+forwarding", before you write or change the tool factory, the tool
+route's auth, the worker's binding or secret wiring, headless-run
+capabilities, or the prompt's description of a tool's effect.
 
 ## Giving the assistant a corpus
 
-When the assistant must answer from documents somebody uploaded, the
-knowledge-base skill owns the domain and the ports. Four rules are
-Think-specific:
+The knowledge-base skill owns the corpus domain and its ports. Retrieval
+is a tool over a port; the worker never holds a database handle, an
+embedding key or a vector store client. The corpus filter is derived
+server-side from the verified actor, never a tool argument the model
+supplies. Extraction never runs in the worker. Passage text is data, not
+instruction.
 
-- **Retrieval is a tool over a port**, like every other tool. The worker
-  calls a `search_corpus` tool on the app's tool route and receives
-  ranked passages with citation handles. It never holds a database
-  handle, an embedding key, or a vector store client.
-- **The corpus filter is derived server-side from the verified actor**,
-  never a tool argument the model supplies. A model that can name the
-  corpus can name somebody else's, and the attribution rule above is the
-  same rule: the client is not the source of identity.
-- **Extraction never runs in the worker.** Both extractors are Python
-  with model weights measured in hundreds of megabytes. The upload lands
-  in R2, the worker enqueues, and a container job extracts and indexes.
-- **Passage text is data, not instruction.** It reaches the transcript
-  from a document the user did not write. Pass it in a data envelope
-  with handles, keep it out of the system prompt, and render it with
-  remote subresources off -- an image in an uploaded document is a
-  zero-click exfiltration channel.
+Read `references/think-corpus.md`, "Giving the assistant a corpus",
+before you add or change retrieval, upload or extraction for an
+assistant.
 
 ## Credentials and the model
 
@@ -276,62 +221,30 @@ Think-specific:
 
 ## The client
 
-- The browser opens a WebSocket to `/agents/<agent-path>/<session-id>`
-  (same-origin in production, by route; see the cloudflare-hosting skill), reads
-  history from `.../get-messages`, and speaks `cf_agent_use_chat_request`
-  / `cf_agent_use_chat_response` / `cf_agent_state` frames.
-- React apps get `useAgent` (`agents/react`) and `useAgentChat`
-  (`@cloudflare/think/react`), including client tools and the
-  `isRecovering` flag. Any other framework writes the adapter behind
-  `AgentRuntimePort`: translate frames into the domain vocabulary, replay
-  stored `UIMessage` parts as events on history load, derive `navigate`
-  from state sync, and make the handle's methods bound properties so
-  consumers may destructure them.
-- **Dev proxies cannot upgrade WebSockets** (Nitro's `devProxy` returns a
-  non-101). In dev the browser talks to the worker origin directly (a
-  public runtime config, default `http://localhost:8788`) and the worker
-  serves CORS; in production the route makes it same-origin and the
-  base is empty.
-- **The session registry is the product's, the transcript is the
-  engine's.** Recents (id, title, origin page, pinned) live behind the
-  store port, client-side first, server-backed when a job can create a
-  session no browser opened. Transcripts live in the object's SQLite:
-  swapping engines loses them, and that is a recorded acceptance, not a
-  surprise.
-- Every row in the recents list is the only handle on an engine-held
-  transcript: forgetting one is a two-step confirm, and a pin exempts a
-  row from the cap.
+The browser opens a WebSocket to `/agents/<agent-path>/<session-id>`,
+reads history from `.../get-messages`, and speaks `cf_agent_*` frames;
+the adapter behind `AgentRuntimePort` translates them into the domain
+vocabulary. Dev proxies cannot upgrade WebSockets, so in dev the browser
+talks to the worker origin directly. The session registry is the
+product's, the transcript is the engine's.
+
+Read `references/think-client.md`, "The client", before you write or
+change the client adapter, the dev-proxy or same-origin routing, or the
+session registry (recents, pin, forget).
 
 ## Testing
 
-- **A module that imports `@cloudflare/think` cannot be collected by a
-  node vitest runner**, so nothing in the composition root executes under
-  any unit test. Therefore every decision (path admission, credential
-  lifecycle, base-URL classification, the active tool list, upload
-  policy) lives in a module with NO SDK import, exercised directly, and
-  the subclass only wires. An adapter written in the untestable file is
-  where the next defect goes: a mutation that redirected a manifest read
-  to the wrong store left a whole suite green.
-- Declare the shapes the SDK expects structurally in those modules (they
-  are what `Think.fetchTools` or the tool factory accepts, so `tsc` checks
-  the assignment at the composition root).
-- Domain modules imported across a package boundary trip vite's per-file
-  tsconfig discovery on a generated app tsconfig; pin
-  `esbuild: { tsconfigRaw: '{}' }` (a STRING) and keep type checking in
-  `tsc`.
-- Object-level behaviour (state sync, hooks, recovery) is
-  `@cloudflare/vitest-pool-workers` territory (radar Trial; the
-  testing-node skill). Never hand-roll miniflare.
-- **Evidence of a tool CALL is not evidence the tool WORKED.** A frame
-  that fires before execution passes during the failure it exists to
-  catch; assert on a non-failing result.
-- Deployed: the liveness probe is `.../<agent>/<any-name>/get-messages`
-  (a plain GET that instantiates one object and needs no model call).
-  Then drive ONE real turn with a named case against a page whose content
-  is known, through Access with a service token, and read the events. The
-  probe stays green while the credential is dead, the model id is wrong,
-  or the egress hop refuses you; only the turn proves the assistant
-  answers.
+A module that imports `@cloudflare/think` cannot be collected by a node
+vitest runner, so every decision (path admission, credential lifecycle,
+base-URL classification, the active tool list, upload policy) lives in a
+module with no SDK import, exercised directly, and the subclass only
+wires. Never hand-roll miniflare. Evidence of a tool CALL is not
+evidence the tool WORKED.
+
+Read `references/think-testing.md`, "Testing", before you write or
+review a worker test, set up the vitest config for a package that
+imports domain modules across a boundary, or smoke a deployed assistant
+(the liveness probe and the real-turn check).
 
 ## Turnkey: adding a Think assistant to a product
 
@@ -358,14 +271,8 @@ Do these in the order written; each depends on the one before.
 
 ## Worked example
 
-quillmap's wiki agent: `cloudflare/wiki-agent/` (the subclass, the tool
-factory, the SDK-free decision modules and their tests, the smoketest
-script), `apps/quillmap/app/domain/agent/` and
-`app/domain/ports/agentRuntime.ts` (the core), `app/utils/agentChat.ts`
-(the client adapter), `server/api/agent/tools.post.ts` (the tool route),
-and `docs/design/DESIGN.WIKI-AGENT.md` (the as-built layer map and
-security perimeter). Its `NOTES.md` is the decision log; its
-`docs/DEPLOY_WIKI_AGENT.md` is the operator manual.
+quillmap's wiki agent is the worked example. Read `references/think-worker.md`,
+"Worked example", for the file map when you need a shape to copy.
 
 ## Related
 

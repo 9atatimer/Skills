@@ -47,10 +47,10 @@ is more specific than this skill.
   terraform in the private infra repo; nothing is made in the dashboard.
   The exceptions are what terraform cannot create: vaults and service
   accounts, made once by a human.
-- Hostnames: `<service>.<zone>` for production, `<service>.nonprod.<zone>`
-  for nonprod; the tier is its own DNS label and never "staging". A
-  request naming no tier means nonprod. A production-only root (one
-  laptop, one store: a nonprod tier would front the same hardware) is an
+- Hostnames: `<service>.<zone>` for production, `<service>.preview.<zone>`
+  for preview; the tier is its own DNS label and never "staging". A
+  request naming no tier means preview. A production-only root (one
+  laptop, one store: a preview tier would front the same hardware) is an
   explicit exception, recorded as a Key Decision before it is built.
 
 ## The road
@@ -179,7 +179,7 @@ confined, not only reachable.
 
 | May | May not |
 |---|---|
-| write the module; run `terraform fmt`, `validate` and offline `test` | run `apply`, `import` or `destroy`, or post an Atlantis command |
+| write the module; run `terraform fmt`, `validate` and offline `test`; post `atlantis plan` and `atlantis apply -p <project>` where the infra repo's `AGENT.md` grants them | run `apply`, `import` or `destroy` from a terminal |
 | write the plan hand-off: pre-flight, expected summary, the zero-grant check the human runs | perform the zero-grant check, mint a token, or seed a vault item or the Keychain |
 | read vault names, item titles and `op://` paths | read a token's value into the transcript |
 | run the verify table or the healthcheck when the human asks | widen a policy, or add a bypass, to make a probe pass |

@@ -63,7 +63,6 @@ If using YAML frontmatter:
 ```yaml
 ---
 title: "Document Title"
-status: draft
 date: 2025-12-22
 related:
 
@@ -74,6 +73,14 @@ related:
 - Frontmatter goes at the very top of the file
 - Use quotes around titles with special characters
 - Keep it minimal -- only metadata that tools will read
+
+## Reading a large Markdown file
+
+When the ast-mcp tools are connected, read a Markdown or HTML file with
+`get_outline`, then `read_node` for the sections the task needs, rather
+than reading the whole file. The outline costs a fraction of the file,
+and most tasks need one or two sections. A skill's `SKILL.md` is the
+exception: read it whole, once per session (the sdlc skill).
 
 ## Surgical Editing with markdown-editor MCP
 
@@ -123,6 +130,26 @@ Section IDs regenerate after each edit, so re-run `list_sections` if you need to
 - **Empty sections**: Tool sometimes creates empty duplicate headings; clean up with `delete_section`
 - **No frontmatter access**: markdown-editor cannot edit YAML frontmatter; use your file-editing tool (e.g. the Filesystem MCP server's `edit_file`) for that
 
+### AST editors rewrite what you did not touch
+
+An AST editor (ast-mcp's `update_node`, and any tool that parses the
+file and writes it back) may re-serialize the whole document, not splice
+the one node. Untouched nodes then change in ways only a serializer
+would make: one `update_node` on a single list in a `TODO_PLAN.md`
+(2026-10-16) turned every `-` bullet in the file into `*` and escaped a
+line-leading `#76` as `\#76`. After every AST-tool edit, run
+`git diff` on the file. If anything outside the node you meant changed,
+restore the file and make the edit with a text-replacement tool, so the
+diff carries only your change.
+
+### AST editor node IDs die with your own edits
+
+ast-mcp node IDs are content hashes, and one edit can retire IDs well
+outside the node you addressed, including in sections you never touched.
+After any mutation, treat every ID from an earlier outline as unverified:
+use the IDs the mutation returned (`ids.current`), or re-run `get_outline`
+when the response carries none.
+
 ## Pre-edit checklist
 
 Before editing a Markdown file:
@@ -137,11 +164,15 @@ Before editing a Markdown file:
 
 For project design docs:
 
-- Use YAML frontmatter for metadata (title, status, date, related)
+- Use YAML frontmatter for metadata (title, date, related; never a status -- the design skill, Lifecycle is metadata)
 - Start content at H2 (title is in frontmatter)
 - Use `(decision)` suffix on headings that record architectural decisions
 - Keep a Review Log section at the bottom with dated entries
-- Reference other design docs by relative path
+- Reference other design docs by relative path, and point into one by
+  section name or anchor, never by line number: a line reference drifts
+  as soon as the target is edited
+- Cite `AGENT.md`, not `CLAUDE.md`: `CLAUDE.md` is a symlink, and review
+  bots that do not resolve symlinks flag the reference as broken
 
 ## Future enhancements (TODO)
 

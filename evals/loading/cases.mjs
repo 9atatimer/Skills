@@ -90,7 +90,7 @@ export const CASES = [
     "Add a security-minded persona to our design review panel.",
     "Check my phase-3 seam map before I request approval.",
     "Is this early design sketch worth continuing? Give it a quick panel pass.",
-    "Can an agent amend an APPROVED design record with the panel?",
+    "Can an agent amend a merged design record with the panel?",
   ]),
   ...no("designomatic", [
     "Write a design doc for the new sync feature.", // design
@@ -120,7 +120,7 @@ export const CASES = [
     "Add the Access application and service token for the laptop tunnel's hostname.", // lmde-tunnels
     "Build a Grafana dashboard for the gateway's request counts.", // lmde-dashboards
     "Mint a new Cloudflare API token for the deploy workflow.", // infra-credentials
-    "Write the GitHub Actions workflow that deploys the worker to nonprod.", // release
+    "Write the GitHub Actions workflow that deploys the worker to preview.", // release
     "Set up a Cloudflare Worker with a KV binding.", // cloudflare-hosting
     "Restructure this bash script into header, helpers and a main function.", // style-bash
     "Should we add Redis as a dependency? Check the radar first.", // tech-radar
@@ -136,7 +136,7 @@ export const CASES = [
     "Callers of my laptop endpoint get a 524 after 100 seconds on a cold model load. What should the route do?",
     "Which 1Password vault should the tunnel's run token go in?",
     "Can the Access policy in front of my laptop tunnel just use any_valid_service_token?",
-    "What hostname should the new laptop webhook endpoint get, and does it need a nonprod tier?",
+    "What hostname should the new laptop webhook endpoint get, and does it need a preview tier?",
     "How do I check that the tunnel's origin port still reaches the proxy layer and not some other listener?",
     "The human just applied the new tunnel module. What do I verify, and how?",
   ]),
@@ -151,5 +151,77 @@ export const CASES = [
     "Add an R2 bucket for the archive in terraform.", // iac
     "Sandbox the local inference server so it cannot read my home directory.", // lmde-daemons
     "Wire a Think chat assistant into the product's worker.", // cloudflare-think
+  ]),
+  ...yes("cloudflare-one-devices", [
+    "Tailscale on my Mac is stuck at starting since I enrolled it in our Zero Trust org with WARP.",
+    "Move this laptop's WARP client from one Cloudflare One organization to another.",
+    "Add Tailscale's DERP relays to the WARP split-tunnel exclude list.",
+    "MagicDNS names stop resolving whenever WARP is connected. What do I add?",
+    "warp-cli says Account type: Free after I enrolled. Why isn't it in the team?",
+    "I changed the default device profile's split tunnel but my phone still has the old list.",
+    "Which IP range does Gateway hand out for a private hostname route to my cloudflared tunnel?",
+    "Should I delete the onboarding device profile the dashboard created?",
+    "tailscale netcheck shows UDP false while Cloudflare WARP is on.",
+    "Write the terraform for the WARP device profile's local domain fallback list.",
+  ]),
+  ...no("cloudflare-one-devices", [
+    "Publish the laptop's webhook receiver to the internet through cloudflared behind Access.", // lmde-tunnels
+    "Put the staging marketplace Worker behind a Cloudflare Access login.", // cloudflare-hosting
+    "Bind a D1 database to my Worker and deploy it to preview.", // cloudflare-hosting
+    "Split this terraform root into one directory per tier.", // iac
+    "Create a scoped Cloudflare token for the Access terraform root.", // infra-credentials
+    "Keep the cloudflared connector on my laptop running after a reboot.", // lmde-daemons
+    "Import the hand-made DNS record into terraform without recreating it.", // iac
+    "Read the signed-in user's email from the Access JWT inside the Worker.", // cloudflare-hosting
+    "Allow only the /health path through the laptop tunnel's ingress.", // lmde-tunnels
+    "Seed the 1Password service-account token as a GitHub environment secret.", // infra-credentials
+  ]),
+  ...yes("agent-instructions", [
+    "Write a new skill for running database migrations.",
+    "Our AGENT.md is 700 lines. Trim it.",
+    "Add a rule to AGENT.md that agents open one PR per repo per session.",
+    "The gates skill doesn't load when I ask about review turns. Fix its description.",
+    "How long should a SKILL.md be before I split it into reference files?",
+    "Should I write IMPORTANT in capitals so the agent stops skipping this rule in CLAUDE.md?",
+    "Review this change to the global agent instruction file before I land it.",
+    "This skill section tells the story of the incident that caused the rule. Is that right?",
+    "Does this rule go in AGENT.md, in a skill, or in a hook?",
+    "Write a new persona under agents/ for a database reviewer.",
+  ]),
+  ...no("agent-instructions", [
+    "Add this unsettled lesson to TODO_PLAN.md's Lessons Learned.", // todo-plan
+    "Convert the numbered list in this design doc to bullets.", // markdown
+    "Write the PR description for this branch.", // technical-writing
+    "Write a runbook for rotating the signing key.", // technical-writing
+    "Route the lessons from this retrospective to the right layer.", // retrospective
+    "Write the system prompt our product's support assistant sends to the model.", // coding
+    "Add a codex overlay hook that sets its MCP servers at launch.", // clai
+    "Choose the reviewer personas for the panel over my design doc draft.", // designomatic
+    "A review bot flagged my PR. Do I fix it or reject it on the thread?", // gates
+    "Should this yes/no judgement be a rule, a classifier or an LLM call?", // decision-models
+  ]),
+  ...yes("tiddlywiki", [
+    "Make me a tiddlywiki that covers every Cloudflare product.",
+    "Build a single-file reference wiki for Kubernetes where each concept links to the ones it depends on.",
+    "Turn this product graph JSON into a navigable wiki I can open in a browser.",
+    "I want one place to browse every AWS service with links to its docs and tutorials.",
+    "Create a topic wiki for Postgres extensions that an agent can also navigate.",
+    "Rebuild the Cloudflare tiddlywiki; the source map was updated.",
+    "Add the tutorials links to the topic wiki for Stripe.",
+    "Make a browsable map of the Rust async ecosystem, one page per crate, linked both ways.",
+    "Give me a copy-paste command that starts a Claude session over my topic wiki.",
+    "Why does the Workers tiddler in my wiki have no tutorials section?",
+  ]),
+  ...no("tiddlywiki", [
+    "Let users upload their PDFs and ask questions about them.", // knowledge-base
+    "Draw the layer graph of this repo as an HTML diagram.", // architecture-views
+    "Deploy this worker to Cloudflare.", // cloudflare-hosting
+    "Write a runbook for restoring the database.", // technical-writing
+    "Add a Think chat assistant to the product.", // cloudflare-think
+    "Write the as-built record for the API server.", // as-built
+    "Fix the broken links in this README.", // markdown
+    "Write a design doc for the wiki editing feature in our app.", // design
+    "Choose a vector store for retrieval over our docs.", // knowledge-base
+    "Should we adopt this new charting library?", // tech-radar
   ]),
 ];

@@ -12,6 +12,26 @@ description: "Provisioning and governing the credentials infrastructure needs: t
 > which token fired, an item category that dropped a field, a deleted
 > item that started a scramble.
 
+## Where a secret may come from
+
+- A secret is read from 1Password at the moment of use, with
+  `op read op://<vault>/<item>/<field>` or `op run`. It never lands in a
+  file, a log, a transcript or a commit. Code takes an `op://` reference
+  in its config and resolves it at run time; the reference is
+  configuration, the value is never stored.
+- The one bootstrap credential is the service account token that
+  unlocks one vault. The human hands it to an agent; a workflow gets it
+  as a CI secret.
+- git-crypt (`.env.crypt`, `secrets/**`, decrypted with a GPG identity
+  the human provisions) is the one other channel, and an exception, not
+  a default.
+- There is no third channel. Never design, build, document or test on a
+  secret arriving in an environment variable, a plaintext `.env` file, a
+  CI secret other than the vault token, or an agent platform's
+  environment-secrets store, and never ask the human to put one there.
+  A secret the human puts in direnv to unblock you is temporary: use it,
+  and build nothing that depends on it.
+
 ## The vault boundary
 
 - A **personal vault** (`Private`) is interactive only. It holds the
@@ -34,6 +54,19 @@ description: "Provisioning and governing the credentials infrastructure needs: t
   cannot edit an SA's grants after creation: a wrong grant means a new
   SA, so name the vault and the `read_items` scope on the create line
   and nothing more.
+- **Create a service account piped into its item.** `op service-account
+  create` prints the token once, to the terminal and so into any
+  transcript that sees that terminal. Pipe it straight into the
+  1Password item so it is never displayed:
+
+  ```
+  op service-account create <name> --vault <vault>:read_items --raw \
+    | jq -Rn '{title:"Service Account - OP - <name>", category:"API_CREDENTIAL", fields:[{id:"credential",type:"CONCEALED",label:"credential",value:input}]}' \
+    | op item create --vault Development
+  ```
+
+  A token that was displayed is exposed: revoke that service account in
+  the 1Password console and create a new one the piped way.
 
 ## Minting
 
@@ -41,10 +74,21 @@ description: "Provisioning and governing the credentials infrastructure needs: t
   Key or an admin token from the personal vault for the provider, and
   the `op` desktop app for the 1Password terraform provider. Minting
   modules say LAPTOP ONLY in their README and offer no CI path.
+- Never gate a script on `op whoami`. Under the desktop-app integration
+  it reports "not signed in" until another `op` command in the session
+  has prompted, and it never prompts itself, so the gate refuses with
+  1Password unlocked. Let the script's first real read (`op vault get`,
+  `op item get`) be the sign-in check: it prompts when the app can
+  authorize and fails when 1Password is locked.
 - Least privilege per purpose: a deploy token (scripts, routes, KV), a
   terraform token (Access, DNS), a bucket-scoped storage token, a
   service account per workload per tier. Two purposes, two tokens, even
-  when one account could hold both.
+  when one account could hold both. The exception is a token that adds
+  no boundary: when every holder of a second token already holds a
+  credential that does its job (an account-wide storage token beside a
+  bucket-scoped one, both read by one service account), the second is
+  a wasted slot under the provider's token cap (Cloudflare: 50 per user),
+  not least privilege.
 - The minted value lands in a 1Password item, never directly in a
   GitHub secret, never in a file in any repo, never in a chat or an
   issue. The module writes it there and outputs the `op://` path.
@@ -89,11 +133,49 @@ description: "Provisioning and governing the credentials infrastructure needs: t
   the workflow's `env:`. Everything else is an `op://` reference
   resolved at run time.
 - Tiered deploys put the SA token and the vault UUID on a GitHub
-  Environment (`nonprod`, `production`) so the tier is chosen by the
+  Environment (`preview`, `production`) so the tier is chosen by the
   environment, not by a branch condition in the workflow.
+- **The Environment's branch rule is the only gate on its token.**
+  GitHub releases an Environment secret only to a run whose ref matches
+  the Environment's deployment-branch rule. With no rule, a pushed branch
+  that edits the deploy workflow and dispatches itself receives the
+  token. So a production-tier Environment allows `main` only, declared
+  as code in the infra repo, never clicked. Required reviewers and wait
+  timers are not available on a private repository below GitHub
+  Enterprise: the API answers 422 ("ensure the billing plan supports the
+  required reviewers protection rule"). Never design, document or rely
+  on a reviewer gate there.
+- **`main`-only is two objects, and the first locks the door.** Turning
+  on custom branch policies starts the allow-list empty; the `main`
+  policy is a second object. An apply that stops between them leaves
+  production deployable from no branch (2026-11-14: a reviewer request
+  failed with the 422 above and stranded two repos). Apply that change
+  alone, and finish a partial apply at once.
+- **Declare the Environment before any workflow names it.** The first
+  time a job names an Environment that does not exist, GitHub creates
+  it with no branch rule, and it then releases its secret to any branch.
+  Apply the infra repo root that declares the Environment and its branch
+  rule before merging the workflow; an Environment that already exists
+  is imported into that root, never trusted. Prove the rule, not the
+  Environment's existence: `gh api
+  repos/<owner>/<repo>/environments/<env> --jq .deployment_branch_policy`
+  shows `custom_branch_policies: true`, and `gh api
+  repos/<owner>/<repo>/environments/<env>/deployment-branch-policies`
+  lists the allowed branch.
 - Non-secret identifiers -- account ids, project refs, AUDs, team
   domains, hostnames, role ARNs -- are repository VARIABLES. They show
   in logs, can be checked, and do not count against a secret budget.
+- **In a public repository a variable is public.** The runner prints a
+  step's evaluated `env:` block in the log header before the step runs,
+  so no `::add-mask::` can hide a `vars.*` value, and a public
+  repository's logs are public. A 1Password reference (it names the
+  vault and the item), an account id, or a URL that contains one is
+  therefore never a variable there. Give the workflow's service account
+  exactly one vault, tag each item, and find it at run time with
+  `op item list --tags <tag>`, masking the vault and item ids it returns.
+  The caller then passes the one secret and nothing else (tds-utils
+  `adherence.yml`, tds-utils PR#716: the variable form printed
+  `DECIDE_GATEWAY_OP_ITEM:` in the PR's own run log).
 - No `secrets.A || secrets.B` fallbacks. The expression only falls
   through when the left side is completely unset; an org-level secret
   makes it unconditionally non-empty, and the fallback then hides which
@@ -123,6 +205,63 @@ description: "Provisioning and governing the credentials infrastructure needs: t
   next auth.
 - Deleting an item is a rotation you did not plan. Before deleting,
   grep for its ID and title across the fleet.
+- **Find a provider token's consumer before it is deleted.** Its
+  last-used date and its name are not evidence that nothing uses it:
+  Cloudflare records neither R2 S3-API use nor AI Gateway use there, so
+  a live R2 or gateway token reads "never". Look for the root that mints
+  it, its registry row, and any 1Password item or git config that holds
+  an S3 key pair derived from it. Deleting a token revokes every R2 key
+  pair derived from it (the cloudflare-hosting skill, "R2 credentials
+  and the token cap"). A token whose consumer you
+  cannot find goes to the owner to decide, with what you searched.
+
+**A service-account token is rotated by the infra repo's rotator, run by
+the human**, never by hand and never by an agent. It is one generic tool,
+not a script per account: each rotatable credential is a config file
+beside it. The config format and what the tool checks are in its
+runbook in the infra repo's `docs/`, not here. Its tests run against
+fake `op` and `gh`.
+
+- **A config names the credential, never holds a value.** It decides
+  which vault gets a new account and which secrets are overwritten, so
+  the configs and the tool are owner-approved paths (CODEOWNERS): an
+  agent may propose a change to them, never land one alone.
+- **Dry run first, every time.** The default run changes nothing and
+  prints the plan: the account it would mint, the item it would write,
+  every holder it would re-seed, and the account you would revoke. Read
+  it, then rerun with apply.
+- **Adding a credential is a config and a first dry run.** A config that
+  has never had a dry run says so in its header; the dry run is what
+  proves its holders against the registry.
+- **Out of scope: fall back to the manual procedure.** A token held as a
+  GitHub Environment secret, or one held anywhere but a GitHub secret,
+  is not rotated by the tool. Rotate it by the rules above and the
+  account's own runbook.
+
+On apply, it enforces this order:
+
+- **Refuse before minting** when the holders it finds (the org secret
+  and every repository secret of that name) differ from the registry.
+  A holder the registry does not list is a finding, not a guess.
+- **Mint a new account with the same single-vault read grant.** The
+  grant cannot be edited after creation, so a new token is a new
+  account.
+- **Store it in the existing item, in place.** The token travels on
+  stdin only: never in argv, a file, the output or an exported
+  variable. The item's history keeps the old value.
+- **Probe before seeding.** Give the new token to one read-only child
+  process against its vault. If that fails, stop: no holder has been
+  touched, and the old account still works.
+- **Re-seed every holder from the item.** Keep the org secret's
+  visibility and its selected-repository list exactly as they were.
+- **Revoke the old account last, by hand,** after a green run on each
+  owner's side. The `op` CLI cannot delete a service account, so this
+  is the one console step. The script names which account to revoke.
+- **Recover from a half-rotation by naming the original account.** A
+  failure after the item edit leaves the item holding the new token
+  while every holder still has the old one. Re-seed from the item, or
+  revoke the new account and rerun, passing the original account's
+  name explicitly so the old account is still the one revoked.
 
 ## The registry
 
@@ -132,6 +271,10 @@ and every GitHub secret and variable each repo's workflows read, with
 the item each resolves to. Names only. A change in any repo that adds,
 renames or removes a consumer updates the registry in the same change
 set. A consumer absent from the registry is a finding, not a formality.
+Every provider token that has a consumer has a row, a token made by hand
+outside any root included, because a token audit sees a consumer only
+through the registry. A credential that no root mints and no row names is
+unregistered, not unused: find its consumer before deleting it (Rotation).
 
 ## What an agent may and may not do
 
@@ -141,6 +284,11 @@ set. A consumer absent from the registry is a finding, not a formality.
 | verify a token read-only against the provider's verify endpoint | mint, seed, rotate, or delete |
 | write workflow wiring, `.env.op` references, the registry | widen an SA's grant to make a job pass |
 | diagnose from the step header (`***` present, blank empty) | approve a deployment or look for a route around a gate |
+
+The human runs every mint, seed, revoke and delete. When an agent
+prepares such a command, it hands the human one step at a time as a `!`
+line and reads that step's evidence before it hands over the next,
+because each step's result decides whether the next one is safe.
 
 ## Related
 

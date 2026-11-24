@@ -118,40 +118,14 @@ is not.
 
 ### A name is not a behavior
 
-The failure mode is subtle enough to be worth an example, because it
-survives review and it makes coverage look real.
-
-```python
-def test_a_server_still_starts_against_an_unmigrated_store(self, db):
-    """Given an unmigrated store, When a desk starts, Then it comes up."""
-    drop_desk_tables(db)
-    store = DeskStore(db)
-    try:
-        store.abandon_stale_calls()
-    finally:
-        store.close()
-```
-
-It shipped. It has no assert statement at all: it passes because nothing
-raises, and it never starts a server. The docstring is in Given/When/Then
-and describes a behavior the body does not exercise -- which is worse than
-no test, because the next reader sees the case is covered.
-
-Two checks catch it:
-
-- **Does the body do what the name says?** If the name says a server
-  starts, a server starts. Setup may reach into the store; the *acting*
-  and the *asserting* go through the door the human uses.
-- **Can it fail?** A test with no assertion, or one whose only assertion
-  is that nothing raised, is asserting the absence of a crash -- say so in
-  the name, or give it the assertion it implies.
-
-The same check catches the commoner version: a test that names a behavior
-and then asserts an internal value. If the failure message would read
-`assert lease == 780.0` rather than something the human would notice,
-the name is writing a cheque the body does not honour. TDD is welcome to
-produce that test on the way to correct code -- it is just not the one to
-keep.
+A test must do what its name says, and must be able to fail. A test with no
+assertion, or whose only assertion is that nothing raised, says so in its
+name or gets the assertion it implies; a test that names a behavior and
+asserts an internal value is not the one to keep. Setup may reach into
+the store; the *acting* and the *asserting* go through the door the human
+uses. Read `references/test-pitfalls.md`,
+"A name is not a behavior", for the worked example before you write or review a
+Given/When/Then test whose body you doubt.
 
 ### Reliability and Determinism
 
@@ -233,48 +207,20 @@ We strictly define the layers of testing. Do not blur the lines between them.
 
 ### A fake process must model the real one's lifetime
 
-A fake standing in for something long-lived -- a browser, a server, a
-daemon -- has to **stay running**. Faking its output is not enough. Code
-that supervises a process watches two things: what it says, and whether it
-is still there. A stub that records its arguments and exits immediately
-gets the first right and tells the second a lie: it looks exactly like a
-crash.
-
-This does not fail where you wrote it. Supervising code typically probes
-for readiness and then checks liveness, so an exiting stub leaves a window
-about one process-spawn wide in which the probe reads "not ready yet" and
-the liveness check then finds a corpse. On a fast machine the stub wins
-that race every time and the suite is green; on a loaded CI runner it
-loses it now and then. The tell is a flake that **moves**: a different
-case fails each run, all of them calling the same fixture. A defect in the
-code under test does not wander like that -- when the failures move and
-the fixture is common, suspect the fixture.
-
-The check, before writing any process double: what does the code under
-test observe about this thing besides its output? If "is it still alive"
-is on the list, the double needs a lifetime, and the test needs to reap it
-in teardown. Cover the other direction too, on purpose -- a process that
-dies without ever becoming ready is a real case, and it should be a test
-rather than an accident of scheduling.
+A fake standing in for something long-lived (a browser, a server, a daemon)
+has to stay running, and the test reaps it in teardown; a stub that exits
+immediately looks like a crash. Cover the process that dies before it is
+ready as its own test. Read `references/test-pitfalls.md`, "A fake process must
+model the real one's lifetime", before you write any process double or when
+flakes move between cases that share a fixture.
 
 ### Drive a script the way its caller does
 
-A test that invokes a script under test with tidier arguments than the
-real caller uses tests a program the caller never runs. A mirror-sync
-script passed its `<package-dir>` argument straight into Node's
-`require()`; the suite handed it absolute `mkdtemp` paths and stayed
-green, the workflow handed it `packages/naatm-ci-magic` and the first
-real run died with "Cannot find module" -- a bare specifier without `./`
-or `/` is a module name, not a path. Mechanism: the argument form is part
-of the interface, and the suite had silently narrowed it.
-
-Before the first case, read how the production caller invokes the thing
-(the workflow step, the cron line, the hook) and copy that shape: relative
-or absolute paths, the cwd, quoting, env, argument order. At least one
-case runs the exact production invocation; the rest may be tidier. The
-same rule covers a CLI's own subcommand/flag forms: if the docs say
-`tool -n seed`, one test says `tool -n seed`, not a hand-built call into
-the function underneath.
+Read how the production caller invokes the thing (workflow step, cron line,
+hook) and copy that shape; at least one case runs the exact production
+invocation, and a CLI's documented subcommand/flag forms are tested as
+documented. Read `references/test-pitfalls.md`, "Drive a script the way its
+caller does", before you write the first case for a script or CLI.
 
 ### Test Isolation
 
@@ -283,126 +229,87 @@ Every test must start with clean state:
 - Fakes created per-test (never shared mutable state between tests)
 - Temp directories auto-cleaned by the test framework
 - No global state mutation -- if unavoidable, restore in teardown
+- A test that drives code which detects its environment (a cloud
+  sandbox, CI, a TTY) clears the detector's inputs first, for example
+  `unset CLAUDE_CODE_REMOTE` at the top of the suite. Ambient signals
+  from the machine running the test otherwise leak into every child
+  call, and a case meant to be a no-op writes to the real host. Each
+  case that needs the environment opts in with a scratch path.
+- Deleting a feature deletes its tests, and adds an inverse assertion
+  that the feature is gone (the tool is not invoked, the file is not
+  written). Without it the feature can return and no test notices.
 
 ### A guard needs an accept case
 
-A check that refuses things needs a test that valid input gets through. A
-suite made only of refusal cases stays green when the check refuses
-everything: template-base PR #86's state-guard suite passed 10/10 with the
-path check mutated to never match. Once per new guard, mutate it both ways
--- refuse all, accept all -- and confirm the suite goes red each time.
+A check that refuses things needs a test that valid input gets through,
+including the empty input (nothing in scope, only removals). Once per new
+guard, mutate it both ways -- refuse all, accept all -- and confirm the suite
+goes red each time. Read `references/test-pitfalls.md`, "A guard needs an accept
+case", for the evidence before you write or review a guard's tests.
 
-Nothing to check is an accept case too, and the one most often missing.
-template-tools#714: a pre-commit guard whose suite had accept cases for
-prose, comments and path arguments still exited 1 -- silently -- on a staged
-change that only deleted lines, because no case staged a change with no
-added lines to scan. For a guard over a diff, a file or a list, include the
-empty input (nothing in scope, only removals) and expect a pass.
+### A guard asserts the parsed value
+
+Assert on the parsed value, not a substring, and revert each fix to see
+its test go red. Read `references/test-pitfalls.md`, "A guard asserts the
+parsed value", before writing a guard over a file.
 
 ### A fake cannot test a third-party tool's behavior
 
-A fake of an external CLI encodes your assumption about that CLI, so a
-suite built on it proves only the assumption. template-tools' `cfw` tests
-used a fake docker and asserted "the seeded config has no `credsStore`",
-which was true -- and the real docker CLI still sent the registry
-credential to the macOS keychain, because with no `auths` entry it
-auto-detects a credential helper on PATH (template-tools#711). When a claim
-is about what a third-party tool does, at least one test runs the real
-binary -- with its side-effect edges faked (here, fake `docker-credential-*`
-helpers first on PATH) -- and is skipped, never faked, when the tool is
-absent.
+A fake of an external CLI encodes your assumption about it. When a claim is
+about what a third-party tool does, at least one test runs the real binary,
+with its side-effect edges faked, and is skipped, never faked, when the tool
+is absent. Read `references/test-pitfalls.md`, "A fake cannot test a
+third-party tool's behavior", before you fake an external CLI.
+
+### Pin an outside constant as a literal
+
+A test whose expectation comes from the code under test re-runs that
+code and compares it with itself, so it cannot fail. It reads as
+coverage and hides exactly the bug it was written for. Pin any constant
+that comes from outside the codebase (a vendor's path, a wire format, a
+magic byte) as a literal, checked against the vendor's shipped source,
+not your own copy of it. To probe a suspect test, change the value under
+test to something absurd and re-run: a test that still passes was
+testing nothing. A fixture phrased as "the first X the policy names" is
+the usual suspect.
+
+### Know what runs each test
+
+A test file no runner invokes looks exactly like a passing one. The
+change that adds a test file also wires it into something that runs
+without you: the unit suite, a CI job, a deploy check. The converse
+holds too: "I could not run it here" is not "it has not been run".
+State what you could not verify here, and check what the pipeline
+verifies on push, before reporting a gap.
+
+### A flow that leaves the app needs a round-trip test
+
+Contract tests over fakes prove each unit keeps its interface, not that
+the units are wired together. A flow that leaves the app and comes back
+(an OAuth redirect, a webhook, a payment return) needs round-trip
+coverage, or a live walkthrough, before it is done.
+
+### A green result proves only what its setup allowed
+
+Before recording a result as the answer to a question, check that the
+test's preconditions match the question's. A sign-in tested with signup
+open says nothing about signup closed.
 
 ---
 
 # Test Development Workflow
 
-When creating or overhauling test suites, follow this proven sequence:
+Write skeleton tests against the real, not-yet-built API; set up the
+fakes first; make one test pass at a time, simplest first.
 
-### Start with Skeleton Tests
-
-Write test cases that call the real (not-yet-implemented) API and assert on expected behavior.
-Tests fail because the code does not exist yet -- not because of placeholder assertions like `assert false`.
-This gives you a clear roadmap before writing any implementation.
-
-### Identify and Setup Fakes First
-
-Before implementing any tests:
-
-- Identify all external dependencies
-- Create reusable, resettable fake instances
-- Set up framework-appropriate setup/teardown hooks
-
-### Implement One Test at a Time
-
-- Start with the **simplest** test case
-- Debug the test and its fakes until green
-- Only move to the next test when current test passes
-- Each green test validates both the behavior and the fake setup
-
-### Iterate by Complexity
-
-- Simple happy paths first
-- Edge cases and error conditions next
-- Complex interactions and multi-step workflows last
-
-**Philosophy:** Never write multiple broken tests at once. Each green test
-validates your fakes, creating a solid foundation for more complex tests.
-Writing 20 broken tests simultaneously makes debugging exponentially harder.
-
----
+Read `references/workflow-and-debugging.md`, "Test Development Workflow", when you create or overhaul a suite.
 
 # Debugging Failing Tests
 
-### Systematic Debugging Sequence
+Isolate the failing test, fix the simplest failure first, and examine
+both the test and the code under test.
 
-#### Isolate Tests Methodically
-
-Run only the failing test file, then the specific test case.
-If it passes in isolation but fails in suite, you have shared state.
-
-#### Start with Minimal Test Case
-
-Fix the **simplest** failing test first -- it often reveals patterns for fixing others.
-
-- **Bad:** Trying to fix all failures at once
-- **Good:** Fix one test completely, understand the root cause, then apply to others
-
-#### Two-Sided Investigation Pattern
-
-ALWAYS examine both sides:
-
-- **The test**: Is the assertion correct? Are fakes set up properly?
-- **The code under test**: Did the behavior actually change?
-
-#### Common Failure Patterns
-
-**Fake/Mock Not Returning Expected Data**
-
-- Check that the fake implements the current interface
-- Verify return values match what the code under test expects
-- If an interface changed, the fake may be out of date
-
-**Test Pollution (Order-Dependent Failures)**
-
-- Run the failing test in isolation
-- If it passes alone but fails in suite, you have shared state
-- Check for module-level mutable state or missing cleanup
-
-**Async Timing Issues**
-
-- Never use real sleeps -- use fake clocks, events, or mock the sleep
-- Ensure all async fakes resolve immediately
-- Check for unbounded waits without timeout
-
-#### When Stuck
-
-If you can't diagnose a failure after 2-3 attempts:
-
-- Add logging/print to fakes to trace calls
-- Run with verbose/stdout output enabled
-- Check if the test is testing behavior or implementation (it should be behavior)
-
----
+Read `references/workflow-and-debugging.md`, "Debugging Failing Tests", when a test fails and the cause is not obvious.
 
 # Test Naming
 

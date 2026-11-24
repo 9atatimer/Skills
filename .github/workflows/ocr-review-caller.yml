@@ -1,0 +1,68 @@
+# ocr-review-caller.yml -- OCR on Demand caller template. Copy it verbatim
+# to .github/workflows/ocr-review-caller.yml in an adopting repository of
+# either owner (9atatimer, Nine-At-A-Time-Media); runbook: docs/ops/ocr-review.md
+# in the private tds-utils source repository; design:
+# docs/design/OCR-ON-DEMAND.DESIGN.md there.
+#
+# It carries only the event types. What a valid /ocr command is, and who
+# may issue it, is decided in the reusable workflow.
+#
+# The two SHAs below are a PLACEHOLDER (all zeros). Replace BOTH with the
+# same commit of 9atatimer/workflows (its `main` head, or the commit a
+# release published): the reusable workflow is pinned by it, and tools_ref
+# fetches the step commands from it. Taking a later version is bumping both.
+# Do not pass tools_repository: its default is 9atatimer/workflows.
+# `bin/seed-ocr-review status` reports the pin, a placeholder, a mismatch
+# and a stale pin.
+#
+# Exactly one repository secret crosses into the public workflow, by name.
+
+name: ocr-review
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: Pull request number to review
+        type: number
+        required: true
+      model:
+        description: Model to review with (empty uses the backend's model variable)
+        type: string
+        required: false
+        default: ''
+      backend:
+        description: Backend (ollama-gateway, cf-ai-gateway or anthropic; empty uses the owner's OCR_BACKEND)
+        type: string
+        required: false
+        default: ''
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  ocr-review:
+    uses: 9atatimer/workflows/.github/workflows/ocr-review.yml@51ea745049374ca3bac4ffcd03a7c50d740f0275
+    with:
+      # fromJSON: a dispatch's pr arrives as a string, and the reusable
+      # workflow's number input refuses one (Issue#485).
+      pr: ${{ fromJSON(format('{0}', github.event_name == 'workflow_dispatch' && inputs.pr || github.event.issue.number)) }}
+      model: ${{ github.event_name == 'workflow_dispatch' && inputs.model || '' }}
+      backend: ${{ github.event_name == 'workflow_dispatch' && inputs.backend || '' }}
+      tools_ref: '51ea745049374ca3bac4ffcd03a7c50d740f0275'
+      # The review job's runner and time limit, planned by the reusable
+      # workflow (Issue#776, Issue#787): a PR of 25 files or more, or more
+      # than 800 lines, runs on CI_RUNS_ON_LONG for 115 minutes; on the
+      # runner pool (CI_RUNS_ON set), every other PR runs on
+      # CI_RUNS_ON_DOCKER for 19. Only otherwise does the timeout below
+      # apply: 9 on the pool, 40 on GitHub-hosted runners.
+      # OCR_REVIEW_RUNS_ON and OCR_REVIEW_TIMEOUT_MINUTES override the plan
+      # (runbook, A review's length).
+      review_runs_on: ${{ vars.OCR_REVIEW_RUNS_ON || '' }}
+      review_timeout_minutes: ${{ fromJSON(vars.OCR_REVIEW_TIMEOUT_MINUTES || (vars.CI_RUNS_ON && '9' || '40')) }}
+    secrets:
+      OLLAMA_GATEWAY_OP_SA_TOKEN: ${{ secrets.OLLAMA_GATEWAY_OP_SA_TOKEN }}
