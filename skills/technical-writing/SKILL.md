@@ -68,6 +68,10 @@ check and the commit it ran on.
 
 ## Before sending
 
+Run every command a runbook gives, from a clean state, before you commit
+it. A command inferred from the lines around it fails on the reader's first
+step.
+
 Reread for vague references, unnecessary metaphors, rhetorical setups,
 and sentences the reader must decode. Rewrite those from their meaning,
 not by swapping synonyms. Keep useful detail, and check that the

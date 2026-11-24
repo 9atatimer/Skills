@@ -410,7 +410,10 @@ arrived via subscription, native UI events, or you fetched it cold with
 classify each as one of:
 
 - **Agree** -- will fix.
-- **Disagree** -- will reject with a reason.
+- **Disagree** -- will reject with a reason. A finding that a file is
+  missing can be a symlink: git stores one as a blob holding its target
+  path, so a diff shows a one-line file. Check `git ls-files -s <path>`
+  (mode `120000`) before you act on it.
 - **Ambiguous / architecturally significant** -- ask the human first,
   inline in the session as plain text (never a question-picker widget --
   they break on mobile). Do not guess.

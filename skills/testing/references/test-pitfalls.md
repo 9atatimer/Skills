@@ -107,6 +107,24 @@ change that only deleted lines, because no case staged a change with no
 added lines to scan. For a guard over a diff, a file or a list, include the
 empty input (nothing in scope, only removals) and expect a pass.
 
+### A guard asserts the parsed value
+
+A substring assertion over a file passes for the wrong reason, and the
+failures share one shape:
+
+- `toContain('apps/marketplace')` over a workflow matched a comment, so
+  deleting the step it guarded left the suite green.
+- `includes(name)` over a list let `vue` pass because `@vue/test-utils`
+  contains it. The shortest names, the ones most likely to be added
+  carelessly, fail hardest.
+- A guard that every dependency group batches all updates checked
+  `update-types` and not `patterns`. Narrowing one group to
+  `patterns: ["vite"]` broke the property and every test stayed green.
+
+Parse, then assert on values. Then write down how the guarded property
+could be broken before writing the guard, and mutate each case; a second
+reader finds the cases the author did not think of.
+
 ### A fake cannot test a third-party tool's behavior
 
 A fake of an external CLI encodes your assumption about that CLI, so a
