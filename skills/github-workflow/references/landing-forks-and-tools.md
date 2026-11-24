@@ -51,7 +51,7 @@ forms behind the trigger: `tedium land`, `tedium r+`, `tedium try`. A bare
 case-sensitive. Write `/land`.
 
 On an enrolled repo, an agent may comment `/land` (or `tedium land`) on
-its own PR only when all eight hold on the current head:
+its own PR only when all seven hold on the current head:
 
 - tedium is enabled: `tedium.toml` on the default branch, and the agent
   instruction file says so;
@@ -80,19 +80,16 @@ its own PR only when all eight hold on the current head:
   owner is the PR's author can never clear this, because GitHub refuses
   self-approval: that PR is human-merged, and no `land` will change it;
 - no `hold` label is on the PR;
-- the self-review epilogue is posted on the PR and names the head, or a
-  range ending at it (the self-review skill, The epilogue);
 - the PR adds or changes no design or architecture record
   (`docs/design/DESIGN.*.md`, `docs/design/ARCHITECTURE.*.md`). Merging
   one is its approval (the design skill, Lifecycle is metadata), so a human
   lands it.
 
-Anything short of all eight is not "almost". A red `review-settled` that the
+Anything short of all seven is not "almost". A red `review-settled` that the
 repo requires means a review is owed on this head: re-request the reviewer
 if the latest push carries a load-bearing fix, resolve every thread, post
 the self-review epilogue, then wait for the status. A head red only from a
-hygiene-only tail, or a documentation-only PR, goes to the human to land
-once its epilogue is posted.
+hygiene-only tail, or a documentation-only PR, goes to the human to land.
 A human with write access may comment `tedium land` at any time; that is
 the human merge decision. `tedium dryrun` is unrestricted: it builds on
 `tedium/try` and lands nothing. Never add `tedium/*` to protected-branch

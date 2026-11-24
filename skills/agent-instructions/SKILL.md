@@ -220,7 +220,7 @@ short rule that applies whatever the case in the summary itself.
   no longer holds.
 - A human reads every change to an instruction file before it lands. A
   fresh reviewer reads it first for correctness, readability and
-  specificity, and the epilogue is posted on the PR (the self-review
+  specificity, and its findings are recorded on the PR (the self-review
   skill, Documentation-only changes).
 
 ## Before committing
