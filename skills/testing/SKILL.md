@@ -242,14 +242,9 @@ case", for the evidence before you write or review a guard's tests.
 
 ### A guard asserts the parsed value
 
-A guard test parses what it guards and asserts on the value: YAML through a
-parser, a package name as a whole token, a config through the tool that
-reads it. A substring match passes on a comment or on a longer name. Before
-you write the assertions, list the ways the guarded thing could be defeated,
-and mutate each one: an author mutates what they were thinking about, and
-the hole is in what they were not. Read `references/test-pitfalls.md`, "A
-guard asserts the parsed value", before you write or review a guard over a
-file.
+Assert on the parsed value, not a substring, and revert each fix to see
+its test go red. Read `references/test-pitfalls.md`, "A guard asserts the
+parsed value", before writing a guard over a file.
 
 ### A fake cannot test a third-party tool's behavior
 

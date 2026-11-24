@@ -63,6 +63,13 @@ description: "Writing or modifying TypeScript/Vue/Nuxt: toolchain and style conv
 - Use `||`, not `??`, where a `NOT NULL` text column can hold `''`.
 - A caught error is `unknown`: read it through one helper that checks
   `instanceof Error`, and wrap every composable call that can reject.
+- A null profile has two causes, signed out and row missing: branch on
+  `user` first, and show "profile missing" only for `user && !profile`.
+- Under `noUncheckedIndexedAccess`, destructure an index into a local and
+  guard it; a `.length` check does not narrow `arr[0]`.
+- A file input's `accept` is a hint: validate the extension, reset
+  `input.value` after reading, and add `@drop` and `@dragover.prevent`.
+- Normalize a lookup key (`trim().toLowerCase()`) before reading a map.
 - Truncate, do not round, a compact count (9,999 is not "10.0k"), and pin
   `timeZone: 'UTC'` in a date format whose result must not depend on the
   runner.

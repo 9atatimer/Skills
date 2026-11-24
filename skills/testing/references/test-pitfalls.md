@@ -8,6 +8,7 @@ Contents:
 - A fake process must model the real one's lifetime
 - Drive a script the way its caller does
 - A guard needs an accept case
+- A guard asserts the parsed value
 - A fake cannot test a third-party tool's behavior
 
 ### A name is not a behavior
@@ -123,7 +124,9 @@ failures share one shape:
 
 Parse, then assert on values. Then write down how the guarded property
 could be broken before writing the guard, and mutate each case; a second
-reader finds the cases the author did not think of.
+reader finds the cases the author did not think of. The cheapest mutant is
+the revert: undo the implementation, keep the test, and confirm it goes
+red. A test that stays green without the code it guards proves nothing.
 
 ### A fake cannot test a third-party tool's behavior
 
