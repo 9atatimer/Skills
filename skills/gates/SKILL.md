@@ -27,20 +27,22 @@ expensive:
 govern every rung, and neither has an agent-accessible exception.
 
 **Never re-run a failed `/land` unchanged.** A red staging build after a
-green PR head or a green `/try` has three usual causes: the base moved, the
-merge with the base broke something, or tedium changed the tree (the
-double-bar gate). Rule out the last one before you comment `/land` again:
+green PR head has three usual causes: the base moved, the merge with the
+base broke something, or the double-bar gate's stage 1 failed. Find which
+one before you comment `/land` again:
 
-- Tell the stage: when `git rev-parse <staging-sha>:.github/workflows`
-  equals `git rev-parse origin/<default>:.github/workflows` but the PR
-  changes `.github/workflows/`, the failed build was stage 1, with the
-  base's workflows grafted in. Take `<staging-sha>` from tedium's comment.
-- Compare it with the green `/try` commit: `git diff --stat <try-sha>
-  <staging-sha>`. When the two have the same parents and only
-  `.github/workflows/` differs, the graft caused the failure.
-- For a graft failure, the github-workflow skill, "Landing via tedium",
-  has the remedy. For any other cause, read the job log and fix the
-  cause.
+- Read tedium's failure comment. When the batch changes
+  `.github/workflows/`, the comment says whether stage 1 (the merged code
+  with the base's workflows grafted in) or stage 2 (the PR's own workflows)
+  failed.
+- A stage-1 failure on a PR that changes a workflow and a test that reads
+  it is by design: the test sees the base's workflow there. The
+  github-workflow skill, "Landing via tedium", has the remedy.
+- Reproduce any failure with `/try` on the same head. `/try` builds the same
+  stages as `/land`, so a green `/try` followed by a red `/land` on the same
+  head usually means the base moved in between; merge the default branch
+  into the PR branch and `/try` again.
+- For any other cause, read the job log and fix the cause.
 - A second identical failure on the same head means stop: report the
   diagnosis to the human, or fix the cause, and do not queue a third.
 

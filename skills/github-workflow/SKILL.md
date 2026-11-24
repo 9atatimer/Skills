@@ -170,22 +170,24 @@ tedium landing does not close issues; close them by hand. On a repo
 without `tedium.toml`, an agent never merges and never comments
 `/land`.
 
-**A PR that changes `.github/workflows/` builds twice on `/land` and once
-on `/try`.** Stage 1 runs the merged code with the base's workflows
-grafted in. A test in the PR that reads or runs a changed workflow file
-sees the OLD file there and fails, while `/try` passes (template-tools
-Issue#1109). Before `/land`, check whether the PR touches a workflow AND a
-test that reads one. If it does, fix the shape first:
+**A PR that changes `.github/workflows/` builds twice, on `/land` and on
+`/try` alike.** Stage 1 runs the merged code with the base's workflows
+grafted in; stage 2 runs the PR's own workflows. A test in the PR that
+reads or runs a changed workflow file sees the OLD file in stage 1 and
+fails. `/land` refuses a PR that changes a workflow and a file that
+mentions `.github/workflows` until a `/try` on its current head has passed
+(template-tools Issue#1083), so run `/try` first and read which stage it
+reports. When stage 1 fails on that shape, fix the shape:
 
 - Move the logic that a test runs into a script outside
   `.github/workflows/`, and have the workflow call it. The test runs the
   script, so the test and the fix still land together.
 - Write a guard over workflow text so that it holds for the base form and
   the head form. Tighten it in a later PR.
-- Prove stage 1 locally. Commit first, and merge `origin/<default>` into
-  the branch if the branch is behind it, because stage 1 builds the merge.
-  Then run `git restore --source=origin/<default> --staged --worktree --
-  .github/workflows`, run the suites that read workflows, and put the
+- To check stage 1 before pushing, reproduce it locally. Commit first,
+  and merge `origin/<default>` into the branch if the branch is behind it,
+  because stage 1 builds the merge. Then run `git restore
+  --source=origin/<default> --staged --worktree -- .github/workflows`, run the suites that read workflows, and put the
   branch's workflows back with `git restore --source=HEAD --staged
   --worktree -- .github/workflows`. Use `git restore`, not `git checkout
   <ref> -- <dir>`: checkout only overlays, so it keeps a workflow file the
