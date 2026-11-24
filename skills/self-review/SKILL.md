@@ -268,10 +268,9 @@ verifier, second round, OCR or review-watch loop either. A change to an
 agent instruction file (a skill, a reference file, a persona, a repo's
 `AGENT.md`, the global instruction file, a prompt) goes to one fresh
 reviewer on a cheaper model than the session's; other prose gets the
-author's read. Fix or reject each finding, then post the epilogue before
-the PR is landed, whoever lands it. It records the pass and satisfies
-Zero Unreviewed Code (the gates skill, Documentation-only changes get no
-agentic reviewer). Read `references/briefs.md`, "The prose pass", before
+author's read. Fix or reject each finding, then post the epilogue. It
+records the pass and satisfies Zero Unreviewed Code (the gates skill,
+Documentation-only changes get no agentic reviewer). Read `references/briefs.md`, "The prose pass", before
 you review any documentation-only change.
 
 - **Phases 2 and 3 are the exception.** A design record under review or a

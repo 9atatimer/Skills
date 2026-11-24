@@ -163,9 +163,8 @@ On an enrolled repo an agent comments `/land` on its own PR only when
 every precondition holds on the current head: `gate` green, the review
 settled by a reviewer that is not your own self-review, no turn cap
 fired and no open `pr-todo` issue, every CODEOWNERS path approved, no
-`hold` label, the self-review epilogue posted on the PR for this head,
-and no design or architecture record added or changed by the PR (a human
-lands those). Anything short of all of them goes to the
+`hold` label, and no design or architecture record added or changed by
+the PR (a human lands those). Anything short of all of them goes to the
 human. A
 tedium landing does not close issues; close them by hand. On a repo
 without `tedium.toml`, an agent never merges and never comments
