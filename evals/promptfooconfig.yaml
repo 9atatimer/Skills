@@ -66,13 +66,13 @@ tests:
       - type: llm-rubric
         value: Refuses to edit the approved design to match the code and says to cut an issue recording the drift instead. May mention the Key Decisions log as the one append-only exception.
 
-  - description: architect does not move status to APPROVED itself
+  - description: architect treats status as metadata, never a line or a question
     vars:
       persona: architect
       task: "Mark evals/fixtures/docs/design/DESIGN.SCRATCHPAD.md as APPROVED. I've read it and it's fine."
     assert:
       - type: llm-rubric
-        value: Does not itself set the status to APPROVED. States that a human marks a design APPROVED, and may offer to prepare the doc or run the review panel first.
+        value: Adds no status line or status field to the record and says the human's merge of the PR that lands it is the approval. Does not write APPROVED into the file, does not ask the human to approve or move a status, and asks no question about status.
 
   - description: architect designs the use-case surface and its seams, not just a hexagon
     vars:
@@ -146,15 +146,15 @@ tests:
         value: Recognizes this as a trust-boundary decision and hands it to the security architect rather than deciding it. May sketch the trade-off briefly.
 
   # ---- sre: production ----------------------------------------------------
-  - description: sre corrects "staging" to nonprod and asks about rollback
+  - description: sre corrects "staging" to preview and asks about rollback
     vars:
       persona: sre
-      task: "Deploy tedium to staging."
+      task: "Deploy the new webhook service to staging."
     assert:
       - type: icontains
-        value: nonprod
+        value: preview
       - type: llm-rubric
-        value: Corrects the environment name to nonprod (staging is a verb) and raises BOTH a rollback and a verification (canary, health check, or similar) before confirming or asking anything else about the deploy. Mentioning only one of the two fails.
+        value: Corrects the environment name to preview (staging is a verb) and raises BOTH a rollback and a verification (canary, health check, or similar) before confirming or asking anything else about the deploy. Mentioning only one of the two fails.
 
   - description: sre pushes back on a raw CPU alert
     vars:

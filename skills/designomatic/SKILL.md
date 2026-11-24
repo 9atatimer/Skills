@@ -69,15 +69,17 @@ subscription it costs quota rather than dollars.
 
 **In phases 2 and 3 it replaces the code reviewers, not just precedes
 them.** A design record or seam map under review gets this panel, and
-never a Copilot review or a human-summoned Codex pass: those review code,
+never an OCR, Copilot or Codex pass: those review code,
 and spend quota on prose they cannot judge against the rubric. Outside
 those phases, a documentation-only change gets the self-review pass alone
 (the gates skill, Documentation-only changes get no agentic reviewer).
 
 Do **not** reach for it when:
 
-- The document is APPROVED. It is frozen, and designomatic refuses it --
-  cut a drift issue instead. -> the design skill
+- The document is a merged design or architecture record, and the human
+  did not ask for an amendment. Never run the panel on one; a merged
+  record otherwise changes only by Key Decisions appends (the design
+  skill).
 - You want code reviewed. That is the gates skill.
 - You want to know what a document must contain. That is the concept,
   design, architecture and as-built skills -- which are also exactly what
@@ -115,7 +117,20 @@ panel's narrowing in a `--rubric` supplement.
 | `--kind concept\|design\|as-built` | Only when the path does not say what the document is |
 | `--rubric PATH` | A repo-local supplement read after the skills: it may narrow them, never override them |
 | `--rubric PATH` is also the only way to steer the editor in 0.3.0 | There is no `--guidance` flag in designomatic 0.3.0; a run that passes one fails before the first reviewer. Put editor constraints ("KISS, this is a prototype") in the rubric supplement |
-| `--allow-frozen` | Amend an APPROVED record. **Human decision only** -- an agent never passes this |
+
+**Tell the panel the scope, or it grows the record.** Every reviewer
+judges against the skills for completeness, so each edge case the owner
+deferred reads to it as a defect. DESIGN.QUALITIES.md (9atatimer/iae)
+went in at 25 behaviors and came out of two cycles at 76; the owner cut
+it back to an MVP. A `--rubric` supplement saying the record is an MVP,
+that Future Considerations is deferred rather than missing, and that
+cutting beats adding, kept the next run to four real additions.
+
+**When a panel seat's CLI is missing** (a cloud sandbox has no `codex`),
+`--panel` still plans that seat; `--config` and `--max-cycles` do not
+override a named panel (template-tools issue#996). Run without
+`--panel` and name each seat as `-r <model>:<persona>`, for example
+`-r claude@cli:sonnet:security`, with `-e` and `--critic-model`.
 
 ---
 
@@ -139,10 +154,10 @@ window; 402 means the account's credit balance is at zero. Neither is the
 agent's to lift: report it. Provisioning and the model-id grammar are the
 tool's runbook (template-tools `docs/ops/designomatic.md`).
 
-**The panel's output is a proposal, not an approval.** designomatic cannot
-mark a document APPROVED and neither can you -- only a human moves that
-status. What a green run buys is that a human's first read is not spent on
-what a panel would have caught.
+**The panel's output is a proposal, not an approval.** A human's merge is
+the approval, and no line in the record records it (the design skill,
+Lifecycle is metadata). What a green run buys is that a human's first
+read is not spent on what a panel would have caught.
 
 ---
 

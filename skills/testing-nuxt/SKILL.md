@@ -140,115 +140,16 @@ import { mountSuspended } from '@nuxt/test-utils/runtime'
 
 # 6. Mocking Standards
 
-## 6.1 Nuxt Runtime Mocks (Mandatory)
+## 6.1 Nuxt Runtime Mocks, 6.2 Mock Factory, 6.3 useState Caching
 
-### Mock `#app`
-```ts
-vi.mock('#app', () => ({
-  useNuxtApp: () => ({
-    $supabase: {},
-    $posthog: {},
-  }),
-  useRuntimeConfig: () => ({
-    public: {},
-    private: {}
-  })
-}))
-```
+Mocking `#app` (`useNuxtApp`, `useRuntimeConfig`, `useState`) is mandatory for
+components and composables that use Nuxt runtime. Define mocks BEFORE imports.
+Prefer robust mocks that cover every call the component makes over weak ones
+that break when the component changes. Build mock clients with a factory, not
+inline. Mock `useState` with a key-keyed cache (cleared in `beforeEach`), or
+each call makes a new ref and state sharing breaks.
 
-### Robust vs Weak Mocking
-```typescript
-// WEAK mocking (breaks when component changes):
-vi.mock("#imports", () => ({
-  useSupabaseClient: () => ({ auth: { getUser: vi.fn() } }),
-}));
-
-// ROBUST mocking (handles all component needs):
-vi.mock("#imports", () => ({
-  useSupabaseClient: () => ({
-    auth: {
-      getUser: vi.fn().mockResolvedValue({
-        data: { user: { id: "test-user-id" } },
-        error: null,
-      }),
-    },
-    storage: {
-      from: vi.fn().mockReturnValue({
-        upload: vi.fn().mockResolvedValue({
-          data: { path: "test/path.jpg" },
-          error: null
-        }),
-      }),
-    },
-    from: vi.fn().mockReturnValue({
-      insert: vi.fn().mockReturnValue({
-        select: vi.fn().mockResolvedValue({
-          data: [{ id: "test-image-id" }],
-          error: null
-        }),
-      }),
-    }),
-  }),
-  useSupabaseUser: () => ({ value: { id: "test-user-id" } }),
-}));
-```
-
-## 6.2 Mock Factory Pattern (DRY)
-
-```typescript
-const createMockSupabaseClient = () => ({
-  auth: {
-    getUser: vi.fn().mockResolvedValue({
-      data: { user: null },
-      error: null,
-    }),
-    getSession: vi.fn().mockResolvedValue({
-      data: { session: null },
-      error: null,
-    }),
-    signInWithOAuth: vi.fn(),
-    signOut: vi.fn(),
-  },
-  from: vi.fn(() => ({
-    select: vi.fn().mockReturnThis(),
-    insert: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    single: vi.fn().mockResolvedValue({ data: null, error: null }),
-  })),
-});
-
-vi.mock('#app', () => ({
-  useNuxtApp: () => ({
-    $supabase: { client: createMockSupabaseClient() },
-  }),
-}));
-```
-
-## 6.3 useState Caching Pattern
-
-Nuxt's `useState` caches values by key. Mock this behavior to match production:
-
-```typescript
-import { ref } from 'vue';
-
-const stateCache = new Map<string, any>();
-
-vi.mock('#app', () => ({
-  useState: (key: string, init?: Function) => {
-    if (!stateCache.has(key)) {
-      stateCache.set(key, ref(init ? init() : undefined));
-    }
-    return stateCache.get(key);
-  },
-}));
-
-beforeEach(() => {
-  stateCache.clear();
-});
-```
-
-Without caching, each `useState('key')` call creates a new ref, breaking state sharing between components.
+Read `references/nuxt-detail.md`, "Nuxt runtime mocks, mock factory, useState caching", before you write or change a `#app` / `#imports` mock.
 
 ## 6.4 Centralized Mock Directory
 
@@ -259,23 +160,9 @@ Components using auto-imports can add explicit imports for test compatibility:
 
 ## 6.5 Cleanup (Test Isolation)
 
-```ts
-import { beforeEach, afterEach, vi } from 'vitest'
-import { config } from '@vue/test-utils'
-import { createPinia } from 'pinia'
-
-const stateCache = new Map<string, any>();
-
-beforeEach(() => {
-  vi.clearAllMocks()           // Clear mock call history
-  stateCache.clear()           // Clear useState cache
-  config.global.plugins = [createPinia()]  // Fresh store instances
-})
-
-afterEach(() => {
-  vi.restoreAllMocks()         // Restore original implementations
-})
-```
+In `beforeEach`: `vi.clearAllMocks()`, clear the `useState` cache, install a fresh
+`createPinia()` in `config.global.plugins`. In `afterEach`: `vi.restoreAllMocks()`.
+Read `references/nuxt-detail.md`, "Cleanup for test isolation", for the code.
 
 ---
 
@@ -353,42 +240,9 @@ await nextTick()
 
 ### Testing Event Chains
 
-#### 1. Document the Chain
-```typescript
-// Event Chain:
-// 1. User clicks menu button -> SearchHeader emits menu-click
-// 2. Parent sets isMenuOpen=true -> HamburgerMenu becomes visible
-// 3. User clicks backdrop -> HamburgerMenu emits close
-// 4. Parent sets isMenuOpen=false -> HamburgerMenu becomes hidden
-```
-
-#### 2. Test Each Link Separately
-```typescript
-// SearchHeader in isolation
-it('emits menu-click event', async () => {
-  const wrapper = mount(SearchHeader)
-  await wrapper.find('[data-testid="menu-button"]').trigger('click')
-  expect(wrapper.emitted('menu-click')).toBeTruthy()
-})
-
-// HamburgerMenu in isolation
-it('responds to isOpen prop', async () => {
-  const wrapper = mount(HamburgerMenu, { props: { isOpen: false } })
-  expect(wrapper.find('.menu').isVisible()).toBe(false)
-  await wrapper.setProps({ isOpen: true })
-  expect(wrapper.find('.menu').isVisible()).toBe(true)
-})
-```
-
-#### 3. Integration Test for Full Chain
-```typescript
-it('shows menu when header button clicked', async () => {
-  const wrapper = mount(IndexPage)
-  await wrapper.find('[data-testid="menu-button"]').trigger('click')
-  const menu = document.body.querySelector('[data-testid="menu"]')
-  expect(menu).toBeVisible()
-})
-```
+Document the chain as a comment (who emits, who sets state, what becomes visible), test each link
+in isolation (emit on click; respond to a prop), then add one integration test of the full chain.
+Read `references/nuxt-detail.md`, "Testing event chains", before you test a multi-component event chain.
 
 ### Event Handling Best Practices
 
@@ -460,40 +314,11 @@ Development-only pages for testing complex components without production constra
 
 ### Location: `pages/test/[feature]-[variant].vue`
 
-### Required Documentation
-```typescript
-/**
- * TEST-ONLY PAGE
- * Purpose: [Brief description]
- * Differences from production:
- * - [e.g., "No teleport used"]
- * - [e.g., "Simplified state management"]
- * - [e.g., "Additional debug buttons"]
- */
-```
-
-### Security (Multi-Layer Protection)
-```typescript
-// nuxt.config.ts -- Build exclusion
-ignore: [
-  !['local', 'dev'].includes(process.env.STAGE || '') ? "pages/test/**" : undefined
-]
-
-// nuxt.config.ts -- Route rules
-routeRules: {
-  "/test/**": ['local', 'dev'].includes(process.env.STAGE || '')
-    ? { cors: true }
-    : { redirect: '/404' }
-}
-
-// middleware/block-test-pages.ts
-export default defineNuxtRouteMiddleware((to) => {
-  const stage = process.env.STAGE || ''
-  if (!['local', 'dev'].includes(stage) && to.path.startsWith('/test')) {
-    return navigateTo('/404')
-  }
-})
-```
+Each test page carries a header comment: "TEST-ONLY PAGE", its purpose, and how it
+differs from production. Test pages are excluded from the build and redirected to
+`/404` outside the `local` and `dev` stages, in three layers: `ignore` in
+`nuxt.config.ts`, `routeRules`, and a route middleware.
+Read `references/nuxt-detail.md`, "Test pages: documentation and security", before you add a test page or change how they are protected.
 
 ---
 
@@ -506,100 +331,19 @@ export default defineNuxtRouteMiddleware((to) => {
   cross-use the two.
 
 ### Config sketch (`playwright.config.ts`)
-```typescript
-import { defineConfig } from '@playwright/test'
 
-const baseURL = process.env.BASE_URL ?? 'http://localhost:3000'
-
-export default defineConfig({
-  testDir: './tests/e2e',            // matches the tests/ layout in Section 4
-  testMatch: '**/*.spec.ts',
-  use: {
-    baseURL,
-    testIdAttribute: 'data-pw',      // getByTestId() targets data-pw, not data-testid
-  },
-  // This config lives at the app root (apps/<name>/playwright.config.ts), so
-  // `npm run dev` runs the app's own dev script -- from the repo root it would
-  // be `npm -C apps/<name> run dev`. webServer.url shares baseURL so Playwright
-  // waits on the same origin the tests target; reuse a running dev server locally.
-  webServer: {
-    command: 'npm run dev',
-    url: baseURL,
-    reuseExistingServer: !process.env.CI,
-  },
-})
-```
+`testIdAttribute: 'data-pw'` makes `getByTestId()` target `data-pw`. `webServer.url`
+shares `baseURL`; reuse a running dev server locally, not in CI.
+Read `references/nuxt-detail.md`, "Playwright config sketch", before you write or change `playwright.config.ts`.
 
 ### E2E Authentication Pattern
 
-Playwright has no `Cypress.Commands`/`cy.session`. Model the same concerns --
-per-test user, login, cleanup -- with **fixtures**. (For cross-spec session
-reuse, save `storageState` from a project-level global setup instead; the
-per-test user below is ephemeral and must not be shared across specs.)
-
-#### 1. Per-test user + cleanup (fixture)
-```typescript
-import { test as base, expect } from '@playwright/test'
-import { randomUUID } from 'node:crypto'
-
-type Fixtures = { testUser: { id: string; email: string } }
-
-export const test = base.extend<Fixtures>({
-  testUser: async ({}, use) => {
-    // randomUUID() is unique across parallel workers; Date.now() alone can collide.
-    const email = `test-${randomUUID()}@example.com`
-    const { data, error } = await adminSupabase.auth.admin.createUser({
-      email,
-      password: 'password',
-      email_confirm: true,
-      user_metadata: { is_test_user: true },
-    })
-    // Supabase admin calls return { data, error } -- they do not throw.
-    if (error || !data.user) throw error ?? new Error('createUser returned no user')
-    await use({ id: data.user.id, email })
-    // Cleanup runs after the test, whatever the outcome. deleteUser also returns
-    // { error } rather than throwing, so check it -- an ignored failure silently
-    // leaks the test user.
-    const { error: cleanupError } = await adminSupabase.auth.admin.deleteUser(data.user.id)
-    if (cleanupError) console.warn(`Failed to delete test user ${data.user.id}:`, cleanupError)
-  },
-})
-export { expect }
-```
-
-#### 2. Login via UI
-```typescript
-import { expect, type Page } from '@playwright/test'
-
-async function loginViaUI(page: Page, email: string, password: string) {
-  await page.goto('/test/fixture-login')
-  await page.getByTestId('test-login-email').fill(email)     // -> data-pw
-  await page.getByTestId('test-login-password').fill(password)
-  await page.getByTestId('test-login-submit').click()
-  await expect(page.getByTestId('test-login-success')).toBeVisible({ timeout: 10_000 })
-}
-```
-
-#### 3. Auth state verification
-```typescript
-test('authenticated home renders', async ({ page, testUser }) => {
-  await loginViaUI(page, testUser.email, 'password')
-  await page.goto('/')
-
-  // Assert on an authenticated-only element -- token set =/= auth recognized.
-  // Waiting on a post-auth control is a real client signal; #__nuxt is present
-  // in SSR HTML and does NOT prove hydration.
-  await expect(page.getByTestId('user-menu')).toBeVisible()
-  await expect(page).not.toHaveURL(/\/login/)  // no redirect to login
-})
-```
-
-### Auth Testing Notes
-- Setting auth token =/= auth state recognized by Nuxt
-- Verify via an authenticated-only element, not `#__nuxt` (present during SSR)
-- Watch for race conditions between auth and page load; prefer Playwright's
-  web-first `expect` auto-waiting over fixed timeouts
-- Configure `supabase.redirectOptions` in `nuxt.config.ts` if needed
+Playwright has no `cy.session`: model per-test user, login and cleanup with fixtures.
+Create the user with a `randomUUID()` email (never `Date.now()` alone), check the `{ error }` of
+admin create and delete calls (they do not throw), log in through the UI, and assert on an
+authenticated-only element -- token set =/= auth recognized, and `#__nuxt` is present in SSR HTML.
+Prefer web-first `expect` auto-waiting over fixed timeouts.
+Read `references/nuxt-detail.md`, "E2E authentication pattern", before you write an authenticated E2E test.
 
 ---
 
@@ -650,22 +394,9 @@ Mutate composables, stores, pure utilities, and domain logic.
 
 ### Config sketch (`stryker.conf.json`)
 
-```json
-{
-  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
-  "testRunner": "vitest",
-  "coverageAnalysis": "perTest",
-  "mutate": [
-    "composables/**/*.ts",
-    "stores/**/*.ts",
-    "utils/**/*.ts",
-    "server/**/*.ts",
-    "!**/*.test.ts",
-    "!**/*.nuxt.test.ts"
-  ],
-  "thresholds": { "high": 90, "low": 80, "break": 80 }
-}
-```
+`testRunner: "vitest"`, `coverageAnalysis: "perTest"`, `mutate` over `composables`, `stores`,
+`utils`, `server`, excluding `*.test.ts` and `*.nuxt.test.ts`; thresholds `high 90`, `low 80`, `break 80`.
+Read `references/nuxt-detail.md`, "Stryker config sketch", before you write `stryker.conf.json`.
 
 ### Thresholds
 
@@ -706,9 +437,5 @@ surviving mutant is a statement the test suite proves unnecessary.
 - For component changes, identify and update ALL affected tests
 
 **Temporary Direct Method Invocation (debugging only)**
-```typescript
-// Isolate logic from DOM event complexity
-await wrapper.vm.handleClick();
-expect(mockFn).toHaveBeenCalledTimes(1);
-```
-Production tests should use DOM interactions, but direct method calls help isolate issues.
+Production tests use DOM interactions; call a method directly only to isolate a failure.
+Read `references/nuxt-detail.md`, "Direct method invocation", for the snippet.

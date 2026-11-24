@@ -3,12 +3,17 @@
 # committed or pushed if its name is listed here; listing a skill IS the
 # conscious decision to publish it. Add the directory name (one per line,
 # # comments ignored) in the same commit that adds the skill.
+adherence
+agent-instructions
 architecture
+architecture-views
 as-built
 aws-ops
 cdp-browser
 chrome-mcp
+clai
 cloudflare-hosting
+cloudflare-one-devices
 cloudflare-think
 coding
 concept
@@ -32,8 +37,10 @@ plannotator-annotate
 plannotator-install
 plannotator-last
 plannotator-review
+prompts
 realchrome-cdp
 release
+repo-bootstrap
 retrospective
 sdlc
 self-review
@@ -41,9 +48,11 @@ style-bash
 style-python
 style-typescript
 tech-radar
+technical-writing
 testing
 testing-node
 testing-nuxt
 testing-python
+tiddlywiki
 todo-plan
 wrapup

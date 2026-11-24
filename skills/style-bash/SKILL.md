@@ -52,6 +52,10 @@ Structure every script in clear sections, in this order:
   `node_modules/x`. A downstream filter written for one form silently
   matches nothing on the other: exclude at the source with
   `--exclude-dir=node_modules`, or match both (`^(\./)?node_modules/`).
+- **`ln -sfn TARGET LINK` does not replace a real directory at LINK.**
+  It creates TARGET's basename inside that directory and returns
+  success; `-n` guards only a symlink to a directory. Where LINK must be
+  a symlink, refuse explicitly when LINK is a directory and not a link.
 - Let `main` exit on the first failure by propagating non-zero statuses (`set -e`)
 - Provide actionable error messages
 - **Under `set -euo pipefail`, redirecting stderr does NOT prevent the
@@ -88,6 +92,29 @@ Structure every script in clear sections, in this order:
   `if printf '%s\n' "${body}" | grep -q x`. A fleet tool's guard read a
   rate-limited fetch as "not applicable" this way, and was caught in
   review before it merged (tds-utils PR#434).
+- **A function run in a command substitution can neither stop the script
+  nor talk to the runner.** `x="$(f)"` runs `f` in a subshell. Bash does
+  not carry `set -e` into it (no `inherit_errexit`), so a command that
+  fails inside `f` does not stop `f`: `f` runs on, and the caller sees
+  only its last command's status, going on with whatever it printed
+  whenever that last command succeeded. An `exit` inside `f` leaves only
+  the subshell.
+  Every line `f` writes to stdout lands in `x`, including a GitHub
+  `::add-mask::` line, so the runner never sees it and the value is
+  never masked. A helper that must refuse, or must mask, sets a variable
+  (`REF=...`) and is called bare, never inside `$(...)`. Both bugs were
+  in one helper and were caught before commit, only by running the
+  step's script against the real `op` (tds-utils PR#716).
+- **A function called in a condition runs with `set -e` off, for its
+  whole call tree:** `if f`, `elif f`, `while f`, `until f`, `! f`, and
+  `f` before the last operand of `&&` or `||` (`f || x`, `f && x`). A
+  command that fails inside `f`, or inside anything `f` calls, does not
+  stop it: `f` runs on and returns its last command's status. So
+  `render >"$tmp"` failing inside a helper that then runs
+  `mv -f "$tmp" "$out"` installs the partial file and reports success.
+  In any function a caller might use as a condition, check each command
+  that must stop it:
+  `render >"$tmp" || { rm -f "$tmp"; return 1; }`.
 
 ## Testing and Verification
 - Document in commit messages whether scripts were executed or only statically inspected

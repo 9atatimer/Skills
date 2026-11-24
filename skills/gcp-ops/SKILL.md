@@ -33,14 +33,14 @@ description: "Operating the fleet's Google Cloud estate through terraform and re
 ## Identity and blast radius
 
 - One service account per service per tier, named for the service
-  (`<service>` in nonprod, `<service>-prod` in production). It carries
+  (`<service>` in preview, `<service>-prod` in production). It carries
   only the roles the service needs at run time; the human's identity
   does the applying.
 - Tiers are separate roots over one shared module; tier-defining
   literals (service name, secret name, metric name) live in the tier
   root, not in variables with defaults.
 - Project services (`google_project_service`) are owned by ONE tier root
-  (nonprod), with `disable_on_destroy = false`. Two roots enabling the
+  (preview), with `disable_on_destroy = false`. Two roots enabling the
   same API fight; a destroy that disables an API takes the other tier
   down with it.
 - Projects are shared across systems today. A new system gets its own

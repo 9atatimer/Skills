@@ -1,14 +1,15 @@
 ---
 name: retrospective
-description: "Phase 8 of the SDLC, and the only thing that closes the loop: walking the frozen design against the shipped code, cutting drift issues, appending Key Decisions, recording lessons in TODO_PLAN.md, and handing the status transition to a human. Load whenever an implementation lands -- green tests and a clean review are not the end of the work. This phase never elides, including when the change shipped nowhere; for developer tooling (no design to walk) it shrinks to lessons and discovered issues."
+description: "Phase 8 of the SDLC, and the only thing that closes the loop: walking the frozen design against the shipped code, cutting drift issues, appending Key Decisions, and recording lessons in TODO_PLAN.md; its landing is the record of implementation. Load whenever an implementation lands -- green tests and a clean review are not the end of the work. This phase never elides, including when the change shipped nowhere; for developer tooling (no design to walk) it shrinks to lessons and discovered issues."
 ---
 
 # SKILL: Retrospective (Phase 8)
 
 > **Purpose:** find out whether you built what was designed, and turn what
 > you learned into something the next agent will actually read.
-> **Runs:** after Release (and 7a), in a **docs-only PR separate from the
-> feature PR**.
+> **Runs:** after Release (and 7a): on the session's PR while it is open,
+> else in **one follow-up PR**.
+> -> the github-workflow skill, One open PR per repo per session
 
 **A green test suite and a clean bot review say nothing about whether you
 built what was designed.** Only this phase does. It is not optional, it is
@@ -16,9 +17,16 @@ not "if there is time," and it does not elide.
 
 **Developer tooling runs a short retrospective.** A tool has no design
 doc and no as-built (sdlc, "Product or tooling"), so there is nothing to
-walk for drift, no Key Decisions to append and no status to hand off. Do
+walk for drift and no Key Decisions to append. Do
 the lessons and discovered-issues sections, confirm `docs/ops/<tool>.md`
 matches what shipped, and stop.
+
+The retrospective exists to save the next session's tokens. Record what
+that session cannot derive from the code, the git history, the issues
+and the records: what this session learned, what the owner ruled, what
+is still open and why. Commit those first, before any drift work, so a
+session that ends mid-retrospective has already kept them. Do the work
+yourself; a sub-agent has to rebuild the context you already hold.
 
 This phase used to live inside the design skill, where the freeze rule
 told implementers not to be. That is why it was skipped: the one checklist
@@ -28,15 +36,19 @@ that closes the loop was hidden behind the rule that kept you out of it.
 
 ## The checklist
 
-Work through the whole checklist. A docs-only PR, never bundled into the feature PR --
-doc changes buried in a large code diff do not get read, and that is
-exactly how unreviewed decisions ship.
+Work through the whole checklist. Its doc changes go in their own commit,
+never folded into a code commit -- doc changes buried in a code diff do
+not get read, and that is exactly how unreviewed decisions ship.
 
 ### Cut drift issues
 
-Walk the design doc section by section against the code. Every divergence
-gets an issue, with `file:line` and a concrete consequence. Cross-link them
-so the set is reviewable together.
+File an issue for each divergence you know of from the work: a ruling
+the records do not hold, a rule you bent, something you chose not to
+build or built without a record. Give each `file:line` and a concrete
+consequence, and cross-link them so the set is reviewable together.
+Check the record only where the work changed it or ruled on it; a
+section-by-section audit of the whole record costs more than the next
+session will spend finding the same drift when it needs it.
 
 | Kind | Example | Action |
 |---|---|---|
@@ -57,15 +69,20 @@ stated constraint -- especially a security constraint -- say so out loud in
 its own issue, framed as a decision for a human. **Do not soften the rule
 in the doc so the code conforms.**
 
-### Append Key Decisions
+### Append only the owner's Key Decisions
 
-The design doc's Key Decisions table is an append-only decision log, and it
-is the *only* section an implementer may touch:
+The design doc's Key Decisions table is an append-only log of the handful
+of decisions that change what the design can or cannot do. It is the
+*only* section an implementer may touch, and it is rarely touched:
 
+- **The choices you made while building are drift, not Key Decisions.**
+  Record each in its drift issue and pin it with a test. Do not append a
+  row for it.
+- **Append a row only for the owner's ruling** on such an issue, when the
+  ruling changes what the design can do. The row cites the issue.
 - **Append only.** Never rewrite or delete an existing row. A reversed
   decision gets a new row saying so, with the reason.
-- **Each row cites its authorizing issue.** If nothing authorized it, it is
-  drift -- file it first, then the issue is the citation.
+- **The architecture record's Key Decisions follow the same rule.**
 
 Every other section is frozen until a human amends it. -> the design skill
 
@@ -127,15 +144,17 @@ stays **visibly incomplete** until they are settled. Then prune
 `tasks/done/`: delete every entry whose work has shipped and whose lessons
 have graduated. -> the todo-plan skill
 
-### Hand off the status transition
+### Land it
 
-**Only a human moves a design doc to IMPLEMENTED**, and only once the drift
-issues are closed. IMPLEMENTED means shipped, as-built updated, drift
-closed -- so the status is a lie while drift is open, and an implementer
-never marks its own work implemented.
+**The retrospective's landing is the record of implementation.** Its PR
+merging, and the tracking issue closing with it, is what says the design
+shipped; no line in the design record says so (the design skill,
+Lifecycle is metadata). Write no status line, and never ask a human to
+approve or move one. The retrospective does not land, and does not close
+the tracking issue, while drift cut from it is open.
 
-State plainly in the handoff: what shipped, what drifted, what is still
-open, and that the transition is the human's call.
+State plainly in the PR: what shipped, what drifted, and what is still
+open.
 
 ---
 
@@ -174,10 +193,10 @@ missing, not that agents keep being careless. Propose the change.
 
 ## Exit gate
 
-The loop is closed when: every divergence is filed, Key Decisions cites its
-authorizations, every lesson sits at its layer (unsettled ones in
-`TODO_PLAN.md` alongside the open drift), and a human has what they need
-to rule on the status transition.
+The loop is closed when: every divergence the work knows of is filed, any owner's ruling is
+a Key Decisions row citing its issue, every lesson sits at its layer
+(unsettled ones in `TODO_PLAN.md` alongside the open drift), and the PR is
+open for a human to land.
 
 Shipping code is not the same as shipping what was designed.
 

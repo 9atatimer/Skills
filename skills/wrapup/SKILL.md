@@ -1,6 +1,6 @@
 ---
 name: wrapup
-description: "The session epilogue, typically human-invoked (/wrapup) before a session is archived: first preserve any uncommitted or unpushed work on the session's feature branch, then sweep what the session produced into durable homes -- comments on the issues it touched, new issues for what it discovered, TODO_PLAN lessons and status, as-built corrections -- batching all file edits into at most ONE docs-only PR. Records only what would be wasteful to forget; 'nothing worth recording' is a valid outcome. If an implementation landed this session and phase 8 has not run, run the retrospective skill first -- wrapup is not a substitute for it."
+description: "The session epilogue, typically human-invoked (/wrapup) before a session is archived: first preserve any uncommitted or unpushed work on the session's feature branch, then sweep what the session produced into durable homes -- comments on the issues it touched, new issues for what it discovered, TODO_PLAN lessons and its Now list, as-built corrections -- batching all file edits into at most ONE PR (the session's PR while it is open, else one follow-up). Records only what would be wasteful to forget; 'nothing worth recording' is a valid outcome. If an implementation landed this session and phase 8 has not run, run the retrospective skill first -- wrapup is not a substitute for it."
 ---
 
 # SKILL: Wrapup (session epilogue)
@@ -34,6 +34,16 @@ impossible (no network, no credentials), do NOT proceed quietly: say so
 and end with a precise handoff -- repo, branch, diff stat, and what
 remains -- so the human can decide before the container is reclaimed.
 Only then run the sweep.
+
+**A pushed branch with no PR is lost too.** Nothing tracks it. No review
+sees it, no gate runs on it, and the next session finds it only by
+accident. For each repository, check the session's remote branch for
+commits the default branch lacks (`git log origin/main..origin/<branch>`)
+that no PR carries (the pulls API, `head=<owner>:<branch>`, state all).
+Either open a PR for them, or name the branch and its commits in the
+handoff for the human to decide. Two pushed Skills commits sat this way from
+2026-11-01 until a retrospective two days later found them
+([Skills PR#171](https://github.com/9atatimer/Skills/pull/171)).
 
 ## The sweep
 
@@ -78,7 +88,8 @@ from than a terse one.
 
 **2. At most one PR.** Batch every file edit the sweep produces --
 TODO_PLAN updates, as-built corrections, instruction-file lines -- into
-ONE docs-only PR. Issue comments and new issues need no PR at all, so
+ONE PR: the session's PR while it is open, else one follow-up PR (the
+github-workflow skill, One open PR per repo per session). Issue comments and new issues need no PR at all, so
 a sweep that routes everything to issues correctly produces zero PRs.
 Wrapup starts no new work: anything nontrivial it uncovers becomes an
 issue for a future session, never a task picked up now, and never a
