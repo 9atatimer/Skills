@@ -65,7 +65,7 @@ the issue and the conversation and carry on.
 - **State Machine** -- if the system has lifecycle states (most do), document transitions
 - **Domain Language** -- every noun the Goals, Behaviors and State Machine use, defined once, with its invariants; no tables, no fields, no storage
 - **Parameters** -- every bound the design names, and the constraint on it; no values, no owner (the architecture record places each)
-- **Security Considerations** -- the threats and the constraint each imposes on the system; the mitigation's mechanism is the architecture record's
+- **Security Considerations** -- the threats and the constraint each imposes on the system; the mitigation's mechanism is the architecture record's. State each mitigation against the data and its flows ("page text never leaves the device"), never against a container: a new copy of the data in a new store triggers no re-review of a mitigation written about the old store (tds-utils Issue#420, Issue#411)
 - **Ships where** -- one line: the stages and platforms it is for, or "ships nowhere"
 - **Key Decisions** -- the few choices that shape what the design can or cannot do, each with its rationale. This is the most valuable section for future readers
 - **Open Questions** -- be honest about unknowns. This builds trust
@@ -97,6 +97,7 @@ it and by agents building from it; both need plain, specific text.
   plain sentence and where it was decided sits beside it.
 - **Be explicit** -- No "handle errors gracefully"; state the bound and the failure posture ("retries are bounded; on exhaustion it fails closed") and name the parameter that carries the count. The count itself is a tuned value and lives in the as-built
 - **Be testable** -- No "fast response times"; name the observable and the bound ("resolve latency is measured at P95 and has a ceiling") so a test can read the ceiling from configuration. The target is tuned, not designed
+- **State an inventory as the rule that generates it** -- A closed list ("durable state is exactly these keys") is outgrown by the record's own guarantees: each at-least-once path needs state that outlives a restart, and each is added inside its task with no route back to the list (tds-utils Issue#420). Derive the inventory from the guarantees, or state the rule ("whatever an at-least-once path needs, and nothing that holds page text")
 - **Be unambiguous** -- No "the system"; name the specific component
 - **Prefer tables over prose** -- State machines, decisions, responsibilities all belong in tables
 - **Use ASCII diagrams** -- They work everywhere, including in AI agent prompts

@@ -270,6 +270,13 @@ State Machine, Domain Language, Parameters, Security, Open Questions -- is
 frozen until a human amends it. The architecture record freezes the same
 way once it is merged.
 
+**A scope change is an amendment to the body, not a row.** Pulling a
+Future Considerations item into scope with a Scope row alone leaves the
+body describing the old behavior: one merged record then carries two
+policies, and some other file becomes the spec of record (tds-utils Issue#410,
+Issue#424). Amend every section the item touches, before the freeze or by
+human amendment after it.
+
 ---
 
 ## When implementation lands
