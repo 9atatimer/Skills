@@ -1,16 +1,12 @@
 ---
 name: plannotator-install
-description: "Get the plannotator CLI onto a machine that does not have it, without running a fetched shell script. Load when `plannotator` is not on PATH, when a plannotator-* skill cannot run because the binary is missing, or when a hook fails with `plannotator: command not found`."
+description: "Install, update, build, or release the Plannotator CLI from a published upstream release through the local fork. Load when the binary is missing or broken, or when building, updating, installing, or releasing it; use the plannotator skill for review commands."
 ---
 
 # Installing plannotator
 
-> **Purpose:** turn "the binary is missing" into a working install, on a
-> machine where the documented one-liner is not allowed to be used.
-> **Written against:** plannotator, built from the fork's `main` (see
-> "Clone the fork, not upstream"). Not version-pinned -- policy is to
-> always build latest; do not assume a fixed release the way the vendored
-> plannotator-* skills do.
+> **Purpose:** install or update the CLI from a published release without
+> replacing a working binary until the candidate has been verified.
 
 Plannotator is a local, browser-based review layer -- plans, diffs, and
 documents open in an annotation UI, the human marks them up, and structured
@@ -25,8 +21,9 @@ skill.
 command -v plannotator && plannotator --version
 ```
 
-If that prints a version, the binary is installed and this skill is done.
-Two failures look similar and are not:
+If the request is only to fix a missing binary and that prints a version,
+the binary is installed. For an update or release, continue with the
+requested version. Two failures look similar and are not:
 
 | Symptom | Meaning |
 |---|---|
@@ -50,10 +47,6 @@ There is no package-manager path here: plannotator's root `package.json` is
 `private: true`, and the published `@plannotator/*` packages are libraries
 with no `bin`. So the route is a checkout.
 
-If the human decides they want the upstream installer anyway, that is their
-call to make and theirs to run -- hand them the line and let them paste it.
-Do not run it for them.
-
 ## Clone the fork, not upstream
 
 The fleet builds from its own fork, `9atatimer/plannotator`, so the code
@@ -73,39 +66,38 @@ git -C ~/workplace/third-party/plannotator remote add upstream \
 `remote add` above would fail with "remote upstream already exists" --
 and plain `git clone` needs no `gh` prerequisite.)
 
-The fork's `main` tracks upstream `main`, not a release tag. Upstream cuts
-lightweight, unsigned tags and rewrites history between them, so a tag pin
-buys nothing a fork commit does not. Decided 2026-09-06: always forward,
-build the latest.
+The fork can track upstream `main`, but `main` is not the release point.
+Select a published, non-prerelease upstream release. Fetch its exact tag
+from upstream into a dedicated non-tag ref, require that fetch to succeed,
+and peel that ref to a commit; do not resolve a same-named local tag. Fetch
+the fork and verify that commit is reachable from the fork's remote `main`;
+merely fetching an upstream tag into the same object store does not prove
+this. Build that exact commit in a separate worktree.
+A tag identifies a release; it does not authenticate its contents. Never
+change the fork's history just to select a build point.
 
-## Build from a checkout
+## Build and verify a candidate
 
-Build from the fork's `main`. These are the release workflow's own steps, not an
-approximation of them -- `bun install`, the two UI builds, then the
-single-file compile:
+Read the selected release's build workflow for its pinned Bun version,
+locked dependencies, required generated assets, build order and compile
+flags. Build from the release commit into a candidate path outside the
+live executable's path. Do not compile through a symlink that points at
+the live binary. Run the applicable release CI checks and the candidate's
+version command. Use the candidate itself to open a sample plan and submit
+a review. Require the applicable checks to pass; report any skipped checks
+and their implications. A failed check means the candidate is not verified.
 
-```bash
-cd ~/workplace/third-party/plannotator
-bun install --frozen-lockfile
-bun run build:review
-bun run build:hook
-bun build apps/hook/server/index.ts --compile --no-compile-autoload-bunfig \
-    --define "__CLI_VERSION__=\"$(jq -r .version package.json)\"" \
-    --outfile dist/plannotator
-```
-
-It needs `bun` (1.3.14 is what upstream builds with) and `jq`. The compile
-produces a self-contained binary of about 115MB.
-
-**You may run the build. Stop there.** Putting it on PATH changes the
-machine, and any agent integration writes into `~/.claude`, `~/.agents`,
-and `~/.config/opencode` -- those are the human's to run:
-
-```bash
-ln -s ~/workplace/third-party/plannotator/dist/plannotator ~/.local/bin/plannotator
-```
-
-Then verify with the check at the top.
+Keep the verified candidate outside the checkout, with its source commit
+and checksum. Install only when the owner asks in the session. Resolve the
+live command and any symlink to its target; preserve any previous binary
+for rollback. If no command exists, install at `~/.local/bin/plannotator`
+when that directory is on PATH; otherwise agree on a destination without
+changing shell configuration. Copy the candidate to a temporary file beside that target,
+then rename it over the target so replacement is atomic. Verify the
+installed checksum and version, then open and submit a plan review with
+the installed executable. If a check fails, restore the previous binary, or remove the new binary if this was a first install,
+and report the failure. Installing hooks or changing agent configuration
+requires the owner's instruction as well.
 
 ## The binary and the hooks are two installs
 
@@ -116,20 +108,19 @@ comes from per-agent hooks, which are separate:
 - **Claude Code:** a plugin providing `PreToolUse`/`EnterPlanMode` ->
   `plannotator improve-context` and `PermissionRequest`/`ExitPlanMode` ->
   `plannotator`. It ships hooks only, no skills. The human installs it
-  from the fork, not upstream, so plugin and binary come from one tree:
+  from the fork, not upstream:
   `/plugin marketplace add 9atatimer/plannotator`, then
   `/plugin install plannotator@plannotator`, then restart. The marketplace
-  clones the fork's default branch; `gitCommitSha` in
-  `~/.claude/plugins/installed_plugins.json` should equal the commit the
-  binary was built from.
+  clones the fork's default branch, which may differ from the binary's release commit.
+  Compare `gitCommitSha` in `~/.claude/plugins/installed_plugins.json`
+  with the binary's source commit and report a mismatch.
 - **Unattended sessions:** the `ExitPlanMode` hook's timeout is 345600
   seconds, four days. A plan exit in a headless or channel-driven session
   (Telegram, SSH with no forwarded port) blocks until someone opens the
   browser UI. Keep plan mode out of sessions nobody is watching.
-- **Other agents:** upstream's `scripts/install.sh` writes their hooks,
-  commands, and config. It is the human's to run, and `--skip-skills` is
-  worth knowing about if this fleet's vendored plannotator skills are
-  already provisioned and should not be duplicated.
+- **Other agents:** hooks, commands, and configuration are separate from
+  the binary. Inspect their existing setup before changing it; do not run
+  a fetched installer or change agent configuration without instruction.
 
 So a machine can be in a legitimate half-state: the binary works when
 called directly, and plan review never fires on its own. If the human
@@ -138,46 +129,22 @@ binary.
 
 ## Updating
 
-Forward only. Never force-push the fork's `main`; upstream rewrites its
-own history, so the fork's `main` is a merge line over upstream's, and
-GitHub's "sync fork" button produces the same shape.
+Fetch the fork and upstream release tags. Select a published release and
+confirm its commit is reachable from the fork's remote `main`. Do not build the latest `main`
+merely because it is newer than the selected release. If the fork lacks the
+release, report that fact; do not merge, push, or reset the fork merely to
+install a binary. Build and verify the candidate as above.
 
-```bash
-R=~/workplace/third-party/plannotator
-git -C $R checkout main
-git -C $R fetch upstream main
-git -C $R log --oneline main..upstream/main
-```
-
-Review that list, then merge and rebuild locally:
-
-```bash
-git -C $R merge --no-ff --no-edit upstream/main
-```
-
-If the merge conflicts, resolve it as any merge -- do not force through
-with `-X ours`/`-X theirs`; a silently-resolved conflict is exactly the
-kind of drift this fork exists to prevent.
-
-**Rebuild and verify (steps above). Stop there.** Pushing changes what
-every machine in the fleet builds next -- that push is the human's to run:
-
-```bash
-git -C $R push origin main
-```
-
-Then the human refreshes the plugin with
-`/plugin marketplace update plannotator`. The plugin version follows the
-fork's `package.json`, so a bump there is picked up without a reinstall.
-Compare `gitCommitSha` against `git -C $R rev-parse HEAD` afterwards; if
-they differ, plugin and binary are from different trees.
+A plugin installed from the fork's default branch may not match a binary
+built from a release tag. Compare the plugin's recorded `gitCommitSha` with
+the binary's source commit and report any mismatch; do not claim the two
+are synchronized based on their version strings alone.
 
 ## When it breaks later
 
-A checkout build is a live dependency on that checkout. `plannotator` will
-stop working if the clone is moved or deleted, `dist/` is cleaned, or the
-branch is changed without rebuilding -- and it fails inside a hook, where
-the error is easy to misread as the agent misbehaving.
+An older installation may link the live command to the checkout's `dist/`
+directory. Moving or cleaning that checkout can make the command fail inside
+a hook, where the error is easy to misread as the agent misbehaving.
 
 If `command -v plannotator` resolves but running it fails, check the
 symlink's target exists before anything else:
@@ -191,8 +158,8 @@ A dangling target means rebuild, not reinstall.
 ## Do not
 
 - Do not run a fetched installer script, in any form, for any reason.
-- Do not modify PATH, shell rc files, or any agent's config directory. The
-  human runs those.
+- Do not modify PATH, shell rc files, or any agent's config directory
+  without the owner's instruction.
 - Do not install to make a single command work if the human has not asked
   for plannotator. Report that the binary is missing and point here.
 - Do not assume a version. Read `plannotator --version`; the vendored
