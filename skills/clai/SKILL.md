@@ -20,7 +20,17 @@ to every other agent session.
 
 Agents launch as `clai <agent> [args...]` (shell aliases make the bare
 name do this). A bare agent binary skips the hooks, the provisioning and
-the telemetry; use it only to prove something about the agent itself.
+the telemetry; use it only to prove something about the agent itself, or
+to read and hand-set its config.
+
+**The alias runs the hooks on every subcommand.** `<agent> config set`
+or `<agent> models` typed at a prompt goes through `clai <agent>`, so the
+pre-hooks run first and a hook that owns the key reapplies it before the
+command runs: the setting looks impossible to change (omp, 2026-11-08,
+tds-utils Issue#758). Inspect or hand-set config through the bare binary
+(`command omp ...`), and expect a hook that owns the key to take it back
+at the next launch unless the hook's own hand-change carve-out (a stamp
+of what it last wrote) covers it. The durable change is the hook.
 
 ## Two mechanisms, two jobs
 
