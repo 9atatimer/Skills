@@ -7,6 +7,7 @@ Detail moved out of this skill's SKILL.md. Each section here is named there with
 - Verification and diagnosis table (Verification and diagnosis)
 - API token scope table (API token scopes)
 - R2 credentials and the token cap (API token scopes)
+- Account-owned tokens (API token scopes)
 - Certificates by hostname mechanism (Hostnames: custom domain versus route)
 - Static assets over a service binding (Bindings)
 - WorkerEntrypoint RPC exposure (Bindings)
@@ -59,7 +60,7 @@ blaming the deploy tool.
 | apply routes and namespaces (Terraform) | Workers KV Storage Write | Workers Routes Write |
 | apply Access apps and policies (Terraform) | Access: Apps and Policies Write | DNS Write if Terraform owns records |
 | mint Access service tokens (Terraform) | Access: Service Tokens Write, account scope (a zone-scoped Access grant cannot; the resource is not zonal) | |
-| mint API tokens | the human's Global API Key, laptop only (the iac skill's credential-minting posture) | |
+| mint API tokens | the Global API Key (a user credential, so it can also mint user tokens); for account-owned tokens, an account-owned token holding Account API Tokens Write may do, unproven. Where minting runs is the infra repo's authority table (the iac skill, credential minting) | |
 | R2 state backend | an R2 API token scoped to the state bucket; S3-compatible key pair | |
 | R2 objects in named buckets | Workers R2 Storage Bucket Item Read / Write, scope `com.cloudflare.edge.r2.bucket`, one resource per bucket | |
 
@@ -94,12 +95,55 @@ zonal.
   rewrites its own key now fails.
 - **A token's "last used" date never counts S3 calls.** Every R2 token
   reads "never" however busy it is. It is not evidence of disuse.
-- **User API tokens are capped at 50 per user.** At the cap, a create
+- **User API tokens are capped at 50 per user; account-owned tokens at
+  500 per account, and they count against no user.** Mint account-owned
+  by default (Account-owned tokens, below). At the user cap, a create
   fails `Quota limit exceeded ... (1001)`. Free a slot by consolidating
   tokens that add no boundary (above), never by deleting one on its
   last-used date: find the root that mints it, or its row in the
   credential registry (the infra-credentials skill); a token in neither
   is unregistered, not unused.
+
+## Account-owned tokens
+
+The default kind for every machine token. The shape, provider 5.29 or
+later:
+
+```hcl
+data "cloudflare_account_api_token_permission_groups_list" "deploy" {
+  for_each   = toset(["Workers Scripts Write", "Account Settings Read"])
+  account_id = var.account_id
+  name       = each.key
+  scope      = "com.cloudflare.api.account"
+}
+
+resource "cloudflare_account_token" "deploy" {
+  account_id = var.account_id
+  name       = "<app>-deploy-<tier>"
+  policies = [{
+    effect = "allow"
+    # Sorted by id: the order the API returns, so a plan after the apply
+    # is empty.
+    permission_groups = [for id in sort([for d in data.cloudflare_account_api_token_permission_groups_list.deploy : one(d.result).id]) : { id = id }]
+    resources         = jsonencode({ "com.cloudflare.api.account.${var.account_id}" = "*" })
+  }]
+  lifecycle {
+    prevent_destroy = true # a recreate is a rotation
+  }
+}
+```
+
+- `value` is set at create only, like a user token's. An in-place
+  update keeps it in state; the item written from it gets the same value
+  back.
+- A token minted in one account reaches only that account. A separate
+  account is a separate perimeter only if the token that mints there is
+  that account's own, not a user credential that is a member of both.
+- Not for: Zero Trust Client Platform, Page Rules, Registrar, Super Bot
+  Fight Mode, Turnstile, Intel Data Platform. Those keep a user token
+  (`cloudflare_api_token`), and the root's README says why.
+- Moving an existing user token to account-owned is a re-mint, so a
+  rotation: the owner decides when.
 
 ## Certificates by hostname mechanism
 

@@ -70,10 +70,12 @@ description: "Provisioning and governing the credentials infrastructure needs: t
 
 ## Minting
 
-- Minting is a human act, interactive, on the laptop: the Global API
-  Key or an admin token from the personal vault for the provider, and
-  the `op` desktop app for the 1Password terraform provider. Minting
-  modules say LAPTOP ONLY in their README and offer no CI path.
+- Minting runs on the root credential (the Global API Key) and a vault
+  writer: the `op` desktop app on a laptop, or a vault-writing service
+  account on the infra repo's apply server where the owner allows it.
+  The infra repo's authority table says which; never a deploy CI path.
+- Cloudflare tokens are account-owned by default (the cloudflare-hosting
+  skill).
 - Never gate a script on `op whoami`. Under the desktop-app integration
   it reports "not signed in" until another `op` command in the session
   has prompted, and it never prompts itself, so the gate refuses with
@@ -92,9 +94,9 @@ description: "Provisioning and governing the credentials infrastructure needs: t
 - The minted value lands in a 1Password item, never directly in a
   GitHub secret, never in a file in any repo, never in a chat or an
   issue. The module writes it there and outputs the `op://` path.
-- The minted value also lands in local terraform state, in cleartext.
-  That state file is now a credential: laptop only, never a second copy,
-  never a plan file left on disk.
+- The minted value also lands in terraform state, in cleartext. That
+  state is now a credential: only where the authority table says it
+  lives, never a second copy, never a plan file left on disk.
 - A recreate is a rotation. Access service tokens, OIDC apps and API
   tokens issue their secret once; `prevent_destroy` on the resource, and
   a hand-off that names the consumers a recreate would break.
