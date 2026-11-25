@@ -217,11 +217,22 @@ groups (the dashboard shows Write as "Edit").
 A scoped token that fails `auth.forbidden` on an account-level resource is scoped to a zone; re-scoping does not
 help, the resource is not zonal. Read `references/cloudflare-detail.md`, "API token scope table", before you mint or choose a token for a job.
 
-A Cloudflare user holds at most 50 user API tokens, and one app's tokens and state roots mint about four. Before you
-plan a root that mints user tokens, have the human count the existing ones; past the cap the apply fails with error
-1001, "Quota limit exceeded". When the apply would pass the cap, the owner chooses which tokens to free, or the root
-mints account-owned tokens instead. Free a slot only by the infra-credentials skill, Rotation: a token's last-used
-date is not evidence that it is unused.
+Mint every machine token as an account-owned token (`cloudflare_account_token`, provider 5.29 or later), never a
+user token. An account holds 500 of them, a user holds 50 user tokens in all, and an account-owned token is bound to
+no person's login. Mint a user token (`cloudflare_api_token`) only for a product that account-owned tokens do not
+support: Zero Trust Client Platform (WARP device profiles), Page Rules, Registrar, Super Bot Fight Mode, Turnstile,
+Intel Data Platform. Say which in the root's README. A user token past the 50 fails the apply with error 1001,
+"Quota limit exceeded"; free a slot only by the infra-credentials skill, Rotation: a token's last-used date is not
+evidence that it is unused.
+
+For either kind, take each permission group's name from the API (`GET /accounts/{id}/tokens/permission_groups`) or
+from a root that already uses it, never from the docs: the docs' "Containers Write" is the API's "Workers Containers
+Write". Look each one up by name (`cloudflare_account_api_token_permission_groups_list`, or
+`cloudflare_api_token_permission_groups_list` for a user token) and take it with `one()`, so a wrong name fails the
+plan instead of minting a mis-scoped token. List policies, and each policy's groups, in the order the API returns
+them (groups by id): in any other order every plan shows an in-place reorder, with the value and every item
+written from it as known after apply. Read `references/cloudflare-detail.md`, "Account-owned tokens", before you
+write a token resource.
 
 ## Verification and diagnosis
 
