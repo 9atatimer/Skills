@@ -1,6 +1,6 @@
 ---
 name: github-workflow
-description: "Reaching a GitHub remote at all: branch discipline, remote topology (direct-origin vs fork+upstream), the push/PR flow, issue anatomy, and GitHub tool selection. Spans every SDLC phase rather than belonging to one -- load it whenever you touch a remote. Skip for what happens once the PR exists: scanners, CI, ci.magic, review and the review-watch loop are the gates skill."
+description: "Reaching a GitHub remote at all: branch discipline, remote topology (direct-origin vs fork+upstream), the push/PR flow, issue anatomy, GitHub tool selection, and where repository policy (rulesets, branch protection, required checks, merge settings) is set -- the infra repo, never the repo itself. Spans every SDLC phase rather than belonging to one -- load it whenever you touch a remote. Skip for what happens once the PR exists: scanners, CI, ci.magic, review and the review-watch loop are the gates skill."
 ---
 
 # SKILL: GitHub Workflow
@@ -30,10 +30,12 @@ is an assumption, and read both defaults. Read
 `references/anatomy-and-practices.md`, "Derive repo facts", for the
 commands before you derive the topology.
 
-Branch prefixes, required check names, review cadence and every other
-local policy are in the repo's agent instruction file (`AGENT.md` /
-`AGENTS.md` / `CLAUDE.md`). Nothing repo-owned lives in this skill
-directory: provisioning overwrites it every session.
+Branch prefixes, review cadence and every other local policy are in the
+repo's agent instruction file (`AGENT.md` / `AGENTS.md` / `CLAUDE.md`).
+The required check names it lists are documentation: the infra repo
+declares what a branch enforces (see "Repository policy lives in the
+infra repo") and wins when the two disagree. Nothing repo-owned lives in
+this skill directory: provisioning overwrites it every session.
 
 ## Branch Safety (CRITICAL)
 
@@ -62,6 +64,17 @@ directory: provisioning overwrites it every session.
 - `git worktree remove` deletes ignored files without asking. Run
   `git -C <worktree> clean -ndX` first, read the list, and move out
   anything you cannot regenerate.
+
+## Repository policy lives in the infra repo (CRITICAL)
+
+Rulesets, branch protection, required checks and approvals, bypass
+actors, merge settings and App installation scope are infrastructure,
+declared in the infra repo's GitHub module and applied by a human (sdlc
+law 18). Never set one by hand: not in the UI, not with `gh api`, not
+by copying a ruleset, whoever advises it. A repo that wants its own
+policy first gets an infra-repo issue. Read
+`references/anatomy-and-practices.md`, "Repository policy", before you
+answer advice to change a repo's policy or find one made by hand.
 
 ## Gates are phase 6
 

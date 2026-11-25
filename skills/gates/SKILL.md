@@ -204,7 +204,10 @@ suppression is unverified" before you write a `nosemgrep:` comment.
 Every enrolled repo's default branch requires `gate` on the PR head; a
 new CI job goes into `gate`'s `needs`, and a required check made absent by
 a `paths:` filter hangs the bot. PRs cannot merge until all required checks
-pass. Read `references/gate-detail.md`, "Required checks", when a check
+pass. The required set itself is declared in the infra repo's GitHub
+module, not in the repo: adding, removing or renaming a required check
+is a change there (the github-workflow skill, "Repository policy lives
+in the infra repo"). Read `references/gate-detail.md`, "Required checks", when a check
 fails, when you add a CI job, or when a pushed fix shows no checks: a PR
 with a merge conflict runs no `pull_request` workflows.
 

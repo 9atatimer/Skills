@@ -225,8 +225,12 @@ comments, where the infra repo's `AGENT.md` grants them, are the one
 exception), never passes
 `-auto-approve`, never mints or seeds a credential, and never creates
 a resource by hand to unblock a deploy. A move or refactor is proven
-by an empty plan. -> the iac skill (and infra-credentials,
-cloudflare-hosting, gcp-ops, aws-ops for the surface in play)
+by an empty plan. Repository policy is infrastructure too: rulesets,
+branch protection, required checks, merge settings and GitHub App
+installation scope are declared in the infra repo, never set by hand or
+from a repo's own files (the github-workflow skill). -> the iac skill
+(and infra-credentials, cloudflare-hosting, gcp-ops, aws-ops for the
+surface in play)
 
 ## Elision -- what never elides
 
