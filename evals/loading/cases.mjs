@@ -8,6 +8,30 @@ const yes = (skill, prompts) => prompts.map((prompt) => ({ skill, expect: true, 
 const no = (skill, prompts) => prompts.map((prompt) => ({ skill, expect: false, prompt }));
 
 export const CASES = [
+  ...yes("plannotator-install", [
+    "Plannotator is not on PATH. Install it.",
+    "My hook says plannotator: command not found. Fix the install.",
+    "Build Plannotator from the latest published release tag.",
+    "Update the installed Plannotator binary to a stable release.",
+    "Release the rebuilt Plannotator binary on this laptop.",
+    "Rebuild our Plannotator fork at a release point.",
+    "The Plannotator executable is broken. Diagnose its installation.",
+    "How do I roll back the installed Plannotator binary?",
+    "Before installing Plannotator, how do I verify the candidate build?",
+    "Which commit should I use to build the Plannotator CLI?",
+  ]),
+  ...no("plannotator-install", [
+    "Open this Markdown file for annotation in Plannotator.", // plannotator-annotate
+    "Review my current diff in Plannotator.", // plannotator-review
+    "Annotate the last assistant message in Plannotator.", // plannotator-last
+    "How do I export a Plannotator guided review?", // plannotator
+    "List live Plannotator sessions.", // plannotator
+    "Review a GitHub pull request for bugs.", // gates
+    "Build an architecture view for this repo.", // architecture-views
+    "Install the skill-creator skill.", // skill-installer
+    "Write a release runbook for our worker.", // release
+    "Design a new document review feature.", // design
+  ]),
   ...yes("gates", [
     "CI is red on my PR. What do I do?",
     "Copilot left five review comments on my pull request. How should I triage them?",
