@@ -110,6 +110,11 @@ Read `references/cloudflare-detail.md`, "Route before Custom Domain" and "Certif
 - `wrangler secret put <NAME> --env <stage>` from a value read out of
   the vault, piped on stdin; never `--var`, never a `vars` entry. A var
   is plaintext in the dashboard, the diff, and the deploy output.
+- The reverse holds too: a value that is not a secret (the Access team
+  domain, an AUD tag, an admin list, an account id) is a committed `vars`
+  entry, never a Worker secret. A secret hides it from review, and a
+  hand-set AUD goes stale silently when the Access application is
+  recreated (`references/access-identity.md`, Configuration).
 - Secrets persist across deploys, so the put runs after the deploy (the
   worker must exist first) and needs to succeed once. Guard against
   writing a BLANK over a live value: a wrong vault field label must not
