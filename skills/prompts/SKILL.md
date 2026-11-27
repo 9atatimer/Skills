@@ -49,12 +49,8 @@ last saw it. Include only the sections that have an entry:
 - **Run**: the one `!` command, if any.
 - **Open Qs**: the one short line.
 
-Check every PR in the block against GitHub in the same turn (`gh pr view
-<n> --json state`, plus its comments and its `tedium` status), never from
-memory: the owner lands PRs while you work. Drop a PR that is merged or
-closed, and one already carrying a `/land` or a pending `tedium` status. A
-landing in flight is reported in a line of the body, not listed as an
-action.
+List a PR only after checking it on GitHub that turn; omit it if merged,
+closed, or already `/land`ed.
 
 Then the status line, last and exactly this shape, only when a value
 changed since the last one shown, or the turn ran several commands or
