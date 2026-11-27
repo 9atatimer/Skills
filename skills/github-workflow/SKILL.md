@@ -211,8 +211,7 @@ template: use the headings in PR Anatomy below.
 The body is the whole proposal (problem, evidence, solution) and stands
 alone; comments are review feedback and the replies to it. The body's
 headings, in order, are Problem, Evidence, Solution, Checks, Not proven:
-Problem, Evidence and Solution are never empty. A body is as long as the
-change needs: a one-line rule gets a few lines. Never paste the commands
+Problem, Evidence and Solution are never empty. Never paste the commands
 that were run, token-handling details or vault ids, and never narrate the
 session. A body template handed to other agents carries headings, never
 results. Read `references/anatomy-and-practices.md`, "PR Anatomy (proposal
