@@ -103,6 +103,9 @@ Leave out:
 - **One short instruction over a list of cases.** State the principle
   and its reason. Enumerate cases only when the principle cannot be
   inferred from one.
+- **State the outcome, not the procedure.** Leave out commands and steps
+  the reader can work out. Then cut every word the rule still works
+  without.
 - **One term per thing.** Choose a word for a concept and use only that
   word. A second word reads as a second thing.
 - **Examples.** A single example is copied closely. When an example is
