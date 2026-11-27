@@ -54,19 +54,13 @@ description: "Provisioning and governing the credentials infrastructure needs: t
   cannot edit an SA's grants after creation: a wrong grant means a new
   SA, so name the vault and the `read_items` scope on the create line
   and nothing more.
-- **Create a service account piped into its item.** `op service-account
-  create` prints the token once, to the terminal and so into any
-  transcript that sees that terminal. Pipe it straight into the
-  1Password item so it is never displayed:
-
-  ```
-  op service-account create <name> --vault <vault>:read_items --raw \
-    | jq -Rn '{title:"Service Account - OP - <name>", category:"API_CREDENTIAL", fields:[{id:"credential",type:"CONCEALED",label:"credential",value:input}]}' \
-    | op item create --vault Development
-  ```
-
-  A token that was displayed is exposed: revoke that service account in
-  the 1Password console and create a new one the piped way.
+- **Create a service account only from a declared spec**, through the
+  infra repo's checking tool, never a hand-built `op service-account
+  create`. The spec's vaults, grants and holders are reviewed as code;
+  the tool refuses any grant beyond reading and writing items, any
+  undeclared flag, and a personal vault, and pipes the token to its
+  holders so it is never displayed. A displayed token is exposed: revoke
+  that service account and mint again.
 
 ## Minting
 
