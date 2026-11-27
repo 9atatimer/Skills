@@ -63,6 +63,9 @@ applies:
    means starting this watch, not ending the turn and hoping.
    Stopping `gh webhook forward` leaves its extension child running with
    the webhook still registered: stop the child too (`pkill -P <pid>`).
+   Stop only your own watch's processes, by PID; never by name
+   (`pkill -f 'gh webhook forward --repo=...'`), which also kills every
+   other watch on that repo.
    A forwarder can drop without notice, so when a watch ends or the owner
    asks, re-read the PR's state from the API rather than trusting the
    watch.
