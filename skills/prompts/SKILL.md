@@ -49,6 +49,9 @@ last saw it. Include only the sections that have an entry:
 - **Run**: the one `!` command, if any.
 - **Open Qs**: the one short line.
 
+List a PR only after checking it on GitHub that turn; omit it if merged,
+closed, or already `/land`ed.
+
 Then the status line, last and exactly this shape, only when a value
 changed since the last one shown, or the turn ran several commands or
 took several minutes:
